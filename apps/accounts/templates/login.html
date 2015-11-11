@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% block mainactive %}active{% endblock %}
+
+{% block content-title %}SIR{% endblock %}
+{% block content-suptitle %}Authetication{% endblock %}
+
+{% block content %}
+ <form class="form" method="post" action="{% url 'django.contrib.auth.views.login' %}">
+  {% csrf_token %}
+  {% bootstrap_form form %}
+  <input type="hidden" name="next" value="{{ next }}" />
+  {% buttons %}
+    <button type="submit" class="btn btn-primary">Login</button>
+  {% endbuttons %}
+</form>
+{% endblock %}
+
+{% block messages%}
+{% endblock %}
+
+{% block sidebar%}
+{% endblock %}
