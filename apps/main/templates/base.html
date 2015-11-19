@@ -1,6 +1,4 @@
 <!DOCTYPE html>
-{% load bootstrap3 %}
-{% load url from future %}
 {% load static %}
 <html lang="en">
 <head>
@@ -13,7 +11,7 @@
     <link href="{% static 'css/bootstrap-flatly.min.css' %}" media="screen" rel="stylesheet">
     <style type="text/css">
       body {padding-top: 60px}
-      .logo {height: 45px}      
+      .logo {padding-top: 5px; height: 50px}      
     </style>
     <!--[if lt IE 9]>
 	<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -34,11 +32,24 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="/" style="padding-top:1px"><img class="logo" alt="JRO" src="{% static "images/logo-jro-white-trans.png" %}"></a>
+        <a class="navbar-brand" href="{% url 'index' %}" style="padding-top:1px"><img class="logo" alt="JRO" src="{% static "images/logo-jro-white-trans.png" %}"></a>
       </div>
       <div class="collapse navbar-collapse" id="navigationbar">
-        <ul class="nav navbar-nav">
-        <li class="{% block mainactive %}{% endblock %}"><a href="{% url 'apps.main.views.index' %}">About</a></li>
+        <ul class="nav navbar-nav">          
+          <li class=" dropdown {% block exp-active %}{% endblock %}"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Experiments<span class="caret"></span></a>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="{% url 'index' %}">Templates</a></li>
+              <li><a href="#">Search</a></li>
+              <li><a href="{% url 'new_experiment'%}">New</a></li>
+             </ul>
+          </li>
+          <li class=" dropdown {% block dev-active %}{% endblock %}"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Devices<span class="caret"></span></a>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="#">Scan</a></li>
+              <li><a href="#">Search</a></li>
+              <li><a href="{% url 'new_device'%}">New</a></li>
+             </ul>
+          </li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
           <li class="nav-divider"></li>
@@ -61,23 +72,23 @@
 {% endblock %}
 
 <div class="container">
-	<div id="page" class="row" style="min-height:600px">
-	  <div class="col-md-9 col-xs-12" role="main">
-	      <div class="page-header">
-	          <h1>{% block content-title %}{% endblock %} <small>{% block content-suptitle %}{% endblock %}</small></h1>
-	      </div>
-	      {% block content %}
-	      {% endblock %}
-	      <br>
-	      {% block messages %}
-	      {% endblock %}
-	  </div>
-	  <div class="col-md-3 hidden-xs hidden-sm" role="complementary">
-	    <div id="sidebar" >
-	    {% block sidebar %}
-	    {% endblock %}
-	    </div>
-	  </div>	  
+    <div id="page" class="row" style="min-height:600px">
+	   <div class="page-header">
+        <h1>{% block content-title %}{% endblock %} <small>{% block content-suptitle %}{% endblock %}</small></h1>
+       </div>
+	   <div class="col-md-9 col-xs-12" role="main">	      
+	   {% block content %}
+	   {% endblock %}
+	   <br>
+	   {% block messages %}
+	   {% endblock %}
+	   </div>
+	   <div class="col-md-3 hidden-xs hidden-sm" role="complementary">
+	       <div id="sidebar">
+	       {% block sidebar%}          
+           {% endblock %}
+	       </div>
+	   </div>	  
 	</div><!--/row-->	
 </div> <!-- container -->
 
@@ -97,7 +108,7 @@
 {# bootstrap_javascript jquery=True #}
 <script src="{% static 'js/jquery.min.js' %}"></script>
 <script src="{% static 'js/bootstrap.min.js' %}"></script>
-{% block js_extra %}
+{% block extra-js %}
 {% endblock%}
 </body>
 </html>

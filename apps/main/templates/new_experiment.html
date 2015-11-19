@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% block exp-active %}active{% endblock %}
+
+{% block content-title %}Experiments{% endblock %}
+{% block content-suptitle %}New{% endblock %}
+
+{% block content %}
+<div class='col-md-8'>
+<form class="form" method="post" action="{% url 'new_experiment' %}">
+  {% csrf_token %}
+  {% bootstrap_form form layout='horizontal' size='medium' %}
+  <div style="clear: both;"></div>
+  <br>
+  <button type="submit" class="btn btn-primary pull-right">Create</button>
+</form>
+</div>
+
+{% endblock %}
+
+{% block sidebar%}
+{% endblock %}

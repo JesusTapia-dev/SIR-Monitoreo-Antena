@@ -6,14 +6,16 @@
 {% block content-suptitle %}Authetication{% endblock %}
 
 {% block content %}
- <form class="form" method="post" action="{% url 'django.contrib.auth.views.login' %}">
+<div class='col-md-8'>
+  <form class="form" method="post" action="{% url 'django.contrib.auth.views.login' %}">
   {% csrf_token %}
   {% bootstrap_form form %}
   <input type="hidden" name="next" value="{{ next }}" />
   {% buttons %}
     <button type="submit" class="btn btn-primary">Login</button>
   {% endbuttons %}
-</form>
+  </form>
+</div>
 {% endblock %}
 
 {% block messages%}
