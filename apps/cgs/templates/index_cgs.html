@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% block mainactive %}active{% endblock %}
+
+{% block content-title %}DEVICE CGS{% endblock %}
+{% block content-suptitle %}CLOCK GENERATOR AND SYNCHRONIZER{% endblock %}
+
+{% block content %}
+<p class="text-justify">
+  Ingresar Frecuencias
+</p>
+<div class='col-md-8'>
+    {% bootstrap_form form size='medium' %} 
+<button type="submit" class="btn btn-primary pull-right">Submit</button>   
+</div>
+{% endblock %}
+
+{% block sidebar%}
+
+{% endblock %}
+
+
