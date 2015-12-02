@@ -44,6 +44,7 @@ INSTALLED_APPS = (
     'apps.cgs',
     'apps.acq',
     'apps.abs',
+    'json_field'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -112,10 +113,10 @@ STATIC_ROOT =  '/var/www/html/static/'
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'apps', 'main', 'static'),
-    
+
 )
 
-STATICFILES_FINDERS = ( 
+STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
