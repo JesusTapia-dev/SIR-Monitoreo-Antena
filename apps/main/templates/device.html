@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load main_tags %}
+
+{% block dev-active %}active{% endblock %}
+
+{% block content-title %}Device{% endblock %}
+{% block content-suptitle %}{{suptitle}}{% endblock %}
+
+{% block content %}
+
+{% if form %}
+<form class="form" method="post" action="{{action}}">
+  {% csrf_token %}
+  {% bootstrap_form form layout='horizontal' size='medium' %}
+  <div style="clear: both;"></div>
+  <br>
+  <button type="submit" class="btn btn-primary pull-right">{{button}}</button>
+</form>
+{% else %}
+<table class="table table-hover">
+  <tr>
+	<th>#</th>
+	{% for header in keys %}
+	<th>{{ header|title }}</th>
+	{% endfor%}
+  </tr>
+  {% for item in items %}
+	<tr class="clickable-row" data-href="{%if base_url %}{{ base_url }}/{% endif %}{{ item.id }}">
+	  <td>{{ forloop.counter }}</td>
+	  {% for key in keys %}
+	  <td>{{ item|attr:key }}</td>
+	  {% endfor %}
+	</tr>
+  {% endfor %}
+</table>
+<button class="btn btn-primary pull-right" id="bt_add">{{button}}</button>
+{% endif %}
+
+{% endblock %}
+
+{% block extra-js%}
+<script type="text/javascript">  
+  $(".clickable-row").click(function() {
+    document.location = $(this).data("href");
+  });
+  
+  $("#bt_add").click(function() {
+    document.location = "add/";
+  });
+</script>
+{% endblock %}

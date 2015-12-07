@@ -11,12 +11,13 @@
     <link href="{% static 'css/bootstrap-flatly.min.css' %}" media="screen" rel="stylesheet">
     <style type="text/css">
       body {padding-top: 60px}
-      .logo {padding-top: 5px; height: 50px}      
+      .logo {padding-top: 5px; height: 50px}
+      .clickable-row {cursor: pointer;}   
     </style>
     <!--[if lt IE 9]>
 	<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
 	<![endif]-->    
-    {% block extra_head %}
+    {% block extra-head %}
     {% endblock %}
 </head>
 
@@ -36,19 +37,9 @@
       </div>
       <div class="collapse navbar-collapse" id="navigationbar">
         <ul class="nav navbar-nav">          
-          <li class=" dropdown {% block exp-active %}{% endblock %}"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Experiments<span class="caret"></span></a>
-            <ul class="dropdown-menu" role="menu">
-              <li><a href="{% url 'index' %}">Templates</a></li>
-              <li><a href="#">Search</a></li>
-              <li><a href="{% url 'new_experiment'%}">New</a></li>
-             </ul>
+          <li class=" dropdown {% block exp-active %}{% endblock %}"><a href="{% url 'experiments'%}">Experiments</a>
           </li>
-          <li class=" dropdown {% block dev-active %}{% endblock %}"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Devices<span class="caret"></span></a>
-            <ul class="dropdown-menu" role="menu">
-              <li><a href="#">Scan</a></li>
-              <li><a href="#">Search</a></li>
-              <li><a href="{% url 'new_device'%}">New</a></li>
-             </ul>
+          <li class=" dropdown {% block dev-active %}{% endblock %}"><a href="{% url 'devices'%}">Devices</a>
           </li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
@@ -73,10 +64,11 @@
 
 <div class="container">
     <div id="page" class="row" style="min-height:600px">
+	   <div class="col-md-9 col-xs-12" role="main">
 	   <div class="page-header">
         <h1>{% block content-title %}{% endblock %} <small>{% block content-suptitle %}{% endblock %}</small></h1>
-       </div>
-	   <div class="col-md-9 col-xs-12" role="main">	      
+       <hr>
+       </div>  
 	   {% block content %}
 	   {% endblock %}
 	   <br>
@@ -84,6 +76,7 @@
 	   {% endblock %}
 	   </div>
 	   <div class="col-md-3 hidden-xs hidden-sm" role="complementary">
+	   <br><br>
 	       <div id="sidebar">
 	       {% block sidebar%}          
            {% endblock %}

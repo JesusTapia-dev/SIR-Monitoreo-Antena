@@ -1,14 +1,7 @@
-from django.conf.urls import patterns, url
-
-from . import views
-
-#urlpatterns = patterns('apps.cgs.views',
-#    url(r'^$', views.index, name='index')
-#)
+from django.conf.urls import url
 
 urlpatterns = (
-    url(r'^configuration/$', 'apps.cgs.views.configurate_frequencies', name='new_device'),
+    #url(r'^configuration/$', 'apps.cgs.views.configurate_frequencies', name='new_device'),
+    url(r'^(?P<id>-?\d+)/$', 'apps.cgs.views.configurate_frequencies', name='new_device'),
 )
-
-#url(r'^new/experiment/$', 'apps.main.views.new_experiment', name='new_experiment')
 

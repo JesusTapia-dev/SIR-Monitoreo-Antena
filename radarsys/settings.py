@@ -36,13 +36,15 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bootstrap3',
+    'polymorphic',
     'apps.accounts',
     'apps.main',
     'apps.misc',
     'apps.rc',
     'apps.dds',
     'apps.cgs',
-    'apps.acq',
+    'apps.jars',
+    'apps.usrp',
     'apps.abs',
     'json_field'
 )

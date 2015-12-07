@@ -1,0 +1,12 @@
+{% if devices %}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3>Devices</h3>
+  </div>
+  <div class="list-group">
+  {% for item in devices %}
+    <a href="/{{item.device_type__alias}}/{{item.configuration__id}}/" class="list-group-item {{item.active}}"><h4>{{item.device_type__name}}</h4></a>      
+  {% endfor %}
+  </div>
+</div>
+{% endif %}
