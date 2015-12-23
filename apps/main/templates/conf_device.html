@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% block mainactive %}active{% endblock %}
+
+{% block content-title %}{{experiment.alias}}{% endblock %}
+{% block content-suptitle %}{{device.device_type__name}}{% endblock %}
+
+{% block content %}
+<form class="form" method="post" action="">
+{% csrf_token %}
+{% bootstrap_form form layout='horizontal' size='medium' %}
+<div style="clear: both;"></div>
+<br>
+<button type="submit" class="btn btn-primary pull-right" id="bt_update">Send</button>
+</form>
+{% endblock %}
+
+{% block sidebar%}
+{% include "sidebar_devices.html" %}
+{% endblock %}

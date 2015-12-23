@@ -64,6 +64,15 @@
 
 <div class="container">
     <div id="page" class="row" style="min-height:600px">
+
+	   <div class="col-md-3 hidden-xs hidden-sm" role="complementary">
+	   <br><br>
+	       <div id="sidebar">
+	       {% block sidebar%}          
+           {% endblock %}
+	       </div>
+	   </div>	
+	   
 	   <div class="col-md-9 col-xs-12" role="main">
 	   <div class="page-header">
         <h1>{% block content-title %}{% endblock %} <small>{% block content-suptitle %}{% endblock %}</small></h1>
@@ -75,13 +84,8 @@
 	   {% block messages %}
 	   {% endblock %}
 	   </div>
-	   <div class="col-md-3 hidden-xs hidden-sm" role="complementary">
-	   <br><br>
-	       <div id="sidebar">
-	       {% block sidebar%}          
-           {% endblock %}
-	       </div>
-	   </div>	  
+	     
+	   
 	</div><!--/row-->	
 </div> <!-- container -->
 
