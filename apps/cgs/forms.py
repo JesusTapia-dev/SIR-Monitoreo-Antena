@@ -18,4 +18,5 @@ class CGSConfigurationForm(forms.ModelForm):
     class Meta:
         model = CGSConfiguration
         #exclude = ('freqs', 'clk_in', 'mult','div',)
-        exclude = ('freqs',)
+#         exclude = ('freqs',)
+        fields = ('freq0', 'freq1', 'freq2', 'freq3')

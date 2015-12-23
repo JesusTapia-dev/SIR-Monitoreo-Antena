@@ -9,20 +9,30 @@ from apps.main.models import Device
 def configurate_frequencies(request, id=0):
     kwargs = {}
     if id:
+        
+        conf = CGSConfiguration.objects.get(pk=id)
+        experiment = conf.experiment
+        
         conf = CGSConfiguration.objects.get(pk=id)
         devices = Device.objects.filter(configuration__experiment=conf.experiment)
         devices = devices.values('configuration__id', 'device_type__alias', 'device_type__name')
         for device in devices:
             if device['device_type__alias']=='cgs':
                 device['active'] = 'active'
+                break
+        
+        device = device
         form = CGSConfigurationForm(instance=conf)
     else:
         form = CGSConfigurationForm()
 
     data = {
         'form': form,
+        'device': device,
         'devices':devices,
         'title': ('YAP'),
+        'experiment': experiment,
+        
     }
     
     if request.method == 'POST':
@@ -40,7 +50,7 @@ def configurate_frequencies(request, id=0):
         form = CGSConfigurationForm()           
     
 
-    return render_to_response('index_cgs.html', data, context_instance=RequestContext(request))
+    return render_to_response('conf_cgs.html', data, context_instance=RequestContext(request))
     #return render_to_response("index.html", kwargs, context_instance=RequestContext(request))
     #return_to_response('index.html', {'title': 'Configura','form': form}, context_instance=RequestContext(request))
 
