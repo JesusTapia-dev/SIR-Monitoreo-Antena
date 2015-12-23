@@ -24,6 +24,21 @@ def configurate_frequencies(request, id=0):
         'devices':devices,
         'title': ('YAP'),
     }
+    
+    if request.method == 'POST':
+        form = CGSConfigurationForm(request.POST) #, initial={'purchase_request':purchase_request}) 
+        if form.is_valid():
+            instance = form.save(commit=False)
+            #if 'quote' in request.FILES:
+            #    instance.quoe = request.FILES['quote']
+            instance.save()
+            form.save_m2m()
+            msg = _(u'The frequencies have been activated successfully.')
+            messages.success(request, msg, fail_silently=True)    
+            #return redirect(purchase_request.get_absolute_url())
+    else:
+        form = CGSConfigurationForm()           
+    
 
     return render_to_response('index_cgs.html', data, context_instance=RequestContext(request))
     #return render_to_response("index.html", kwargs, context_instance=RequestContext(request))

@@ -9,6 +9,32 @@
 <p class="text-justify">
   Ingresar Frecuencias
 </p>
+
+
+
+<!-- Agregado 30-11-2015 -->
+ {% if form.is_multipart %}
+    
+    <script type="text/javascript">
+    
+    </script>
+    
+        <form id="{{ idform }}" enctype="multipart/form-data" method="{{ submit_method|default:'post' }}" action="" class="form">
+ {% else %}
+        <form method="{{ submit_method|default:'post' }}" action="" class="form">
+ {% endif %}
+ 
+ {% if step_field %}
+        <input type="hidden" name="{{ step_field }}" value="{{ step0 }}" />
+ {% endif %}
+
+ {% if submit_method != 'GET' and submit_method != 'get' %}
+       {% csrf_token %}
+ {% endif %}
+<!-- Agregado 30-11-2015 -->
+
+
+
 <div class='col-md-8'>
     {% bootstrap_form form size='medium' %} 
 <button type="submit" class="btn btn-primary pull-right">Submit</button>   
