@@ -25,10 +25,12 @@ class DeviceType(models.Model):
 class Device(models.Model):
 
     device_type = models.ForeignKey(DeviceType)
+    name = models.CharField(max_length=40, default='')
     model = models.CharField(max_length=40, default='')
-    serial = models.CharField(max_length=40, default='')
+    serial_number = models.CharField(max_length=40, default='')
     ip_address = models.GenericIPAddressField(protocol='IPv4', default='0.0.0.0')
     mac_address = models.CharField(max_length = 20, null=True, blank=True)
+    description = models.TextField(blank=True, null=True)
     status = models.PositiveSmallIntegerField(default=1, choices=STATES)
 
     class Meta:

@@ -102,7 +102,7 @@ def device(request, id_dev=0):
         kwargs['suptitle'] = 'Detail'
     else:
         devices = Device.objects.all()       
-        kwargs['keys'] = ['device_type__name', 'model', 'serial', 'ip_address', 'status']
+        kwargs['keys'] = ['device_type__name', 'model', 'serial_number', 'ip_address', 'status']
         keys = ['id']+kwargs['keys']
         kwargs['items'] = devices.values(*keys)
         kwargs['suptitle'] = 'List'
