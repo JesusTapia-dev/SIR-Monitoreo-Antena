@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
 urlpatterns = (
-    url(r'^(?P<id_conf>-?\d+)/$', 'apps.dds.views.config_dds', name='url_conf_dds'),
-    url(r'^(?P<id_conf>-?\d+)/edit/$', 'apps.dds.views.config_dds_edit', name='url_conf_dds_edit'),
+    url(r'^(?P<id_conf>-?\d+)/$', 'apps.dds.views.dds_conf', name='url_dds_conf'),
+    url(r'^(?P<id_conf>-?\d+)/edit/$', 'apps.dds.views.edit_dds_conf', name='url_edit_dds_conf'),
 )

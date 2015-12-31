@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load main_tags %}
+{% block extra-head %}
+<link href="{% static 'css/bootstrap-datetimepicker.min.css' %}" media="screen" rel="stylesheet">
+{% endblock %}
+
+{% block exp-active %}active{% endblock %}
+
+{% block content-title %}{{title}}{% endblock %}
+{% block content-suptitle %}{{suptitle}}{% endblock %}
+
+{% block content %}
+<table class="table table-hover">
+  <tr>
+	<th>#</th>
+	{% for key in experiment_keys %}
+	<th>{{ key|title }}</th>
+	{% endfor%}
+  </tr>
+  {% for experiment in experiments %}
+	<tr class="clickable-row" data-href="{% url 'url_experiment' experiment.id %}">
+	  <td>{{ forloop.counter }}</td>
+	  {% for key in experiment_keys %}
+	  <td>{{ experiment|attr:key }}</td>
+	  {% endfor %}
+	</tr>
+  {% endfor %}
+</table>
+<button class="btn btn-primary pull-right" id="bt_add">{{button}}</button>
+{% endblock %}
+
+{% block sidebar%}
+   {% include "sidebar_devices.html" %}
+{% endblock %}
+
+{% block extra-js%}
+
+<script src="{% static 'js/moment.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
+<script type="text/javascript">
+  $('.input-group.date').datetimepicker({"format": "YYYY-MM-DD HH:mm"});
+  
+  $(".clickable-row").click(function() {
+    document.location = $(this).data("href");
+  });
+  
+  $("#bt_add").click(function() {
+    document.location = "{% url 'url_add_experiment' 0 %}";
+  });
+  
+</script>
+{% endblock %}

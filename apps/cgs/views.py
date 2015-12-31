@@ -7,17 +7,13 @@ from apps.main.models import Device
 # Create your views here.
 
 def configurate_frequencies(request, id=0):
-    kwargs = {}
+    
     if id:
-        
-        conf = CGSConfiguration.objects.get(pk=id)
-        experiment = conf.experiment
-        
         conf = CGSConfiguration.objects.get(pk=id)
         devices = Device.objects.filter(configuration__experiment=conf.experiment)
-        devices = devices.values('configuration__id', 'device_type__alias', 'device_type__name')
+        devices = devices.values('configuration__id', 'device_type__name')
         for device in devices:
-            if device['device_type__alias']=='cgs':
+            if device['device_type__name']=='cgs':
                 device['active'] = 'active'
                 break
         
@@ -31,9 +27,12 @@ def configurate_frequencies(request, id=0):
         'device': device,
         'devices':devices,
         'title': ('YAP'),
-        'experiment': experiment,
+        'experiment': conf.experiment,
         
     }
+    
+    data['dev_conf'] = conf
+    data['dev_conf_keys'] = ['experiment', 'device']
     
     if request.method == 'POST':
         form = CGSConfigurationForm(request.POST) #, initial={'purchase_request':purchase_request}) 
@@ -49,10 +48,6 @@ def configurate_frequencies(request, id=0):
     else:
         form = CGSConfigurationForm()           
     
-
-    return render_to_response('conf_cgs.html', data, context_instance=RequestContext(request))
-    #return render_to_response("index.html", kwargs, context_instance=RequestContext(request))
-    #return_to_response('index.html', {'title': 'Configura','form': form}, context_instance=RequestContext(request))
-
+    return render(request, 'cgs_conf.html', data)
 
 

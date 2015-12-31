@@ -36,10 +36,14 @@
         <a class="navbar-brand" href="{% url 'index' %}" style="padding-top:1px"><img class="logo" alt="JRO" src="{% static "images/logo-jro-white-trans.png" %}"></a>
       </div>
       <div class="collapse navbar-collapse" id="navigationbar">
-        <ul class="nav navbar-nav">          
-          <li class=" dropdown {% block exp-active %}{% endblock %}"><a href="{% url 'experiments'%}">Experiments</a>
+        <ul class="nav navbar-nav"> 
+          <li class=" dropdown {% block camp-active %}{% endblock %}"><a href="{% url 'url_campaigns'%}">Campaigns</a>
           </li>
-          <li class=" dropdown {% block dev-active %}{% endblock %}"><a href="{% url 'devices'%}">Devices</a>
+          <li class=" dropdown {% block exp-active %}{% endblock %}"><a href="{% url 'url_experiments'%}">Experiments</a>
+          </li>
+          <li class=" dropdown {% block dev-active %}{% endblock %}"><a href="{% url 'url_devices'%}">Devices</a>
+          </li>
+          <li class=" dropdown {% block conf-active %}{% endblock %}"><a href="{% url 'url_dev_confs'%}">Device Configurations</a>
           </li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
@@ -105,6 +109,7 @@
 {# bootstrap_javascript jquery=True #}
 <script src="{% static 'js/jquery.min.js' %}"></script>
 <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
 {% block extra-js %}
 {% endblock%}
 </body>

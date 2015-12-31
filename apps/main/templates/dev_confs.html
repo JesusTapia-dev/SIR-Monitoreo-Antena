@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load main_tags %}
+{% block extra-head %}
+<link href="{% static 'css/bootstrap-datetimepicker.min.css' %}" media="screen" rel="stylesheet">
+{% endblock %}
+
+{% block conf-active %}active{% endblock %}
+
+{% block content-title %}{{title}}{% endblock %}
+{% block content-suptitle %}{{suptitle}}{% endblock %}
+
+{% block content %}
+<table class="table table-hover">
+  <tr>
+	<th>#</th>
+	{% for key in configuration_keys %}
+	<th>{{ key|title }}</th>
+	{% endfor%}
+  </tr>
+  {% for item in configurations %}
+	<tr class="clickable-row" data-href="/{{item.device__device_type__name}}/{{item.id}}/">
+	  <td>{{ forloop.counter }}</td>
+	  {% for key in configuration_keys %}
+	  <td>{{ item|attr:key }}</td>
+	  {% endfor %}
+	</tr>
+  {% endfor %}
+</table>
+<button class="btn btn-primary pull-right" id="bt_add">{{button}}</button>
+{% endblock %}
+
+{% block sidebar%}
+   {% include "sidebar_devices.html" %}
+{% endblock %}
+
+{% block extra-js%}
+<script src="{% static 'js/moment.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
+<script type="text/javascript">
+  $('.input-group.date').datetimepicker({"format": "YYYY-MM-DD HH:mm"});
+  $('.input-group.time').datetimepicker({"format": "HH:mm"});
+  
+  $("#bt_add").click(function() {
+    document.location = "{% url 'url_add_dev_conf' 0%}";
+  });
+ 
+  $(".clickable-row").click(function() {
+	    document.location = $(this).data("href");
+	  });
+  
+</script>
+{% endblock %}

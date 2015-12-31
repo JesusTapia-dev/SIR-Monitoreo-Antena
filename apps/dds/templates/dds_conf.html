@@ -1,0 +1,11 @@
+{% extends "dev_conf.html" %}
+
+{% block extra-js%}
+<script type="text/javascript">
+  
+  $("#bt_edit_device").click(function() {
+    document.location = "{% url 'url_edit_dds_conf' dev_conf.id%}";
+  });
+  
+</script>
+{% endblock %}

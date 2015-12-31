@@ -11,9 +11,9 @@ def jars_config(request, id):
     if id:
         conf = JARSConfiguration.objects.get(pk=id)
         devices = Device.objects.filter(configuration__experiment=conf.experiment)
-        devices = devices.values('configuration__id', 'device_type__alias', 'device_type__name')
+        devices = devices.values('configuration__id', 'device_type__name')
         for device in devices:
-            if device['device_type__alias']=='jars':
+            if device['device_type__name']=='jars':
                 device['active'] = 'active'
         form = JARSConfigurationForm(instance=conf)
     else:

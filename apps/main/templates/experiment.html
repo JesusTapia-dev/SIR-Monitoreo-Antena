@@ -8,134 +8,52 @@
 
 {% block exp-active %}active{% endblock %}
 
-{% block content-title %}Experiment{% endblock %}
+{% block content-title %}{{title}}{% endblock %}
 {% block content-suptitle %}{{suptitle}}{% endblock %}
 
 {% block content %}
-{% if form_new %}
-<form class="form" method="post" action="">
-  {% csrf_token %}
-  {% bootstrap_form form_new layout='horizontal' size='medium' %}
-  <div style="clear: both;"></div>
-  <br>
-  <button type="submit" class="btn btn-primary pull-right">Create</button>
-</form>
-{% elif experiment %}
 <table class="table table-bordered">
 {% for key in experiment_keys %}
 <tr><th>{{key|title}}</th><td>{{experiment|attr:key}}</td></tr>
 {% endfor %}
 </table>
-<hr>
+<button class="btn btn-primary pull-right" id="bt_edit_experiment">Edit Experiment</button>
+<br></br>
+<br></br>
 
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-  <div class="panel panel-default">
-    <div class="panel-heading" role="tab" id="headingOne">
-      <h4 class="panel-title">
-        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-          Edit Experiment Details
-        </a>
-      </h4>
-    </div>
-    <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
-      <div class="panel-body">
-        <form class="form" method="post" action="{% url 'edit_experiment' id_exp %}">
-  		{% csrf_token %}
-  		{% bootstrap_form form layout='horizontal' size='medium' %}
-  		<div style="clear: both;"></div>
-		<br>
-		<button type="submit" class="btn btn-primary pull-right" id="bt_update">Update</button>
-		</form>		
-      </div>
-    </div>
-  </div>
+
   <div class="panel panel-default">
     <div class="panel-heading" role="tab" id="headingTwo">
       <h4 class="panel-title">
-        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-          Add Device to Experiment
-        </a>
-      </h4>
-    </div>
-    <div id="collapseTwo" class="panel-collapse collapse {%if id_dev_type%}in{%endif%}" role="tabpanel" aria-labelledby="headingTwo">
-      <div class="panel-body">
-        <form class="form" method="post" action="{% url 'experiment_add_device' id_exp %}">
-  		{% csrf_token %}
-  		{% bootstrap_form subform layout='horizontal' size='medium' %}
-  		<div style="clear: both;"></div>
-		<br>
-		<table class="table">
-		<tr>
-		  <th>#</th>
-		  {% for header in keys %}
-		  <th>{{ header|title }}</th>
-		  {% endfor%}
-		</tr>
-		{% for item in items %}
-		<tr class="clickable-row" data-href="{%if base_url %}{{ base_url }}/{% endif %}{{ item.id }}">
-		  <td>{{ forloop.counter }}</td>
-		  {% for key in keys %}
-		  <td>{{ item|attr:key }}</td>
-		  {% endfor %}
-		  <td><input type="hidden" id="id_device" name="device" value="{{item.id}}"></input><button type="submit" class="btn btn-primary btn-sm">Add</button></td>
-		</tr>
-		{% endfor %}
-		</table>
-		<br>				
-		</form>
-      </div>
-    </div>
-  </div>
-  <div class="panel panel-default">
-    <div class="panel-heading" role="tab" id="headingThree">
-      <h4 class="panel-title">
-        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseThree">
           Experiment's Devices
         </a>
       </h4>
     </div>
-    <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+    <div id="collapseTwo" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
       <div class="panel-body">
       <table class="table table-hover">
 		<tr>
 		  <th>#</th>
-		  {% for header in device_keys %}
-		  <th>{{ header|title }}</th>
+		  {% for key in configuration_keys %}
+		  <th>{{ key|title }}</th>
 		  {% endfor%}
 		</tr>
-		{% for item in devices %}
-		<tr class="clickable-row" data-href="/{{item.device_type__alias}}/{{item.configuration__id}}/">
+		{% for item in configurations %}
+		<tr class="clickable-row" data-href="/{{item.device__device_type__name}}/{{item.id}}/">
 		  <td>{{ forloop.counter }}</td>
-		  {% for key in device_keys %}
+		  {% for key in configuration_keys %}
 		  <td>{{ item|attr:key }}</td>
 		  {% endfor %}
 		</tr>
 		{% endfor %}
 	  </table>  
+	  <button class="btn btn-primary pull-right" id="bt_add_conf">{{button}}</button>
       </div>
     </div>
   </div>
 </div>
-{% else %}
-<table class="table table-hover">
-  <tr>
-	<th>#</th>
-	{% for header in keys %}
-	<th>{{ header|title }}</th>
-	{% endfor%}
-  </tr>
-  {% for item in items %}
-	<tr class="clickable-row" data-href="{%if base_url %}{{ base_url }}/{% endif %}{{ item.id }}">
-	  <td>{{ forloop.counter }}</td>
-	  {% for key in keys %}
-	  <td>{{ item|attr:key }}</td>
-	  {% endfor %}
-	</tr>
-  {% endfor %}
-</table>
-<button class="btn btn-primary pull-right" id="bt_add">{{button}}</button>
-{% endif %}
-
 {% endblock %}
 
 {% block sidebar%}
@@ -153,12 +71,13 @@
     document.location = $(this).data("href");
   });
   
-  $("#bt_add").click(function() {
-    document.location = "add";
+  $("#bt_edit_experiment").click(function() {
+	    document.location = "{% url 'url_edit_experiment' experiment.id%}";
+	  });
+  
+  $("#bt_add_conf").click(function() {
+    document.location = "{% url 'url_add_dev_conf' experiment.id%}";
   });
   
-  $("#id_device_type").change(function() {
-    document.location = "{% url 'experiment' id_exp %}device/"+$(this).val();
-  });
 </script>
 {% endblock %}

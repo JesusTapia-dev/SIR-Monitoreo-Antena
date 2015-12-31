@@ -8,7 +8,7 @@ class JARSConfigurationForm(forms.ModelForm):
         instance = getattr(self, 'instance', None)
         if instance and instance.pk:
             self.fields['experiment'].widget.attrs['disabled'] = True
-            self.fields['device'].widget.choices = [(item['id'], '%s %s | %s' % (item['device_type__alias'], item['model'], item['ip_address'])) for item in Device.objects.filter(device_type__alias='jars').values('id', 'device_type__alias', 'model', 'ip_address')]
+            self.fields['device'].widget.choices = [(item['id'], '%s | %s' % (item['device_type__name'], item['ip_address'])) for item in Device.objects.filter(device_type__name='jars').values('id', 'device_type__name', 'ip_address')]
     
     class Meta:
         model = JARSConfiguration

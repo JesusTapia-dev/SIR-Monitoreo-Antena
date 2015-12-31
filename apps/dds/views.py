@@ -2,56 +2,48 @@
 
 from django.shortcuts import redirect, render
 
-from apps.main.models import Device
 from .models import DDSConfiguration
 from .forms import DDSConfigurationForm
 # Create your views here.
 
-def config_dds(request, id_conf):
+def dds_conf(request, id_conf):
 
-    if id_conf:
-                
-        conf = DDSConfiguration.objects.get(pk=id_conf)
-        form = DDSConfigurationForm(instance=conf)
-        experiment = conf.experiment
-        
-        devices = Device.objects.filter(configuration__experiment=experiment)
-        
-        deviceList = devices.values('configuration__id', 'device_type__alias', 'device_type__name')
-        
-        for thisDevice in deviceList:
-            if thisDevice['configuration__id'] == conf.id:
-                thisDevice['active'] = 'active'
-                break
-        
-        device = thisDevice
-        
-    else:
-        form = DDSConfigurationForm()
-        device = ''
-        experiment = ''
-        devices = {}
-        
-    kwargs = {
-        'form': form,
-        'device': device,
-        'experiment': experiment,
-        'devices': deviceList
-    }
-
-#     return render_to_response('conf_dds.html', kwargs, context_instance=RequestContext(request))
-    return render(request, 'conf_dds.html', kwargs)
+    dev_conf = DDSConfiguration.objects.get(pk=id_conf)
     
-def config_dds_edit(request, id_conf):
+    kwargs = {}
+    kwargs['dev_conf'] = dev_conf
+    kwargs['dev_conf_keys'] = ['experiment', 'device',
+                               'clock', 'multiplier',
+                               'freq_reg', 'phase_reg',
+                               'amplitude_chA', 'amplitude_chB',
+                               'modulation',
+                               'freq_reg_mod', 'phase_reg_mod']
     
+    kwargs['title'] = 'DDS Configuration'
+    kwargs['suptitle'] = 'Details'
+    
+    kwargs['button'] = 'Edit Configuration'
+    
+    return render(request, 'dds_conf.html', kwargs)
+    
+def edit_dds_conf(request, id_conf):
+    
+    dev_conf = DDSConfiguration.objects.get(pk=id_conf)
+    
+    if request.method=='GET':
+        form = DDSConfigurationForm(instance=dev_conf)
+        
     if request.method=='POST':
-        
-        conf = DDSConfiguration.objects.get(pk=id_conf)
-        form = DDSConfigurationForm(instance=conf)
+        form = DDSConfigurationForm(request.POST, instance=dev_conf)
         
         if form.is_valid():
             form.save()
-        else:
-            raise ValueError, "Error"
-            
-    return redirect('url_conf_dds', id_conf=id_conf)
+            return redirect('url_dds_conf', id_conf=id_conf)
+          
+    kwargs = {}
+    kwargs['form'] = form
+    kwargs['title'] = 'Device Configuration'
+    kwargs['suptitle'] = 'Edit'
+    kwargs['button'] = 'Update'
+    
+    return render(request, 'dds_conf_edit.html', kwargs)
