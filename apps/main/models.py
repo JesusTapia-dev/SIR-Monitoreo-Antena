@@ -2,9 +2,16 @@ from itertools import chain
 from django.db import models
 from polymorphic import PolymorphicModel
 
-STATES = (
-          (0, 'Inactive'),
-          (1, 'Active'),
+CONF_STATES = (
+          (0, 'Active'),
+          (1, 'Historial'),
+         )
+
+DEV_STATES = (
+          (0, 'No connected'),
+          (1, 'Connected'),
+          (2, 'Configured'),
+          (3, 'Running'),
          )
 
 DEV_TYPES = (
@@ -41,10 +48,11 @@ class Device(models.Model):
     ip_address = models.GenericIPAddressField(protocol='IPv4', default='0.0.0.0')
     port_address = models.PositiveSmallIntegerField(default=2000)
     description = models.TextField(blank=True, null=True)
+    status = models.PositiveSmallIntegerField(default=0, choices=DEV_STATES)
     
 #     serial_number = models.CharField(max_length=40, default='')
 #     mac_address = models.CharField(max_length = 20, null=True, blank=True)
-#     status = models.PositiveSmallIntegerField(default=1, choices=STATES)
+    
 
     class Meta:
         db_table = 'db_devices'
@@ -84,9 +92,10 @@ class Configuration(PolymorphicModel):
 
     experiment = models.ForeignKey(Experiment)
     device = models.ForeignKey(Device)
+    status = models.PositiveSmallIntegerField(default=0, choices=CONF_STATES)
+    date = models.DateTimeField(auto_now=True, blank=True)
+    
 #     parameters = models.TextField(default='{}')
-#     status = models.PositiveSmallIntegerField(default=1, choices=STATES)
-
     class Meta:
         db_table = 'db_configurations'
     
