@@ -17,29 +17,12 @@
 <tr><th>{{key|title}}</th><td>{{campaign|attr:key}}</td></tr>
 {% endfor %}
 </table>
-<hr>
+<button class="btn btn-primary pull-right" id="bt_edit_campaign">Edit Campaign</button>
+<br></br>
+<br></br>
 
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-  <div class="panel panel-default">
-    <div class="panel-heading" role="tab" id="headingOne">
-      <h4 class="panel-title">
-        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-          Edit Campaign Details
-        </a>
-      </h4>
-    </div>
-    <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
-      <div class="panel-body">
-        <form class="form" method="post" action="{% url 'url_edit_campaign' campaign.id %}">
-  		{% csrf_token %}
-  		{% bootstrap_form form layout='horizontal' size='medium' %}
-  		<div style="clear: both;"></div>
-		<br>
-		<button type="submit" class="btn btn-primary pull-right" id="bt_update">Update</button>
-		</form>		
-      </div>
-    </div>
-  </div>
+  
   <div class="panel panel-default">
     <div class="panel-heading" role="tab" id="headingTwo">
       <h4 class="panel-title">
@@ -84,13 +67,17 @@
 <script type="text/javascript">
   $('.input-group.date').datetimepicker({"format": "YYYY-MM-DD HH:mm"});
   
-  $("#bt_add").click(function() {
-    document.location = "{% url 'url_add_experiment' campaign.id%}";
-  });
-  
   $(".clickable-row").click(function() {
 	    document.location = $(this).data("href");
 	  });
+
+  $("#bt_edit_campaign").click(function() {
+	    document.location = "{% url 'url_edit_campaign' campaign.id%}";
+	  });
+  
+  $("#bt_add").click(function() {
+    document.location = "{% url 'url_add_experiment' campaign.id%}";
+  });
   
 </script>
 {% endblock %}

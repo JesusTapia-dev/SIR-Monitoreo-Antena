@@ -22,6 +22,7 @@ def jars_config(request, id):
     kwargs = {
         'form': form,
         'devices':devices,
+        'dev_conf': conf
     }
 
     return render_to_response('jars.html', kwargs, context_instance=RequestContext(request))

@@ -27,8 +27,6 @@ def configurate_frequencies(request, id=0):
         'device': device,
         'devices':devices,
         'title': ('YAP'),
-        'experiment': conf.experiment,
-        
     }
     
     data['dev_conf'] = conf

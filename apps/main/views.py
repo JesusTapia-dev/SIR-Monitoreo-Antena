@@ -217,15 +217,15 @@ def experiments(request):
 def experiment(request, id_exp):
     
     experiment = Experiment.objects.get(pk=id_exp)
-    campaign = Campaign.objects.get(pk = experiment.campaign.id)
+#     campaign = Campaign.objects.get(pk = experiment.campaign.id)
     configurations = Configuration.objects.filter(experiment=experiment)
     
 #     form = ExperimentForm(instance=experiment)
     
     kwargs = {}
     
-    kwargs['campaign_keys'] = ['name', 'start_date', 'end_date', 'tags', 'description']
-    kwargs['campaign'] = campaign
+#     kwargs['campaign_keys'] = ['name', 'start_date', 'end_date', 'tags', 'description']
+#     kwargs['campaign'] = campaign
     
     kwargs['experiment_keys'] = ['campaign', 'name', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
@@ -296,7 +296,7 @@ def dev_confs(request):
     kwargs['configuration_keys'] = keys[1:]
     kwargs['configurations'] = configurations.values(*keys)
     
-    kwargs['title'] = 'Configurations'
+    kwargs['title'] = 'Configuration'
     kwargs['suptitle'] = 'List'
     kwargs['button'] = 'New Configuration'
     
