@@ -17,7 +17,8 @@
 <tr><th>{{key|title}}</th><td>{{experiment|attr:key}}</td></tr>
 {% endfor %}
 </table>
-<button class="btn btn-primary pull-right" id="bt_edit_experiment">Edit Experiment</button>
+<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_export">Export</button>
+<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_edit">Edit</button>
 <br></br>
 <br></br>
 
@@ -65,13 +66,12 @@
 <script src="{% static 'js/moment.min.js' %}"></script>
 <script src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
 <script type="text/javascript">
-  $('.input-group.date').datetimepicker({"format": "YYYY-MM-DD HH:mm"});
   
   $(".clickable-row").click(function() {
     document.location = $(this).data("href");
   });
   
-  $("#bt_edit_experiment").click(function() {
+  $("#bt_edit").click(function() {
 	    document.location = "{% url 'url_edit_experiment' experiment.id%}";
 	  });
   

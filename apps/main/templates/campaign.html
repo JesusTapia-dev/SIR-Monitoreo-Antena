@@ -12,49 +12,52 @@
 {% block content-suptitle %}{{suptitle}}{% endblock %}
 
 {% block content %}
-<table class="table table-bordered">
-{% for key in campaign_keys %}
-<tr><th>{{key|title}}</th><td>{{campaign|attr:key}}</td></tr>
-{% endfor %}
-</table>
-<button class="btn btn-primary pull-right" id="bt_edit_campaign">Edit Campaign</button>
-<br></br>
-<br></br>
+	<table class="table table-bordered">
+	{% for key in campaign_keys %}
+		<tr><th>{{key|title}}</th><td>{{campaign|attr:key}}</td></tr>
+	{% endfor %}
+	</table>
+	
+	<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_export">Export</button>
+	<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_edit">Edit</button>
+	
+	<br></br>
+	<br></br>
 
-<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-  
-  <div class="panel panel-default">
-    <div class="panel-heading" role="tab" id="headingTwo">
-      <h4 class="panel-title">
-        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-          Experiment List
-        </a>
-      </h4>
-    </div>
-    
-    <div id="collapseTwo" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
-      <div class="panel-body">
-      <table class="table table-hover">
-		<tr>
-		  <th>#</th>
-		  {% for header in experiment_keys %}
-		  <th>{{ header|title }}</th>
-		  {% endfor%}
-		</tr>
-		{% for item in experiments %}
-		<tr class="clickable-row" data-href="{% url 'url_experiment' item.id %}">
-		  <td>{{ forloop.counter }}</td>
-		  {% for key in experiment_keys %}
-		  <td>{{ item|attr:key }}</td>
-		  {% endfor %}
-		</tr>
-		{% endfor %}
-	  </table>  
-	  <button class="btn btn-primary pull-right" id="bt_add">{{button}}</button>
-      </div>
-    </div>
-  </div>
-</div>
+	<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+	  
+	  <div class="panel panel-default">
+	    <div class="panel-heading" role="tab" id="headingTwo">
+	      <h4 class="panel-title">
+	        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+	          Experiment List
+	        </a>
+	      </h4>
+	    </div>
+	    
+	    <div id="collapseTwo" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
+	      <div class="panel-body">
+	      <table class="table table-hover">
+			<tr>
+			  <th>#</th>
+			  {% for header in experiment_keys %}
+			  <th>{{ header|title }}</th>
+			  {% endfor%}
+			</tr>
+			{% for item in experiments %}
+			<tr class="clickable-row" data-href="{% url 'url_experiment' item.id %}">
+			  <td>{{ forloop.counter }}</td>
+			  {% for key in experiment_keys %}
+			  <td>{{ item|attr:key }}</td>
+			  {% endfor %}
+			</tr>
+			{% endfor %}
+		  </table>  
+		  <button class="btn btn-primary pull-right" id="bt_add">{{button}}</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
 {% endblock %}
 
 {% block sidebar%}
@@ -70,8 +73,8 @@
   $(".clickable-row").click(function() {
 	    document.location = $(this).data("href");
 	  });
-
-  $("#bt_edit_campaign").click(function() {
+  
+  $("#bt_edit").click(function() {
 	    document.location = "{% url 'url_edit_campaign' campaign.id%}";
 	  });
   

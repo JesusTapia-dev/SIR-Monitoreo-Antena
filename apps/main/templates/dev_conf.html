@@ -14,7 +14,9 @@
 <tr><th>{{key|title}}</th><td>{{dev_conf|attr:key}}</td></tr>
 {% endfor %}
 </table>
-<button class="btn btn-primary pull-right" id="bt_edit_device">Edit Device Conf</button>
+<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_send">Send</button>
+<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_export">Export</button>
+<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_edit">Edit</button>
 <br></br>
 <br></br>
 {% endblock %}
@@ -26,7 +28,7 @@
 {% block extra-js%}
 <script type="text/javascript">
   
-  $("#bt_edit_device").click(function() {
+  $("#bt_edit").click(function() {
     document.location = "{% url 'url_edit_dev_conf' dev_conf.id%}";
   });
   
