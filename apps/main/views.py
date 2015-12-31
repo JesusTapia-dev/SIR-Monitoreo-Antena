@@ -217,23 +217,23 @@ def experiments(request):
 def experiment(request, id_exp):
     
     experiment = Experiment.objects.get(pk=id_exp)
-#     campaign = Campaign.objects.get(pk = experiment.campaign.id)
-    configurations = Configuration.objects.filter(experiment=experiment)
     
-#     form = ExperimentForm(instance=experiment)
+    experiments = Experiment.objects.filter(campaign=experiment.campaign)
+    configurations = Configuration.objects.filter(experiment=experiment)
     
     kwargs = {}
     
-#     kwargs['campaign_keys'] = ['name', 'start_date', 'end_date', 'tags', 'description']
-#     kwargs['campaign'] = campaign
+    exp_keys = ['id', 'campaign', 'name', 'start_time', 'end_time']
+    conf_keys = ['id', 'device__name', 'device__device_type__name', 'device__ip_address']
     
-    kwargs['experiment_keys'] = ['campaign', 'name', 'start_time', 'end_time']
+    
+    kwargs['experiment_keys'] = exp_keys[1:]
     kwargs['experiment'] = experiment
     
-    keys = ['id', 'device__name', 'device__device_type__name', 'device__ip_address']
+    kwargs['experiments'] = experiments.values(*exp_keys)
     
-    kwargs['configuration_keys'] = keys[1:]
-    kwargs['configurations'] = configurations.values(*keys)
+    kwargs['configuration_keys'] = conf_keys[1:]
+    kwargs['configurations'] = configurations.values(*conf_keys)
     
     kwargs['title'] = 'Experiment'
     kwargs['suptitle'] = 'Details'
@@ -317,6 +317,19 @@ def dev_conf(request, id_conf):
     kwargs['suptitle'] = 'Details'
     
     kwargs['button'] = 'Edit Configuration'
+    
+    ###### SIDEBAR ######
+    experiments = Experiment.objects.filter(campaign=conf.experiment.campaign)
+    configurations = Configuration.objects.filter(experiment=conf.experiment)
+    
+    exp_keys = ['id', 'campaign', 'name', 'start_time', 'end_time']
+    conf_keys = ['id', 'device__name', 'device__device_type__name', 'device__ip_address']
+    
+    kwargs['experiment_keys'] = exp_keys[1:]
+    kwargs['experiments'] = experiments.values(*exp_keys)
+    
+    kwargs['configuration_keys'] = conf_keys[1:]
+    kwargs['configurations'] = configurations.values(*conf_keys)
     
     return render(request, 'dev_conf.html', kwargs)
 
