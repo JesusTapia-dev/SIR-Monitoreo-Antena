@@ -1,6 +1,6 @@
 # Create your views here.
 
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 
 from apps.main.models import Experiment, Configuration
 from .models import DDSConfiguration
@@ -9,7 +9,7 @@ from .forms import DDSConfigurationForm
 
 def dds_conf(request, id_conf):
 
-    conf = DDSConfiguration.objects.get(pk=id_conf)
+    conf = get_object_or_404(DDSConfiguration, pk=id_conf)
     
     kwargs = {}
     kwargs['dev_conf'] = conf
@@ -42,7 +42,7 @@ def dds_conf(request, id_conf):
     
 def dds_conf_edit(request, id_conf):
     
-    conf = DDSConfiguration.objects.get(pk=id_conf)
+    conf = get_object_or_404(DDSConfiguration, pk=id_conf)
     
     if request.method=='GET':
         form = DDSConfigurationForm(instance=conf)

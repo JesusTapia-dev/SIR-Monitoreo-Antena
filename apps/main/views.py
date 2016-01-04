@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 
 from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm
 from apps.cgs.forms import CGSConfigurationForm
@@ -58,7 +58,7 @@ def devices(request):
 
 def device(request, id_dev):
     
-    device = Device.objects.get(pk=id_dev)
+    device = get_object_or_404(Device, pk=id_dev)
     
     kwargs = {}
     kwargs['device'] = device
@@ -93,7 +93,7 @@ def device_new(request):
 
 def device_edit(request, id_dev):
     
-    device = Device.objects.get(pk=id_dev)
+    device = get_object_or_404(Device, pk=id_dev)
     
     if request.method=='GET':
         form = DeviceForm(instance=device)
@@ -115,7 +115,7 @@ def device_edit(request, id_dev):
 
 def device_delete(request, id_dev):
     
-    device = Device.objects.get(pk=id_dev)
+    device = get_object_or_404(Device, pk=id_dev)
     
     if request.method=='POST':
         
@@ -147,7 +147,7 @@ def campaigns(request):
 
 def campaign(request, id_camp):
     
-    campaign = Campaign.objects.get(pk=id_camp)
+    campaign = get_object_or_404(Campaign, pk=id_camp)
     experiments = Experiment.objects.filter(campaign=campaign)
     
     form = CampaignForm(instance=campaign)
@@ -191,7 +191,7 @@ def campaign_new(request):
 
 def campaign_edit(request, id_camp):
     
-    campaign = Campaign.objects.get(pk=id_camp)
+    campaign = get_object_or_404(Campaign, pk=id_camp)
     
     if request.method=='GET':
         form = CampaignForm(instance=campaign)
@@ -213,7 +213,7 @@ def campaign_edit(request, id_camp):
 
 def campaign_delete(request, id_camp):
      
-    campaign = Campaign.objects.get(pk=id_camp)
+    campaign = get_object_or_404(Campaign, pk=id_camp)
     
     if request.method=='POST':
         if request.user.is_staff:
@@ -246,7 +246,7 @@ def experiments(request):
 
 def experiment(request, id_exp):
     
-    experiment = Experiment.objects.get(pk=id_exp)
+    experiment = get_object_or_404(Experiment, pk=id_exp)
     
     experiments = Experiment.objects.filter(campaign=experiment.campaign)
     configurations = Configuration.objects.filter(experiment=experiment)
@@ -294,7 +294,7 @@ def experiment_new(request, id_camp=0):
 
 def experiment_edit(request, id_exp):
     
-    experiment = Experiment.objects.get(pk=id_exp)
+    experiment = get_object_or_404(Experiment, pk=id_exp)
     
     if request.method == 'GET':
         form = ExperimentForm(instance=experiment)
@@ -316,7 +316,7 @@ def experiment_edit(request, id_exp):
 
 def experiment_delete(request, id_exp):
      
-    experiment = Experiment.objects.get(pk=id_exp)
+    experiment = get_object_or_404(Experiment, pk=id_exp)
     
     if request.method=='POST':
         if request.user.is_staff:
@@ -350,7 +350,7 @@ def dev_confs(request):
 
 def dev_conf(request, id_conf):
     
-    conf = Configuration.objects.get(pk=id_conf)
+    conf = get_object_or_404(Configuration, pk=id_conf)
     
     DevConfModel = CONF_MODELS[conf.device.device_type.name]
     dev_conf = DevConfModel.objects.get(pk=id_conf)
@@ -411,7 +411,7 @@ def dev_conf_new(request, id_exp=0):
     
 def dev_conf_edit(request, id_conf):
     
-    conf = Configuration.objects.get(pk=id_conf)
+    conf = get_object_or_404(Configuration, pk=id_conf)
     
     DevConfModel = CONF_MODELS[conf.device.device_type.name]
     DevConfForm = CONF_FORMS[conf.device.device_type.name]
@@ -438,7 +438,7 @@ def dev_conf_edit(request, id_conf):
 
 def dev_conf_delete(request, id_conf):
      
-    conf = Configuration.objects.get(pk=id_conf)
+    conf = get_object_or_404(Configuration, pk=id_conf)
     
     if request.method=='POST':
         if request.user.is_staff:
