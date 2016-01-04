@@ -40,7 +40,7 @@ def dds_conf(request, id_conf):
     
     return render(request, 'dds_conf.html', kwargs)
     
-def edit_dds_conf(request, id_conf):
+def dds_conf_edit(request, id_conf):
     
     conf = DDSConfiguration.objects.get(pk=id_conf)
     

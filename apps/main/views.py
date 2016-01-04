@@ -71,7 +71,7 @@ def device(request, id_dev):
     
     return render(request, 'device.html', kwargs)
 
-def add_device(request):
+def device_new(request):
     
     if request.method == 'GET':
         form = DeviceForm()
@@ -91,7 +91,7 @@ def add_device(request):
         
     return render(request, 'device_edit.html', kwargs)
 
-def edit_device(request, id_dev):
+def device_edit(request, id_dev):
     
     device = Device.objects.get(pk=id_dev)
     
@@ -113,7 +113,7 @@ def edit_device(request, id_dev):
     
     return render(request, 'device_edit.html', kwargs)
 
-def delete_device(request, id_dev):
+def device_delete(request, id_dev):
     
     device = Device.objects.get(pk=id_dev)
     
@@ -169,7 +169,7 @@ def campaign(request, id_camp):
     
     return render(request, 'campaign.html', kwargs)
 
-def add_campaign(request):
+def campaign_new(request):
     
     if request.method == 'GET':
         form = CampaignForm()
@@ -189,7 +189,7 @@ def add_campaign(request):
         
     return render(request, 'campaign_edit.html', kwargs)
 
-def edit_campaign(request, id_camp):
+def campaign_edit(request, id_camp):
     
     campaign = Campaign.objects.get(pk=id_camp)
     
@@ -211,7 +211,7 @@ def edit_campaign(request, id_camp):
     
     return render(request, 'campaign_edit.html', kwargs)
 
-def delete_campaign(request, id_camp):
+def campaign_delete(request, id_camp):
      
     campaign = Campaign.objects.get(pk=id_camp)
     
@@ -272,7 +272,7 @@ def experiment(request, id_exp):
     
     return render(request, 'experiment.html', kwargs)
 
-def add_experiment(request, id_camp=0):
+def experiment_new(request, id_camp=0):
     
     if request.method == 'GET':
         form = ExperimentForm(initial={'campaign':id_camp})
@@ -292,7 +292,7 @@ def add_experiment(request, id_camp=0):
     
     return render(request, 'experiment_edit.html', kwargs)
 
-def edit_experiment(request, id_exp):
+def experiment_edit(request, id_exp):
     
     experiment = Experiment.objects.get(pk=id_exp)
     
@@ -314,7 +314,7 @@ def edit_experiment(request, id_exp):
         
     return render(request, 'experiment_edit.html', kwargs)
 
-def delete_experiment(request, id_exp):
+def experiment_delete(request, id_exp):
      
     experiment = Experiment.objects.get(pk=id_exp)
     
@@ -379,7 +379,7 @@ def dev_conf(request, id_conf):
     
     return render(request, 'dev_conf.html', kwargs)
 
-def add_dev_conf(request, id_exp=0):
+def dev_conf_new(request, id_exp=0):
 
     if request.method == 'GET':
         form = ConfigurationForm(initial={'experiment':id_exp})
@@ -409,7 +409,7 @@ def add_dev_conf(request, id_exp=0):
     
     return render(request, 'dev_conf_edit.html', kwargs)
     
-def edit_dev_conf(request, id_conf):
+def dev_conf_edit(request, id_conf):
     
     conf = Configuration.objects.get(pk=id_conf)
     
@@ -436,7 +436,7 @@ def edit_dev_conf(request, id_conf):
     
     return render(request, 'dev_conf_edit.html', kwargs)
 
-def delete_dev_conf(request, id_conf):
+def dev_conf_delete(request, id_conf):
      
     conf = Configuration.objects.get(pk=id_conf)
     
@@ -452,118 +452,3 @@ def delete_dev_conf(request, id_conf):
           'url_cancel':'url_dev_conf', 'id_item':id_conf}
     
     return render(request, 'item_delete.html', kwargs)
-
-# def experiment(request, id_exp=0, id_dev_type=0):
-#     kwargs = {}
-#     if id_exp:
-#         experiment = Experiment.objects.get(pk=id_exp)
-#         devices = Configuration.objects.filter(configuration__experiment=experiment)
-#         kwargs['experiment'] = experiment
-#         kwargs['experiment_keys'] = ['campaign', 'name', 'start_time', 'end_time']
-#         
-#         form = ExperimentForm(instance=experiment)
-#         
-#         if id_dev_type:
-#             subform = DeviceTypeForm(initial={'device_type':id_dev_type})            
-#             kwargs['keys'] = ['ip_address']
-#             keys = ['id']+kwargs['keys']
-#             kwargs['items'] = Device.objects.filter(device_type=id_dev_type).values(*keys)
-#         else:
-#             subform = DeviceTypeForm()
-#         
-#         kwargs['form'] = form
-#         kwargs['subform'] = subform
-#         kwargs['device_keys'] = ['device_type__name', 'ip_address']
-#         kwargs['devices'] = devices.values('device_type__name', 'ip_address', 'configuration__id')
-#         kwargs['suptitle'] = 'Detail'
-#     else:
-#         experiments = Experiment.objects.all().order_by('start_time')        
-#         kwargs['keys'] = ['name', 'start_time', 'end_time']
-#         keys = ['id']+kwargs['keys']
-#         kwargs['items'] = experiments.values(*keys)        
-#         kwargs['suptitle'] = 'List'
-#         kwargs['button'] = 'Add Experiment'
-#     
-#     kwargs['id_dev_type'] = id_dev_type
-#     kwargs['id_exp'] = id_exp
-#     return render_to_response("experiment.html", kwargs, context_instance=RequestContext(request))
-
-# def edit_experiment(request, id_exp):
-#     if request.method=='POST':
-#         experiment = Experiment.objects.get(pk=id_exp)
-#         form = ExperimentForm(request.POST, instance=experiment)
-#         if form.is_valid():
-#             form.save()
-#     return redirect('experiment', id_exp=id_exp)
-
-# def experiment_add_device(request, id_exp):
-#     if request.method=='POST':
-#         experiment = Experiment.objects.get(pk=id_exp)
-#          
-#         exp_devices = Device.objects.filter(configuration__experiment=experiment)
-#          
-#         device = Device.objects.get(pk=request.POST['device'])
-#          
-#         if device.id in exp_devices.values('id',):
-#             return redirect('experiment', id_exp=id_exp)
-#          
-#         model = MODELS[device.device_type.alias]
-#         conf = model(experiment=experiment, device=device)
-#         conf.save()
-#     return redirect('experiment', id_exp=id_exp)
-
-# def add_experiment(request):
-#     
-#     kwargs = {}
-#     if request.method == 'POST':
-#         form = ExperimentForm(request.POST)
-#         if form.is_valid():
-#             experiment = form.save()
-#             return redirect('experiment', id_exp=experiment.id)
-#     else:        
-#         form = ExperimentForm()
-#     kwargs['form_new'] = form
-#     kwargs['title'] = 'Experiment'
-#     kwargs['suptitle'] = 'New'
-#     kwargs['id_exp'] = 0
-#     return render_to_response("experiment.html", kwargs, context_instance=RequestContext(request))
-
-# def device(request, id_dev=0):
-#     kwargs = {}
-#     if id_dev:
-#         device = Device.objects.get(pk=id_dev)
-#         kwargs['form'] = DeviceForm(instance=device)
-#         kwargs['action'] = 'edit/'
-#         kwargs['button'] = 'Update'
-#         kwargs['suptitle'] = 'Detail'
-#     else:
-#         devices = Device.objects.all()       
-#         kwargs['keys'] = ['device_type__name', 'ip_address']
-#         keys = ['id']+kwargs['keys']
-#         kwargs['items'] = devices.values(*keys)
-#         kwargs['suptitle'] = 'List'
-#         kwargs['button'] = 'Add Device'
-#     return render_to_response("device.html", kwargs, context_instance=RequestContext(request))
-# 
-# def edit_device(request, id_dev):
-#     if request.method=='POST':
-#         device = Device.objects.get(pk=id_dev)
-#         form = DeviceForm(request.POST, instance=device)
-#         if form.is_valid():
-#             form.save()
-#     return redirect('devices')
-# 
-# def add_device(request):
-#     kwargs = {}
-#     if request.method == 'POST':
-#         form = DeviceForm(request.POST)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('devices')
-#     else:        
-#         form = DeviceForm()
-#     kwargs['form'] = form
-#     kwargs['button'] = 'Create'
-#     kwargs['suptitle'] = 'New'
-#     return render_to_response("device.html", kwargs, context_instance=RequestContext(request))
-
