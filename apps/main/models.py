@@ -100,5 +100,7 @@ class Configuration(PolymorphicModel):
         db_table = 'db_configurations'
     
     def __unicode__(self):
-        return u'%s [%s]' % (self.experiment.name, self.device.name) 
+        return u'[%s - %s]: %s' % (self.experiment.campaign.name,
+                                self.experiment.name,
+                                self.device.name) 
     

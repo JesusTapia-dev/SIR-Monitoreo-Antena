@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, HttpResponse
 
 from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm
 from apps.cgs.forms import CGSConfigurationForm
@@ -60,8 +60,6 @@ def device(request, id_dev):
     
     device = Device.objects.get(pk=id_dev)
     
-#     form = DeviceForm(instance=device)
-    
     kwargs = {}
     kwargs['device'] = device
     kwargs['device_keys'] = ['device_type', 'name', 'ip_address', 'port_address', 'description']
@@ -69,7 +67,6 @@ def device(request, id_dev):
     kwargs['title'] = 'Device'
     kwargs['suptitle'] = 'Details'
     
-#     kwargs['form'] = form
     kwargs['button'] = 'Add Device'
     
     return render(request, 'device.html', kwargs)
@@ -116,6 +113,23 @@ def edit_device(request, id_dev):
     
     return render(request, 'device_edit.html', kwargs)
 
+def delete_device(request, id_dev):
+    
+    device = Device.objects.get(pk=id_dev)
+    
+    if request.method=='POST':
+        
+        if request.user.is_staff:
+            device.delete()
+            return redirect('url_devices')
+        
+        return HttpResponse("Not enough permission to delete this object")
+    
+    kwargs = {'object':device, 'dev_active':'active',
+              'url_cancel':'url_device', 'id_item':id_dev}
+    
+    return render(request, 'item_delete.html', kwargs)
+    
 def campaigns(request):
     
     campaigns = Campaign.objects.all().order_by('start_date')
@@ -197,6 +211,22 @@ def edit_campaign(request, id_camp):
     
     return render(request, 'campaign_edit.html', kwargs)
 
+def delete_campaign(request, id_camp):
+     
+    campaign = Campaign.objects.get(pk=id_camp)
+    
+    if request.method=='POST':
+        if request.user.is_staff:
+            campaign.delete()
+            return redirect('url_campaigns')
+        
+        return HttpResponse("Not enough permission to delete this object")
+    
+    kwargs = {'object':campaign, 'camp_active':'active',
+              'url_cancel':'url_campaign', 'id_item':id_camp}
+    
+    return render(request, 'item_delete.html', kwargs)
+
 def experiments(request):
     
     campaigns = Experiment.objects.all().order_by('start_time')
@@ -238,7 +268,6 @@ def experiment(request, id_exp):
     kwargs['title'] = 'Experiment'
     kwargs['suptitle'] = 'Details'
     
-#     kwargs['form'] = form
     kwargs['button'] = 'Add Device'
     
     return render(request, 'experiment.html', kwargs)
@@ -284,6 +313,23 @@ def edit_experiment(request, id_exp):
     kwargs['button'] = 'Update'
         
     return render(request, 'experiment_edit.html', kwargs)
+
+def delete_experiment(request, id_exp):
+     
+    experiment = Experiment.objects.get(pk=id_exp)
+    
+    if request.method=='POST':
+        if request.user.is_staff:
+            id_camp = experiment.campaign.id
+            experiment.delete()
+            return redirect('url_campaign', id_camp=id_camp)
+        
+        return HttpResponse("Not enough permission to delete this object")
+    
+    kwargs = {'object':experiment, 'exp_active':'active',
+              'url_cancel':'url_experiment', 'id_item':id_exp}
+    
+    return render(request, 'item_delete.html', kwargs)
 
 def dev_confs(request):
     
@@ -390,6 +436,22 @@ def edit_dev_conf(request, id_conf):
     
     return render(request, 'dev_conf_edit.html', kwargs)
 
+def delete_dev_conf(request, id_conf):
+     
+    conf = Configuration.objects.get(pk=id_conf)
+    
+    if request.method=='POST':
+        if request.user.is_staff:
+            id_exp = conf.experiment.id
+            conf.delete()
+            return redirect('url_experiment', id_exp=id_exp)
+        
+        return HttpResponse("Not enough permission to delete this object")
+    
+    kwargs = {'object':conf, 'conf_active':'active',
+          'url_cancel':'url_dev_conf', 'id_item':id_conf}
+    
+    return render(request, 'item_delete.html', kwargs)
 
 # def experiment(request, id_exp=0, id_dev_type=0):
 #     kwargs = {}

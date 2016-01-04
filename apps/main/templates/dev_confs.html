@@ -36,12 +36,8 @@
 {% endblock %}
 
 {% block extra-js%}
-<script src="{% static 'js/moment.min.js' %}"></script>
-<script src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
 <script type="text/javascript">
-  $('.input-group.date').datetimepicker({"format": "YYYY-MM-DD HH:mm"});
-  $('.input-group.time').datetimepicker({"format": "HH:mm"});
-  
+
   $("#bt_add").click(function() {
     document.location = "{% url 'url_add_dev_conf' 0%}";
   });
