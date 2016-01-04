@@ -2,9 +2,9 @@ from itertools import chain
 from django.db import models
 from polymorphic import PolymorphicModel
 
-CONF_STATES = (
+CONF_TYPES = (
           (0, 'Active'),
-          (1, 'Historial'),
+          (1, 'Historical'),
          )
 
 DEV_STATES = (
@@ -92,8 +92,8 @@ class Configuration(PolymorphicModel):
 
     experiment = models.ForeignKey(Experiment)
     device = models.ForeignKey(Device)
-    status = models.PositiveSmallIntegerField(default=0, choices=CONF_STATES)
-    date = models.DateTimeField(auto_now=True, blank=True)
+    type = models.PositiveSmallIntegerField(default=0, choices=CONF_TYPES)
+    created = models.DateTimeField(auto_now_add=True, blank=True)
     
 #     parameters = models.TextField(default='{}')
     class Meta:
