@@ -18,7 +18,7 @@ DEV_TYPES = (
     ('', 'Select a device type'),
     ('rc', 'Radar Controller'),
     ('dds', 'Direct Digital Synthesizer'),
-    ('jars', 'Jicamarca Radar System'),
+    ('jars', 'Jicamarca Radar Acquisition System'),
     ('usrp', 'Universal Software Radio Peripheral'),
     ('cgs', 'Clock Generator System'),
     ('abs', 'Automatic Beam Switching'),
@@ -39,7 +39,7 @@ class DeviceType(models.Model):
         db_table = 'db_device_types'
     
     def __unicode__(self):
-        return u'%s' % self.name
+        return u'%s' % self.get_name_display()
     
 class Device(models.Model):
 
@@ -58,7 +58,7 @@ class Device(models.Model):
         db_table = 'db_devices'
         
     def __unicode__(self):
-        return u'[%s]: %s | %s' % (self.device_type.name, self.name, self.ip_address)
+        return u'%s | %s' % (self.name, self.ip_address)
 
 class Campaign(models.Model):
 
@@ -73,7 +73,7 @@ class Campaign(models.Model):
         db_table = 'db_campaigns'
     
     def __unicode__(self):
-        return u'%s: %s - %s' % (self.name, self.start_date.date(), self.end_date.date())
+        return u'%s' % (self.name)
     
 class Experiment(models.Model):
 
@@ -86,16 +86,19 @@ class Experiment(models.Model):
         db_table = 'db_experiments'
     
     def __unicode__(self):
-        return u'[%s]: %s: %s - %s' % (self.campaign.name, self.name, self.start_time, self.end_time)
+        return u'[%s]: %s' % (self.campaign.name, self.name)
     
 class Configuration(PolymorphicModel):
 
     experiment = models.ForeignKey(Experiment)
     device = models.ForeignKey(Device)
     type = models.PositiveSmallIntegerField(default=0, choices=CONF_TYPES)
-    created = models.DateTimeField(auto_now_add=True, blank=True)
     
-#     parameters = models.TextField(default='{}')
+    created_date = models.DateTimeField(auto_now_add=True)
+    programmed_date = models.DateTimeField(auto_now=True)
+    
+    parameters = models.TextField(default='{}')
+    
     class Meta:
         db_table = 'db_configurations'
     

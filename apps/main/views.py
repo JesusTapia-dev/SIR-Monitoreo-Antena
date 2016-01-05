@@ -45,11 +45,12 @@ def devices(request):
     
     devices = Device.objects.all().order_by('device_type__name')
     
-    keys = ['id', 'device_type__name', 'name', 'ip_address']
+#     keys = ['id', 'device_type__name', 'name', 'ip_address']
+    keys = ['id', 'name', 'ip_address', 'device_type']
     
     kwargs = {}
     kwargs['device_keys'] = keys[1:]
-    kwargs['devices'] = devices.values(*keys)
+    kwargs['devices'] = devices#.values(*keys)
     kwargs['title'] = 'Device'
     kwargs['suptitle'] = 'List'
     kwargs['button'] = 'New Device'
@@ -138,7 +139,7 @@ def campaigns(request):
     
     kwargs = {}
     kwargs['campaign_keys'] = keys[1:]
-    kwargs['campaigns'] = campaigns.values(*keys)
+    kwargs['campaigns'] = campaigns#.values(*keys)
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = 'List'
     kwargs['button'] = 'New Campaign'
@@ -229,14 +230,14 @@ def campaign_delete(request, id_camp):
 
 def experiments(request):
     
-    campaigns = Experiment.objects.all().order_by('start_time')
+    experiment_list = Experiment.objects.all().order_by('campaign')
     
-    keys = ['id', 'campaign__name', 'name', 'start_time', 'end_time']
+    keys = ['id', 'name', 'start_time', 'end_time', 'campaign']
     
     kwargs = {}
     
     kwargs['experiment_keys'] = keys[1:]
-    kwargs['experiments'] = campaigns.values(*keys)
+    kwargs['experiments'] = experiment_list#.values(*keys)
     
     kwargs['title'] = 'Experiment'
     kwargs['suptitle'] = 'List'
@@ -333,14 +334,16 @@ def experiment_delete(request, id_exp):
 
 def dev_confs(request):
     
-    configurations = Configuration.objects.all().order_by('device__device_type')
+    configurations = Configuration.objects.all().order_by('experiment')
     
-    keys = ['id', 'device__device_type__name', 'device__name', 'experiment__campaign__name', 'experiment__name']
+#     keys = ['id', 'device__device_type__name', 'device__name', 'experiment__campaign__name', 'experiment__name']
     
+    keys = ['id', 'device', 'experiment']
+
     kwargs = {}
     
     kwargs['configuration_keys'] = keys[1:]
-    kwargs['configurations'] = configurations.values(*keys)
+    kwargs['configurations'] = configurations#.values(*keys)
     
     kwargs['title'] = 'Configuration'
     kwargs['suptitle'] = 'List'
