@@ -14,7 +14,10 @@
   {% bootstrap_form form layout='horizontal' size='medium' %}
   <div style="clear: both;"></div>
   <br>
-  <button type="submit" class="btn btn-primary pull-right">{{button}}</button>
+  <div class="pull-right">
+  <button type="button" class="btn btn-primary" onclick="{% if previous %}window.location.replace('{{ previous }}');{% else %}history.go(-1);{% endif %}">Cancel</button>
+  <button type="submit" class="btn btn-primary">{{button}}</button>
+  </div>
 </form>
 {% endblock %}
 

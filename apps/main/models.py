@@ -106,4 +106,7 @@ class Configuration(PolymorphicModel):
         return u'[%s - %s]: %s' % (self.experiment.campaign.name,
                                 self.experiment.name,
                                 self.device.name) 
+    def get_absolute_url(self):
+        from django.core.urlresolvers import reverse
+        return reverse('url_%s_conf' % self.device.device_type.name, args=[str(self.id)])
     
