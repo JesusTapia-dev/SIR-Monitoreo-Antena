@@ -455,3 +455,20 @@ def dev_conf_delete(request, id_conf):
           'url_cancel':'url_dev_conf', 'id_item':id_conf}
     
     return render(request, 'item_delete.html', kwargs)
+
+def sidebar(conf):
+    
+    experiments = Experiment.objects.filter(campaign=conf.experiment.campaign)
+    configurations = Configuration.objects.filter(experiment=conf.experiment)
+    
+    exp_keys = ['id', 'campaign', 'name', 'start_time', 'end_time']
+    conf_keys = ['id', 'device__name', 'device__device_type__name', 'device__ip_address']
+    
+    kwargs = {}
+    kwargs['experiment_keys'] = exp_keys[1:]
+    kwargs['experiments'] = experiments.values(*exp_keys)
+    
+    kwargs['configuration_keys'] = conf_keys[1:]
+    kwargs['configurations'] = configurations.values(*conf_keys)
+    
+    return kwargs

@@ -1,4 +1,6 @@
 
+import json
+
 from polymorphic import PolymorphicModel
 
 from django.db import models
@@ -45,16 +47,24 @@ class RCConfiguration(Configuration):
         if lines:
             return max([line.position for line in lines])
 
+    def get_refs_lines(self):
+        
+        lines = RCLine.objects.filter(rc_configuration=self.pk, line_type__name='tx')
+        return [(line.pk, line.get_name()) for line in lines]
+
 class RCLineCode(models.Model):
     
-    name = models.CharField(choices=LINE_TYPES, max_length=40)
+    name = models.CharField(max_length=40)
     bits_per_code = models.PositiveIntegerField(default=0)
     number_of_codes = models.PositiveIntegerField(default=0)
     codes = models.TextField(blank=True, null=True)
     
     class Meta:
         db_table = 'rc_line_codes'
-        
+        ordering = ('name',)
+    
+    def __unicode__(self):
+        return u'%s' % self.name    
 
 class RCLineType(models.Model):
     
@@ -87,9 +97,11 @@ class RCLine(models.Model):
         
         chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         
-        if self.line_type.name in ('tx', 'code', 'tr'):
-            return '%s%s' % (self.line_type.name.upper(), chars[self.position])
-        
-        return self.line_type.name.upper()
-
-
+        if self.line_type.name in ('tx', 'tr',):
+            return '%s %s' % (self.line_type.name.upper(), chars[self.position])
+        elif self.line_type.name in ('codes', 'windows',):
+            pk = json.loads(self.params)['TX_ref']
+            ref = RCLine.objects.get(pk=pk)
+            return '%s %s' % (self.line_type.name.upper(), chars[ref.position])
+        else:
+            return self.line_type.name.upper()

@@ -1,12 +1,13 @@
 import json
 
 from django.contrib import messages
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 
 from apps.main.models import Configuration, Experiment
+from apps.main.views import sidebar
 
-from .models import RCConfiguration, RCLine
-from .forms import RCConfigurationForm, RCLineForm, RCLineViewForm
+from .models import RCConfiguration, RCLine, RCLineType
+from .forms import RCConfigurationForm, RCLineForm, RCLineViewForm, RCLineEditForm
 
 
 def conf(request, id):
@@ -29,17 +30,7 @@ def conf(request, id):
     kwargs['button'] = 'Edit Configuration'
     
     ###### SIDEBAR ######
-    experiments = Experiment.objects.filter(campaign=conf.experiment.campaign)
-    configurations = Configuration.objects.filter(experiment=conf.experiment)
-    
-    exp_keys = ['id', 'campaign', 'name', 'start_time', 'end_time']
-    conf_keys = ['id', 'device__name', 'device__device_type__name', 'device__ip_address']
-    
-    kwargs['experiment_keys'] = exp_keys[1:]
-    kwargs['experiments'] = experiments.values(*exp_keys)
-    
-    kwargs['configuration_keys'] = conf_keys[1:]
-    kwargs['configurations'] = configurations.values(*conf_keys)
+    kwargs.update(sidebar(conf))
     
     return render(request, 'rc_conf.html', kwargs)
 
@@ -56,30 +47,40 @@ def conf_edit(request, id):
         
         if form.is_valid():
             form.save()
-            return redirect('url_rc_conf', id=id)
+            return redirect('url_dev_conf', id=id)
           
     kwargs = {}
+    kwargs['dev_conf'] = conf
     kwargs['form'] = form
     kwargs['title'] = 'Device Configuration'
     kwargs['suptitle'] = 'Edit'    
     kwargs['button'] = 'Update'
     kwargs['previous'] = conf.get_absolute_url()
+    
+    kwargs.update(sidebar(conf))
+    
     return render(request, 'rc_conf_edit.html', kwargs)
 
 
-def add_line(request, id):
+def add_line(request, conf_id, line_type_id=None):
     
-    conf = get_object_or_404(RCConfiguration, pk=id)
+    conf = get_object_or_404(RCConfiguration, pk=conf_id)
     
     if request.method=='GET':
-        form = RCLineForm(initial={'rc_configuration':conf.id})
+        if line_type_id:
+            line_type = get_object_or_404(RCLineType, pk=line_type_id)
+            form = RCLineForm(initial={'rc_configuration':conf_id, 'line_type': line_type_id},
+                              extra_fields=json.loads(line_type.params))
+        else:
+            form = RCLineForm(initial={'rc_configuration':conf_id})
         
     if request.method=='POST':
-        form = RCLineForm(request.POST)
+        line_type = get_object_or_404(RCLineType, pk=line_type_id)
+        form = RCLineForm(request.POST, extra_fields=json.loads(line_type.params))
         
         if form.is_valid():
             form.save()
-            return redirect('url_rc_conf', id=id)
+            return redirect(conf.get_absolute_url())
           
     kwargs = {}
     kwargs['form'] = form
@@ -87,6 +88,10 @@ def add_line(request, id):
     kwargs['suptitle'] = 'Add Line'
     kwargs['button'] = 'Add'
     kwargs['previous'] = conf.get_absolute_url()
+    kwargs['dev_conf'] = conf
+    
+    kwargs.update(sidebar(conf))
+    
     return render(request, 'rc_add_line.html', kwargs)
 
 
@@ -119,36 +124,77 @@ def remove_line(request, conf_id, line_id):
     return render(request, 'confirm.html', kwargs)
 
 
-def line_up(request, conf_id, line_id):
+def edit_lines(request, conf_id):
     
     conf = get_object_or_404(RCConfiguration, pk=conf_id)
-    line = get_object_or_404(RCLine, pk=line_id)
     
-    if line:
-        ch = line.channel
-        if ch-1>=0:
-            line0 = RCLine.objects.get(rc_configuration=conf, channel=ch-1)
-            line0.channel = ch
-            line0.save()
-            line.channel = ch-1 
-            line.save()            
+    if request.method=='GET':         
+        lines = RCLine.objects.filter(rc_configuration=conf).order_by('channel')
+        for line in lines:
+            line_type = get_object_or_404(RCLineType, pk=line.line_type.id)
+            extra_fields = json.loads(line_type.params)
+            for item in extra_fields:
+                params = json.loads(line.params)
+                item['value'] = params[item['name']]
+            line.form = RCLineEditForm(initial={'rc_configuration':conf_id, 'line_type': line.line_type.id, 'line': line.id},
+                                   extra_fields=extra_fields)
     
-    return redirect(conf.get_absolute_url())
-
-
-def line_down(request, conf_id, line_id):
-    
-    conf = get_object_or_404(RCConfiguration, pk=conf_id)
-    line = get_object_or_404(RCLine, pk=line_id)
+    elif request.method=='POST':
+        data = {}
+        for label,value in request.POST.items():
+            if '|' not in label:
+                continue
+            id, name = label.split('|')
+            if id in data:
+                data[id][name]=value
+            else:
+                data[id] = {name:value}
+                
+        for id, params in data.items():
+            line = RCLine.objects.get(pk=id)
+            line.params = json.dumps(params)
+            line.save()    
         
-    if line:
-        ch = line.channel
-        if ch+1<RCLine.objects.filter(rc_configuration=conf).count():
-            line1 = RCLine.objects.get(rc_configuration=conf, channel=ch+1)
-            line1.channel = ch
-            line1.save()
-            line.channel = ch+1 
+        return redirect(conf.get_absolute_url())    
+    
+    kwargs = {}
+    kwargs['dev_conf'] = conf
+    kwargs['rc_lines'] = lines
+    kwargs['edit'] = True
+    
+    kwargs['title'] = 'RC Configuration'
+    kwargs['suptitle'] = 'Edit Lines'    
+    kwargs['button'] = 'Update'
+    kwargs['previous'] = conf.get_absolute_url()
+
+    
+    kwargs.update(sidebar(conf))
+    
+    return render(request, 'rc_edit_lines.html', kwargs)
+    
+
+def update_lines(request, conf_id):
+    
+    conf = get_object_or_404(RCConfiguration, pk=conf_id)
+    
+    if request.method=='POST':
+        ch = 0
+        for item in request.POST['items'].split('&'):            
+            line = RCLine.objects.get(pk=item.split('=')[-1])
+            line.channel = ch
             line.save()
-                    
+            ch += 1          
+            
+        lines = RCLine.objects.filter(rc_configuration=conf).order_by('channel')
+    
+        for line in lines:
+            line.form = RCLineViewForm(extra_fields=json.loads(line.params))
+        
+        html = render(request, 'rc_lines.html', {'rc_lines':lines})
+        data = {'html': html.content}
+        
+        return HttpResponse(json.dumps(data), content_type="application/json")
     return redirect(conf.get_absolute_url())
+    
+
 
