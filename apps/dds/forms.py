@@ -2,15 +2,28 @@ from django import forms
 from apps.main.models import Device
 from .models import DDSConfiguration
 
-from django.core.validators import MinValueValidator, MaxValueValidator
+# from django.core.validators import MinValueValidator, MaxValueValidator
 
 class DDSConfigurationForm(forms.ModelForm):
     
-    frequency = forms.FloatField(label='Frequency (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)])
-    phase = forms.FloatField(label='Phase (Degrees)', validators=[MinValueValidator(0), MaxValueValidator(360)])
+#     frequency_bin = forms.IntegerField(label='Frequency (Binary)', required=False)
+#     phase_bin = forms.IntegerField(label='Phase (Binary)', required=False)
     
-    frequency_mod = forms.FloatField(label='Frequency (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], required=False)
-    phase_mod = forms.FloatField(label='Phase (Degrees)', validators=[MinValueValidator(0), MaxValueValidator(360)], required=False)
+#     frequency_mod_bin = forms.IntegerField(label='Frequency Mod (Binary)', required=False)
+#     phase_mod_bin = forms.IntegerField(label='Phase Mod (Binary)', required=False)
+    
+    field_order = ['experiment', 'device',
+                   'clock', 'multiplier',
+                   'frequency',
+                   'frequency_bin',
+                   'phase',
+                   'phase_bin',
+                   'amplitude_chA', 'amplitude_chB',
+                   'modulation',
+                   'frequency_mod',
+                   'frequency_mod_bin',
+                   'phase_mod',
+                   'phase_mod_bin']
     
     def __init__(self, *args, **kwargs):
         #request = kwargs.pop('request')
@@ -21,10 +34,11 @@ class DDSConfigurationForm(forms.ModelForm):
         if instance and instance.pk:
             
             devices = Device.objects.filter(device_type__name='dds')
-            items = devices.values('id', 'name', 'device_type__name', 'ip_address')
             
             self.fields['experiment'].widget.attrs['readonly'] = True
-            self.fields['device'].widget.choices = [(item['id'], '[%s]: %s | %s' % (item['device_type__name'], item['name'], item['ip_address'])) for item in items]
+            self.fields['experiment'].widget.choices = [(instance.experiment.id, instance.experiment)]
+            
+            self.fields['device'].widget.choices = [(device.id, device) for device in devices]
     
     
     def clean(self):
@@ -33,4 +47,4 @@ class DDSConfigurationForm(forms.ModelForm):
 
     class Meta:
         model = DDSConfiguration
-        fields = ('experiment', 'device', 'clock', 'multiplier', 'modulation')
+        exclude = ('type','parameters')

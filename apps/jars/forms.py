@@ -6,10 +6,15 @@ class JARSConfigurationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(JARSConfigurationForm, self).__init__(*args, **kwargs)
         instance = getattr(self, 'instance', None)
+        
         if instance and instance.pk:
-            self.fields['experiment'].widget.attrs['disabled'] = True
-            self.fields['device'].widget.choices = [(item['id'], '%s | %s' % (item['device_type__name'], item['ip_address'])) for item in Device.objects.filter(device_type__name='jars').values('id', 'device_type__name', 'ip_address')]
-    
+            devices = Device.objects.filter(device_type__name='jars')
+            
+            self.fields['experiment'].widget.attrs['readonly'] = True
+            self.fields['experiment'].widget.choices = [(instance.experiment.id, instance.experiment)]
+            
+            self.fields['device'].widget.choices = [(device.id, device) for device in devices]
+            
     class Meta:
         model = JARSConfiguration
         exclude = ('parameters', 'status')

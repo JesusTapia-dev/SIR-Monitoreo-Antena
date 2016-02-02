@@ -1,1 +1,90 @@
 {% extends "dev_conf_edit.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load main_tags %}
+
+{% block extra-js%}
+<script type="text/javascript">
+
+	$("#bt_cancel").click(function() {
+	    document.location = "{% url 'url_dds_conf' id_dev%}";
+	  });
+	
+	$("#bt_read").click(function() {
+	    document.location = "{% url 'url_dds_conf_read' id_dev%}";
+	  });
+  
+    $("#id_clock").on('change', function() {
+    	updateFrequencies();
+    });
+    
+    $("#id_multiplier").on('change', function() {
+    	updateFrequencies();
+    });
+    
+    $("#id_frequency").on('change', function() {
+    	updateBinaryFrequencies();
+    });
+    
+    $("#id_frequency_bin").on('change', function() {
+    	updateFrequencies();
+    });
+    
+    $("#id_frequency_mod").on('change', function() {
+    	updateBinaryFrequencies();
+    });
+    
+    $("#id_frequency_mod_bin").on('change', function() {
+    	updateFrequencies();
+    });
+    
+    function updateBinaryFrequencies() {
+    	
+    	var clock = $("#id_clock").val();
+    	var multiplier = $("#id_multiplier").val();
+    	var freq = $("#id_frequency").val();
+    	var freq_mod = $("#id_frequency_mod").val();
+    	
+    	var mclock = clock*multiplier;
+    	var k = Math.pow(2,48)/mclock;
+    	
+    	var freq_bin = parseInt(freq*k);
+    	var freq_mod_bin = parseInt(freq_mod*k);
+    	
+    	$("#id_frequency_bin").val(freq_bin);
+    	$("#id_frequency_mod_bin").val(freq_mod_bin);
+    	
+    	freq = freq_bin/k;
+    	freq_mod = freq_mod_bin/k;
+    	
+    	$("#id_frequency").val(freq);
+    	$("#id_frequency_mod").val(freq_mod);
+    	
+    }
+   
+    function updateFrequencies() {
+    	
+    	var clock = $("#id_clock").val();
+    	var multiplier = $("#id_multiplier").val();
+    	var freq_bin = $("#id_frequency_bin").val();
+    	var freq_mod_bin = $("#id_frequency_mod_bin").val();
+    	
+    	var mclock = clock*multiplier;
+    	var k = Math.pow(2,48)/mclock;
+
+    	var freq = parseInt(freq_bin)/k;
+    	var freq_mod = parseInt(freq_mod_bin)/k;
+    	
+    	$("#id_frequency").val(freq);
+    	$("#id_frequency_mod").val(freq_mod);
+    	
+    	var freq_bin = parseInt(freq*k);
+    	var freq_mod_bin = parseInt(freq_mod*k);
+    	
+    	$("#id_frequency_bin").val(freq_bin);
+    	$("#id_frequency_mod_bin").val(freq_mod_bin);
+    	
+    }
+    
+</script>
+{% endblock %}

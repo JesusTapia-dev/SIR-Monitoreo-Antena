@@ -9,15 +9,17 @@
 {% block content-suptitle %}{{suptitle}}{% endblock %}
 
 {% block content %}
+
 <table class="table table-bordered">
+<tr><th>Status</th><td>{%if connected == True %} &#9752; Connected  {% else %} &#9940; Disconnected {% endif %}</td></tr>
 {% for key in dev_conf_keys %}
 <tr><th>{{key|title}}</th><td>{{dev_conf|attr:key}}</td></tr>
 {% endfor %}
 </table>
+
 <button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_send">Send</button>
 <button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_export">Export</button>
 <button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_edit">Edit</button>
-<br></br>
 <br></br>
 {% endblock %}
 

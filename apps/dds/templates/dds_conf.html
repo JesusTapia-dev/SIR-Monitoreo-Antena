@@ -1,4 +1,53 @@
-{% extends "dev_conf.html" %}
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load main_tags %}
+
+{% block conf-active %}active{% endblock %}
+
+{% block content-title %}{{title}}{% endblock %}
+{% block content-suptitle %}{{suptitle}}{% endblock %}
+
+{% block content %}
+
+<table class="table table-bordered">
+	<tr><th>Status</th><td>{%if connected == True %} &#9752; Connected  {% else %} &#9940; Disconnected {% endif %}</td></tr>
+	{% for item in dev_conf_keys %}
+	<tr><th>{{item|title}}</th><td>{{dev_conf|attr:item}}</td></tr>
+	{% endfor %}
+	
+	<tr><th>{{form.modulation.label}}</th><td>{{form.modulation}}</td></tr>
+	
+	{% if form.modulation.value == 0 %}
+	{% endif %}
+	
+	{% if form.modulation.value == 1 %}
+	<tr><th>{{form.frequency_mod.label}}</th><td>{{form.frequency_mod.value}}</td></tr>
+	{% endif %}
+	
+	{% if form.modulation.value == 2 %}
+	<tr><th>{{form.frequency_mod.label}}</th><td>{{form.frequency_mod.value}}</td></tr>
+	{% endif %}
+	
+	{% if form.modulation.value == 3 %}
+	<tr><th>{{form.frequency_mod.label}}</th><td>{{form.frequency_mod.value}}</td></tr>
+	{% endif %}
+	
+	{% if form.modulation.value == 4 %}
+	<tr><th>{{form.phase_mod.label}}</th><td>{{form.phase_mod.value}}</td></tr>
+	{% endif %}
+</table>
+
+<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_read">Read</button>
+<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_write">Write</button>
+<button class="btn btn-primary pull-left" style="margin-left: 10px" id="bt_export">Export</button>
+<button class="btn btn-primary pull-left" style="margin-left: 10px" id="bt_edit">Edit</button>
+<br></br>
+{% endblock %}
+
+{% block sidebar%}
+{% include "sidebar_devices.html" %}
+{% endblock %}
 
 {% block extra-js%}
 <script type="text/javascript">
@@ -6,6 +55,14 @@
   $("#bt_edit").click(function() {
     document.location = "{% url 'url_edit_dds_conf' dev_conf.id%}";
   });
+  
+  $("#bt_write").click(function() {
+	    document.location = "{% url 'url_dds_conf_write' dev_conf.id%}";
+	  });
+  
+  $("#bt_read").click(function() {
+	    document.location = "{% url 'url_dds_conf_read' dev_conf.id%}";
+	  });
   
 </script>
 {% endblock %}

@@ -465,6 +465,9 @@ def sidebar(conf):
     conf_keys = ['id', 'device__name', 'device__device_type__name', 'device__ip_address']
     
     kwargs = {}
+    
+    kwargs['dev_conf'] = conf
+    
     kwargs['experiment_keys'] = exp_keys[1:]
     kwargs['experiments'] = experiments.values(*exp_keys)
     
