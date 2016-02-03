@@ -20,6 +20,10 @@ class CGSConfiguration(Configuration):
     #clk_in = models.PositiveIntegerField(default=10e6)
     #mult = models.PositiveIntegerField(default=40)
     #div = models.PositiveIntegerField(default=1)
+    
+    def verify_frequencies(self):
+        
+        return True
 
 
     class Meta:

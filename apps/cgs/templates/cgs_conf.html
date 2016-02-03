@@ -1,11 +1,1 @@
 {% extends "dev_conf.html" %}
-
-{% block extra-js%}
-<script type="text/javascript">
-  
-  $("#bt_edit").click(function() {
-    document.location = "{% url 'url_edit_cgs_conf' dev_conf.id 1%}";
-  });
-  
-</script>
-{% endblock %}
