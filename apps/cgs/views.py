@@ -1,51 +1,58 @@
-from django.shortcuts import render, render_to_response
-from django.template import RequestContext
+from django.shortcuts import redirect, render, get_object_or_404
 
-from .forms import CGSConfigurationForm
+from apps.main.models import Experiment, Configuration
 from .models import CGSConfiguration
-from apps.main.models import Device
+from .forms import CGSConfigurationForm
 # Create your views here.
 
-def configurate_frequencies(request, id=0):
+def cgs_conf(request, id_conf):
     
-    if id:
-        conf = CGSConfiguration.objects.get(pk=id)
-        devices = Device.objects.filter(configuration__experiment=conf.experiment)
-        devices = devices.values('configuration__id', 'device_type__name')
-        for device in devices:
-            if device['device_type__name']=='cgs':
-                device['active'] = 'active'
-                break
-        
-        device = device
+    conf = get_object_or_404(CGSConfiguration, pk=id_conf)
+    
+    kwargs = {}
+    kwargs['dev_conf'] = conf
+    kwargs['dev_conf_keys'] = ['experiment', 'device',
+                               'freq0', 'freq1',
+                               'freq2', 'freq3']
+    
+    kwargs['title'] = 'CGS Configuration'
+    kwargs['suptitle'] = 'Details'
+    
+    kwargs['button'] = 'Edit Configuration'
+    
+    ###### SIDEBAR ######
+    experiments = Experiment.objects.filter(campaign=conf.experiment.campaign)
+    configurations = Configuration.objects.filter(experiment=conf.experiment)
+    
+    exp_keys = ['id', 'campaign', 'name', 'start_time', 'end_time']
+    conf_keys = ['id', 'device__name', 'device__device_type__name', 'device__ip_address']
+    
+    kwargs['experiment_keys'] = exp_keys[1:]
+    kwargs['experiments'] = experiments.values(*exp_keys)
+    
+    kwargs['configuration_keys'] = conf_keys[1:]
+    kwargs['configurations'] = configurations.values(*conf_keys)
+    
+    return render(request, 'cgs_conf.html', kwargs)
+
+def cgs_conf_edit(request, id_conf):
+    
+    conf = get_object_or_404(CGSConfiguration, pk=id_conf)
+    
+    if request.method=='GET':
         form = CGSConfigurationForm(instance=conf)
-    else:
-        form = CGSConfigurationForm()
-
-    data = {
-        'form': form,
-        'device': device,
-        'devices':devices,
-        'title': ('YAP'),
-    }
-    
-    data['dev_conf'] = conf
-    data['dev_conf_keys'] = ['experiment', 'device']
-    
-    if request.method == 'POST':
-        form = CGSConfigurationForm(request.POST) #, initial={'purchase_request':purchase_request}) 
+        
+    if request.method=='POST':
+        form = CGSConfigurationForm(request.POST, instance=conf)
+        
         if form.is_valid():
-            instance = form.save(commit=False)
-            #if 'quote' in request.FILES:
-            #    instance.quoe = request.FILES['quote']
-            instance.save()
-            form.save_m2m()
-            msg = _(u'The frequencies have been activated successfully.')
-            messages.success(request, msg, fail_silently=True)    
-            #return redirect(purchase_request.get_absolute_url())
-    else:
-        form = CGSConfigurationForm()           
+            form.save()
+            return redirect('url_cgs_conf', id_conf=id_conf)
+          
+    kwargs = {}
+    kwargs['form'] = form
+    kwargs['title'] = 'Device Configuration'
+    kwargs['suptitle'] = 'Edit'
+    kwargs['button'] = 'Update'
     
-    return render(request, 'cgs_conf.html', data)
-
-
+    return render(request, 'cgs_conf_edit.html', kwargs)
