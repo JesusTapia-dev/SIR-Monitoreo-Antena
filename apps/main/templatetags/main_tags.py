@@ -1,11 +1,25 @@
 from django.template.defaulttags import register
 
 @register.filter
-def attr(object, key):
-    if hasattr(object, key):
-        return getattr(object, key)
-    return object.get(key)
+def attr(instance, key):
+    
+    display_key = "get_" + key + "_display"
+    
+    if hasattr(instance, display_key):
+        return getattr(instance, display_key)()
+    
+    if hasattr(instance, key):
+        return getattr(instance, key)
+    
+    return instance.get(key)
 
 @register.filter
 def title(s):
     return s.replace('_', ' ').title()
+
+@register.simple_tag
+def get_verbose_field_name(instance, field_name):
+    """
+    Returns verbose_name for a field.
+    """
+    return instance._meta.get_field(field_name).verbose_name.title()

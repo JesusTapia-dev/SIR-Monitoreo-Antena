@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
+from django.contrib import messages
 
 from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm
 from apps.cgs.forms import CGSConfigurationForm
@@ -338,7 +339,7 @@ def dev_confs(request):
     
 #     keys = ['id', 'device__device_type__name', 'device__name', 'experiment__campaign__name', 'experiment__name']
     
-    keys = ['id', 'device', 'experiment']
+    keys = ['id', 'device', 'experiment', 'type', 'programmed_date']
 
     kwargs = {}
     
@@ -368,17 +369,7 @@ def dev_conf(request, id_conf):
     kwargs['button'] = 'Edit Configuration'
     
     ###### SIDEBAR ######
-    experiments = Experiment.objects.filter(campaign=conf.experiment.campaign)
-    configurations = Configuration.objects.filter(experiment=conf.experiment)
-    
-    exp_keys = ['id', 'campaign', 'name', 'start_time', 'end_time']
-    conf_keys = ['id', 'device__name', 'device__device_type__name', 'device__ip_address']
-    
-    kwargs['experiment_keys'] = exp_keys[1:]
-    kwargs['experiments'] = experiments.values(*exp_keys)
-    
-    kwargs['configuration_keys'] = conf_keys[1:]
-    kwargs['configurations'] = configurations.values(*conf_keys)
+    kwargs.update(sidebar(conf))
     
     return render(request, 'dev_conf.html', kwargs)
 
@@ -410,6 +401,9 @@ def dev_conf_new(request, id_exp=0):
     kwargs['suptitle'] = 'New'
     kwargs['button'] = 'Create'
     
+    ###### SIDEBAR ######
+    kwargs.update(sidebar(conf))
+    
     return render(request, 'dev_conf_edit.html', kwargs)
     
 def dev_conf_edit(request, id_conf):
@@ -437,7 +431,102 @@ def dev_conf_edit(request, id_conf):
     kwargs['suptitle'] = 'Edit'
     kwargs['button'] = 'Update'
     
+    ###### SIDEBAR ######
+    kwargs.update(sidebar(conf))
+    
     return render(request, 'dev_conf_edit.html', kwargs)
+
+def dev_conf_read(request, id_conf):
+    
+    conf = get_object_or_404(Configuration, pk=id_conf)
+    
+    DevConfModel = CONF_MODELS[conf.device.device_type.name]
+    dev_conf = DevConfModel.objects.get(pk=id_conf)
+    
+    kwargs = {}
+    kwargs['dev_conf'] = dev_conf
+    kwargs['dev_conf_keys'] = ['experiment', 'device']
+    
+    kwargs['title'] = 'Configuration'
+    kwargs['suptitle'] = 'Details'
+    
+    kwargs['button'] = 'Edit Configuration'
+    
+    ###### SIDEBAR ######
+    kwargs.update(sidebar(conf))
+    
+    messages.error(request, "Read View not implemented yet for this configuration")
+    
+    return render(request, 'dev_conf.html', kwargs)
+
+def dev_conf_write(request, id_conf):
+    
+    conf = get_object_or_404(Configuration, pk=id_conf)
+    
+    DevConfModel = CONF_MODELS[conf.device.device_type.name]
+    dev_conf = DevConfModel.objects.get(pk=id_conf)
+    
+    kwargs = {}
+    kwargs['dev_conf'] = dev_conf
+    kwargs['dev_conf_keys'] = ['experiment', 'device']
+    
+    kwargs['title'] = 'Configuration'
+    kwargs['suptitle'] = 'Details'
+    
+    kwargs['button'] = 'Edit Configuration'
+    
+    ###### SIDEBAR ######
+    kwargs.update(sidebar(conf))
+    
+    messages.error(request, "Write View not implemented yet for this configuration")
+    
+    return render(request, 'dev_conf.html', kwargs)
+
+def dev_conf_import(request, id_conf):
+    
+    conf = get_object_or_404(Configuration, pk=id_conf)
+    
+    DevConfModel = CONF_MODELS[conf.device.device_type.name]
+    dev_conf = DevConfModel.objects.get(pk=id_conf)
+    
+    kwargs = {}
+    kwargs['dev_conf'] = dev_conf
+    kwargs['dev_conf_keys'] = ['experiment', 'device']
+    
+    kwargs['title'] = 'Configuration'
+    kwargs['suptitle'] = 'Details'
+    
+    kwargs['button'] = 'Edit Configuration'
+    
+    ###### SIDEBAR ######
+    kwargs.update(sidebar(conf))
+    
+    messages.error(request, "Import View not implemented yet for this configuration")
+    
+    return render(request, 'dev_conf.html', kwargs)
+
+def dev_conf_export(request, id_conf):
+    
+    conf = get_object_or_404(Configuration, pk=id_conf)
+    
+    DevConfModel = CONF_MODELS[conf.device.device_type.name]
+    dev_conf = DevConfModel.objects.get(pk=id_conf)
+    
+    kwargs = {}
+    kwargs['dev_conf'] = dev_conf
+    kwargs['dev_conf_keys'] = ['experiment', 'device']
+    
+    kwargs['title'] = 'Configuration'
+    kwargs['suptitle'] = 'Details'
+    
+    kwargs['button'] = 'Edit Configuration'
+    
+    ###### SIDEBAR ######
+    kwargs.update(sidebar(conf))
+    
+    messages.error(request, "Export View not implemented yet for this configuration")
+    
+    return render(request, 'dev_conf.html', kwargs)
 
 def dev_conf_delete(request, id_conf):
      
@@ -454,12 +543,15 @@ def dev_conf_delete(request, id_conf):
     kwargs = {'object':conf, 'conf_active':'active',
           'url_cancel':'url_dev_conf', 'id_item':id_conf}
     
+    ###### SIDEBAR ######
+    kwargs.update(sidebar(conf))
+    
     return render(request, 'item_delete.html', kwargs)
 
 def sidebar(conf):
     
     experiments = Experiment.objects.filter(campaign=conf.experiment.campaign)
-    configurations = Configuration.objects.filter(experiment=conf.experiment)
+    configurations = Configuration.objects.filter(experiment=conf.experiment, type=0)
     
     exp_keys = ['id', 'campaign', 'name', 'start_time', 'end_time']
     conf_keys = ['id', 'device__name', 'device__device_type__name', 'device__ip_address']

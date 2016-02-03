@@ -11,16 +11,26 @@
 {% block content %}
 
 <table class="table table-bordered">
-<tr><th>Status</th><td>{%if connected == True %} &#9752; Connected  {% else %} &#9940; Disconnected {% endif %}</td></tr>
-{% for key in dev_conf_keys %}
-<tr><th>{{key|title}}</th><td>{{dev_conf|attr:key}}</td></tr>
-{% endfor %}
+	<tr>
+		<th>Status</th>
+		<td>{%if connected == True %} &#9752; Connected  {% else %} &#9940; Disconnected {% endif %}</td>
+	</tr>
+	
+	{% for key in dev_conf_keys %}
+	<tr>
+		<th>{% get_verbose_field_name dev_conf key %}</th>
+		<td>{{dev_conf|attr:key}}</td>
+	</tr>
+	{% endfor %}
 </table>
 
-<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_send">Send</button>
 <button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_export">Export</button>
+<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_import">Import</button>
 <button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_edit">Edit</button>
-<br></br>
+
+<button class="btn btn-primary pull-left" style="margin-left: 10px" id="bt_read">Read</button>
+<button class="btn btn-primary pull-left" style="margin-left: 10px" id="bt_write">Write</button>
+
 {% endblock %}
 
 {% block sidebar%}
@@ -31,7 +41,23 @@
 <script type="text/javascript">
   
   $("#bt_edit").click(function() {
-    document.location = "{% url 'url_edit_dev_conf' dev_conf.id%}";
+    document.location = "{{ dev_conf.get_absolute_url_edit }}";
+  });
+ 
+  $("#bt_read").click(function() {
+    document.location = "{{ dev_conf.get_absolute_url_read }}";
+  });
+
+  $("#bt_write").click(function() {
+    document.location = "{{ dev_conf.get_absolute_url_write }}";
+  });
+
+  $("#bt_import").click(function() {
+    document.location = "{{ dev_conf.get_absolute_url_import }}";
+  });
+
+  $("#bt_export").click(function() {
+    document.location = "{{ dev_conf.get_absolute_url_export }}";
   });
   
 </script>

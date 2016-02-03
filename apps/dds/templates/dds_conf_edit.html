@@ -4,6 +4,7 @@
 {% load main_tags %}
 
 {% block extra-js%}
+<script src="{% static 'js/dds_conversion.js' %}"></script>
 <script type="text/javascript">
 
 	$("#bt_cancel").click(function() {
@@ -11,7 +12,7 @@
 	  });
 	
 	$("#bt_read").click(function() {
-	    document.location = "{% url 'url_dds_conf_read' id_dev%}";
+	    document.location = "{% url 'url_read_dds_conf' id_dev%}";
 	  });
   
     $("#id_clock").on('change', function() {
@@ -46,16 +47,15 @@
     	var freq_mod = $("#id_frequency_mod").val();
     	
     	var mclock = clock*multiplier;
-    	var k = Math.pow(2,48)/mclock;
     	
-    	var freq_bin = parseInt(freq*k);
-    	var freq_mod_bin = parseInt(freq_mod*k);
+    	var freq_bin = freq2Binary(mclock, freq);
+    	var freq_mod_bin = freq2Binary(mclock, freq_mod);
     	
     	$("#id_frequency_bin").val(freq_bin);
     	$("#id_frequency_mod_bin").val(freq_mod_bin);
     	
-    	freq = freq_bin/k;
-    	freq_mod = freq_mod_bin/k;
+    	freq = binary2Freq(mclock, freq_bin);
+    	freq_mod = binary2Freq(mclock, freq_mod_bin);
     	
     	$("#id_frequency").val(freq);
     	$("#id_frequency_mod").val(freq_mod);
@@ -70,19 +70,12 @@
     	var freq_mod_bin = $("#id_frequency_mod_bin").val();
     	
     	var mclock = clock*multiplier;
-    	var k = Math.pow(2,48)/mclock;
 
-    	var freq = parseInt(freq_bin)/k;
-    	var freq_mod = parseInt(freq_mod_bin)/k;
+    	var freq = binary2Freq(mclock, freq_bin);
+    	var freq_mod = binary2Freq(mclock, freq_mod_bin);
     	
     	$("#id_frequency").val(freq);
     	$("#id_frequency_mod").val(freq_mod);
-    	
-    	var freq_bin = parseInt(freq*k);
-    	var freq_mod_bin = parseInt(freq_mod*k);
-    	
-    	$("#id_frequency_bin").val(freq_bin);
-    	$("#id_frequency_mod_bin").val(freq_mod_bin);
     	
     }
     

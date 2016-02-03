@@ -20,7 +20,7 @@
 	{% endfor%}
   </tr>
   {% for item in configurations %}
-	<tr class="clickable-row" data-href="/{{item.device.device_type.name}}/{{item.id}}/">
+	<tr class="clickable-row" data-href="{{item.get_absolute_url}}">
 	  <td>{{ forloop.counter }}</td>
 	  {% for key in configuration_keys %}
 	  <td>{{ item|attr:key }}</td>
