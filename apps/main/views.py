@@ -440,93 +440,33 @@ def dev_conf_read(request, id_conf):
     
     conf = get_object_or_404(Configuration, pk=id_conf)
     
-    DevConfModel = CONF_MODELS[conf.device.device_type.name]
-    dev_conf = DevConfModel.objects.get(pk=id_conf)
+    messages.error(request, "Read View not implemented yet")
     
-    kwargs = {}
-    kwargs['dev_conf'] = dev_conf
-    kwargs['dev_conf_keys'] = ['experiment', 'device']
-    
-    kwargs['title'] = 'Configuration'
-    kwargs['suptitle'] = 'Details'
-    
-    kwargs['button'] = 'Edit Configuration'
-    
-    ###### SIDEBAR ######
-    kwargs.update(sidebar(conf))
-    
-    messages.error(request, "Read View not implemented yet for this configuration")
-    
-    return render(request, 'dev_conf.html', kwargs)
+    return redirect('url_dev_conf', id_conf=conf.id)
 
 def dev_conf_write(request, id_conf):
     
     conf = get_object_or_404(Configuration, pk=id_conf)
     
-    DevConfModel = CONF_MODELS[conf.device.device_type.name]
-    dev_conf = DevConfModel.objects.get(pk=id_conf)
+    messages.error(request, "Write View not implemented yet")
     
-    kwargs = {}
-    kwargs['dev_conf'] = dev_conf
-    kwargs['dev_conf_keys'] = ['experiment', 'device']
-    
-    kwargs['title'] = 'Configuration'
-    kwargs['suptitle'] = 'Details'
-    
-    kwargs['button'] = 'Edit Configuration'
-    
-    ###### SIDEBAR ######
-    kwargs.update(sidebar(conf))
-    
-    messages.error(request, "Write View not implemented yet for this configuration")
-    
-    return render(request, 'dev_conf.html', kwargs)
+    return redirect('url_dev_conf', id_conf=conf.id)
 
 def dev_conf_import(request, id_conf):
     
     conf = get_object_or_404(Configuration, pk=id_conf)
     
-    DevConfModel = CONF_MODELS[conf.device.device_type.name]
-    dev_conf = DevConfModel.objects.get(pk=id_conf)
+    messages.error(request, "Import View not implemented yet")
     
-    kwargs = {}
-    kwargs['dev_conf'] = dev_conf
-    kwargs['dev_conf_keys'] = ['experiment', 'device']
-    
-    kwargs['title'] = 'Configuration'
-    kwargs['suptitle'] = 'Details'
-    
-    kwargs['button'] = 'Edit Configuration'
-    
-    ###### SIDEBAR ######
-    kwargs.update(sidebar(conf))
-    
-    messages.error(request, "Import View not implemented yet for this configuration")
-    
-    return render(request, 'dev_conf.html', kwargs)
+    return redirect('url_dev_conf', id_conf=conf.id)
 
 def dev_conf_export(request, id_conf):
     
     conf = get_object_or_404(Configuration, pk=id_conf)
     
-    DevConfModel = CONF_MODELS[conf.device.device_type.name]
-    dev_conf = DevConfModel.objects.get(pk=id_conf)
+    messages.error(request, "Export View not implemented yet")
     
-    kwargs = {}
-    kwargs['dev_conf'] = dev_conf
-    kwargs['dev_conf_keys'] = ['experiment', 'device']
-    
-    kwargs['title'] = 'Configuration'
-    kwargs['suptitle'] = 'Details'
-    
-    kwargs['button'] = 'Edit Configuration'
-    
-    ###### SIDEBAR ######
-    kwargs.update(sidebar(conf))
-    
-    messages.error(request, "Export View not implemented yet for this configuration")
-    
-    return render(request, 'dev_conf.html', kwargs)
+    return redirect('url_dev_conf', id_conf=conf.id)
 
 def dev_conf_delete(request, id_conf):
      

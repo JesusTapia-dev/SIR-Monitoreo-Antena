@@ -2,11 +2,13 @@
 from django.contrib import messages
 from django.shortcuts import redirect, render, get_object_or_404
 
+from django.core.exceptions import ValidationError
+
 # from apps.main.models import Experiment, Configuration
 from apps.main.views import sidebar
 
 from .models import DDSConfiguration
-from .forms import DDSConfigurationForm
+from .forms import DDSConfigurationForm, UploadFileForm
 # Create your views here.
 
 from radarsys_api import dds
@@ -18,7 +20,11 @@ def dds_conf(request, id_conf):
     answer = dds.echo(ip=str(conf.device.ip_address), port=conf.device.port_address)
     
     kwargs = {}
+    
     kwargs['connected'] = (answer[0] == "1")
+    
+    if not kwargs['connected']:
+        messages.error(request, message=answer)
     
     kwargs['dev_conf'] = conf
     kwargs['dev_conf_keys'] = ['experiment', 'device',
@@ -87,8 +93,8 @@ def dds_conf_write(request, id_conf):
                              freq_regA=conf.frequency_bin,
                              freq_regB=conf.frequency_mod_bin,
                              modulation=conf.modulation,
-                             phaseA=conf.phase,
-                             phaseB=conf.phase_mod,
+                             phaseA=conf.phase2binary(conf.phase),
+                             phaseB=conf.phase2binary(conf.phase_mod),
                              amplitude0=conf.amplitude_ch_A,
                              amplitude1=conf.amplitude_ch_B)
     
@@ -101,9 +107,9 @@ def dds_conf_write(request, id_conf):
         conf.save()
         
     else:
-        messages.error(request, answer)
+        messages.error(request, "Could not write the parameters to this device")
     
-    return redirect('url_dds_conf', id_conf=conf.id)
+    return redirect('url_dds_conf', id_conf=id_conf)
 
 def dds_conf_read(request, id_conf):
     
@@ -120,7 +126,7 @@ def dds_conf_read(request, id_conf):
                 dds_model.save()
                 return redirect('url_dds_conf', id_conf=conf.id)
         
-        messages.error(request, "Parameters could not be saved. Invalid parameters")
+        messages.error(request, "Parameters could not be saved")
         
         data = {}
     
@@ -130,25 +136,22 @@ def dds_conf_read(request, id_conf):
                           port=conf.device.port_address)
         
         if not parms:
-            messages.error(request, "Could not read parameters from Device")
+            messages.error(request, "Could not read dds parameters from this device")
             return redirect('url_dds_conf', id_conf=conf.id)
             
-        data = {'experiment' : conf.experiment.id,
-                'device' : conf.device.id,
-                'clock' : conf.clock,
-                'multiplier' : parms[0],
+        data = {'multiplier' : parms[0],
                 'frequency' : conf.binary2freq(parms[1], parms[0]*conf.clock),
                 'frequency_bin' : parms[1],
-                'phase' : parms[4],
+                'phase' : conf.binary2phase(parms[4]),
                 'amplitude_ch_A' : parms[6],
                 'amplitude_ch_B' : parms[7],
                 'modulation' : parms[3],
                 'frequency_mod' : conf.binary2freq(parms[2], parms[0]*conf.clock),
                 'frequency_mod_bin' : parms[2],
-                'phase_mod' : parms[5],
+                'phase_mod' : conf.binary2phase(parms[5]),
                 }
     
-    form = DDSConfigurationForm(data)
+        form = DDSConfigurationForm(initial=data, instance=conf)
     
     kwargs = {}
     kwargs['id_dev'] = conf.id
@@ -161,3 +164,58 @@ def dds_conf_read(request, id_conf):
     kwargs.update(sidebar(conf))
     
     return render(request, 'dds_conf_edit.html', kwargs)
+
+def dds_conf_import(request, id_conf):
+    
+    conf = get_object_or_404(DDSConfiguration, pk=id_conf)
+    
+    if request.method == 'POST':
+        file_form = UploadFileForm(request.POST, request.FILES)
+        
+        if file_form.is_valid():
+            
+            if conf.update_from_file(request.FILES['file']):
+            
+                try:
+                    conf.full_clean()
+                except ValidationError as e:
+                    messages.error(request, e)
+                else:
+                    conf.save()
+                    
+                    messages.success(request, "Parameters imported from file: '%s'." %request.FILES['file'].name)
+                    messages.warning(request, "Clock Input could not be read from file, using %3.2fMhz by default. Please update it to its real value" %conf.clock)
+                    return redirect('url_dds_conf', id_conf=conf.id)
+        
+        messages.error(request, "Could not import parameters from file")
+        
+    else:
+        file_form = UploadFileForm()
+    
+    kwargs = {}
+    kwargs['id_dev'] = conf.id
+    kwargs['title'] = 'Device Configuration'
+    kwargs['form'] = file_form
+    kwargs['suptitle'] = 'Importing file'
+    kwargs['button'] = 'Import'
+    
+    kwargs.update(sidebar(conf))
+    
+    return render(request, 'dds_conf_import.html', kwargs)
+
+def handle_uploaded_file(f):
+    
+    data = {'multiplier' : 5,
+            'frequency' : 49.92,
+            'frequency_bin' : 45678,
+            'phase' : 0,
+            'amplitude_ch_A' : 1024,
+            'amplitude_ch_B' : 2014,
+            'modulation' : 1,
+            'frequency_mod' : 0,
+            'frequency_mod_bin' : 0,
+            'phase_mod' : 180,
+            }
+    
+    
+    return data

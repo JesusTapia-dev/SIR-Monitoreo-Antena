@@ -2,6 +2,8 @@ from itertools import chain
 from django.db import models
 from polymorphic import PolymorphicModel
 
+from django.core.urlresolvers import reverse
+
 CONF_TYPES = (
           (0, 'Active'),
           (1, 'Historical'),
@@ -107,25 +109,20 @@ class Configuration(PolymorphicModel):
                                 self.experiment.name,
                                 self.device.name) 
     def get_absolute_url(self):
-        from django.core.urlresolvers import reverse
+        
         return reverse('url_%s_conf' % self.device.device_type.name, args=[str(self.id)])
     
     def get_absolute_url_edit(self):
-        from django.core.urlresolvers import reverse
         return reverse('url_edit_%s_conf' % self.device.device_type.name, args=[str(self.id)])
     
     def get_absolute_url_import(self):
-        from django.core.urlresolvers import reverse
         return reverse('url_import_%s_conf' % self.device.device_type.name, args=[str(self.id)])
     
     def get_absolute_url_export(self):
-        from django.core.urlresolvers import reverse
         return reverse('url_export_%s_conf' % self.device.device_type.name, args=[str(self.id)])
     
     def get_absolute_url_write(self):
-        from django.core.urlresolvers import reverse
         return reverse('url_write_%s_conf' % self.device.device_type.name, args=[str(self.id)])
     
     def get_absolute_url_read(self):
-        from django.core.urlresolvers import reverse
         return reverse('url_read_%s_conf' % self.device.device_type.name, args=[str(self.id)])

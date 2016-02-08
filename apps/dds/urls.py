@@ -6,6 +6,6 @@ urlpatterns = (
     url(r'^(?P<id_conf>-?\d+)/edit/$', 'apps.dds.views.dds_conf_edit', name='url_edit_dds_conf'),
     url(r'^(?P<id_conf>-?\d+)/write/$', 'apps.dds.views.dds_conf_write', name='url_write_dds_conf'),
     url(r'^(?P<id_conf>-?\d+)/read/$', 'apps.dds.views.dds_conf_read', name='url_read_dds_conf'),
-    url(r'^(?P<id_conf>-?\d+)/import/$', 'apps.main.views.dev_conf_import', name='url_import_dds_conf'),
+    url(r'^(?P<id_conf>-?\d+)/import/$', 'apps.dds.views.dds_conf_import', name='url_import_dds_conf'),
     url(r'^(?P<id_conf>-?\d+)/export/$', 'apps.main.views.dev_conf_export', name='url_export_dds_conf'),
 )

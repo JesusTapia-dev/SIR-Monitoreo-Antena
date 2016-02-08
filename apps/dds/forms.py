@@ -4,6 +4,11 @@ from .models import DDSConfiguration
 
 # from django.core.validators import MinValueValidator, MaxValueValidator
 
+EXT_TYPES = (
+    ('dds', '.dds'),
+    ('json', '.json'),
+)
+
 class DDSConfigurationForm(forms.ModelForm):
     
 #     frequency_bin = forms.IntegerField(label='Frequency (Binary)', required=False)
@@ -48,3 +53,8 @@ class DDSConfigurationForm(forms.ModelForm):
     class Meta:
         model = DDSConfiguration
         exclude = ('type','parameters')
+
+class UploadFileForm(forms.Form):
+    
+    title = forms.ChoiceField(label='Extension Type', choices=EXT_TYPES)
+    file = forms.FileField()
