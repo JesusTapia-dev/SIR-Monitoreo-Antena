@@ -72,18 +72,26 @@ def cgs_conf_write(request, id_conf):
     port=conf.device.port_address
     
     #Frequencies from form
-    f0 = conf.freq0
-    f1 = conf.freq1
-    f2 = conf.freq2
-    f3 = conf.freq3
-    headers = {'User-Agent': 'Mozilla/5.0'}
+    f0 = int(conf.freq0)
+    f1 = int(conf.freq1)
+    f2 = int(conf.freq2)
+    f3 = int(conf.freq3)
     post_data = {"f0":f0, "f1":f1, "f2":f2, "f3":f3}
     route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
-    session = requests.session()
+    r = requests.post(route, post_data)
+    text = r.text
+    text = text.split(',')
     
-    r = session.post(route, data= post_data,headers= headers)
-    print r.url
-    print r.text
+    try: 
+        title = text[0]
+        status = text[1]
+        status_ok = r.status_code 
+        if status_ok == 200 or title == "okay":
+            messages.success(request, status)
+        else:
+            messages.error(request, status)
+    except:
+        messages.error(request, "An hardware error was found")
     
     
     
@@ -120,6 +128,7 @@ def cgs_conf_read(request, id_conf):
         response = response.split(";")
         icon = response[0]
         status = response[-1] 
+        print r.text
         #"icon" could be: "alert" or "okay"
         if  "okay" in icon:
             messages.success(request, status)
@@ -136,6 +145,7 @@ def cgs_conf_read(request, id_conf):
         f2 = frequencies.get("f2")
         f3 = frequencies.get("f3")
         print f0,f1,f2,f3
+        
             
         if not response:
             messages.error(request, "Could not read parameters from Device")
