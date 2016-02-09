@@ -18,6 +18,23 @@ def cgs_conf(request, id_conf):
     port=conf.device.port_address
     
     kwargs = {}
+    
+    if request.method=='GET':
+        #r: response = icon, status
+        route = "http://" + str(ip) + ":" + str(port) + "/status/ad9548"
+        r = requests.get(route)
+        response = str(r.text)
+        response = response.split(";")
+        icon = response[0]
+        status = response[-1] 
+        #print r.text
+        #"icon" could be: "alert" or "okay"
+        if  "okay" in icon or "alert" in icon:
+            kwargs['connected'] = True
+    
+    if not kwargs['connected']:
+        messages.error(request, message=status)
+    
     kwargs['dev_conf'] = conf
     kwargs['dev_conf_keys'] = ['experiment', 'device',
                                'freq0', 'freq1',
