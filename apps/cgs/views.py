@@ -126,7 +126,9 @@ def cgs_conf_read(request, id_conf):
         else:
             messages.error(request, status)
         #Get Frequencies
-        frequencies = requests.get('http://10.10.10.175:8080/frequencies/')
+        route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
+        #frequencies = requests.get('http://10.10.10.175:8080/frequencies/')
+        frequencies = requests.get(route)
         frequencies = frequencies.json()
         frequencies = frequencies.get("Frecuencias")
         f0 = frequencies.get("f0")
@@ -160,3 +162,11 @@ def cgs_conf_read(request, id_conf):
     kwargs.update(sidebar(conf))
     
     return render(request, 'cgs_conf_edit.html', kwargs)
+
+#def cgs_conf_export(request, id_conf):
+    
+#    conf = get_object_or_404(CGSConfiguration, pk=id_conf)
+#    ip=conf.device.ip_address
+#    port=conf.device.port_address
+    
+#    return render(request, 'cgs_conf_export.html', kwargs)
