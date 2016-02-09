@@ -76,10 +76,12 @@ def cgs_conf_write(request, id_conf):
     f1 = conf.freq1
     f2 = conf.freq2
     f3 = conf.freq3
-    
+    headers = {'User-Agent': 'Mozilla/5.0'}
     post_data = {"f0":f0, "f1":f1, "f2":f2, "f3":f3}
     route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
-    r = requests.post(route, post_data)
+    session = requests.session()
+    
+    r = session.post(route, data= post_data,headers= headers)
     print r.url
     print r.text
     
@@ -145,7 +147,7 @@ def cgs_conf_read(request, id_conf):
                 'freq3' : f3,
                 }
     
-    form = CGSConfigurationForm(data)
+        form = CGSConfigurationForm(initial = data)
     
     kwargs = {}
     kwargs['id_dev'] = conf.id
