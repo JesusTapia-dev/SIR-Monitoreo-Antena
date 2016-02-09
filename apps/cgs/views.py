@@ -29,8 +29,16 @@ def cgs_conf(request, id_conf):
         status = response[-1] 
         #print r.text
         #"icon" could be: "alert" or "okay"
-        if  "okay" in icon or "alert" in icon:
+        # Si hay alerta pero esta conectado
+        if "alert" in icon:
+            if "Starting Up" in status: #No Esta conectado
+                kwargs['connected'] = False
+            else:
+                kwargs['connected'] = True
+        elif "okay" in icon:
             kwargs['connected'] = True
+        else:
+            kwargs['connected'] = False
     
     if not kwargs['connected']:
         messages.error(request, message=status)
