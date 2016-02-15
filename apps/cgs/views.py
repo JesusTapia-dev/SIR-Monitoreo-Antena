@@ -1,5 +1,6 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
+from django.http import HttpResponse
 
 from apps.main.models import Experiment, Configuration
 from .models import CGSConfiguration
@@ -76,21 +77,14 @@ def cgs_conf_edit(request, id_conf):
         form = CGSConfigurationForm(request.POST, instance=conf)
         
         if form.is_valid():
+            if conf.freq0 == None:  conf.freq0 = 0
+            if conf.freq1 == None:  conf.freq1 = 0
+            if conf.freq2 == None:  conf.freq2 = 0
+            if conf.freq3 == None:  conf.freq3 = 0
+            
             conf = form.save(commit=False)
             
             if conf.verify_frequencies():
-                
-                if conf.freq0 == None:  conf.freq0 = 0
-                if conf.freq1 == None:  conf.freq0 = 0
-                if conf.freq2 == None:  conf.freq0 = 0
-                if conf.freq3 == None:  conf.freq0 = 0
-                
-                
-                data = {'f0': str(conf.freq0), 'f1': str(conf.freq1), 
-                        'f2': str(conf.freq2), 'f3': str(conf.freq3)}
-                json_data = json.dumps(data)
-                conf.parameters = json_data
-                
                 conf.save()
                 return redirect('url_cgs_conf', id_conf=conf.id)
             
@@ -116,14 +110,10 @@ def cgs_conf_write(request, id_conf):
     port=conf.device.port_address
     
     #Frequencies from form
-    if conf.freq0 == None:  conf.freq0 = 0
-    if conf.freq1 == None:  conf.freq0 = 0
-    if conf.freq2 == None:  conf.freq0 = 0
-    if conf.freq3 == None:  conf.freq0 = 0
-    f0 = int(conf.freq0)
-    f1 = int(conf.freq1)
-    f2 = int(conf.freq2)
-    f3 = int(conf.freq3)
+    f0 = conf.freq0
+    f1 = conf.freq1
+    f2 = conf.freq2
+    f3 = conf.freq3
     
     try:            
         post_data = {"f0":f0, "f1":f1, "f2":f2, "f3":f3}
@@ -302,9 +292,31 @@ def cgs_conf_export(request, id_conf):
     ip=conf.device.ip_address
     port=conf.device.port_address
     
-    if request.method=='POST':
-        return HttpResponse(conf.parameters, content_type="application/json")
+    if request.method=='GET':
+        data = {"Frequencies": [
+                    ["freq0", conf.freq0],
+                    ["freq1", conf.freq1],
+                    ["freq2", conf.freq2],
+                    ["freq3", conf.freq3]
+               ]}
+        json_data = json.dumps(data)
+        conf.parameters = json_data
+        response = HttpResponse(conf.parameters, content_type="application/json")
+        response['Content-Disposition'] = 'attachment; filename="data.json"'
+                
+        return response
     
-    return render(request, 'cgs_conf.html')
-    #return redirect(conf.get_absolute_url())
-
+    kwargs = {}
+    kwargs['dev_conf'] = conf
+    kwargs['dev_conf_keys'] = ['experiment', 'device',
+                               'freq0', 'freq1',
+                               'freq2', 'freq3']
+    
+    kwargs['title'] = 'CGS Configuration'
+    kwargs['suptitle'] = 'Details'
+    
+    kwargs['button'] = 'Edit Configuration'
+    
+    ###### SIDEBAR ######
+    kwargs.update(sidebar(conf))
+    return render(request, 'cgs_conf.html', kwargs)

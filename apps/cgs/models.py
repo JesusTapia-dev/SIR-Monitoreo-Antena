@@ -7,14 +7,14 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from apps.main.models import Device, Experiment
 
 from files import read_json_file
-# Create your models here.
+# Create your models here. validators=[MinValueValidator(62.5e6), MaxValueValidator(450e6)]
 
 class CGSConfiguration(Configuration):
     
-    freq0 = models.FloatField(verbose_name='Frequency 0',validators=[MinValueValidator(62.5e6), MaxValueValidator(450e6)], blank=True, null=True)
-    freq1 = models.FloatField(verbose_name='Frequency 1',validators=[MinValueValidator(62.5e6), MaxValueValidator(450e6)], blank=True, null=True)
-    freq2 = models.FloatField(verbose_name='Frequency 2',validators=[MinValueValidator(62.5e6), MaxValueValidator(450e6)], blank=True, null=True)
-    freq3 = models.FloatField(verbose_name='Frequency 3',validators=[MinValueValidator(62.5e6), MaxValueValidator(450e6)], blank=True, null=True)
+    freq0 = models.IntegerField(verbose_name='Frequency 0',validators=[MinValueValidator(0), MaxValueValidator(450e6)], blank=True, null=True)
+    freq1 = models.IntegerField(verbose_name='Frequency 1',validators=[MinValueValidator(0), MaxValueValidator(450e6)], blank=True, null=True)
+    freq2 = models.IntegerField(verbose_name='Frequency 2',validators=[MinValueValidator(0), MaxValueValidator(450e6)], blank=True, null=True)
+    freq3 = models.IntegerField(verbose_name='Frequency 3',validators=[MinValueValidator(0), MaxValueValidator(450e6)], blank=True, null=True)
     #jfreqs = JSONField(default={"frequencies":[{"f0":freq0,"f1":freq1,"f2":freq2,"f3":freq3}]}, blank=True)
     
     
