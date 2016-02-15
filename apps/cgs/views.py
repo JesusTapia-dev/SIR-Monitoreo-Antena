@@ -4,7 +4,7 @@ from django.contrib import messages
 from apps.main.models import Experiment, Configuration
 from .models import CGSConfiguration
 
-from .forms import CGSConfigurationForm
+from .forms import CGSConfigurationForm, UploadFileForm
 from apps.main.views import sidebar
 
 import requests
@@ -243,6 +243,58 @@ def cgs_conf_read(request, id_conf):
     kwargs.update(sidebar(conf))
     
     return render(request, 'cgs_conf_edit.html', kwargs)
+
+def cgs_conf_import(request, id_conf):
+    
+    conf = get_object_or_404(CGSConfiguration, pk=id_conf)
+    
+    if request.method == 'POST':
+        file_form = UploadFileForm(request.POST, request.FILES)
+                
+        if file_form.is_valid():
+            
+            try:
+                if conf.update_from_file(request.FILES['file']):
+                
+                    try:
+                        conf.full_clean()
+                    except ValidationError as e:
+                        messages.error(request, e)
+                    else:
+                        conf.save()
+                        
+                        messages.success(request, "Parameters imported from file: '%s'." %request.FILES['file'].name)
+                        #messages.warning(request,"")
+                        return redirect('url_cgs_conf', id_conf=conf.id)
+            except:
+                messages.error(request, "No JSON object could be decoded.")
+                
+        messages.error(request, "Could not import parameters from file")
+        
+    else:
+        file_form = UploadFileForm(initial={'title': '.json'})
+        
+    
+    kwargs = {}
+    kwargs['id_dev'] = conf.id
+    kwargs['title'] = 'Device Configuration'
+    kwargs['form'] = file_form
+    kwargs['suptitle'] = 'Importing file'
+    kwargs['button'] = 'Import'
+    
+    kwargs.update(sidebar(conf))
+    
+    return render(request, 'cgs_conf_import.html', kwargs)
+
+def handle_uploaded_file(f):
+    
+    data = {'freq0' : 62500000,
+            'freq1' : 62500000,
+            'freq2' : 62500000,
+            'freq3' : 62500000,
+            }
+        
+    return data
 
 def cgs_conf_export(request, id_conf):
     
