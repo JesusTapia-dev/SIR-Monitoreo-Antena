@@ -125,29 +125,32 @@ def cgs_conf_write(request, id_conf):
     f2 = int(conf.freq2)
     f3 = int(conf.freq3)
     
-                
-    post_data = {"f0":f0, "f1":f1, "f2":f2, "f3":f3}
-    route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
-    r = requests.post(route, post_data)
-    text = r.text
-    text = text.split(',')
+    try:            
+        post_data = {"f0":f0, "f1":f1, "f2":f2, "f3":f3}
+        route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
+        r = requests.post(route, post_data)
+        text = r.text
+        text = text.split(',')
     
-    try: 
-        if len(text)>1:
-            title = text[0]
-            status = text[1]
-            status_ok = r.status_code 
-            if title == "okay":
-                messages.success(request, status)
+        try: 
+            if len(text)>1:
+                title = text[0]
+                status = text[1]
+                status_ok = r.status_code 
+                if title == "okay":
+                    messages.success(request, status)
+                else:
+                    messages.error(request, status)
+                    
             else:
-                messages.error(request, status)
-                
-        else:
-            title = text[0]
-            messages.error(request, title)
+                title = text[0]
+                messages.error(request, title)
+            
+        except:
+            messages.error(request, "An hardware error was found.")
             
     except:
-        messages.error(request, "An hardware error was found")
+        messages.error(request, "Could not write parameters.")
     
     
     
