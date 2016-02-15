@@ -9,7 +9,7 @@ from apps.main.views import sidebar
 
 import requests
 import json
-from __builtin__ import None
+#from __builtin__ import None
 # Create your views here.
 
 def cgs_conf(request, id_conf):
@@ -225,6 +225,7 @@ def cgs_conf_read(request, id_conf):
                     'freq2' : None,
                     'freq3' : None,
                     }
+            return redirect('url_cgs_conf', id_conf=conf.id)
     
         form = CGSConfigurationForm(initial = data)
     
