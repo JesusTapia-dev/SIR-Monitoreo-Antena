@@ -1,8 +1,13 @@
-from itertools import chain
 from django.db import models
 from polymorphic import PolymorphicModel
 
 from django.core.urlresolvers import reverse
+
+CONF_STATES = (
+          (0, 'Disconnected'),
+          (1, 'Connected'),
+          (1, 'Running'),
+         )
 
 CONF_TYPES = (
           (0, 'Active'),
@@ -27,15 +32,22 @@ DEV_TYPES = (
 )
 
 # Create your models here.
+
+class Location(models.Model):
+
+    name = models.CharField(max_length = 30)
+    description = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'db_location'
+    
+    def __unicode__(self):
+        return u'%s' % self.name
     
 class DeviceType(models.Model):
 
     name = models.CharField(max_length = 10, choices = DEV_TYPES, default = 'rc')
-    
     description = models.TextField(blank=True, null=True)
-    
-#     info = models.TextField(blank=True, null=True) 
-#     status = models.PositiveSmallIntegerField(default=1, choices=STATES)
 
     class Meta:
         db_table = 'db_device_types'
@@ -46,15 +58,13 @@ class DeviceType(models.Model):
 class Device(models.Model):
 
     device_type = models.ForeignKey(DeviceType)
+#     location = models.ForeignKey(Location)
+    
     name = models.CharField(max_length=40, default='')
     ip_address = models.GenericIPAddressField(protocol='IPv4', default='0.0.0.0')
     port_address = models.PositiveSmallIntegerField(default=2000)
     description = models.TextField(blank=True, null=True)
     status = models.PositiveSmallIntegerField(default=0, choices=DEV_STATES)
-    
-#     serial_number = models.CharField(max_length=40, default='')
-#     mac_address = models.CharField(max_length = 20, null=True, blank=True)
-    
 
     class Meta:
         db_table = 'db_devices'
@@ -94,7 +104,11 @@ class Configuration(PolymorphicModel):
 
     experiment = models.ForeignKey(Experiment)
     device = models.ForeignKey(Device)
+    
+    status = models.PositiveSmallIntegerField(default=0, choices=CONF_STATES)
     type = models.PositiveSmallIntegerField(default=0, choices=CONF_TYPES)
+    
+    name = models.CharField(max_length=40, default='')
     
     created_date = models.DateTimeField(auto_now_add=True)
     programmed_date = models.DateTimeField(auto_now=True)

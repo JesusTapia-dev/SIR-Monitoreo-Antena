@@ -11,9 +11,9 @@
 {% block content %}
 
 {% if form.is_multipart %}
-    <form class="form" enctype="multipart/form-data" method="post" action="">
+    <form class="form" enctype="multipart/form-data" method="post" action="{{action}}">
 {% else %}
-    <form class="form" method="post" action="">
+    <form class="form" method="post" action="{{action}}">
 {% endif %}
 
   {% csrf_token %}

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.contrib import messages
 
-from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm
+from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm
 from apps.cgs.forms import CGSConfigurationForm
 from apps.jars.forms import JARSConfigurationForm
 from apps.usrp.forms import USRPConfigurationForm
@@ -9,7 +9,7 @@ from apps.abs.forms import ABSConfigurationForm
 from apps.rc.forms import RCConfigurationForm
 from apps.dds.forms import DDSConfigurationForm
 
-from .models import Campaign, Experiment, Device, Configuration
+from .models import Campaign, Experiment, Device, Configuration, Location
 from apps.cgs.models import CGSConfiguration
 from apps.jars.models import JARSConfiguration
 from apps.usrp.models import USRPConfiguration
@@ -42,12 +42,99 @@ def index(request):
     
     return render(request, 'index.html', kwargs)
 
+def locations(request):
+    
+    locations = Location.objects.all().order_by('name')
+    
+    keys = ['id', 'name', 'description']
+    
+    kwargs = {}
+    kwargs['location_keys'] = keys[1:]
+    kwargs['locations'] = locations
+    kwargs['title'] = 'Location'
+    kwargs['suptitle'] = 'List'
+    kwargs['button'] = 'New Location'
+    
+    return render(request, 'locations.html', kwargs)
+
+def location(request, id_loc):
+    
+    location = get_object_or_404(Location, pk=id_loc)
+    
+    kwargs = {}
+    kwargs['location'] = location
+    kwargs['location_keys'] = ['name', 'description']
+    
+    kwargs['title'] = 'Location'
+    kwargs['suptitle'] = 'Details'
+    
+    return render(request, 'location.html', kwargs)
+
+def location_new(request):
+    
+    if request.method == 'GET':
+        form = LocationForm()
+        
+    if request.method == 'POST':
+        form = LocationForm(request.POST)
+        
+        if form.is_valid():
+            form.save()
+            return redirect('url_locations')
+        
+    kwargs = {}
+    kwargs['form'] = form
+    kwargs['title'] = 'Location'
+    kwargs['suptitle'] = 'New'
+    kwargs['button'] = 'Create'
+        
+    return render(request, 'location_edit.html', kwargs)
+
+def location_edit(request, id_loc):
+    
+    location = get_object_or_404(Location, pk=id_loc)
+    
+    if request.method=='GET':
+        form = LocationForm(instance=location)
+         
+    if request.method=='POST':
+        form = LocationForm(request.POST, instance=location)
+        
+        if form.is_valid():
+            form.save()
+            return redirect('url_locations')
+          
+    kwargs = {}
+    kwargs['form'] = form
+    kwargs['title'] = 'Location'
+    kwargs['suptitle'] = 'Edit'
+    kwargs['button'] = 'Update'
+    
+    return render(request, 'location_edit.html', kwargs)
+
+def location_delete(request, id_loc):
+    
+    location = get_object_or_404(Location, pk=id_loc)
+    
+    if request.method=='POST':
+        
+        if request.user.is_staff:
+            location.delete()
+            return redirect('url_locations')
+        
+        return HttpResponse("Not enough permission to delete this object")
+    
+    kwargs = {'object':location, 'loc_active':'active',
+              'url_cancel':'url_location', 'id_item':id_loc}
+    
+    return render(request, 'item_delete.html', kwargs)
+
 def devices(request):
     
     devices = Device.objects.all().order_by('device_type__name')
     
 #     keys = ['id', 'device_type__name', 'name', 'ip_address']
-    keys = ['id', 'name', 'ip_address', 'device_type']
+    keys = ['id', 'name', 'ip_address', 'port_address', 'device_type']
     
     kwargs = {}
     kwargs['device_keys'] = keys[1:]
@@ -68,8 +155,6 @@ def device(request, id_dev):
     
     kwargs['title'] = 'Device'
     kwargs['suptitle'] = 'Details'
-    
-    kwargs['button'] = 'Add Device'
     
     return render(request, 'device.html', kwargs)
 
@@ -251,21 +336,23 @@ def experiment(request, id_exp):
     experiment = get_object_or_404(Experiment, pk=id_exp)
     
     experiments = Experiment.objects.filter(campaign=experiment.campaign)
-    configurations = Configuration.objects.filter(experiment=experiment)
+    configurations = Configuration.objects.filter(experiment=experiment, type=0)
     
     kwargs = {}
     
     exp_keys = ['id', 'campaign', 'name', 'start_time', 'end_time']
-    conf_keys = ['id', 'device__name', 'device__device_type__name', 'device__ip_address']
+    conf_keys = ['id', 'device__name', 'device__device_type', 'device__ip_address', 'device__port_address']
     
+    conf_labels = ['id', 'device__name', 'device_type', 'ip_address', 'port_address']
     
     kwargs['experiment_keys'] = exp_keys[1:]
     kwargs['experiment'] = experiment
     
     kwargs['experiments'] = experiments.values(*exp_keys)
     
+    kwargs['configuration_labels'] = conf_labels[1:]
     kwargs['configuration_keys'] = conf_keys[1:]
-    kwargs['configurations'] = configurations.values(*conf_keys)
+    kwargs['configurations'] = configurations #.values(*conf_keys)
     
     kwargs['title'] = 'Experiment'
     kwargs['suptitle'] = 'Details'
@@ -335,7 +422,7 @@ def experiment_delete(request, id_exp):
 
 def dev_confs(request):
     
-    configurations = Configuration.objects.all().order_by('experiment')
+    configurations = Configuration.objects.all().order_by('type', 'device__device_type', 'experiment')
     
 #     keys = ['id', 'device__device_type__name', 'device__name', 'experiment__campaign__name', 'experiment__name']
     
@@ -385,14 +472,15 @@ def dev_conf_new(request, id_exp=0):
             experiment = Experiment.objects.get(pk=request.POST['experiment'])
             device = Device.objects.get(pk=request.POST['device'])
             
-            exp_devices = Device.objects.filter(configuration__experiment=experiment)
+            exp_devices = Device.objects.filter(configuration__experiment=experiment,
+                                                configuration__type=0)
               
             if device.id not in exp_devices.values('id',):
               
                 DevConfModel = CONF_MODELS[device.device_type.name]
                 conf = DevConfModel(experiment=experiment, device=device)
                 conf.save()
-                
+    
                 return redirect('url_experiment', id_exp=experiment.id)
         
     kwargs = {}
@@ -400,9 +488,6 @@ def dev_conf_new(request, id_exp=0):
     kwargs['title'] = 'Configuration'
     kwargs['suptitle'] = 'New'
     kwargs['button'] = 'Create'
-    
-    ###### SIDEBAR ######
-    kwargs.update(sidebar(conf))
     
     return render(request, 'dev_conf_edit.html', kwargs)
     
@@ -494,7 +579,7 @@ def sidebar(conf):
     configurations = Configuration.objects.filter(experiment=conf.experiment, type=0)
     
     exp_keys = ['id', 'campaign', 'name', 'start_time', 'end_time']
-    conf_keys = ['id', 'device__name', 'device__device_type__name', 'device__ip_address']
+    conf_keys = ['id', 'device']
     
     kwargs = {}
     
@@ -504,6 +589,6 @@ def sidebar(conf):
     kwargs['experiments'] = experiments.values(*exp_keys)
     
     kwargs['configuration_keys'] = conf_keys[1:]
-    kwargs['configurations'] = configurations.values(*conf_keys)
+    kwargs['configurations'] = configurations #.values(*conf_keys)
     
     return kwargs

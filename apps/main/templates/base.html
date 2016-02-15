@@ -37,13 +37,15 @@
       </div>
       <div class="collapse navbar-collapse" id="navigationbar">
         <ul class="nav navbar-nav"> 
-          <li class=" dropdown {% block dev-active %}{% endblock %}"><a href="{% url 'url_devices'%}">Devices</a>
-          </li>
           <li class=" dropdown {% block camp-active %}{% endblock %}"><a href="{% url 'url_campaigns'%}">Campaigns</a>
           </li>
           <li class=" dropdown {% block exp-active %}{% endblock %}"><a href="{% url 'url_experiments'%}">Experiments</a>
           </li>
-          <li class=" dropdown {% block conf-active %}{% endblock %}"><a href="{% url 'url_dev_confs'%}">Device Configurations</a>
+          <li class=" dropdown {% block conf-active %}{% endblock %}"><a href="{% url 'url_dev_confs'%}">Configurations</a>
+          </li>
+          <li class=" dropdown {% block dev-active %}{% endblock %}"><a href="{% url 'url_devices'%}">Devices</a>
+          </li>
+          <li class=" dropdown {% block loc-active %}{% endblock %}"><a href="{% url 'url_locations'%}">Locations</a>
           </li>
         </ul>
         <ul class="nav navbar-nav navbar-right">

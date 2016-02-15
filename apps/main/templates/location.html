@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load main_tags %}
+
+{% block loc-active %}active{% endblock %}
+
+{% block content-title %}{{title}}{% endblock %}
+{% block content-suptitle %}{{suptitle}}{% endblock %}
+
+{% block content %}
+<table class="table table-bordered">
+{% for key in location_keys %}
+<tr><th>{{key|title}}</th><td>{{location|attr:key}}</td></tr>
+{% endfor %}
+</table>
+<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_edit">Edit</button>
+<br></br>
+<br></br>
+{% endblock %}
+
+{% block sidebar%}
+{% include "sidebar_devices.html" %}
+{% endblock %}
+
+{% block extra-js%}
+<script type="text/javascript">
+  
+  $("#bt_edit").click(function() {
+    document.location = "{% url 'url_edit_location' location.id%}";
+  });
+  
+</script>
+{% endblock %}

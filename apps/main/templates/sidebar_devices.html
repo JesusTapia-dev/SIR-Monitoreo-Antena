@@ -52,7 +52,7 @@
 		  </div>
 		  <div class="list-group"> 
 		  {% for item in configurations %}
-		    <a href="/{{item.device__device_type__name}}/{{item.id}}" class="list-group-item {{item.active}}">{{item.device__name}}</a>      
+		    <a href="{{item.get_absolute_url}}" class="list-group-item {{item.active}}">{{item.device.name}}</a>      
 		  {% endfor %}
 		  </div>
 		</div>
@@ -90,7 +90,7 @@
 		  </div>
 		  <div class="list-group"> 
 		  {% for item in configurations %}
-		    <a href="/{{item.device__device_type__name}}/{{item.id}}" class="list-group-item {%if item.id == dev_conf.id%}active{%endif%}">{{item.device__name}}</a>      
+		    <a href="{{item.get_absolute_url}}" class="list-group-item {%if item.id == dev_conf.id%}active{%endif%}">{{item.device.name}}</a>      
 		  {% endfor %}
 		  </div>
 		</div>

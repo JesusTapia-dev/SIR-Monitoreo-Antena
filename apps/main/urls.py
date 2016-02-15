@@ -1,6 +1,12 @@
 from django.conf.urls import url
 
 urlpatterns = (
+    url(r'^location/new/$', 'apps.main.views.location_new', name='url_add_location'),
+    url(r'^location/$', 'apps.main.views.locations', name='url_locations'),
+    url(r'^location/(?P<id_loc>-?\d+)/$', 'apps.main.views.location', name='url_location'),
+    url(r'^location/(?P<id_loc>-?\d+)/edit/$', 'apps.main.views.location_edit', name='url_edit_location'),
+    url(r'^location/(?P<id_loc>-?\d+)/delete/$', 'apps.main.views.location_delete', name='url_delete_location'),
+    
     url(r'^device/new/$', 'apps.main.views.device_new', name='url_add_device'),
     url(r'^device/$', 'apps.main.views.devices', name='url_devices'),
     url(r'^device/(?P<id_dev>-?\d+)/$', 'apps.main.views.device', name='url_device'),
@@ -24,4 +30,5 @@ urlpatterns = (
     url(r'^dev_conf/(?P<id_conf>-?\d+)/$', 'apps.main.views.dev_conf', name='url_dev_conf'),
     url(r'^dev_conf/(?P<id_conf>-?\d+)/edit/$', 'apps.main.views.dev_conf_edit', name='url_edit_dev_conf'),
     url(r'^dev_conf/(?P<id_conf>-?\d+)/delete/$', 'apps.main.views.dev_conf_delete', name='url_delete_dev_conf'),
+    
 )

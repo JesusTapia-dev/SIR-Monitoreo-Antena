@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.safestring import mark_safe
         
-from .models import DeviceType, Device, Experiment, Campaign, Configuration
+from .models import DeviceType, Device, Experiment, Campaign, Configuration, Location
 
 def add_empty_choice(choices, pos=0, label='-----'):
     if len(choices)>0:
@@ -45,6 +45,11 @@ class ExperimentForm(forms.ModelForm):
         model = Experiment
         fields = ['campaign', 'name', 'start_time', 'end_time']
 
+class LocationForm(forms.ModelForm):
+    class Meta:
+        model = Location
+        exclude = ['']
+        
 class DeviceForm(forms.ModelForm):
     class Meta:
         model = Device
@@ -57,4 +62,3 @@ class ConfigurationForm(forms.ModelForm):
         
 class DeviceTypeForm(forms.Form):
     device_type = forms.ChoiceField(choices=add_empty_choice(DeviceType.objects.all().order_by('name').values_list('id', 'name')))
-    
