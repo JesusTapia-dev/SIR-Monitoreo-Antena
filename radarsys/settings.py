@@ -46,7 +46,6 @@ INSTALLED_APPS = (
     'apps.jars',
     'apps.usrp',
     'apps.abs',
-    'json_field'
 )
 
 MIDDLEWARE_CLASSES = (

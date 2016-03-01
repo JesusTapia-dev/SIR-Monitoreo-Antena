@@ -26,8 +26,13 @@
 {% endblock %}
 
 {% block extra-js%}
+<script src="{% static 'js/moment.min.js' %}"></script>
 <script src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
 <script type="text/javascript">
-  $('.input-group.date').datetimepicker({"format": "YYYY-MM-DD HH:mm"});
+  $('.input-group.time').datetimepicker({
+    format: 'HH:mm:ss',
+    pickDate: false,
+    pickSeconds: true
+  });
 </script>
 {% endblock %}

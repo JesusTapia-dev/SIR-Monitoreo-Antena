@@ -357,7 +357,7 @@ def experiment(request, id_exp):
     kwargs['title'] = 'Experiment'
     kwargs['suptitle'] = 'Details'
     
-    kwargs['button'] = 'Add Device'
+    kwargs['button'] = 'Add Configuration'
     
     return render(request, 'experiment.html', kwargs)
 

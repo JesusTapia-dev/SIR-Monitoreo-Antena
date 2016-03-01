@@ -13,7 +13,7 @@
 <table class="table table-bordered">
 	<tr>
 		<th>Status</th>
-		<td>{%if connected == True %} &#9752; Connected  {% else %} &#9940; Disconnected {% endif %}</td>
+		<td>{%if connected == True %} <span class="glyphicon glyphicon-ok-circle text-success" aria-hidden="true"></span> Connected  {% else %} <span class="glyphicon glyphicon-remove-circle text-danger" aria-hidden="true"></span> Disconnected {% endif %}</td>
 	</tr>
 	
 	{% for key in dev_conf_keys %}

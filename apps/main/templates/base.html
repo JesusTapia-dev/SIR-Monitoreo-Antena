@@ -77,13 +77,12 @@
 	       {% block sidebar%}          
            {% endblock %}
 	       </div>
-	   </div>	
+	   </div>
 	   
 	   <div class="col-md-9 col-xs-12" role="main">
 	   <div class="page-header">
         <h1>{% block content-title %}{% endblock %} <small>{% block content-suptitle %}{% endblock %}</small></h1>
-       <hr>
-       </div> 
+       </div>
        {% block messages %}
 	       {% if messages %}
 	         {% for message in messages %}
@@ -99,7 +98,6 @@
 	   {% endblock %}
 	     
 	   </div>
-	     
 	   
 	</div><!--/row-->	
 </div> <!-- container -->
@@ -120,7 +118,6 @@
 {# bootstrap_javascript jquery=True #}
 <script src="{% static 'js/jquery.min.js' %}"></script>
 <script src="{% static 'js/bootstrap.min.js' %}"></script>
-<script src="{% static 'js/jquery-ui.min.js' %}"></script>
 {% block extra-js %}
 {% endblock%}
 </body>

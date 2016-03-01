@@ -1,0 +1,27 @@
+{% extends "dev_conf.html" %}
+{% load static %}
+{% load bootstrap3 %}
+{% load main_tags %}
+
+{% block extra-head %}
+<link href="http://cdn.pydata.org/bokeh/release/bokeh-0.11.1.min.css" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block content %}
+
+
+
+        <div id="div_plot">{{div}}</div>
+        
+
+
+{% endblock %}
+
+{% block extra-js%}
+
+<script src="{% static 'js/jquery-ui.min.js' %}"></script>
+<script src="{% static 'js/bokeh-0.11.1.min.js' %}"></script>
+ 
+{{script}}
+
+{% endblock %}

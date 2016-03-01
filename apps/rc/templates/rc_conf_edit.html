@@ -1,1 +1,67 @@
 {% extends "dev_conf_edit.html" %}
+{% load bootstrap3 %}
+{% load static %}
+
+{% block extra-head %}
+<style type="text/css">
+    /* show the move cursor as the user moves the mouse over the panel header.*/
+    .panel-default { cursor: move; }
+</style>
+{% endblock %}
+
+{% block content %}
+<form class="form" method="post">
+  {% csrf_token %}
+  {% bootstrap_form form layout='horizontal' size='medium' %}
+  <div style="clear: both;"></div>
+  <h2>RC Lines</h2><hr>
+  <div class="panel-group" id="div_lines" role="tablist" aria-multiselectable="true">
+  {% include "rc_lines.html" %}
+  </div>
+  <div style="clear: both;"></div>
+  <br>
+  <div class="pull-right">
+  <button type="button" class="btn btn-primary" onclick="{% if previous %}window.location.replace('{{ previous }}');{% else %}history.go(-1);{% endif %}">Cancel</button>
+  <button type="button" class="btn btn-primary" id="bt_add_line">Add Line</button>
+  <button type="submit" class="btn btn-primary">{{button}}</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra-js%}
+
+<script src="{% static 'js/jquery-ui.min.js' %}"></script>
+
+<script type="text/javascript">
+
+  $("#div_lines").on("click", "button[name=bt_remove_line]", function(){
+    document.location = "/rc/{{dev_conf.id}}/line/"+$(this).val()+"/delete/";
+  });
+  
+  $("#div_lines").on("click", "button[name=bt_remove_subline]", function(){
+    document.location = $(this).data('url');
+  });
+  
+  $("#div_lines").on("click", "button[name=bt_add_subline]", function(){
+    document.location = "/rc/{{dev_conf.id}}/line/"+$(this).val()+"/add_subline/";
+  }); 
+  
+  $("#bt_add_line").click(function() {
+    document.location = "{% url 'url_add_rc_line' dev_conf.id%}";
+  });
+  
+  $(".panel-group").sortable({
+    //placeholder: "ui-state-highlight",
+    update: function( event, ui ) {
+        var sorted = $( ".panel-group" ).sortable( "serialize", { key: "item" } );
+        var url = "{% url 'url_update_rc_lines_position' dev_conf.id %}";
+        var csrf_token = "{{csrf_token}}";
+        $.post( url, { 'items': sorted, 'csrfmiddlewaretoken': csrf_token }, function(data){
+           $("#div_lines").html(data.html);
+        });
+    }
+  });
+  
+</script>
+{% endblock %}
+  

@@ -1,70 +1,80 @@
 {% extends "dev_conf.html" %}
 {% load static %}
 {% load bootstrap3 %}
-{% load main_tags %}s
+{% load main_tags %}
 
 {% block extra-head %}
-<style type="text/css">
-    /* show the move cursor as the user moves the mouse over the panel header.*/
-    .panel-default { cursor: move; }
-</style>
+<link href="http://cdn.pydata.org/bokeh/release/bokeh-0.11.1.min.css" rel="stylesheet" type="text/css">
 {% endblock %}
+
 {% block content %}
 <table class="table table-bordered">
-{% for key in dev_conf_keys %}
-<tr><th>{{key|title}}</th><td>{{dev_conf|attr:key}}</td></tr>
+  <tr>
+  <th>Status</th>
+    <td>{%if connected == True %} <span class="glyphicon glyphicon-ok-circle text-success" aria-hidden="true"></span> Connected  {% else %} <span class="glyphicon glyphicon-remove-circle text-danger" aria-hidden="true"></span> Disconnected {% endif %}</td>
+  </tr>
+  {% for key in dev_conf_keys %}
+  <tr>
+    <th>{% get_verbose_field_name dev_conf key %}</th>
+    <td>{{dev_conf|attr:key}}</td>
+  </tr>
 {% endfor %}
 </table>
-<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_send">Send</button>
-<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_export">Export</button>
-<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_edit">Edit</button>
-<br>
-<h2>RC Lines</h2><hr>
 
+
+<div class="clearfix"></div>
+<h2>RC Lines</h2><hr>
 <div class="panel-group" id="div_lines" role="tablist" aria-multiselectable="true">
 {% include "rc_lines.html" %}
 </div>
 
 <br>
-<div class="pull-right">
-<button class="btn btn-primary" id="bt_add_line">Add Line</button>
-<button class="btn btn-primary" id="bt_edit_lines">  Edit  </button>
-<button class="btn btn-primary" id="bt_pulses">Pulses</button>
-</div>
-{% endblock %}
+<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_export">Export</button>
+<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_import">Import</button>
+<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_edit">Edit</button>
 
+<button class="btn btn-primary pull-left" style="margin-left: 10px" id="bt_read">Read</button>
+<button class="btn btn-primary pull-left" style="margin-left: 10px" id="bt_write">Write</button>
+<button class="btn btn-primary pull-left" style="margin-left: 10px" id="bt_pulses">Pulses</button>
+
+<div class="modal fade" id="pulsesModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">RC Pulses</h4>
+      </div>
+      <div class="modal-body">
+        <div id="div_plot"></div>
+        <div id="div_script"></div>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+{% endblock %}
 
 {% block extra-js%}
 
+<script src="{% static 'js/jquery-ui.min.js' %}"></script>
+<script src="{% static 'js/bokeh-0.11.1.min.js' %}"></script>
+
 <script type="text/javascript">
 
+  $("#bt_import").click(function() {
+    document.location = "{% url 'url_import_rc_conf' dev_conf.id %}";
+  });
+  
   $("#bt_edit").click(function() {
     document.location = "{% url 'url_edit_rc_conf' dev_conf.id %}";
   });
   
-  $("#div_lines").on("click", "button[name=bt_remove_line]", function(){
-    document.location = "line/"+$(this).val()+"/delete/";
-  }); 
-  
-  $(".panel-group").sortable({
-    //placeholder: "ui-state-highlight",
-    update: function( event, ui ) {
-        var sorted = $( ".panel-group" ).sortable( "serialize", { key: "item" } );
-        var url = "{% url 'url_update_rc_lines' dev_conf.id %}";
-        var csrf_token = "{{csrf_token}}";
-        $.post( url, { 'items': sorted, 'csrfmiddlewaretoken': csrf_token }, function(data){
-           $("#div_lines").html(data.html);
+  $("#bt_pulses").click(function() {
+    $.get( "plot/?json", {}, function(data){
+           $("#div_plot").html(data.div);
+           $("#div_script").html(data.script);
         });
-    }
-  });
-  
-   
-  $("#bt_add_line").click(function() {
-    document.location = "{% url 'url_add_rc_line' dev_conf.id%}";
-  });
-  
-  $("#bt_edit_lines").click(function() {
-    document.location = "{% url 'url_edit_rc_lines' dev_conf.id %}";
+    $('#pulsesModal').modal();
   });
   
 </script>
