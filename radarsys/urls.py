@@ -18,6 +18,7 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^$', 'apps.main.views.index', name='index'),
+    url(r'^operation/', 'apps.main.views.operation', name='url_operation'),    
     url(r'^admin/', include(admin.site.urls)),
     url(r'^accounts/', include('apps.accounts.urls')),  
     url(r'^', include('apps.main.urls')),

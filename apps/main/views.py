@@ -592,3 +592,9 @@ def sidebar(conf):
     kwargs['configurations'] = configurations #.values(*conf_keys)
     
     return kwargs
+
+
+def operation(request):
+    pass
+
+

@@ -12,7 +12,8 @@
     <style type="text/css">
       body {padding-top: 60px}
       .logo {padding-top: 5px; height: 50px}
-      .clickable-row {cursor: pointer;} 
+      .clickable-row {cursor: pointer;}
+      .col-no-padding { padding-left:0; }
     </style>
     <!--[if lt IE 9]>
 	<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -37,16 +38,31 @@
       </div>
       <div class="collapse navbar-collapse" id="navigationbar">
         <ul class="nav navbar-nav"> 
-          <li class=" dropdown {% block camp-active %}{% endblock %}"><a href="{% url 'url_campaigns'%}">Campaigns</a>
+          <li class=" dropdown {% block operation-active %}{% endblock %}"><a href="{% url 'url_operation'%}">Operation</a>
           </li>
-          <li class=" dropdown {% block exp-active %}{% endblock %}"><a href="{% url 'url_experiments'%}">Experiments</a>
+          <li class=" dropdown {% block conf-active %}{% endblock %}">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuration<span class="caret"></span></a>          
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="#">Campaigns</a></li>
+              <li><a href="#">Radars</a></li>
+              <li><a href="#">Devices</a></li>
+            </ul>          
           </li>
-          <li class=" dropdown {% block conf-active %}{% endblock %}"><a href="{% url 'url_dev_confs'%}">Configurations</a>
+          <li class=" dropdown {% block test-active %}{% endblock %}">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Test<span class="caret"></span></a>          
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="{% url 'url_experiments' %}">Experiments</a></li>              
+              <li><a href="{% url 'url_devices' %}">Devices</a></li>
+            </ul>
           </li>
-          <li class=" dropdown {% block dev-active %}{% endblock %}"><a href="{% url 'url_devices'%}">Devices</a>
-          </li>
-          <li class=" dropdown {% block loc-active %}{% endblock %}"><a href="{% url 'url_locations'%}">Locations</a>
-          </li>
+          <li class=" dropdown {% block search-active %}{% endblock %}">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Search<span class="caret"></span></a>          
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="{% url 'url_campaigns' %}">Campaigns</a></li>              
+              <li><a href="{% url 'url_experiments' %}">Experiments</a></li>
+              <li><a href="{% url 'url_dev_confs' %}">Configurations</a></li>
+            </ul>
+          </li>          
         </ul>
         <ul class="nav navbar-nav navbar-right">
           <li class="nav-divider"></li>
