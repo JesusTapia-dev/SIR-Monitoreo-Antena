@@ -4,32 +4,41 @@ from polymorphic import PolymorphicModel
 from django.core.urlresolvers import reverse
 
 CONF_STATES = (
-          (0, 'Disconnected'),
-          (1, 'Connected'),
-          (1, 'Running'),
-         )
+                 (0, 'Disconnected'),
+                 (1, 'Connected'),
+                 (1, 'Running'),
+             )
 
 CONF_TYPES = (
-          (0, 'Active'),
-          (1, 'Historical'),
-         )
+                 (0, 'Active'),
+                 (1, 'Historical'),
+             )
 
 DEV_STATES = (
-          (0, 'No connected'),
-          (1, 'Connected'),
-          (2, 'Configured'),
-          (3, 'Running'),
-         )
+                 (0, 'No connected'),
+                 (1, 'Connected'),
+                 (2, 'Configured'),
+                 (3, 'Running'),
+             )
 
 DEV_TYPES = (
-    ('', 'Select a device type'),
-    ('rc', 'Radar Controller'),
-    ('dds', 'Direct Digital Synthesizer'),
-    ('jars', 'Jicamarca Radar Acquisition System'),
-    ('usrp', 'Universal Software Radio Peripheral'),
-    ('cgs', 'Clock Generator System'),
-    ('abs', 'Automatic Beam Switching'),
-)
+                ('', 'Select a device type'),
+                ('rc', 'Radar Controller'),
+                ('dds', 'Direct Digital Synthesizer'),
+                ('jars', 'Jicamarca Radar Acquisition System'),
+                ('usrp', 'Universal Software Radio Peripheral'),
+                ('cgs', 'Clock Generator System'),
+                ('abs', 'Automatic Beam Switching'),
+            )
+
+DEV_PORTS = {
+                'rc'    : 2000,
+                'dds'   : 2000,
+                'jars'  : 2000,
+                'usrp'  : 2000,
+                'cgs'   : 8080,
+                'abs'   : 8080
+            }
 
 # Create your models here.
 
@@ -71,15 +80,21 @@ class Device(models.Model):
         
     def __unicode__(self):
         return u'%s | %s' % (self.name, self.ip_address)
+    
+    def get_status(self):
+        
+        return self.status
+    
 
 class Campaign(models.Model):
 
+    template = models.BooleanField(default=False)
+    
     name = models.CharField(max_length=40, unique=True)
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
     tags = models.CharField(max_length=40)
     description = models.TextField(blank=True, null=True)
-    template = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'db_campaigns'
@@ -89,6 +104,8 @@ class Campaign(models.Model):
     
 class Experiment(models.Model):
 
+    template = models.BooleanField(default=False)
+    
     campaign = models.ForeignKey(Campaign)
     name = models.CharField(max_length=40, default='')
     start_time = models.TimeField(default='00:00:00')
@@ -102,13 +119,14 @@ class Experiment(models.Model):
     
 class Configuration(PolymorphicModel):
 
+    template = models.BooleanField(default=False)
+    
+    name = models.CharField(verbose_name="Configuration Name", max_length=40, default='')
+    
     experiment = models.ForeignKey(Experiment)
     device = models.ForeignKey(Device)
     
-    status = models.PositiveSmallIntegerField(default=0, choices=CONF_STATES)
     type = models.PositiveSmallIntegerField(default=0, choices=CONF_TYPES)
-    
-    name = models.CharField(max_length=40, default='')
     
     created_date = models.DateTimeField(auto_now_add=True)
     programmed_date = models.DateTimeField(auto_now=True)
@@ -120,10 +138,10 @@ class Configuration(PolymorphicModel):
     
     def __unicode__(self):
         return u'[%s - %s]: %s' % (self.experiment.campaign.name,
-                                self.experiment.name,
-                                self.device.name) 
-    def get_absolute_url(self):
+                                   self.experiment.name,
+                                   self.device.name)
         
+    def get_absolute_url(self):
         return reverse('url_%s_conf' % self.device.device_type.name, args=[str(self.id)])
     
     def get_absolute_url_edit(self):

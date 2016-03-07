@@ -22,7 +22,6 @@ def value(instance, key):
     
     item = instance
     for my_key in key.split("__"):
-        print "TP Value", item, my_key
         item = attr(item, my_key)
     
     print item

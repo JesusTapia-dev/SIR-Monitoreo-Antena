@@ -448,7 +448,7 @@ def dev_conf(request, id_conf):
     
     kwargs = {}
     kwargs['dev_conf'] = dev_conf
-    kwargs['dev_conf_keys'] = ['experiment', 'device']
+    kwargs['dev_conf_keys'] = ['name', 'experiment', 'device']
     
     kwargs['title'] = 'Configuration'
     kwargs['suptitle'] = 'Details'
@@ -466,22 +466,17 @@ def dev_conf_new(request, id_exp=0):
         form = ConfigurationForm(initial={'experiment':id_exp})
         
     if request.method == 'POST':
-        form = ConfigurationForm(request.POST)
+        experiment = Experiment.objects.get(pk=request.POST['experiment'])
+        device = Device.objects.get(pk=request.POST['device'])
+        
+        DevConfForm = CONF_FORMS[device.device_type.name]
+        
+        form = DevConfForm(request.POST, initial={'experiment':experiment.id})
         
         if form.is_valid():
-            experiment = Experiment.objects.get(pk=request.POST['experiment'])
-            device = Device.objects.get(pk=request.POST['device'])
-            
-            exp_devices = Device.objects.filter(configuration__experiment=experiment,
-                                                configuration__type=0)
-              
-            if device.id not in exp_devices.values('id',):
-              
-                DevConfModel = CONF_MODELS[device.device_type.name]
-                conf = DevConfModel(experiment=experiment, device=device)
-                conf.save()
+            dev_conf = form.save()
     
-                return redirect('url_experiment', id_exp=experiment.id)
+            return redirect('url_experiment', id_exp=experiment.id)
         
     kwargs = {}
     kwargs['form'] = form

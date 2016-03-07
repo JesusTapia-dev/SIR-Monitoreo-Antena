@@ -31,7 +31,7 @@ class CampaignForm(forms.ModelForm):
     
     class Meta:
         model = Campaign
-        fields = ['name', 'start_date', 'end_date', 'tags', 'description', 'template']
+        exclude = ['']
          
 class ExperimentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -43,7 +43,7 @@ class ExperimentForm(forms.ModelForm):
         
     class Meta:
         model = Experiment
-        fields = ['campaign', 'name', 'start_time', 'end_time']
+        exclude = ['']
 
 class LocationForm(forms.ModelForm):
     class Meta:
@@ -58,7 +58,7 @@ class DeviceForm(forms.ModelForm):
 class ConfigurationForm(forms.ModelForm):
     class Meta:
         model = Configuration
-        fields = ['experiment', 'device']
+        exclude = ['type', 'created_date', 'programmed_date', 'parameters']
         
 class DeviceTypeForm(forms.Form):
     device_type = forms.ChoiceField(choices=add_empty_choice(DeviceType.objects.all().order_by('name').values_list('id', 'name')))
