@@ -42,17 +42,6 @@ DEV_PORTS = {
 
 # Create your models here.
 
-class Location(models.Model):
-
-    name = models.CharField(max_length = 30)
-    description = models.TextField(blank=True, null=True)
-
-    class Meta:
-        db_table = 'db_location'
-    
-    def __unicode__(self):
-        return u'%s' % self.name
-    
 class DeviceType(models.Model):
 
     name = models.CharField(max_length = 10, choices = DEV_TYPES, default = 'rc')
@@ -102,11 +91,23 @@ class Campaign(models.Model):
     def __unicode__(self):
         return u'%s' % (self.name)
     
+class Location(models.Model):
+
+    name = models.CharField(max_length = 30)
+    description = models.TextField(blank=True, null=True)
+    campaign = models.ForeignKey(Campaign)
+
+    class Meta:
+        db_table = 'db_location'
+    
+    def __unicode__(self):
+        return u'%s' % self.name
+    
 class Experiment(models.Model):
 
     template = models.BooleanField(default=False)
     
-    campaign = models.ForeignKey(Campaign)
+    location = models.ForeignKey(Location)
     name = models.CharField(max_length=40, default='')
     start_time = models.TimeField(default='00:00:00')
     end_time = models.TimeField(default='23:59:59')
