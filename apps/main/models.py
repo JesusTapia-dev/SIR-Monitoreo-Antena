@@ -40,6 +40,13 @@ DEV_PORTS = {
                 'abs'   : 8080
             }
 
+RADAR_STATES = (
+                 (0, 'No connected'),
+                 (1, 'Connnected'),
+                 (2, 'Configured'),
+                 (3, 'Running'),
+                 (4, 'Scheduled'),
+             )
 # Create your models here.
 
 class DeviceType(models.Model):
@@ -91,23 +98,24 @@ class Campaign(models.Model):
     def __unicode__(self):
         return u'%s' % (self.name)
     
-class Location(models.Model):
+class Radar(models.Model):
 
     name = models.CharField(max_length = 30)
-    description = models.TextField(blank=True, null=True)
     campaign = models.ForeignKey(Campaign)
+    status = models.PositiveSmallIntegerField(default=0, choices=RADAR_STATES)
 
     class Meta:
-        db_table = 'db_location'
+        db_table = 'db_radar'
     
     def __unicode__(self):
         return u'%s' % self.name
+    
     
 class Experiment(models.Model):
 
     template = models.BooleanField(default=False)
     
-    location = models.ForeignKey(Location)
+    radar = models.ForeignKey(Radar)
     name = models.CharField(max_length=40, default='')
     start_time = models.TimeField(default='00:00:00')
     end_time = models.TimeField(default='23:59:59')
@@ -116,7 +124,7 @@ class Experiment(models.Model):
         db_table = 'db_experiments'
     
     def __unicode__(self):
-        return u'[%s]: %s' % (self.campaign.name, self.name)
+        return u'[%s]: %s' % (self.radar.name, self.name)
     
 class Configuration(PolymorphicModel):
 
@@ -159,3 +167,14 @@ class Configuration(PolymorphicModel):
     
     def get_absolute_url_read(self):
         return reverse('url_read_%s_conf' % self.device.device_type.name, args=[str(self.id)])
+    
+class Location(models.Model):
+
+    name = models.CharField(max_length = 30)
+    description = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'db_location'
+    
+    def __unicode__(self):
+        return u'%s' % self.name
