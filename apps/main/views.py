@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.contrib import messages
 
-from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm
+from datetime import datetime
+
+from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm, OperationForm
 from apps.cgs.forms import CGSConfigurationForm
 from apps.jars.forms import JARSConfigurationForm
 from apps.usrp.forms import USRPConfigurationForm
@@ -9,7 +11,7 @@ from apps.abs.forms import ABSConfigurationForm
 from apps.rc.forms import RCConfigurationForm
 from apps.dds.forms import DDSConfigurationForm
 
-from .models import Campaign, Experiment, Device, Configuration, Location
+from .models import Campaign, Experiment, Device, Configuration, Location, Radar
 from apps.cgs.models import CGSConfiguration
 from apps.jars.models import JARSConfiguration
 from apps.usrp.models import USRPConfiguration
@@ -235,8 +237,7 @@ def campaigns(request):
 def campaign(request, id_camp):
     
     campaign = get_object_or_404(Campaign, pk=id_camp)
-    experiments = Experiment.objects.filter(campaign=campaign)
-    
+    #experiments = Experiment.objects.filter(campaign=campaign)
     form = CampaignForm(instance=campaign)
     
     kwargs = {}
@@ -246,7 +247,7 @@ def campaign(request, id_camp):
     keys = ['id', 'name', 'start_time', 'end_time']
     
     kwargs['experiment_keys'] = keys[1:]
-    kwargs['experiments'] = experiments.values(*keys)
+    #kwargs['experiments'] = experiments.values(*keys)
     
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = 'Details'
@@ -589,7 +590,42 @@ def sidebar(conf):
     return kwargs
 
 
-def operation(request):
-    pass
-
-
+def operation(request, id_camp=None):
+    
+    today = datetime.today()
+    
+    if id_camp==None:
+        id_camp = Campaign.objects.filter(start_date__month=today.month).filter(start_date__year=today.year).order_by('-start_date')[0].id
+        
+    if request.method=='GET':
+        campaign = get_object_or_404(Campaign, pk = id_camp)
+        campaigns = Campaign.objects.filter(start_date__month=today.month).filter(start_date__year=today.year).order_by('-start_date') 
+        form = OperationForm(initial={'campaign': id_camp})
+        
+    if request.method=='POST': 
+        campaign = get_object_or_404(Campaign, pk=request.POST['campaign'])
+        #id_camp = Campaign.objects.filter(start_date__month=today.month).filter(start_date__year=today.year).order_by('-start_date')[1].id
+        form = OperationForm(request.POST, initial={'campaign':campaign.name})
+        if form.is_valid():
+            return redirect('url_operation', id_camp=campaign.id)
+    
+    radars = Radar.objects.filter(campaign = campaign)
+    experiments = [Experiment.objects.filter(radar=radar) for radar in radars] #zip(radars, [Experiment.objects.filter(radar=radar) for radar in radars])
+    
+    kwargs = {}
+    #---Campaign
+    kwargs['campaign'] = campaign
+    kwargs['campaign_keys'] = ['name', 'start_date', 'end_date', 'tags', 'description']
+    #---Experimet
+    keys = ['id', 'name', 'start_time', 'end_time', 'radar']
+    kwargs['experiment_keys'] = keys[1:]
+    kwargs['experiments'] = experiments
+    #---Radar
+    kwargs['radars'] = radars
+    #---Else
+    kwargs['title'] = 'Operation'
+    kwargs['suptitle'] = campaign.name
+    kwargs['form'] = form
+    kwargs['button'] = '...'
+    
+    return render(request, 'operation.html', kwargs)

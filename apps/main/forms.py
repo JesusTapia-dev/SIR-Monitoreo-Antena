@@ -1,5 +1,9 @@
 from django import forms
 from django.utils.safestring import mark_safe
+from datetime import datetime
+
+from apps.main.widgets import Filtering_ComboBox_Widget, Datepicker, HTMLrender,Filtering_ComboBox_Widget2
+
         
 from .models import DeviceType, Device, Experiment, Campaign, Configuration, Location
 
@@ -62,3 +66,9 @@ class ConfigurationForm(forms.ModelForm):
         
 class DeviceTypeForm(forms.Form):
     device_type = forms.ChoiceField(choices=add_empty_choice(DeviceType.objects.all().order_by('name').values_list('id', 'name')))
+
+class OperationForm(forms.Form):
+    today = datetime.today()
+    # -----Campaigns from this month------
+    campaign = forms.ChoiceField(choices=Campaign.objects.filter(start_date__month=today.month).filter(start_date__year=today.year).order_by('-start_date').values_list('id', 'name'), label="Campaign")
+    

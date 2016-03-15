@@ -31,4 +31,7 @@ urlpatterns = (
     url(r'^dev_conf/(?P<id_conf>-?\d+)/edit/$', 'apps.main.views.dev_conf_edit', name='url_edit_dev_conf'),
     url(r'^dev_conf/(?P<id_conf>-?\d+)/delete/$', 'apps.main.views.dev_conf_delete', name='url_delete_dev_conf'),
     
+    url(r'^operation/$', 'apps.main.views.operation', name='url_operation'),
+    url(r'^operation/(?P<id_camp>-?\d+)/$', 'apps.main.views.operation', name='url_operation'),
+    
 )

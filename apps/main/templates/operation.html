@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load main_tags %}
+{% block extra-head %}
+<link href="{% static 'css/bootstrap-datetimepicker.min.css' %}" media="screen" rel="stylesheet">
+{% endblock %}
+
+{% block camp-active %}active{% endblock %}
+
+{% block content-title %}{{title}}{% endblock %}
+{% block content-suptitle %}{{suptitle}}{% endblock %}
+
+{% block content %}
+
+<form class="form" method="post" action="">
+  {% csrf_token %}
+  {% bootstrap_form form layout='horizontal' size='medium' %}
+  <div style="clear: both;"></div>
+  <br>
+  <button type="submit" class="btn btn-primary pull-right">{{button}}</button>
+  <br>
+  <br>
+</form>
+<br>
+<br>
+
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true" >
+      
+	  {% for radar in radars %}
+	  
+	  <div class="panel panel-default">
+	    <div class="panel-heading" role="tab" id="headingTwo">
+	      <h4 class="panel-title">
+	        <a class="collapsed" role="button" data-toggle="collapse"  href="#collapseTwo-{{ radar.id }}" aria-expanded="false" aria-controls="collapseTwo">
+	          {{radar.name}}: Experiment List
+	        </a>
+	      </h4>
+	    </div>
+	    
+	    <div id="collapseTwo-{{ radar.id }}" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
+	      <div class="panel-body">
+	      <table class="table table-hover">
+			<tr>
+			  
+			  {% for header in experiment_keys %}
+			  <th>{{ header|title }}</th>
+			  {% endfor%}
+			</tr>
+			{% for item in experiments %}
+			    {% for exs in item %}
+			<tr class="clickable-row" data-href="{% url 'url_experiment' exs.id %}" >
+			  
+			        {% for key in experiment_keys %}
+			          {% if radar.name in exs.radar.name  %}
+			              <td>{{ exs|attr:key }}</td>
+			          {% endif %}
+			       {% endfor %}
+			    {% endfor %}
+			</tr>
+			{% endfor %}
+		  </table>  
+	      </div>
+	    </div>
+	  </div>
+	  {% endfor %}
+</div>
+
+{% endblock %}
+
+
+
+{% block extra-js%}
+<script type="text/javascript">
+  
+   //$("#bt_add").click(function() {
+	   //alert("sometext");
+	//   document.location = "{% url 'url_operation' campaign.id %}";
+   //});
+ 
+  $(".clickable-row").click(function() {
+      document.location = $(this).data("href");
+  });
+  
+  $(document).ready(function() {
+	    $("#id_campaign").change(function() {
+	    	var id_camp = document.getElementById("id_campaign").value;
+	    	//alert(id_camp);
+			document.location = "{% url 'url_operation'%}"+String(id_camp);
+		});
+  });
+  
+  
+</script>
+{% endblock %}
