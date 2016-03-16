@@ -23,7 +23,6 @@
   <br>
 </form>
 <br>
-<br>
 
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true" >
       
@@ -32,9 +31,19 @@
 	  <div class="panel panel-default">
 	    <div class="panel-heading" role="tab" id="headingTwo">
 	      <h4 class="panel-title">
+	        
 	        <a class="collapsed" role="button" data-toggle="collapse"  href="#collapseTwo-{{ radar.id }}" aria-expanded="false" aria-controls="collapseTwo">
 	          {{radar.name}}: Experiment List
+	          <span>
+	          </span>
 	        </a>
+	        <button type="button" class="btn btn-primary pull-right btn-xs" aria-label="Left Align" style="margin-left: 10px">
+                <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="btn btn-primary pull-right btn-xs" aria-label="Left Align" style="margin-left: 10px">
+                <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+            </button>
+	        
 	      </h4>
 	    </div>
 	    

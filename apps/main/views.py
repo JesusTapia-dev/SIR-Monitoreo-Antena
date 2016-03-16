@@ -617,7 +617,7 @@ def operation(request, id_camp=None):
     kwargs['campaign'] = campaign
     kwargs['campaign_keys'] = ['name', 'start_date', 'end_date', 'tags', 'description']
     #---Experimet
-    keys = ['id', 'name', 'start_time', 'end_time', 'radar']
+    keys = ['id', 'name', 'start_time', 'end_time']
     kwargs['experiment_keys'] = keys[1:]
     kwargs['experiments'] = experiments
     #---Radar
