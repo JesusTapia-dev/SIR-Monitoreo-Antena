@@ -23,17 +23,17 @@
   <br>
 </form>
 <br>
+<br>
 
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true" >
       
-	  {% for radar in radars %}
+	  {% for location in locations %}
 	  
 	  <div class="panel panel-default">
 	    <div class="panel-heading" role="tab" id="headingTwo">
 	      <h4 class="panel-title">
-	        
-	        <a class="collapsed" role="button" data-toggle="collapse"  href="#collapseTwo-{{ radar.id }}" aria-expanded="false" aria-controls="collapseTwo">
-	          {{radar.name}}: Experiment List
+	        <a class="collapsed" role="button" data-toggle="collapse"  href="#collapseTwo-{{ location.id }}" aria-expanded="false" aria-controls="collapseTwo">
+	          {{location.name}}: Experiment List
 	          <span>
 	          </span>
 	        </a>
@@ -47,26 +47,25 @@
 	      </h4>
 	    </div>
 	    
-	    <div id="collapseTwo-{{ radar.id }}" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
+	    <div id="collapseTwo-{{ location.name }}" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
 	      <div class="panel-body">
 	      <table class="table table-hover">
 			<tr>
-			  
+			  <th>#</th>
 			  {% for header in experiment_keys %}
 			  <th>{{ header|title }}</th>
 			  {% endfor%}
 			</tr>
+			
 			{% for item in experiments %}
-			    {% for exs in item %}
-			<tr class="clickable-row" data-href="{% url 'url_experiment' exs.id %}" >
-			  
-			        {% for key in experiment_keys %}
-			          {% if radar.name in exs.radar.name  %}
-			              <td>{{ exs|attr:key }}</td>
-			          {% endif %}
-			       {% endfor %}
-			    {% endfor %}
-			</tr>
+				{% if location.name in item.location.name  %}
+					<tr class="clickable-row" data-href="{% url 'url_experiment' item.id %}" >
+						<td>{{ forloop.counter }}</td>
+			        	{% for key in experiment_keys %}
+			              <td>{{ item|value:key }}</td>
+			       		{% endfor %}
+					</tr>
+				{% endif %}
 			{% endfor %}
 		  </table>  
 	      </div>

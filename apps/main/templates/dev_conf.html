@@ -10,10 +10,25 @@
 
 {% block content %}
 
+<span class=" dropdown pull-right">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Options<span class="caret"></span></a>          
+  <ul class="dropdown-menu" role="menu">
+    <li><a href="{{ dev_conf.get_absolute_url_edit }}">Edit</a></li>
+    <li><a href="{{ dev_conf.get_absolute_url_import }}">Import </a></li>
+    <li><a href="{{ dev_conf.get_absolute_url_export }}">Export </a></li>
+    <li><a>----------------</a></li>
+    <li><a href="{{ dev_conf.get_absolute_url_write }}">Write</a></li>
+    <li><a href="{{ dev_conf.get_absolute_url_read }}">Read</a></li>
+    <li><a href="{{ dev_conf.get_absolute_url_start}}">Start</a></li>
+    <li><a href="{{ dev_conf.get_absolute_url_stop }}">Stop</a></li>
+    <li><a href="{{ dev_conf.get_absolute_url_status }}">Update Status</a></li>
+  </ul>          
+</span>
+          
 <table class="table table-bordered">
 	<tr>
 		<th>Status</th>
-		<td>{%if connected == True %} <span class="glyphicon glyphicon-ok-circle text-success" aria-hidden="true"></span> Connected  {% else %} <span class="glyphicon glyphicon-remove-circle text-danger" aria-hidden="true"></span> Disconnected {% endif %}</td>
+		<td>{%if status %} <span class="glyphicon glyphicon-ok-circle text-success" aria-hidden="true"></span> {{status}}  {% else %} <span class="glyphicon glyphicon-remove-circle text-danger" aria-hidden="true"></span> Disconnected {% endif %}</td>
 	</tr>
 	
 	{% for key in dev_conf_keys %}
@@ -23,13 +38,6 @@
 	</tr>
 	{% endfor %}
 </table>
-
-<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_export">Export</button>
-<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_import">Import</button>
-<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_edit">Edit</button>
-
-<button class="btn btn-primary pull-left" style="margin-left: 10px" id="bt_read">Read</button>
-<button class="btn btn-primary pull-left" style="margin-left: 10px" id="bt_write">Write</button>
 
 {% endblock %}
 

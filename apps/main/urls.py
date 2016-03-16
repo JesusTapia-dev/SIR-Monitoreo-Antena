@@ -30,6 +30,14 @@ urlpatterns = (
     url(r'^dev_conf/(?P<id_conf>-?\d+)/$', 'apps.main.views.dev_conf', name='url_dev_conf'),
     url(r'^dev_conf/(?P<id_conf>-?\d+)/edit/$', 'apps.main.views.dev_conf_edit', name='url_edit_dev_conf'),
     url(r'^dev_conf/(?P<id_conf>-?\d+)/delete/$', 'apps.main.views.dev_conf_delete', name='url_delete_dev_conf'),
+        
+    url(r'^dev_conf/(?P<id_conf>-?\d+)/write/$', 'apps.main.views.dev_conf_write', name='url_write_dev_conf'),
+    url(r'^dev_conf/(?P<id_conf>-?\d+)/read/$', 'apps.main.views.dev_conf_read', name='url_read_dev_conf'),
+    url(r'^dev_conf/(?P<id_conf>-?\d+)/import/$', 'apps.main.views.dev_conf_import', name='url_import_dev_conf'),
+    url(r'^dev_conf/(?P<id_conf>-?\d+)/export/$', 'apps.main.views.dev_conf_export', name='url_export_dev_conf'),
+    url(r'^dev_conf/(?P<id_conf>-?\d+)/start/$', 'apps.main.views.dev_conf_start', name='url_start_dev_conf'),
+    url(r'^dev_conf/(?P<id_conf>-?\d+)/stop/$', 'apps.main.views.dev_conf_stop', name='url_stop_dev_conf'),
+    url(r'^dev_conf/(?P<id_conf>-?\d+)/status/$', 'apps.main.views.dev_conf_status', name='url_status_dev_conf'),
     
     url(r'^operation/$', 'apps.main.views.operation', name='url_operation'),
     url(r'^operation/(?P<id_camp>-?\d+)/$', 'apps.main.views.operation', name='url_operation'),

@@ -1,9 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.contrib import messages
 
-from datetime import datetime
-
-from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm, OperationForm
+from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm, UploadFileForm, DownloadFileForm, OperationForm
 from apps.cgs.forms import CGSConfigurationForm
 from apps.jars.forms import JARSConfigurationForm
 from apps.usrp.forms import USRPConfigurationForm
@@ -11,7 +9,7 @@ from apps.abs.forms import ABSConfigurationForm
 from apps.rc.forms import RCConfigurationForm
 from apps.dds.forms import DDSConfigurationForm
 
-from .models import Campaign, Experiment, Device, Configuration, Location, Radar
+from .models import Campaign, Experiment, Device, Configuration, Location
 from apps.cgs.models import CGSConfiguration
 from apps.jars.models import JARSConfiguration
 from apps.usrp.models import USRPConfiguration
@@ -237,7 +235,8 @@ def campaigns(request):
 def campaign(request, id_camp):
     
     campaign = get_object_or_404(Campaign, pk=id_camp)
-    #experiments = Experiment.objects.filter(campaign=campaign)
+    experiments = Experiment.objects.filter(campaign=campaign)
+    
     form = CampaignForm(instance=campaign)
     
     kwargs = {}
@@ -247,7 +246,7 @@ def campaign(request, id_camp):
     keys = ['id', 'name', 'start_time', 'end_time']
     
     kwargs['experiment_keys'] = keys[1:]
-    #kwargs['experiments'] = experiments.values(*keys)
+    kwargs['experiments'] = experiments.values(*keys)
     
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = 'Details'
@@ -341,7 +340,7 @@ def experiment(request, id_exp):
     
     kwargs = {}
     
-    exp_keys = ['id', 'campaign', 'name', 'start_time', 'end_time']
+    exp_keys = ['id', 'campaign', 'location', 'name', 'start_time', 'end_time']
     conf_keys = ['id', 'device__name', 'device__device_type', 'device__ip_address', 'device__port_address']
     
     conf_labels = ['id', 'device__name', 'device_type', 'ip_address', 'port_address']
@@ -517,37 +516,203 @@ def dev_conf_edit(request, id_conf):
     
     return render(request, 'dev_conf_edit.html', kwargs)
 
-def dev_conf_read(request, id_conf):
+def dev_conf_start(request, id_conf):
     
     conf = get_object_or_404(Configuration, pk=id_conf)
     
-    messages.error(request, "Read View not implemented yet")
+    DevConfModel = CONF_MODELS[conf.device.device_type.name]
     
-    return redirect('url_dev_conf', id_conf=conf.id)
+    conf = DevConfModel.objects.get(pk=id_conf)
+    
+    if conf.start_device():
+        messages.success(request, conf.message)
+    else:
+        messages.error(request, conf.message)
+        
+    return redirect(conf.get_absolute_url())
+
+def dev_conf_stop(request, id_conf):
+    
+    conf = get_object_or_404(Configuration, pk=id_conf)
+    
+    DevConfModel = CONF_MODELS[conf.device.device_type.name]
+    
+    conf = DevConfModel.objects.get(pk=id_conf)
+    
+    if conf.stop_device():
+        messages.success(request, conf.message)
+    else:
+        messages.error(request, conf.message)
+    
+    return redirect(conf.get_absolute_url())
+
+def dev_conf_status(request, id_conf):
+    
+    conf = get_object_or_404(Configuration, pk=id_conf)
+    
+    DevConfModel = CONF_MODELS[conf.device.device_type.name]
+    
+    conf = DevConfModel.objects.get(pk=id_conf)
+    
+    if conf.status_device():
+        messages.success(request, conf.message)
+    else:
+        messages.error(request, conf.message)
+    
+    return redirect(conf.get_absolute_url())
+
 
 def dev_conf_write(request, id_conf):
     
     conf = get_object_or_404(Configuration, pk=id_conf)
     
-    messages.error(request, "Write View not implemented yet")
+    DevConfModel = CONF_MODELS[conf.device.device_type.name]
     
-    return redirect('url_dev_conf', id_conf=conf.id)
+    conf = DevConfModel.objects.get(pk=id_conf)
+    
+    answer = conf.write_device()
+    
+    if answer:
+        messages.success(request, conf.message)
+        
+        conf.pk = None
+        conf.id = None
+        conf.type = 1
+        conf.template = 0
+        conf.save()
+        
+    else:
+        messages.error(request, conf.message)
+    
+    return redirect(conf.get_absolute_url())
+
+def dev_conf_read(request, id_conf):
+    
+    conf = get_object_or_404(Configuration, pk=id_conf)
+    
+    DevConfModel = CONF_MODELS[conf.device.device_type.name]
+    DevConfForm = CONF_FORMS[conf.device.device_type.name]
+    
+    conf = DevConfModel.objects.get(pk=id_conf)
+    
+    if request.method=='GET':
+        
+        parms = conf.read_device()
+        
+        if not parms:
+            messages.error(request, conf.message)
+            return redirect(conf.get_absolute_url())
+        
+        form = DevConfForm(initial=parms, instance=conf)
+    
+    if request.method=='POST':
+        form = DevConfForm(request.POST, instance=conf)
+        
+        if form.is_valid():
+            dev_model = form.save(commit=False)
+                
+            if  dev_model.save():
+                return redirect(conf.get_absolute_url())
+        
+        messages.error(request, "Parameters could not be saved")
+        
+    kwargs = {}
+    kwargs['id_dev'] = conf.id
+    kwargs['form'] = form
+    kwargs['title'] = 'Device Configuration'
+    kwargs['suptitle'] = 'Parameters read from device'
+    kwargs['button'] = 'Save'
+    
+    ###### SIDEBAR ######
+    kwargs.update(sidebar(conf))
+    
+    return render(conf.get_absolute_url_edit())
 
 def dev_conf_import(request, id_conf):
     
     conf = get_object_or_404(Configuration, pk=id_conf)
     
-    messages.error(request, "Import View not implemented yet")
+    DevConfModel = CONF_MODELS[conf.device.device_type.name]
+    DevConfForm = CONF_FORMS[conf.device.device_type.name]
     
-    return redirect('url_dev_conf', id_conf=conf.id)
+    conf = DevConfModel.objects.get(pk=id_conf)
+    
+    if request.method == 'GET':
+        file_form = UploadFileForm()
+        
+    if request.method == 'POST':
+        file_form = UploadFileForm(request.POST, request.FILES)
+        
+        if file_form.is_valid():
+            
+            parms = conf.import_from_file(request.FILES['file'])
+        
+            if parms:
+                
+                messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
+                
+                form = DevConfForm(initial=parms, instance=conf)
+                
+                kwargs = {}
+                kwargs['id_dev'] = conf.id
+                kwargs['form'] = form
+                kwargs['title'] = 'Device Configuration'
+                kwargs['suptitle'] = 'Parameters imported'
+                kwargs['button'] = 'Save'
+                kwargs['action'] = conf.get_absolute_url_edit()
+                kwargs['previous'] = conf.get_absolute_url()
+                
+                ###### SIDEBAR ######
+                kwargs.update(sidebar(conf))
+                
+                return render(request, '%s_conf_edit.html' %conf.device.device_type.name, kwargs)
+
+        messages.error(request, "Could not import parameters from file")
+    
+    kwargs = {}
+    kwargs['id_dev'] = conf.id
+    kwargs['title'] = 'Device Configuration'
+    kwargs['form'] = file_form
+    kwargs['suptitle'] = 'Importing file'
+    kwargs['button'] = 'Import'
+    
+    kwargs.update(sidebar(conf))
+    
+    return render(request, 'dev_conf_import.html', kwargs)
 
 def dev_conf_export(request, id_conf):
     
     conf = get_object_or_404(Configuration, pk=id_conf)
     
-    messages.error(request, "Export View not implemented yet")
+    DevConfModel = CONF_MODELS[conf.device.device_type.name]
     
-    return redirect('url_dev_conf', id_conf=conf.id)
+    conf = DevConfModel.objects.get(pk=id_conf)
+    
+    if request.method == 'GET':
+        file_form = DownloadFileForm()
+        
+    if request.method == 'POST':
+        file_form = DownloadFileForm(request.POST)
+    
+        if file_form.is_valid():
+            fields = conf.export_to_file(format = file_form.format)
+            
+            response = HttpResponse(content_type=fields['content_type'])
+            response['Content-Disposition'] = 'attachment; filename="%s"' %fields['filename']
+            response.write(fields['content'])
+        
+            return response
+        
+        messages.error(request, "Could not export parameters")
+    
+    kwargs = {}
+    kwargs['id_dev'] = conf.id
+    kwargs['title'] = 'Device Configuration'
+    kwargs['form'] = file_form
+    kwargs['suptitle'] = 'Exporting file'
+    kwargs['button'] = 'Export'
+    
+    return render(request, 'dev_conf_export.html', kwargs)
 
 def dev_conf_delete(request, id_conf):
      
@@ -592,25 +757,27 @@ def sidebar(conf):
 
 def operation(request, id_camp=None):
     
-    today = datetime.today()
-    
-    if id_camp==None:
-        id_camp = Campaign.objects.filter(start_date__month=today.month).filter(start_date__year=today.year).order_by('-start_date')[0].id
+    if not id_camp:
+        campaigns = Campaign.objects.all().order_by('-start_date')
         
+        if not campaigns:
+            return render(request, 'operation.html', {})
+        
+        id_camp = campaigns[0].id
+    
+    campaign = get_object_or_404(Campaign, pk = id_camp)
+    
     if request.method=='GET':
-        campaign = get_object_or_404(Campaign, pk = id_camp)
-        campaigns = Campaign.objects.filter(start_date__month=today.month).filter(start_date__year=today.year).order_by('-start_date') 
         form = OperationForm(initial={'campaign': id_camp})
         
-    if request.method=='POST': 
-        campaign = get_object_or_404(Campaign, pk=request.POST['campaign'])
-        #id_camp = Campaign.objects.filter(start_date__month=today.month).filter(start_date__year=today.year).order_by('-start_date')[1].id
-        form = OperationForm(request.POST, initial={'campaign':campaign.name})
+    if request.method=='POST':
+        form = OperationForm(request.POST, initial={'campaign':campaign.id})
+        
         if form.is_valid():
             return redirect('url_operation', id_camp=campaign.id)
     
-    radars = Radar.objects.filter(campaign = campaign)
-    experiments = [Experiment.objects.filter(radar=radar) for radar in radars] #zip(radars, [Experiment.objects.filter(radar=radar) for radar in radars])
+    locations = Location.objects.filter(experiment__campaign = campaign)
+    experiments = Experiment.objects.filter(campaign=campaign)
     
     kwargs = {}
     #---Campaign
@@ -621,11 +788,11 @@ def operation(request, id_camp=None):
     kwargs['experiment_keys'] = keys[1:]
     kwargs['experiments'] = experiments
     #---Radar
-    kwargs['radars'] = radars
+    kwargs['locations'] = locations
     #---Else
-    kwargs['title'] = 'Operation'
+    kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = campaign.name
     kwargs['form'] = form
-    kwargs['button'] = '...'
+    kwargs['button'] = 'Apply'
     
     return render(request, 'operation.html', kwargs)

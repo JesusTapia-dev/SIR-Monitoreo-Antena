@@ -49,6 +49,18 @@ RADAR_STATES = (
              )
 # Create your models here.
 
+    
+class Location(models.Model):
+
+    name = models.CharField(max_length = 30)
+    description = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'db_location'
+    
+    def __unicode__(self):
+        return u'%s' % self.name
+
 class DeviceType(models.Model):
 
     name = models.CharField(max_length = 10, choices = DEV_TYPES, default = 'rc')
@@ -62,8 +74,8 @@ class DeviceType(models.Model):
     
 class Device(models.Model):
 
-    device_type = models.ForeignKey(DeviceType)
-#     location = models.ForeignKey(Location)
+    device_type = models.ForeignKey(DeviceType, on_delete=models.CASCADE)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE)
     
     name = models.CharField(max_length=40, default='')
     ip_address = models.GenericIPAddressField(protocol='IPv4', default='0.0.0.0')
@@ -98,24 +110,27 @@ class Campaign(models.Model):
     def __unicode__(self):
         return u'%s' % (self.name)
     
-class Radar(models.Model):
-
-    name = models.CharField(max_length = 30)
-    campaign = models.ForeignKey(Campaign)
-    status = models.PositiveSmallIntegerField(default=0, choices=RADAR_STATES)
-
-    class Meta:
-        db_table = 'db_radar'
-    
-    def __unicode__(self):
-        return u'%s' % self.name
+# class Radar(models.Model):
+# 
+# #     name = models.CharField(max_length = 30)
+#     experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE)
+#     location = models.OneToOneField('Location', on_delete=models.CASCADE)
+#     status = models.PositiveSmallIntegerField(default=0, choices=RADAR_STATES)
+# 
+#     class Meta:
+#         db_table = 'db_radar'
+#     
+#     def __unicode__(self):
+#         return u'%s' % self.location
     
     
 class Experiment(models.Model):
 
     template = models.BooleanField(default=False)
     
-    radar = models.ForeignKey(Radar)
+    campaign = models.ForeignKey('Campaign', null=True, blank=True, on_delete=models.CASCADE)
+    location = models.ForeignKey('Location', null=True, blank=True, on_delete=models.CASCADE)
+    
     name = models.CharField(max_length=40, default='')
     start_time = models.TimeField(default='00:00:00')
     end_time = models.TimeField(default='23:59:59')
@@ -124,7 +139,7 @@ class Experiment(models.Model):
         db_table = 'db_experiments'
     
     def __unicode__(self):
-        return u'[%s]: %s' % (self.radar.name, self.name)
+        return u'%s' % (self.name)
     
 class Configuration(PolymorphicModel):
 
@@ -132,8 +147,8 @@ class Configuration(PolymorphicModel):
     
     name = models.CharField(verbose_name="Configuration Name", max_length=40, default='')
     
-    experiment = models.ForeignKey(Experiment)
-    device = models.ForeignKey(Device)
+    experiment = models.ForeignKey('Experiment', null=True, blank=True, on_delete=models.CASCADE)
+    device = models.ForeignKey(Device, on_delete=models.CASCADE)
     
     type = models.PositiveSmallIntegerField(default=0, choices=CONF_TYPES)
     
@@ -142,14 +157,94 @@ class Configuration(PolymorphicModel):
     
     parameters = models.TextField(default='{}')
     
+    message = ""
+    
     class Meta:
         db_table = 'db_configurations'
     
     def __unicode__(self):
-        return u'[%s - %s]: %s' % (self.experiment.campaign.name,
+        return u'[%s - %s]: %s' % (self.experiment.name,
                                    self.experiment.name,
                                    self.device.name)
+    
+    def parms_to_dict(self):
         
+        parameters = {}
+        
+        for key in self.__dict__.keys():
+            parameters[key] = getattr(self, key)
+        
+        return parameters
+    
+    def dict_to_parms(self, parameters):
+        
+        if type(parameters) != type({}):
+            return
+            
+        for key in parameters.keys():
+            setattr(self, key, parameters[key])
+        
+    def export_to_file(self, format="json"):
+        
+        import json
+        
+        content_type = 'application/json'
+        filename = '%s.json' %self.name
+        content = json.dumps(self.params_to_dict())
+            
+        if format == 'text':
+            content_type = 'text/plain'
+            filename = '%s.%s' %(self.name, self.device.device_type.name)
+            content = self.params_to_text()
+        
+        if format == 'binary':
+            content_type = 'application/octet-stream'
+            filename = '%s.bin' %self.name
+            content = self.params_to_binary()
+            
+        fields = {'content_type':content_type,
+                  'filename':filename,
+                  'content':content
+                  }
+        
+        return fields
+    
+    def import_from_file(self, filename):
+        
+        raise NotImplementedError, "This method should be implemented in each Configuration model"
+        
+        return {}
+      
+    def status_device(self):
+        
+        raise NotImplementedError, "This method should be implemented in each Configuration model"
+        
+        return None
+    
+    def stop_device(self):
+        
+        raise NotImplementedError, "This method should be implemented in each Configuration model"
+        
+        return None
+    
+    def start_device(self):
+        
+        raise NotImplementedError, "This method should be implemented in each Configuration model"
+        
+        return None
+    
+    def write_device(self, parms):
+        
+        raise NotImplementedError, "This method should be implemented in each Configuration model"
+        
+        return None
+    
+    def read_device(self):
+        
+        raise NotImplementedError, "This method should be implemented in each Configuration model"
+        
+        return None
+    
     def get_absolute_url(self):
         return reverse('url_%s_conf' % self.device.device_type.name, args=[str(self.id)])
     
@@ -157,24 +252,22 @@ class Configuration(PolymorphicModel):
         return reverse('url_edit_%s_conf' % self.device.device_type.name, args=[str(self.id)])
     
     def get_absolute_url_import(self):
-        return reverse('url_import_%s_conf' % self.device.device_type.name, args=[str(self.id)])
+        return reverse('url_import_dev_conf', args=[str(self.id)])
     
     def get_absolute_url_export(self):
-        return reverse('url_export_%s_conf' % self.device.device_type.name, args=[str(self.id)])
+        return reverse('url_export_dev_conf', args=[str(self.id)])
     
     def get_absolute_url_write(self):
-        return reverse('url_write_%s_conf' % self.device.device_type.name, args=[str(self.id)])
+        return reverse('url_write_dev_conf', args=[str(self.id)])
     
     def get_absolute_url_read(self):
-        return reverse('url_read_%s_conf' % self.device.device_type.name, args=[str(self.id)])
+        return reverse('url_read_dev_conf', args=[str(self.id)])
     
-class Location(models.Model):
-
-    name = models.CharField(max_length = 30)
-    description = models.TextField(blank=True, null=True)
-
-    class Meta:
-        db_table = 'db_location'
+    def get_absolute_url_start(self):
+        return reverse('url_start_dev_conf', args=[str(self.id)])
     
-    def __unicode__(self):
-        return u'%s' % self.name
+    def get_absolute_url_stop(self):
+        return reverse('url_stop_dev_conf', args=[str(self.id)])
+    
+    def get_absolute_url_status(self):
+        return reverse('url_status_dev_conf', args=[str(self.id)])
