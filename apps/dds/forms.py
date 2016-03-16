@@ -11,25 +11,6 @@ EXT_TYPES = (
 
 class DDSConfigurationForm(forms.ModelForm):
     
-#     frequency_bin = forms.IntegerField(label='Frequency (Binary)', required=False)
-#     phase_bin = forms.IntegerField(label='Phase (Binary)', required=False)
-    
-#     frequency_mod_bin = forms.IntegerField(label='Frequency Mod (Binary)', required=False)
-#     phase_mod_bin = forms.IntegerField(label='Phase Mod (Binary)', required=False)
-    
-    field_order = ['experiment', 'device',
-                   'clock', 'multiplier',
-                   'frequency',
-                   'frequency_bin',
-                   'phase',
-                   'phase_bin',
-                   'amplitude_chA', 'amplitude_chB',
-                   'modulation',
-                   'frequency_mod',
-                   'frequency_mod_bin',
-                   'phase_mod',
-                   'phase_mod_bin']
-    
     def __init__(self, *args, **kwargs):
         #request = kwargs.pop('request')
         super(DDSConfigurationForm, self).__init__(*args, **kwargs)
@@ -52,9 +33,4 @@ class DDSConfigurationForm(forms.ModelForm):
 
     class Meta:
         model = DDSConfiguration
-        exclude = ('type','parameters')
-
-class UploadFileForm(forms.Form):
-    
-    title = forms.ChoiceField(label='Extension Type', choices=EXT_TYPES)
-    file = forms.FileField()
+        exclude = ('type', 'parameters', 'status')

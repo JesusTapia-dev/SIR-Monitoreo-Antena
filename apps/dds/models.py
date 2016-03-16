@@ -5,16 +5,20 @@ from apps.main.models import Configuration
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 
-from files import read_dds_file, read_json_file
+from devices.dds import api, data, files
 
+ENABLE_TYPE = (
+               (False, 'Disabled'),
+               (True, 'Enabled'),
+               )
 MOD_TYPES = (
-    (0, 'Single Tone'),
-    (1, 'FSK'),
-    (2, 'Ramped FSK'),
-    (3, 'Chirp'),
-    (4, 'BPSK'),
-)
-
+                (0, 'Single Tone'),
+                (1, 'FSK'),
+                (2, 'Ramped FSK'),
+                (3, 'Chirp'),
+                (4, 'BPSK'),
+            )
+    
 class DDSConfiguration(Configuration):
     
     DDS_NBITS = 48
@@ -22,22 +26,23 @@ class DDSConfiguration(Configuration):
     clock = models.FloatField(verbose_name='Clock Input (MHz)',validators=[MinValueValidator(5), MaxValueValidator(75)], null=True)
     multiplier = models.PositiveIntegerField(verbose_name='Multiplier',validators=[MinValueValidator(1), MaxValueValidator(20)], default=4)
 
-    frequency = models.DecimalField(verbose_name='Frequency (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16)
-    frequency_bin = models.BigIntegerField(verbose_name='Frequency (Binary)',validators=[MinValueValidator(0), MaxValueValidator(2**DDS_NBITS-1)])
+    frequencyA_Mhz = models.DecimalField(verbose_name='Frequency A (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16, null=True)
+    frequencyA = models.BigIntegerField(verbose_name='Frequency A (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**DDS_NBITS-1)], null=True)
+
+    frequencyB_Mhz = models.DecimalField(verbose_name='Frequency B (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16, blank=True, null=True)
+    frequencyB = models.BigIntegerField(verbose_name='Frequency B (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**DDS_NBITS-1)], blank=True, null=True)
     
-    phase = models.FloatField(verbose_name='Phase (Degrees)', validators=[MinValueValidator(0), MaxValueValidator(360)], default=0)
-#     phase_binary = models.PositiveIntegerField(verbose_name='Phase (Binary)',validators=[MinValueValidator(0), MaxValueValidator(2**14-1)])
-     
-    amplitude_ch_A = models.PositiveIntegerField(verbose_name='Amplitude CH A',validators=[MinValueValidator(0), MaxValueValidator(2**12-1)], blank=True, null=True)
-    amplitude_ch_B = models.PositiveIntegerField(verbose_name='Amplitude CH B',validators=[MinValueValidator(0), MaxValueValidator(2**12-1)], blank=True, null=True)
+    phaseB_degrees = models.FloatField(verbose_name='Phase B (Degrees)', validators=[MinValueValidator(0), MaxValueValidator(360)], blank=True, null=True)
+    
+    phaseA_degrees = models.FloatField(verbose_name='Phase A (Degrees)', validators=[MinValueValidator(0), MaxValueValidator(360)], default=0)
     
     modulation = models.PositiveIntegerField(verbose_name='Modulation Type', choices = MOD_TYPES, default = 0)
     
-    frequency_mod = models.DecimalField(verbose_name='Mod: Frequency (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16, blank=True, null=True)
-    frequency_mod_bin = models.BigIntegerField(verbose_name='Mod: Frequency (Binary)',validators=[MinValueValidator(0), MaxValueValidator(2**DDS_NBITS-1)], blank=True, null=True)
+    amplitude_enabled = models.BooleanField(verbose_name='Amplitude Control', choices=ENABLE_TYPE, default=False)
     
-    phase_mod = models.FloatField(verbose_name='Mod: Phase (Degrees)', validators=[MinValueValidator(0), MaxValueValidator(360)], blank=True, null=True)
-#     phase_binary_mod = models.PositiveIntegerField(verbose_name='Phase Mod (Binary)',validators=[MinValueValidator(0), MaxValueValidator(2**14-1)], blank=True, null=True)
+    amplitudeI = models.PositiveIntegerField(verbose_name='Amplitude CH1',validators=[MinValueValidator(0), MaxValueValidator(2**12-1)], blank=True, null=True)
+    amplitudeQ = models.PositiveIntegerField(verbose_name='Amplitude CH2',validators=[MinValueValidator(0), MaxValueValidator(2**12-1)], blank=True, null=True)
+    
     
     def get_nbits(self):
         
@@ -46,79 +51,152 @@ class DDSConfiguration(Configuration):
     def clean(self):
         
         if self.modulation in [1,2,3]:
-            if self.frequency_mod is None or self.frequency_mod_bin is None:
+            if self.frequencyB is None or self.frequencyB_Mhz is None:
                 raise ValidationError({
-                    'frequency_mod': 'Frequency modulation has to be defined when FSK or Chirp modulation is selected'
+                    'frequencyB': 'Frequency modulation has to be defined when FSK or Chirp modulation is selected'
                 })
           
         if self.modulation in [4,]:
-            if self.phase_mod is None:
+            if self.phaseB_degrees is None:
                 raise ValidationError({
-                    'phase_mod': 'Phase modulation has to be defined when BPSK modulation is selected'
+                    'phaseB': 'Phase modulation has to be defined when BPSK modulation is selected'
                 })
-        
+                   
     def verify_frequencies(self):
         
         return True
     
-    def freq2binary(self, freq, mclock):
+    def parms_to_dict(self):
         
-        binary = (float(freq)/mclock)*(2**self.DDS_NBITS)
+        parameters = {}
         
-        return binary
-    
-    def binary2freq(self, binary, mclock):
+        parameters['clock'] = float(self.clock)
+        parameters['multiplier'] = int(self.multiplier)
+        parameters['frequencyA'] = int(self.frequencyA)
+        parameters['frequencyB'] = int(self.frequencyB)
+        parameters['phaseA'] = data.phase_to_binary(self.phaseA_degrees)
+        parameters['phaseB'] = data.phase_to_binary(self.phaseB_degrees)
+        parameters['frequencyA_Mhz'] = int(self.frequencyA_Mhz)
+        parameters['frequencyB_Mhz'] = int(self.frequencyB_Mhz)
+        parameters['phaseA_degrees'] = float(self.phaseA_degrees)
+        parameters['phaseB_degrees'] = float(self.phaseB_degrees)
+        parameters['modulation'] = int(self.modulation)
+        parameters['amplitude_enabled'] = int(self.amplitude_enabled)
         
-        freq = (float(binary)/(2**self.DDS_NBITS))*mclock
-        
-        return freq
-    
-    def phase2binary(self, phase):
-        
-        binary = phase*8192/180.0
-        
-        return binary
-    
-    def binary2phase(self, binary):
-        
-        phase = binary*180.0/8192
-        
-        return phase
-    
-    def export_file(self, ext_file="dds"):
-        
-        pass
-    
-    def update_from_file(self, fp, ext_file="dds"):
-        
-        if ext_file == "dds":
-            kwargs = read_dds_file(fp)
+        if self.amplitudeI:
+            parameters['amplitudeI'] = int(self.amplitudeI)
         else:
-            kwargs = read_json_file(fp)
+            parameters['amplitudeI'] = 0
+            
+        if self.amplitudeQ:
+            parameters['amplitudeQ'] = int(self.amplitudeQ)
+        else:
+            parameters['amplitudeQ'] = 0
         
-        if not kwargs:
-            return False
-        
-        self.clock = kwargs['clock']
-        self.multiplier = kwargs['multiplier']
+        return parameters
     
-        mclock = self.clock*self.multiplier
+    def dict_to_parms(self, parameters):
         
-        self.frequency = self.binary2freq(kwargs['frequency_bin'], mclock)
-        self.frequency_bin = kwargs['frequency_bin']
+        self.clock = parameters['clock']
+        self.multiplier = parameters['multiplier']
+        self.frequencyA = parameters['frequencyA']
+        self.frequencyB = parameters['frequencyB']
+        self.frequencyA_Mhz = parameters['frequencyA_Mhz']
+        self.frequencyB_Mhz = parameters['frequencyB_Mhz']
+        self.phaseA_degrees = parameters['phaseA_degrees']
+        self.phaseB_degrees = parameters['phaseB_degrees']
+        self.modulation = parameters['modulation']
+        self.amplitude_enabled = parameters['amplitude_enabled']
+    
+    def import_from_file(self, fp):
         
-        self.frequency_mod = self.binary2freq(kwargs['frequency_mod_bin'], mclock)
-        self.frequency_mod_bin = kwargs['frequency_mod_bin']
+        import os
         
-        self.phase = self.binary2phase(kwargs['phase_bin'])
-        self.phase_mod = self.binary2phase(kwargs['phase_mod_bin'])
+        parms = {}
         
-        self.modulation = kwargs['modulation']
+        path, ext = os.path.splitext(fp)
         
-        self.amplitude_ch_A = kwargs['amplitude_ch_A']
-        self.amplitude_ch_B = kwargs['amplitude_ch_B']
+        if ext == '.json':
+            parms = files.read_json_file(fp)
         
-        return True
+        if ext == '.dds':
+            parms = files.read_dds_file(fp)
+    
+        return parms
+    
+    def status_device(self):
+        
+        answer = api.status(ip = self.device.ip_address,
+                            port = self.device.port_address)
+        
+        self.device.status = int(answer[0])
+        self.message = answer[2:]
+        
+        self.device.save()
+        
+        return self.device.status
+    
+    def reset_device(self):
+        
+        answer = api.reset(ip = self.device.ip_address,
+                           port = self.device.port_address)
+        
+        if answer[0] != "1":
+            self.message = answer[0:]
+            return 0
+        
+        self.message = answer[2:]
+        return 1
+    
+    def stop_device(self):
+        
+        answer = api.disable_rf(ip = self.device.ip_address,
+                                port = self.device.port_address)
+        
+        if answer[0] != "1":
+            self.message = answer[0:]
+            return 0
+        
+        self.message = answer[2:]
+        return 1
+    
+    def start_device(self):
+        
+        answer = api.enable_rf(ip = self.device.ip_address,
+                               port = self.device.port_address)
+        
+        if answer[0] != "1":
+            self.message = answer[0:]
+            return 0
+        
+        self.message = answer[2:]
+        return 1
+    
+    def read_device(self):
+        
+        parms = api.read_config(ip = self.device.ip_address,
+                                port = self.device.port_address)
+        
+        if not parms:
+            self.message = "Could not read DDS parameters from this device"
+            return parms
+        
+        self.message = ""
+        return parms
+        
+        
+    def write_device(self):
+        
+        answer = api.write_config(ip = self.device.ip_address,
+                                 port = self.device.port_address,
+                                 parms = self.parms_to_dict())
+    
+        if answer[0] != "1":
+            self.message = answer[0:]
+            return 0
+        
+        self.message = answer[2:]
+        return 1
     
     class Meta:
         db_table = 'dds_configurations'
