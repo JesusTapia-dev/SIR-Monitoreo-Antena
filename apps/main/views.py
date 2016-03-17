@@ -776,8 +776,9 @@ def operation(request, id_camp=None):
         if form.is_valid():
             return redirect('url_operation', id_camp=campaign.id)
     
-    locations = Location.objects.filter(experiment__campaign = campaign)
+    locations = Location.objects.filter(experiment__campaign__pk = campaign.id)
     experiments = Experiment.objects.filter(campaign=campaign)
+    experiments = [Experiment.objects.filter(location__pk=location.id) for location in locations]
     
     kwargs = {}
     #---Campaign
