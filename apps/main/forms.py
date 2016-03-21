@@ -3,6 +3,20 @@ from django.utils.safestring import mark_safe
         
 from .models import DeviceType, Device, Experiment, Campaign, Configuration, Location
 
+FILE_FORMAT = (
+                ('json', 'json'),
+                )
+
+DDS_FILE_FORMAT = (
+                ('json', 'json'),
+                ('text', 'dds')
+                )
+
+RC_FILE_FORMAT = (
+                ('json', 'json'),
+                ('text', 'rc')
+                )
+
 def add_empty_choice(choices, pos=0, label='-----'):
     if len(choices)>0:
         choices = list(choices)
@@ -68,10 +82,22 @@ class DeviceTypeForm(forms.Form):
 class UploadFileForm(forms.Form):
     
     file = forms.FileField()
-    
+
 class DownloadFileForm(forms.Form):
     
-    format = forms.ComboField()
+    format = forms.ChoiceField(choices= ((0, 'json'),) )
+    
+    def __init__(self, device_type, *args, **kwargs):
+        
+        super(DownloadFileForm, self).__init__(*args, **kwargs)
+        
+        self.fields['format'].choices = FILE_FORMAT
+        
+        if device_type == 'dds':
+            self.fields['format'].choices = DDS_FILE_FORMAT
+        
+        if device_type == 'rc':
+            self.fields['format'].choices = RC_FILE_FORMAT
     
 class OperationForm(forms.Form):
 #     today = datetime.today()

@@ -514,7 +514,7 @@ def dev_conf_edit(request, id_conf):
     ###### SIDEBAR ######
     kwargs.update(sidebar(conf))
     
-    return render(request, 'dev_conf_edit.html', kwargs)
+    return render(request, '%s_conf_edit.html' %conf.device.device_type.name, kwargs)
 
 def dev_conf_start(request, id_conf):
     
@@ -528,7 +528,9 @@ def dev_conf_start(request, id_conf):
         messages.success(request, conf.message)
     else:
         messages.error(request, conf.message)
-        
+    
+    conf.status_device()
+    
     return redirect(conf.get_absolute_url())
 
 def dev_conf_stop(request, id_conf):
@@ -543,6 +545,8 @@ def dev_conf_stop(request, id_conf):
         messages.success(request, conf.message)
     else:
         messages.error(request, conf.message)
+    
+    conf.status_device()
     
     return redirect(conf.get_absolute_url())
 
@@ -571,16 +575,20 @@ def dev_conf_write(request, id_conf):
     conf = DevConfModel.objects.get(pk=id_conf)
     
     answer = conf.write_device()
+    conf.status_device()
     
     if answer:
         messages.success(request, conf.message)
         
+        #Creating a historical configuration
         conf.pk = None
         conf.id = None
         conf.type = 1
         conf.template = 0
         conf.save()
         
+        #Original configuration
+        conf = DevConfModel.objects.get(pk=id_conf)
     else:
         messages.error(request, conf.message)
     
@@ -598,6 +606,7 @@ def dev_conf_read(request, id_conf):
     if request.method=='GET':
         
         parms = conf.read_device()
+        conf.status_device()
         
         if not parms:
             messages.error(request, conf.message)
@@ -609,10 +618,8 @@ def dev_conf_read(request, id_conf):
         form = DevConfForm(request.POST, instance=conf)
         
         if form.is_valid():
-            dev_model = form.save(commit=False)
-                
-            if  dev_model.save():
-                return redirect(conf.get_absolute_url())
+            form.save()
+            return redirect(conf.get_absolute_url())
         
         messages.error(request, "Parameters could not be saved")
         
@@ -626,7 +633,7 @@ def dev_conf_read(request, id_conf):
     ###### SIDEBAR ######
     kwargs.update(sidebar(conf))
     
-    return render(conf.get_absolute_url_edit())
+    return render(request, '%s_conf_edit.html' %conf.device.device_type.name, kwargs)
 
 def dev_conf_import(request, id_conf):
     
@@ -648,9 +655,8 @@ def dev_conf_import(request, id_conf):
             parms = conf.import_from_file(request.FILES['file'])
         
             if parms:
-                
                 messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
-                
+                print parms
                 form = DevConfForm(initial=parms, instance=conf)
                 
                 kwargs = {}
@@ -689,13 +695,13 @@ def dev_conf_export(request, id_conf):
     conf = DevConfModel.objects.get(pk=id_conf)
     
     if request.method == 'GET':
-        file_form = DownloadFileForm()
+        file_form = DownloadFileForm(conf.device.device_type.name)
         
     if request.method == 'POST':
-        file_form = DownloadFileForm(request.POST)
+        file_form = DownloadFileForm(conf.device.device_type.name, request.POST)
     
         if file_form.is_valid():
-            fields = conf.export_to_file(format = file_form.format)
+            fields = conf.export_to_file(format = file_form.cleaned_data['format'])
             
             response = HttpResponse(content_type=fields['content_type'])
             response['Content-Disposition'] = 'attachment; filename="%s"' %fields['filename']

@@ -14,7 +14,7 @@ def dds_conf(request, id_conf):
     
     kwargs = {}
     
-    kwargs['status'] = conf.device.status
+    kwargs['status'] = conf.device.get_status_display()
     
 #     if not kwargs['connected']:
 #         messages.error(request, message=answer)
@@ -65,7 +65,7 @@ def dds_conf_edit(request, id_conf):
                 return redirect('url_dds_conf', id_conf=conf.id)
             
             ##ERRORS
-          
+        
     kwargs = {}
     kwargs['id_dev'] = conf.id
     kwargs['form'] = form

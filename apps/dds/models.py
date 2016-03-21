@@ -5,7 +5,7 @@ from apps.main.models import Configuration
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 
-from devices.dds import api, data, files
+from devices.dds import api, data
 
 ENABLE_TYPE = (
                (False, 'Disabled'),
@@ -32,9 +32,9 @@ class DDSConfiguration(Configuration):
     frequencyB_Mhz = models.DecimalField(verbose_name='Frequency B (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16, blank=True, null=True)
     frequencyB = models.BigIntegerField(verbose_name='Frequency B (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**DDS_NBITS-1)], blank=True, null=True)
     
-    phaseB_degrees = models.FloatField(verbose_name='Phase B (Degrees)', validators=[MinValueValidator(0), MaxValueValidator(360)], blank=True, null=True)
-    
     phaseA_degrees = models.FloatField(verbose_name='Phase A (Degrees)', validators=[MinValueValidator(0), MaxValueValidator(360)], default=0)
+    
+    phaseB_degrees = models.FloatField(verbose_name='Phase B (Degrees)', validators=[MinValueValidator(0), MaxValueValidator(360)], blank=True, null=True)
     
     modulation = models.PositiveIntegerField(verbose_name='Modulation Type', choices = MOD_TYPES, default = 0)
     
@@ -61,7 +61,10 @@ class DDSConfiguration(Configuration):
                 raise ValidationError({
                     'phaseB': 'Phase modulation has to be defined when BPSK modulation is selected'
                 })
-                   
+        
+        self.frequencyA_Mhz = data.binary_to_freq(self.frequencyA, self.clock*self.multiplier)
+        self.frequencyB_Mhz = data.binary_to_freq(self.frequencyB, self.clock*self.multiplier)
+        
     def verify_frequencies(self):
         
         return True
@@ -72,17 +75,30 @@ class DDSConfiguration(Configuration):
         
         parameters['clock'] = float(self.clock)
         parameters['multiplier'] = int(self.multiplier)
-        parameters['frequencyA'] = int(self.frequencyA)
-        parameters['frequencyB'] = int(self.frequencyB)
-        parameters['phaseA'] = data.phase_to_binary(self.phaseA_degrees)
-        parameters['phaseB'] = data.phase_to_binary(self.phaseB_degrees)
-        parameters['frequencyA_Mhz'] = int(self.frequencyA_Mhz)
-        parameters['frequencyB_Mhz'] = int(self.frequencyB_Mhz)
-        parameters['phaseA_degrees'] = float(self.phaseA_degrees)
-        parameters['phaseB_degrees'] = float(self.phaseB_degrees)
-        parameters['modulation'] = int(self.modulation)
-        parameters['amplitude_enabled'] = int(self.amplitude_enabled)
         
+        parameters['frequencyA'] = int(self.frequencyA)
+        parameters['frequencyA_Mhz'] = float(self.frequencyA_Mhz)
+        
+        parameters['phaseA'] = data.phase_to_binary(self.phaseA_degrees)
+        parameters['phaseA_degrees'] = float(self.phaseA_degrees)
+        
+        parameters['modulation'] = int(self.modulation)
+        parameters['amplitude_enabled'] = bool(self.amplitude_enabled)
+        
+        if self.frequencyB:
+            parameters['frequencyB'] = int(self.frequencyB)
+            parameters['frequencyB_Mhz'] = float(self.frequencyB_Mhz)
+        else:
+            parameters['frequencyB'] = 0
+            parameters['frequencyB_Mhz'] = 0
+        
+        if self.phaseB_degrees:
+            parameters['phaseB_degrees'] = float(self.phaseB_degrees)
+            parameters['phaseB'] = data.phase_to_binary(self.phaseB_degrees)
+        else:
+            parameters['phaseB_degrees'] = 0
+            parameters['phaseB'] = 0
+            
         if self.amplitudeI:
             parameters['amplitudeI'] = int(self.amplitudeI)
         else:
@@ -94,6 +110,14 @@ class DDSConfiguration(Configuration):
             parameters['amplitudeQ'] = 0
         
         return parameters
+    
+    def parms_to_text(self):
+        
+        my_dict = self.parms_to_dict()
+        
+        text = data.dict_to_text(my_dict)
+        
+        return text
     
     def dict_to_parms(self, parameters):
         
@@ -109,18 +133,19 @@ class DDSConfiguration(Configuration):
         self.amplitude_enabled = parameters['amplitude_enabled']
     
     def import_from_file(self, fp):
-        
-        import os
-        
+         
+        import os, json
+         
         parms = {}
-        
-        path, ext = os.path.splitext(fp)
-        
+         
+        path, ext = os.path.splitext(fp.name)
+         
         if ext == '.json':
-            parms = files.read_json_file(fp)
-        
+            parms = json.load(fp)
+         
         if ext == '.dds':
-            parms = files.read_dds_file(fp)
+            lines = fp.readlines()
+            parms = data.text_to_dict(lines)
     
         return parms
     

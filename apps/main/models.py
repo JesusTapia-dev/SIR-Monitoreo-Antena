@@ -163,9 +163,9 @@ class Configuration(PolymorphicModel):
         db_table = 'db_configurations'
     
     def __unicode__(self):
-        return u'[%s - %s]: %s' % (self.experiment.name,
-                                   self.experiment.name,
-                                   self.device.name)
+        return u'[%s, %s]: %s' % (self.experiment.name,
+                                   self.device.name,
+                                   self.name)
     
     def parms_to_dict(self):
         
@@ -175,6 +175,18 @@ class Configuration(PolymorphicModel):
             parameters[key] = getattr(self, key)
         
         return parameters
+    
+    def parms_to_text(self):
+        
+        raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
+        
+        return ''
+    
+    def parms_to_binary(self):
+        
+        raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
+        
+        return ''
     
     def dict_to_parms(self, parameters):
         
@@ -188,19 +200,22 @@ class Configuration(PolymorphicModel):
         
         import json
         
-        content_type = 'application/json'
-        filename = '%s.json' %self.name
-        content = json.dumps(self.params_to_dict())
+        content_type = ''
             
         if format == 'text':
             content_type = 'text/plain'
-            filename = '%s.%s' %(self.name, self.device.device_type.name)
-            content = self.params_to_text()
+            filename = '%s_%s.%s' %(self.device.device_type.name, self.name, self.device.device_type.name)
+            content = self.parms_to_text()
         
         if format == 'binary':
             content_type = 'application/octet-stream'
-            filename = '%s.bin' %self.name
-            content = self.params_to_binary()
+            filename = '%s_%s.bin' %(self.device.device_type.name, self.name)
+            content = self.parms_to_binary()
+        
+        if not content_type:
+            content_type = 'application/json'
+            filename = '%s_%s.json' %(self.device.device_type.name, self.name)
+            content = json.dumps(self.parms_to_dict())
             
         fields = {'content_type':content_type,
                   'filename':filename,
@@ -209,39 +224,46 @@ class Configuration(PolymorphicModel):
         
         return fields
     
-    def import_from_file(self, filename):
+    def import_from_file(self, fp):
         
-        raise NotImplementedError, "This method should be implemented in each Configuration model"
+        import os, json
         
-        return {}
+        parms = {}
+        
+        path, ext = os.path.splitext(fp.name)
+        
+        if ext == '.json':
+            parms = json.load(fp)
+        
+        return parms
       
     def status_device(self):
         
-        raise NotImplementedError, "This method should be implemented in each Configuration model"
+        raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
         
         return None
     
     def stop_device(self):
         
-        raise NotImplementedError, "This method should be implemented in each Configuration model"
+        raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
         
         return None
     
     def start_device(self):
         
-        raise NotImplementedError, "This method should be implemented in each Configuration model"
+        raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
         
         return None
     
     def write_device(self, parms):
         
-        raise NotImplementedError, "This method should be implemented in each Configuration model"
+        raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
         
         return None
     
     def read_device(self):
         
-        raise NotImplementedError, "This method should be implemented in each Configuration model"
+        raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
         
         return None
     

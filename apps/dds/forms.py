@@ -4,11 +4,6 @@ from .models import DDSConfiguration
 
 # from django.core.validators import MinValueValidator, MaxValueValidator
 
-EXT_TYPES = (
-    ('dds', '.dds'),
-    ('json', '.json'),
-)
-
 class DDSConfigurationForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
@@ -26,10 +21,10 @@ class DDSConfigurationForm(forms.ModelForm):
             
             self.fields['device'].widget.choices = [(device.id, device) for device in devices]
     
-    
-    def clean(self):
-        # Custom validation to force an integer when type of unit = "Unit"
-        return 
+#     
+#     def clean(self):
+#         # Custom validation to force an integer when type of unit = "Unit"
+#         return 
 
     class Meta:
         model = DDSConfiguration

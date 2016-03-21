@@ -41,11 +41,13 @@
           <li class=" dropdown {% block operation-active %}{% endblock %}"><a href="{% url 'url_operation'%}">Operation</a>
           </li>
           <li class=" dropdown {% block conf-active %}{% endblock %}">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuration<span class="caret"></span></a>          
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">New<span class="caret"></span></a>          
             <ul class="dropdown-menu" role="menu">
-              <li><a href="#">Campaigns</a></li>
-              <li><a href="#">Radars</a></li>
-              <li><a href="#">Devices</a></li>
+              <li><a href="{% url 'url_add_campaign' %}">Campaign</a></li>
+              <li><a href="{% url 'url_add_experiment' 0%}">Experiment</a></li>
+              <li><a href="{% url 'url_add_dev_conf' 0%}">Device Configuration</a></li>
+              <li><a href="{% url 'url_add_device'%}">Radar/Device</a></li>
+              
             </ul>          
           </li>
           <li class=" dropdown {% block test-active %}{% endblock %}">
