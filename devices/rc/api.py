@@ -29,21 +29,12 @@ CMD_RESET           =0X01
 CMD_ENABLE          =0X02
 CMD_CHANGEIP        =0X03
 CMD_STATUS          =0X04
+CMD_DISABLE         =0X02
 CMD_ECHO            =0XFE
 
-DDS_CMD_RESET       =0X10
-DDS_CMD_ENABLE_RF   =0x11
-# DDS_CMD_MULTIPLIER  =0X12
-# DDS_CMD_MODE        =0x13
-# DDS_CMD_FREQUENCY_A  =0X14
-# DDS_CMD_FREQUENCY_B  =0x15
-# DDS_CMD_PHASE_A      =0X16
-# DDS_CMD_PHASE_B      =0x17
-# DDS_CMD_AMPLITUDE_1  =0X19      #Se han invertido la posicion de los canales
-# DDS_CMD_AMPLITUDE_2  =0x18      #en el PCB
-
-DDS_CMD_WRITE        =0x50
-DDS_CMD_READ        =0x8000
+RC_CMD_RESET        =0X10
+RC_CMD_WRITE        =0x50
+RC_CMD_READ         =0x8000
 
 @eth_device(ID_CLASS)
 def reset():
@@ -82,12 +73,12 @@ def read_all_device():
     
     payload = ""
     
-    return DDS_CMD_READ, payload
+    return CR_CMD_READ, payload
 
 @eth_device(ID_CLASS)
 def write_all_device(payload):
     
-    return DDS_CMD_WRITE, payload
+    return CR_CMD_WRITE, payload
 
 def read_config(ip, port):
     """
@@ -113,6 +104,28 @@ def write_config(ip, port, parms):
     answer = write_all_device(ip, port, payload)
     
     return answer
+
+def __get_low_byte(valor):
+   
+   return ord(valor & 0x00FF)
+   
+def __get_high_byte(valor):
+   
+   return ord((valor & 0xFF00) >> 8)
+
+@eth_device(ID_CLASS)
+def write_ram_memory(vector_valores, vector_tiempos):
+
+    l1 = len(vector_valores)
+    l2 = len(vector_tiempos)
+    
+    cad = ""
+    
+    for i in range(l1):
+      cad += ord(84) + __get_low_byte(vector_valores[i]) + ord(85) + __get_high_byte(vector_valores[i]) + \
+             ord(84) + __get_low_byte(vector_tiempos[i]) + ord(85) + __get_high_byte(vector_tiempos[i])
+    
+    return RC_CMD_WRITE, cad
 
 if __name__ == '__main__':
     ip = "10.10.20.150"
