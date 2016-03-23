@@ -36,7 +36,34 @@ class CGSConfiguration(Configuration):
         self.freq3 = kwargs['freq3']
         
         return True
-
-
+    
+    def parms_to_dict(self):
+        
+        parameters = {}
+        
+        if self.freq0 == None or self.freq0 == '':
+            parameters['freq0'] = 0
+        else:
+            parameters['freq0'] = self.freq0
+            
+        if self.freq1 == None or self.freq1 == '':
+            parameters['freq1'] = 0
+        else:
+            parameters['freq1'] = self.freq1
+            
+        if self.freq2 == None or self.freq2 == '':
+            parameters['freq2'] = 0
+        else:
+            parameters['freq2'] = self.freq2    
+            
+        if self.freq3 == None or self.freq3 == '':
+            parameters['freq3'] = 0
+        else:
+            parameters['freq3'] = self.freq3
+        
+        
+        return parameters
+    
+    
     class Meta:
         db_table = 'cgs_configurations'
