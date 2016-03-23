@@ -65,5 +65,112 @@ class CGSConfiguration(Configuration):
         return parameters
     
     
+    def status_device(self):
+        
+        import requests
+        
+        ip=self.device.ip_address
+        port=self.device.port_address
+        
+        route = "http://" + str(ip) + ":" + str(port) + "/status/ad9548"
+        try:
+            r = requests.get(route)
+        except:
+            self.device.status = 0
+            self.device.save()
+            return self.device.status
+         
+        response = str(r.text)
+        response = response.split(";")
+        icon = response[0]
+        status = response[-1] 
+        
+        print icon, status
+        #"icon" could be: "alert" or "okay"
+        if "alert" in icon:
+            if "Starting Up" in status: #No Esta conectado
+                self.device.status = 0
+            else:
+                self.device.status = 1
+        elif  "okay" in icon:
+            self.device.status = 3
+        else:
+            self.device.status = 1
+    
+        self.message = status
+        self.device.save()
+        
+        
+        return self.device.status
+    
+    
+    def read_device(self):
+        
+        import requests
+        
+        ip=self.device.ip_address
+        port=self.device.port_address
+        
+        route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
+        try:
+            frequencies = requests.get(route)
+        
+        except:
+            self.message = "Could not read CGS parameters from this device"
+            return None
+        
+        frequencies = frequencies.json()
+        frequencies = frequencies.get("Frecuencias")
+        f0 = frequencies.get("f0")
+        f1 = frequencies.get("f1")
+        f2 = frequencies.get("f2")
+        f3 = frequencies.get("f3")
+        
+        parms = {'freq0': f0,
+                 'freq1': f1,
+                 'freq2': f2,
+                 'freq3': f3}
+        
+        self.message = ""
+        return parms
+    
+    
+    def write_device(self):
+        
+        import requests
+        
+        ip=self.device.ip_address
+        port=self.device.port_address
+        
+        #---Frequencies from form
+        f0 = self.freq0
+        f1 = self.freq1
+        f2 = self.freq2
+        f3 = self.freq3
+        post_data = {"f0":f0, "f1":f1, "f2":f2, "f3":f3}
+        route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
+        
+        try:            
+            r = requests.post(route, post_data)
+        except:
+            self.message = "Could not write CGS parameters"
+            return None
+        
+        text = r.text
+        text = text.split(',')
+        
+        if len(text)>1:
+            title = text[0]
+            status = text[1]
+            if title == "okay":
+                self.message = status
+                return 3
+            else:
+                self.message = title + ", " + status
+                return 1
+    
+        return 1
+    
+
     class Meta:
         db_table = 'cgs_configurations'
