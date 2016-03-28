@@ -18,7 +18,7 @@
   {% bootstrap_form form layout='horizontal' size='medium' %}
   <div style="clear: both;"></div>
   <br>
-  <button type="submit" class="btn btn-primary pull-right">{{button}}</button>
+  <button id="button-1" type="button" class="btn btn-primary pull-right">{{button}}</button>
   <br>
   <br>
 </form>
@@ -37,10 +37,10 @@
 	          <span>
 	          </span>
 	        </a>
-	        <button type="button" class="btn btn-primary pull-right btn-xs" aria-label="Left Align" style="margin-left: 10px">
+	        <button id="play-{{ location.id }}" type="button" class="btn btn-primary pull-right btn-xs" aria-label="Left Align" style="margin-left: 10px">
                 <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
             </button>
-            <button type="button" class="btn btn-primary pull-right btn-xs" aria-label="Left Align" style="margin-left: 10px">
+            <button id="stop-{{ location.id }}" type="button" class="btn btn-primary pull-right btn-xs" aria-label="Left Align" style="margin-left: 10px">
                 <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
             </button>
 	        
@@ -51,23 +51,22 @@
 	      <div class="panel-body">
 	      <table class="table table-hover">
 			<tr>
-			  
+			   <th>#</th>
 			  {% for header in experiment_keys %}
 			  <th>{{ header|title }}</th>
 			  {% endfor%}
 			</tr>
-			
+			    
 			{% for item in experiments %}
-				{% for exs in item %}
-					<tr class="clickable-row" data-href="{% url 'url_experiment' exs.id %}" >
-						
+			    {% if location.name in item.location.name  %}
+				
+					<tr class="clickable-row" data-href="{% url 'url_experiment' item.id %}" >
+						<td>{{ forloop.counter }}</td>
 			        	{% for key in experiment_keys %}
-			        	    {% if location.name in exs.location.name  %}
-			              <td>{{ exs|value:key }}</td>
-			       		    {% endif %}
+			              <td>{{ item|value:key }}</td>
 			       		{% endfor %}
-			     {% endfor %}
 					</tr>
+			     {% endif %}
 			{% endfor %}
 		  </table>  
 	      </div>
@@ -82,11 +81,25 @@
 
 {% block extra-js%}
 <script type="text/javascript">
-  
-   //$("#bt_add").click(function() {
-	   //alert("sometext");
-	//   document.location = "{% url 'url_operation' campaign.id %}";
-   //});
+//for (i = 0; i < locations.length; i++) {
+//    text += cars[i] + "<br>";
+//}
+	//------For PLAY Button-------
+    {%  for location in locations %} 
+       $("#play-{{ location.id }}").click(function() {
+	       //alert("Play-{{location}}");
+	       var id_loc = {{location.id}}
+	       //document.location = 
+       });
+    {% endfor %} 
+
+  //--------For STOP Button-------
+    {%  for location in locations %} 
+       $("#stop-{{ location.id }}").click(function() {
+	       alert("Stop-{{location}}");
+	    //   document.location = "{% url 'url_operation' campaign.id %}";
+       });
+    {% endfor %} 
  
   $(".clickable-row").click(function() {
       document.location = $(this).data("href");
@@ -98,6 +111,10 @@
 	    	//alert(id_camp);
 			document.location = "{% url 'url_operation'%}"+String(id_camp);
 		});
+  });
+  
+  $("#button-1").click(function() {
+      document.location = "{% url 'url_operation_search' %}";
   });
   
   
