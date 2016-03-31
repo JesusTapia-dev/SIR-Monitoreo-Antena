@@ -829,6 +829,7 @@ def operation(request, id_camp=None):
     kwargs['suptitle'] = campaign.name
     kwargs['form'] = form
     kwargs['button'] = 'Search'
+    kwargs['details'] = True
     kwargs['search_button'] = True
     
     return render(request, 'operation.html', kwargs)

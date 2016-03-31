@@ -28,6 +28,9 @@
 <br>
 <br>
 
+<!-- If -->
+{% if details %}
+
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true" >
       
 	  {% for location in locations %}
@@ -77,6 +80,8 @@
 	  </div>
 	  {% endfor %}
 </div>
+
+{% endif %}
 
 {% endblock %}
 
