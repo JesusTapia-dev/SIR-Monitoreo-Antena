@@ -10,7 +10,7 @@ from apps.abs.forms import ABSConfigurationForm
 from apps.rc.forms import RCConfigurationForm
 from apps.dds.forms import DDSConfigurationForm
 
-from .models import Campaign, Experiment, Device, Configuration, Location, RunningExperiment
+from .models import Campaign, Experiment, Device, Configuration, Location#, RunningExperiment
 from apps.cgs.models import CGSConfiguration
 from apps.jars.models import JARSConfiguration
 from apps.usrp.models import USRPConfiguration
