@@ -101,6 +101,26 @@ class DownloadFileForm(forms.Form):
     
 class OperationForm(forms.Form):
 #     today = datetime.today()
-    # -----Campaigns from this month------
-    campaign = forms.ChoiceField(choices=Campaign.objects.all().order_by('-start_date').values_list('id', 'name')[:5], label="Campaign")
+    # -----Campaigns from this month------[:5]
+    campaign = forms.ChoiceField(label="Campaign")
+    
+    def __init__(self, *args, **kwargs):
+        
+        if 'length' not in kwargs.keys():
+            length = None
+        else:
+            length = kwargs['length']
+        
+            kwargs.pop('length')
+        
+        super(OperationForm, self).__init__(*args, **kwargs)
+        self.fields['campaign'].choices=Campaign.objects.all().order_by('-start_date').values_list('id', 'name')[:length]
+        
+class OperationSearchForm(forms.Form):
+    # -----ALL Campaigns------
+    campaign = forms.ChoiceField(label="Campaign")
+    
+    def __init__(self, *args, **kwargs):
+        super(OperationSearchForm, self).__init__(*args, **kwargs)
+        self.fields['campaign'].choices=Campaign.objects.all().order_by('-start_date').values_list('id', 'name')
     

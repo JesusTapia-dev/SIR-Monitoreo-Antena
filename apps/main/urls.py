@@ -40,6 +40,8 @@ urlpatterns = (
     url(r'^dev_conf/(?P<id_conf>-?\d+)/status/$', 'apps.main.views.dev_conf_status', name='url_status_dev_conf'),
     
     url(r'^operation/$', 'apps.main.views.operation', name='url_operation'),
+    url(r'^operation/search/$', 'apps.main.views.operation_search', name='url_operation_search'),
+    url(r'^operation/search/(?P<id_camp>-?\d+)/$', 'apps.main.views.operation_search', name='url_operation_search'),
     url(r'^operation/(?P<id_camp>-?\d+)/$', 'apps.main.views.operation', name='url_operation'),
     
 )

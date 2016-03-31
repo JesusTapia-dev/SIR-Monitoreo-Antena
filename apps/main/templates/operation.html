@@ -18,7 +18,10 @@
   {% bootstrap_form form layout='horizontal' size='medium' %}
   <div style="clear: both;"></div>
   <br>
+  <!-- For deep search -->
+  {% if search_button == True %}
   <button id="button-1" type="button" class="btn btn-primary pull-right">{{button}}</button>
+  {% endif %}
   <br>
   <br>
 </form>
@@ -105,6 +108,7 @@
       document.location = $(this).data("href");
   });
   
+  {% if search_button == True %}
   $(document).ready(function() {
 	    $("#id_campaign").change(function() {
 	    	var id_camp = document.getElementById("id_campaign").value;
@@ -112,6 +116,15 @@
 			document.location = "{% url 'url_operation'%}"+String(id_camp);
 		});
   });
+  {% else %}
+  $(document).ready(function() {
+	    $("#id_campaign").change(function() {
+	    	var id_camp = document.getElementById("id_campaign").value;
+	    	//alert(id_camp);
+			document.location = "{% url 'url_operation_search'%}"+String(id_camp);
+		});
+  });
+  {% endif %}
   
   $("#button-1").click(function() {
       document.location = "{% url 'url_operation_search' %}";

@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.contrib import messages
 
 from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm, UploadFileForm, DownloadFileForm, OperationForm
+from .forms import OperationSearchForm
 from apps.cgs.forms import CGSConfigurationForm
 from apps.jars.forms import JARSConfigurationForm
 from apps.usrp.forms import USRPConfigurationForm
@@ -9,7 +10,7 @@ from apps.abs.forms import ABSConfigurationForm
 from apps.rc.forms import RCConfigurationForm
 from apps.dds.forms import DDSConfigurationForm
 
-from .models import Campaign, Experiment, Device, Configuration, Location
+from .models import Campaign, Experiment, Device, Configuration, Location, RunningExperiment
 from apps.cgs.models import CGSConfiguration
 from apps.jars.models import JARSConfiguration
 from apps.usrp.models import USRPConfiguration
@@ -69,6 +70,35 @@ def location(request, id_loc):
     kwargs['suptitle'] = 'Details'
     
     return render(request, 'location.html', kwargs)
+
+#def location_play(request, id_camp, id_loc):
+    
+#    campaign = get_object_or_404(Campaign, pk=id_camp)
+#    print campaign
+#    location = get_object_or_404(Location, pk=id_loc)
+#    experiments =  Experiment.objects.filter(location__pk=location.id).filter(campaign__pk=campaign.id)
+#    locations = Location.objects.filter(pk=id_loc)
+    
+#    if request.method=='GET':
+#        form = OperationForm(initial={'campaign': campaign.id})
+    
+#    kwargs = {}
+    #---Campaign
+#    kwargs['campaign'] = campaign
+#    kwargs['campaign_keys'] = ['name', 'start_date', 'end_date', 'tags', 'description']
+    #---Experiment
+#    keys = ['id', 'name', 'start_time', 'end_time']
+#    kwargs['experiment_keys'] = keys[1:]
+#    kwargs['experiments'] = experiments
+    #---Radar
+#    kwargs['location'] = location
+    #---Else
+#    kwargs['title'] = 'Campaign'
+#    kwargs['suptitle'] = campaign.name
+#    kwargs['form'] = form
+#    kwargs['button'] = 'Search'
+    
+#    return render(request, 'operation_play.html', kwargs)
 
 def location_new(request):
     
@@ -774,23 +804,21 @@ def operation(request, id_camp=None):
     campaign = get_object_or_404(Campaign, pk = id_camp)
     
     if request.method=='GET':
-        form = OperationForm(initial={'campaign': id_camp})
+        form = OperationForm(initial={'campaign': campaign.id}, length = 5)
         
     if request.method=='POST':
-        form = OperationForm(request.POST, initial={'campaign':campaign.id})
+        form = OperationForm(request.POST, initial={'campaign':campaign.id}, length = 5)
         
         if form.is_valid():
             return redirect('url_operation', id_camp=campaign.id)
-    
-    locations = Location.objects.filter(experiment__campaign__pk = campaign.id)
-    experiments = Experiment.objects.filter(campaign=campaign)
-    experiments = [Experiment.objects.filter(location__pk=location.id) for location in locations]
-    
+    locations = Location.objects.filter(experiment__campaign__pk = campaign.id).distinct()
+    experiments = Experiment.objects.filter(campaign__pk=campaign.id)
+    #experiments = [Experiment.objects.filter(location__pk=location.id).filter(campaign__pk=campaign.id) for location in locations]
     kwargs = {}
     #---Campaign
     kwargs['campaign'] = campaign
     kwargs['campaign_keys'] = ['name', 'start_date', 'end_date', 'tags', 'description']
-    #---Experimet
+    #---Experiment
     keys = ['id', 'name', 'start_time', 'end_time']
     kwargs['experiment_keys'] = keys[1:]
     kwargs['experiments'] = experiments
@@ -800,6 +828,60 @@ def operation(request, id_camp=None):
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = campaign.name
     kwargs['form'] = form
-    kwargs['button'] = 'Apply'
+    kwargs['button'] = 'Search'
+    kwargs['search_button'] = True
+    
+    return render(request, 'operation.html', kwargs)
+
+def operation_search(request, id_camp=None, location_play = None):
+    
+    
+    if not id_camp:
+        campaigns = Campaign.objects.all().order_by('-start_date')
+        form = OperationSearchForm()
+        
+        if not campaigns:
+            return render(request, 'operation.html', {})
+        
+        id_camp = campaigns[0].id
+        campaign = get_object_or_404(Campaign, pk = id_camp)
+        
+        kwargs = {}
+        kwargs['title'] = 'All Campaigns'
+        kwargs['form'] = form
+        return render(request, 'operation.html', kwargs)
+    
+    else:
+        campaign = get_object_or_404(Campaign, pk = id_camp)
+        locations = Location.objects.filter(experiment__campaign__pk = campaign.id).distinct()
+        experiments = Experiment.objects.filter(campaign__pk=campaign.id)
+        #experiments = [Experiment.objects.filter(location__pk=location.id).filter(campaign__pk=campaign.id) for location in locations]
+        form = OperationSearchForm(initial={'campaign': campaign.id})
+        
+        kwargs = {}
+        #---Campaign
+        kwargs['campaign'] = campaign
+        kwargs['campaign_keys'] = ['name', 'start_date', 'end_date', 'tags', 'description']
+        #---Experiment
+        keys = ['id', 'name', 'start_time', 'end_time']
+        kwargs['experiment_keys'] = keys[1:]
+        kwargs['experiments'] = experiments
+        #---Radar
+        kwargs['locations'] = locations
+        #---Else
+        kwargs['title'] = 'Campaign'
+        kwargs['suptitle'] = campaign.name
+        kwargs['form'] = form
+        kwargs['button'] = 'Select'
+        kwargs['details'] = True
+        kwargs['search_button'] = False
+        
+        
+    if request.method=='POST':
+        form = OperationSearchForm(request.POST, initial={'campaign':campaign.id})
+        
+        if form.is_valid():
+            return redirect('operation.html', id_camp=campaign.id)
+        
     
     return render(request, 'operation.html', kwargs)
