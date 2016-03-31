@@ -6,7 +6,15 @@ from django.core.urlresolvers import reverse
 CONF_STATES = (
                  (0, 'Disconnected'),
                  (1, 'Connected'),
-                 (1, 'Running'),
+                 (2, 'Running'),
+             )
+
+EXP_STATES = (
+                 (0,'Error'),        #RED
+                 (1,'Configurated'), #BLUE
+                 (2,'Running'),      #GREEN
+                 (3,'Waiting'),      #YELLOW
+                 (4,'Nothing'),      #WHITE
              )
 
 CONF_TYPES = (
@@ -122,6 +130,11 @@ class Campaign(models.Model):
 #     
 #     def __unicode__(self):
 #         return u'%s' % self.location
+
+#class RunningExperiment(models.Model):
+#    radar = models.OneToOneField('Location', on_delete=models.CASCADE)
+#    running_experiment = models.OneToOneField('Experiment', on_delete=models.CASCADE)
+#    status = models.PositiveSmallIntegerField(default=0, choices=RADAR_STATES)
     
     
 class Experiment(models.Model):
