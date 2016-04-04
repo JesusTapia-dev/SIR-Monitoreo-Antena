@@ -13,8 +13,12 @@
 
 {% block content %}
 
+
+
 <form class="form" method="post" action="">
   {% csrf_token %}
+  <!-- Not Empty-->
+  {% if details %}
   {% bootstrap_form form layout='horizontal' size='medium' %}
   <div style="clear: both;"></div>
   <br>
@@ -28,8 +32,7 @@
 <br>
 <br>
 
-<!-- If -->
-{% if details %}
+
 
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true" >
       
