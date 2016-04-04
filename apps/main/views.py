@@ -800,7 +800,7 @@ def operation(request, id_camp=None):
             kwargs = {}
             kwargs['title'] = 'No Campaigns'
             kwargs['suptitle'] = 'Empty'
-            return render(request, 'operation.html', {})
+            return render(request, 'operation.html', kwargs)
         
         id_camp = campaigns[0].id
     
