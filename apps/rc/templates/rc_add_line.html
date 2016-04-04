@@ -9,5 +9,10 @@
     document.location = url + $(this).val()+"/";
   });
 
+ $("#id_code").change(function() {
+    var url = "{% url 'url_add_rc_line' dev_conf.id line_type.id %}";
+    document.location = url+ "code/" + $(this).val() + "/";
+  });
+
 </script>
 {% endblock %}

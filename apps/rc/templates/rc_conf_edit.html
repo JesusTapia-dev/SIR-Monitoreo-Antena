@@ -7,6 +7,8 @@
     /* show the move cursor as the user moves the mouse over the panel header.*/
     .panel-default { cursor: move; }
 </style>
+<script src="{% static 'js/jquery-ui.min.js' %}"></script>
+
 {% endblock %}
 
 {% block content %}
@@ -30,7 +32,7 @@
 
 {% block extra-js%}
 
-<script src="{% static 'js/jquery-ui.min.js' %}"></script>
+<script src="{% static 'js/cr.js' %}"></script>
 
 <script type="text/javascript">
 
@@ -45,6 +47,10 @@
   $("#div_lines").on("click", "button[name=bt_add_subline]", function(){
     document.location = "/rc/{{dev_conf.id}}/line/"+$(this).val()+"/add_subline/";
   }); 
+  
+  $("#div_lines").on("click", "button[name=bt_edit_codes]", function(){
+    document.location = "/rc/{{dev_conf.id}}/line/"+$(this).val()+"/codes/";
+  });   
   
   $("#bt_add_line").click(function() {
     document.location = "{% url 'url_add_rc_line' dev_conf.id%}";

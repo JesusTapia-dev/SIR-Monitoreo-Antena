@@ -121,3 +121,9 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
+
+FIXTURE_DIRS = (
+    os.path.join(BASE_DIR, 'apps', 'rc', 'fixtures'),
+    os.path.join(BASE_DIR, 'apps', 'main', 'fixtures'),
+
+)

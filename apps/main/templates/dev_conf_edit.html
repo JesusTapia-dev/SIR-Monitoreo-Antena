@@ -20,6 +20,11 @@
   {% bootstrap_form form layout='horizontal' size='medium' %}
   <div style="clear: both;"></div>
   <br>
+  {% if extra_button %}
+  <div class="pull-left">
+  <button type="button" class="btn btn-primary" id="bt_{{extra_button}}">{{extra_button}}</button>  
+  </div>
+  {% endif %}
   <div class="pull-right">
   <button type="button" class="btn btn-primary" onclick="{% if previous %}window.location.replace('{{ previous }}');{% else %}history.go(-1);{% endif %}">Cancel</button>
   <button type="submit" class="btn btn-primary">{{button}}</button>
@@ -32,4 +37,10 @@
 {% endblock %}
 
 {% block extra-js%}
+<script type="text/javascript">
+  $("#id_device").change(function() {
+    var url = "{% url 'url_add_dev_conf' id_exp  %}";
+    document.location = url+ $(this).val() + "/";
+  });
+ </script>
 {% endblock %}

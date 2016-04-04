@@ -8,18 +8,11 @@
 {% endblock %}
 
 {% block content %}
-
-
-
-        <div id="div_plot">{{div}}</div>
-        
-
-
+<div id="div_plot">{{div}}</div>
 {% endblock %}
 
 {% block extra-js%}
 
-<script src="{% static 'js/jquery-ui.min.js' %}"></script>
 <script src="{% static 'js/bokeh-0.11.1.min.js' %}"></script>
  
 {{script}}

@@ -1,0 +1,63 @@
+{% extends "dev_conf_edit.html" %}
+
+{% block extra-js%}
+
+<script type="text/javascript">
+
+  $("#bt_Flip").click(function() {
+  
+    var codes = $("#id_codes").val().split("\n");
+    
+    if (codes.length>0) {
+      var mask = (Math.pow(2, codes[codes.length-1].length)-1)
+      var code = ~parseInt(codes[codes.length-1], 2) >>> 0;
+      codes[codes.length-1] = (code).toString(2);
+      //codes[codes.length-1] = mask.toString(2);
+      
+      $("#id_codes").val(codes.join("\n"));
+    }
+    
+  });
+  
+  $("#id_code").change(function() {
+    var url = "{% url 'url_edit_rc_codes' dev_conf.id line.id %}";
+    document.location = url+ $(this).val() + "/";
+  });
+  
+  $("#id_bits_per_code").change(function() {
+  
+    var codes = $("#id_codes").val().split("\n");
+  
+    for (i=0; i<codes.length; i++){  
+      if (codes[i].length>$(this).val()){      
+        codes[i] = codes[i].substr(0, parseInt($(this).val()));
+      }else{
+        codes[i] = codes[i]+Array(parseInt($(this).val())-codes[i].length+1).join("0");
+      }  
+    }
+    
+    $("#id_codes").val(codes.join("\n"));
+  
+  });
+  
+  $("#id_number_of_codes").change(function() {
+  
+    var codes = $("#id_codes").val().split("\n");
+  
+    if (codes.length>$(this).val()){
+      codes = codes.slice(0, $(this).val())
+    }else{
+      n = parseInt($(this).val())-codes.length;
+      while (n>0){
+        codes.splice(codes.length, 0, codes[0]);
+        n--;
+      }
+    }
+    
+    $("#id_codes").val(codes.join("\n"));
+  
+  });
+    
+
+</script>
+{% endblock %}

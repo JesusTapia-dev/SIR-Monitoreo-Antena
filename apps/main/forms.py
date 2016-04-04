@@ -14,7 +14,8 @@ DDS_FILE_FORMAT = (
 
 RC_FILE_FORMAT = (
                 ('json', 'json'),
-                ('text', 'rc')
+                ('text', 'racp'),
+                ('binary', 'dat'),
                 )
 
 def add_empty_choice(choices, pos=0, label='-----'):

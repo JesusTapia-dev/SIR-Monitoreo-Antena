@@ -1,3 +1,4 @@
+
 import json
 
 from django.contrib import messages
@@ -8,8 +9,8 @@ from apps.main.models import Configuration, Experiment, Device
 from apps.main.views import sidebar
 
 from .models import RCConfiguration, RCLine, RCLineType, RCLineCode
-from .forms import RCConfigurationForm, RCLineForm, RCLineViewForm, RCLineEditForm, RCSubLineEditForm, RCImportForm
-from .utils import RCFile, plot_pulses
+from .forms import RCConfigurationForm, RCLineForm, RCLineViewForm, RCLineEditForm, RCImportForm, RCLineCodesForm
+from .utils import plot_pulses
 
 
 def conf(request, conf_id):
@@ -27,8 +28,8 @@ def conf(request, conf_id):
     kwargs = {}
     kwargs['dev_conf'] = conf
     kwargs['rc_lines'] = lines
-    kwargs['dev_conf_keys'] = ['name', 'ipp', 'ntx', 'clock', 'clock_divider', 
-                               'time_before', 'time_after', 'sync']
+    kwargs['dev_conf_keys'] = ['name', 'ipp', 'ntx', 'clock_in', 'clock_divider', 'clock', 
+                               'time_before', 'time_after', 'sync', 'sampling_reference', 'control_tx', 'control_sw']
     
     kwargs['title'] = 'RC Configuration'
     kwargs['suptitle'] = 'Details'
@@ -46,21 +47,14 @@ def conf_edit(request, conf_id):
     
     lines = RCLine.objects.filter(rc_configuration=conf).order_by('channel')
         
-    for line in lines:
-        line_type = get_object_or_404(RCLineType, pk=line.line_type.id)
-        extra_fields = json.loads(line_type.params)
-        params = json.loads(line.params)
-        for item, values in extra_fields.items():
-            if item=='params':
-                continue              
-            values['value'] = params[item]
-        
-        line.form = RCLineEditForm(initial={'rc_configuration':conf_id, 'line_type': line.line_type.id, 'line': line.id},
-                                   extra_fields=extra_fields)
+    for line in lines:        
+        params = json.loads(line.params)                
+        line.form = RCLineEditForm(conf=conf, line=line, extra_fields=params)
+        line.subform = False
         
         if 'params' in params:
+            line.subforms = [RCLineEditForm(extra_fields=fields, line=line, subform=i) for i, fields in enumerate(params['params'])]
             line.subform = True
-            line.subforms = [RCSubLineEditForm(extra_fields=fields, line=line.id, count=i) for i, fields in enumerate(params['params'])]
     
     if request.method=='GET':
         
@@ -76,22 +70,26 @@ def conf_edit(request, conf_id):
         for label,value in request.POST.items():
             if label=='csrfmiddlewaretoken':
                 continue
+            
             if label.count('|')==0:
                 conf_data[label] = value
                 continue
-            elif label.count('|')==2:
+            
+            elif label.split('|')[0]<>'-1':
                 extras.append(label)
                 continue 
             
-            pk, name = label.split('|')
-    
+            x, pk, name = label.split('|')            
+            
+            if name=='codes':
+                value = [s for s in value.split('\r\n') if s]
+            
             if pk in line_data:
                 line_data[pk][name] = value
             else:
                 line_data[pk] = {name:value}
         
         #update conf
-
         form = RCConfigurationForm(conf_data, instance=conf)
 
         if form.is_valid():
@@ -125,7 +123,7 @@ def conf_edit(request, conf_id):
                 line.update_pulses()
             
             for tr in conf.get_lines('tr'):
-                tr.update_pulses()
+                tr.update_pulses()                    
             
             messages.success(request, 'RC Configuration successfully updated')
             
@@ -147,21 +145,29 @@ def conf_edit(request, conf_id):
     return render(request, 'rc_conf_edit.html', kwargs)
 
 
-def add_line(request, conf_id, line_type_id=None):
+def add_line(request, conf_id, line_type_id=None, code_id=None):
     
     conf = get_object_or_404(RCConfiguration, pk=conf_id)
     
     if request.method=='GET':
         if line_type_id:
             line_type = get_object_or_404(RCLineType, pk=line_type_id)
-            form = RCLineForm(initial={'rc_configuration':conf_id, 'line_type': line_type_id},
-                              extra_fields=json.loads(line_type.params))
+            
+            if code_id:
+                form = RCLineForm(initial={'rc_configuration':conf_id, 'line_type': line_type_id, 'code_id': code_id},
+                                  extra_fields=json.loads(line_type.params))
+            else:
+                form = RCLineForm(initial={'rc_configuration':conf_id, 'line_type': line_type_id},
+                                  extra_fields=json.loads(line_type.params))
         else:
+            line_type = {'id':0}
             form = RCLineForm(initial={'rc_configuration':conf_id})
         
     if request.method=='POST':
+        
         line_type = get_object_or_404(RCLineType, pk=line_type_id)
-        form = RCLineForm(request.POST, extra_fields=json.loads(line_type.params))
+        form = RCLineForm(request.POST,
+                          extra_fields=json.loads(line_type.params))
         
         if form.is_valid():
             form.save()
@@ -175,10 +181,50 @@ def add_line(request, conf_id, line_type_id=None):
     kwargs['button'] = 'Add'
     kwargs['previous'] = conf.get_absolute_url_edit()
     kwargs['dev_conf'] = conf
+    kwargs['line_type'] = line_type
     
     kwargs.update(sidebar(conf))
     
     return render(request, 'rc_add_line.html', kwargs)
+
+def edit_codes(request, conf_id, line_id, code_id=None):
+    
+    conf = get_object_or_404(RCConfiguration, pk=conf_id)
+    line = get_object_or_404(RCLine, pk=line_id)    
+    params = json.loads(line.params)
+    
+    if request.method=='GET':
+        if code_id:
+            code = get_object_or_404(RCLineCode, pk=code_id)
+            form = RCLineCodesForm(instance=code)
+        else:
+            initial = {'code': params['code'], 
+                       'codes': params['codes'] if 'codes' in params else [],
+                       'number_of_codes': len(params['codes']) if 'codes' in params else 0,
+                       'bits_per_code': len(params['codes'][0]) if 'codes' in params else 0,
+                       }
+            form = RCLineCodesForm(initial=initial)
+    
+    if request.method=='POST':
+        form = RCLineCodesForm(request.POST)
+        if form.is_valid():
+            params['code'] = request.POST['code']
+            params['codes'] = [s for s in request.POST['codes'].split('\r\n') if s]
+            line.params = json.dumps(params)
+            line.save()
+            messages.success(request, 'Line: "%s" has been updated.'  % line)
+            return redirect('url_edit_rc_conf', conf.id)
+    
+    kwargs = {}
+    kwargs['form'] = form
+    kwargs['title'] = line
+    kwargs['suptitle'] = 'Edit' 
+    kwargs['button'] = 'Update'
+    kwargs['dev_conf'] = conf
+    kwargs['previous'] = conf.get_absolute_url_edit()
+    kwargs['line'] = line
+    
+    return render(request, 'rc_edit_codes.html', kwargs)
 
 def add_subline(request, conf_id, line_id):
     
@@ -188,13 +234,12 @@ def add_subline(request, conf_id, line_id):
     if request.method == 'POST':
         if line:
             params = json.loads(line.params)
-            if 'params' in params:
-                subparams = json.loads(line.line_type.params)
-                base = [p for p in subparams if p['name']=='params'][0]['form']
-                new = {}
-                for p in base:
-                    new[p['name']] = p['value']
-                params['params'].append(new)
+            subparams = json.loads(line.line_type.params)
+            if 'params' in subparams:
+                dum = {}
+                for key, value in subparams['params'].items():
+                    dum[key] = value['value']
+                params['params'].append(dum)
                 line.params = json.dumps(params)
                 line.save()
             return redirect('url_edit_rc_conf', conf.id)
@@ -233,6 +278,7 @@ def remove_line(request, conf_id, line_id):
     kwargs['title'] = 'Confirm delete'
     kwargs['previous'] = conf.get_absolute_url_edit()
     return render(request, 'confirm.html', kwargs)
+
 
 def remove_subline(request, conf_id, line_id, subline_id):
     
@@ -273,13 +319,19 @@ def update_lines_position(request, conf_id):
         lines = RCLine.objects.filter(rc_configuration=conf).order_by('channel')
     
         for line in lines:
-            line.form = RCLineViewForm(extra_fields=json.loads(line.params))
+            params = json.loads(line.params)                
+            line.form = RCLineEditForm(conf=conf, line=line, extra_fields=params)
         
-        html = render(request, 'rc_lines.html', {'rc_lines':lines, 'edit':True})
+            if 'params' in params:
+                line.subform = True
+                line.subforms = [RCLineEditForm(extra_fields=fields, line=line, subform=i) for i, fields in enumerate(params['params'])]
+        
+        html = render(request, 'rc_lines.html', {'dev_conf':conf, 'rc_lines':lines, 'edit':True})
         data = {'html': html.content}
         
         return HttpResponse(json.dumps(data), content_type="application/json")
     return redirect('url_edit_rc_conf', conf.id)
+
     
 def import_file(request, conf_id):
     
@@ -289,59 +341,17 @@ def import_file(request, conf_id):
         if form.is_valid():
             #try:
             if True:
-                f = RCFile(request.FILES['file_name'])
-                data = f.data
-                conf.ipp = data['ipp']
-                conf.ntx = data['ntx']
-                conf.clock = data['clock']
-                conf.clock_divider = data['clock_divider']
-                conf.time_before = data['time_before']
-                conf.time_after = data['time_after']
-                conf.sync = data['sync']
-                conf.save()                
-                lines = []
-                positions = {'tx':0, 'tr':0}                
                 
-                for i, line_data in enumerate(data['lines']):
-                    line_type = RCLineType.objects.get(name=line_data.pop('type'))
-                    if line_type.name=='codes':
-                        code = RCLineCode.objects.get(name=line_data['code'])
-                        line_data['code'] = code.pk
-                    line = RCLine.objects.filter(rc_configuration=conf, channel=i)
-                    if line:
-                        line = line[0]
-                        line.line_type = line_type
-                        line.params = json.dumps(line_data)
-                    else:
-                        line = RCLine(rc_configuration=conf, line_type=line_type, 
-                                      params=json.dumps(line_data),
-                                      channel=i)                    
-                    
-                    if line_type.name=='tx':
-                        line.position = positions['tx']
-                        positions['tx'] += 1
-                    
-                    if line_type.name=='tr':
-                        line.position = positions['tr']
-                        positions['tr'] += 1
-                        
-                    line.save()
-                    lines.append(line)
-                    
-                for line, line_data in zip(lines, data['lines']):
-                    if 'TX_ref' in line_data:
-                        params = json.loads(line.params)
-                        params['TX_ref'] = [l.pk for l in lines if l.line_type.name=='tx' and l.get_name().replace(' ', '')==line_data['TX_ref']][0]
-                        line.params = json.dumps(params)
-                        line.save()                                
-                     
+                conf.update_from_file(request.FILES['file_name'])
+                conf.save()
+                
                 for line in conf.get_lines():
                     if line.line_type.name=='tr':
                         continue
                     line.update_pulses()
                 
                 for tr in conf.get_lines('tr'):
-                    tr.update_pulses() 
+                    tr.update_pulses()                            
                 
                 messages.success(request, 'Configuration "%s" loaded succesfully' % request.FILES['file_name'])
                 return redirect(conf.get_absolute_url())
@@ -351,8 +361,7 @@ def import_file(request, conf_id):
         
     else:
         messages.warning(request, 'Your current configuration will be replaced')
-        form = RCImportForm()
-    
+        form = RCImportForm()    
     
     kwargs = {}
     kwargs['form'] = form
@@ -362,7 +371,7 @@ def import_file(request, conf_id):
     kwargs['previous'] = conf.get_absolute_url()
     
     return render(request, 'rc_import.html', kwargs)
-
+    
 
 def view_pulses(request, conf_id):
     
@@ -373,17 +382,14 @@ def view_pulses(request, conf_id):
     
     N = int(conf.ipp*(conf.clock/conf.clock_divider)*20./3)*conf.ntx
         
-    script, div = plot_pulses(unit, N, lines)
+    script, div = plot_pulses(unit, N, lines) 
     
-    kwargs = {'div':mark_safe(div), 'script':mark_safe(script)}
-    
-    if 'json' in request.GET:
-    
-        return HttpResponse(json.dumps(kwargs), content_type="application/json")
-    
-    else:
+    kwargs = {}
         
-        
-        
-        return render(request, 'rc_pulses.html', kwargs)
+    kwargs['title'] = 'RC Pulses'
+    kwargs['suptitle'] = conf.name
+    kwargs['div'] = mark_safe(div)
+    kwargs['script'] = mark_safe(script)
+                   
+    return render(request, 'rc_pulses.html', kwargs)
 

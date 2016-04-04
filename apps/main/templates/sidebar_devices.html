@@ -61,14 +61,17 @@
 {% endif %}
 
 {% if dev_conf %}
-	<div class="panel panel-default">
-	  <div class="panel-heading">
-	    <h4>Campaign</h4>
-	  </div>
-	  <div class="list-group"> 
-	  	<a href="{% url 'url_campaign' dev_conf.experiment.campaign.id %}" class="list-group-item active" >{{ dev_conf.experiment.campaign.name }}</a>
-	  </div>
-	</div>
+	
+	{% if campaign %}
+    	<div class="panel panel-default">
+    	  <div class="panel-heading">
+    	    <h4>Campaign</h4>
+    	  </div>
+    	  <div class="list-group"> 
+    	  	<a href="{% url 'url_campaign' dev_conf.experiment.campaign.id %}" class="list-group-item active" >{{ dev_conf.experiment.campaign.name }}</a>
+    	  </div>
+    	</div>
+	{% endif %}
 	
 	{% if experiments %}
 		<div class="panel panel-default">

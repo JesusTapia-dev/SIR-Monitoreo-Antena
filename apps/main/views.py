@@ -391,7 +391,7 @@ def experiment(request, id_exp):
     
     return render(request, 'experiment.html', kwargs)
 
-def experiment_new(request, id_camp=0):
+def experiment_new(request, id_camp=None):
     
     if request.method == 'GET':
         form = ExperimentForm(initial={'campaign':id_camp})
@@ -473,42 +473,42 @@ def dev_conf(request, id_conf):
     
     conf = get_object_or_404(Configuration, pk=id_conf)
     
-    DevConfModel = CONF_MODELS[conf.device.device_type.name]
-    dev_conf = DevConfModel.objects.get(pk=id_conf)
+    return redirect(conf.get_absolute_url())
     
-    kwargs = {}
-    kwargs['dev_conf'] = dev_conf
-    kwargs['dev_conf_keys'] = ['name', 'experiment', 'device']
-    
-    kwargs['title'] = 'Configuration'
-    kwargs['suptitle'] = 'Details'
-    
-    kwargs['button'] = 'Edit Configuration'
-    
-    ###### SIDEBAR ######
-    kwargs.update(sidebar(conf))
-    
-    return render(request, 'dev_conf.html', kwargs)
 
-def dev_conf_new(request, id_exp=0):
+def dev_conf_new(request, id_exp=0, id_dev=0):
+    
+    initial = {}
+    
+    if id_exp==0:
+        initial['experiment'] = id_exp
+    
+    if id_dev<>0:
+        initial['device'] = id_dev
 
     if request.method == 'GET':
-        form = ConfigurationForm(initial={'experiment':id_exp})
+        if id_dev==0:
+            form = ConfigurationForm(initial=initial)
+        else:
+            device = Device.objects.get(pk=id_dev)
+            DevConfForm = CONF_FORMS[device.device_type.name]
+                                        
+            form = DevConfForm(initial=initial)
         
     if request.method == 'POST':
-        experiment = Experiment.objects.get(pk=request.POST['experiment'])
+        
         device = Device.objects.get(pk=request.POST['device'])
-        
         DevConfForm = CONF_FORMS[device.device_type.name]
-        
-        form = DevConfForm(request.POST, initial={'experiment':experiment.id})
+                                        
+        form = DevConfForm(request.POST)
         
         if form.is_valid():
             dev_conf = form.save()
     
-            return redirect('url_experiment', id_exp=experiment.id)
+            return redirect('url_dev_confs')
         
     kwargs = {}
+    kwargs['id_exp'] = id_exp
     kwargs['form'] = form
     kwargs['title'] = 'Configuration'
     kwargs['suptitle'] = 'New'
@@ -701,7 +701,7 @@ def dev_conf_import(request, id_conf):
                 ###### SIDEBAR ######
                 kwargs.update(sidebar(conf))
                 
-                return render(request, '%s_conf_edit.html' %conf.device.device_type.name, kwargs)
+                return render(request, '%s_conf_edit.html' % conf.device.device_type.name, kwargs)
 
         messages.error(request, "Could not import parameters from file")
     
@@ -772,21 +772,17 @@ def dev_conf_delete(request, id_conf):
 
 def sidebar(conf):
     
-    experiments = Experiment.objects.filter(campaign=conf.experiment.campaign)
-    configurations = Configuration.objects.filter(experiment=conf.experiment, type=0)
-    
-    exp_keys = ['id', 'campaign', 'name', 'start_time', 'end_time']
-    conf_keys = ['id', 'device']
-    
     kwargs = {}
     
-    kwargs['dev_conf'] = conf
-    
-    kwargs['experiment_keys'] = exp_keys[1:]
-    kwargs['experiments'] = experiments.values(*exp_keys)
-    
-    kwargs['configuration_keys'] = conf_keys[1:]
-    kwargs['configurations'] = configurations #.values(*conf_keys)
+    if conf.experiment:
+        experiments = Experiment.objects.filter(campaign=conf.experiment.campaign)
+        configurations = Configuration.objects.filter(experiment=conf.experiment, type=0)
+        exp_keys = ['id', 'campaign', 'name', 'start_time', 'end_time']
+        kwargs['experiment_keys'] = exp_keys[1:]
+        kwargs['experiments'] = experiments.values(*exp_keys)    
+        conf_keys = ['id', 'device']            
+        kwargs['configuration_keys'] = conf_keys[1:]
+        kwargs['configurations'] = configurations #.values(*conf_keys)
     
     return kwargs
 

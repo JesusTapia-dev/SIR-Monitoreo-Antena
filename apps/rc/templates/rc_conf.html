@@ -3,24 +3,11 @@
 {% load bootstrap3 %}
 {% load main_tags %}
 
-{% block extra-head %}
-<link href="http://cdn.pydata.org/bokeh/release/bokeh-0.11.1.min.css" rel="stylesheet" type="text/css">
+{% block extra-menu-actions %}
+<li><a href="{{ dev_conf.get_absolute_url_plot }}" target="_blank"><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> View Pulses </a></li>
 {% endblock %}
 
-{% block content %}
-<table class="table table-bordered">
-  <tr>
-  <th>Status</th>
-    <td>{%if connected == True %} <span class="glyphicon glyphicon-ok-circle text-success" aria-hidden="true"></span> Connected  {% else %} <span class="glyphicon glyphicon-remove-circle text-danger" aria-hidden="true"></span> Disconnected {% endif %}</td>
-  </tr>
-  {% for key in dev_conf_keys %}
-  <tr>
-    <th>{% get_verbose_field_name dev_conf key %}</th>
-    <td>{{dev_conf|attr:key}}</td>
-  </tr>
-{% endfor %}
-</table>
-
+{% block extra-content %}
 
 <div class="clearfix"></div>
 <h2>RC Lines</h2><hr>
@@ -28,54 +15,4 @@
 {% include "rc_lines.html" %}
 </div>
 
-<br>
-<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_export">Export</button>
-<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_import">Import</button>
-<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_edit">Edit</button>
-
-<button class="btn btn-primary pull-left" style="margin-left: 10px" id="bt_read">Read</button>
-<button class="btn btn-primary pull-left" style="margin-left: 10px" id="bt_write">Write</button>
-<button class="btn btn-primary pull-left" style="margin-left: 10px" id="bt_pulses">Pulses</button>
-
-<div class="modal fade" id="pulsesModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">RC Pulses</h4>
-      </div>
-      <div class="modal-body">
-        <div id="div_plot"></div>
-        <div id="div_script"></div>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
-{% endblock %}
-
-{% block extra-js%}
-
-<script src="{% static 'js/jquery-ui.min.js' %}"></script>
-<script src="{% static 'js/bokeh-0.11.1.min.js' %}"></script>
-
-<script type="text/javascript">
-
-  $("#bt_import").click(function() {
-    document.location = "{% url 'url_import_rc_conf' dev_conf.id %}";
-  });
-  
-  $("#bt_edit").click(function() {
-    document.location = "{% url 'url_edit_rc_conf' dev_conf.id %}";
-  });
-  
-  $("#bt_pulses").click(function() {
-    $.get( "plot/?json", {}, function(data){
-           $("#div_plot").html(data.div);
-           $("#div_script").html(data.script);
-        });
-    $('#pulsesModal').modal();
-  });
-  
-</script>
-{% endblock %}
+{% endblock extra-content%}

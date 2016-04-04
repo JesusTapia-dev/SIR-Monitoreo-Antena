@@ -176,9 +176,15 @@ class Configuration(PolymorphicModel):
         db_table = 'db_configurations'
     
     def __unicode__(self):
-        return u'[%s, %s]: %s' % (self.experiment.name,
-                                   self.device.name,
-                                   self.name)
+        
+        if self.experiment:
+            return u'[%s, %s]: %s' % (self.experiment.name,
+                                      self.device.name,
+                                      self.name)
+        else:
+            return u'%s' % self.device.name
+
+        
     
     def parms_to_dict(self):
         
@@ -228,7 +234,7 @@ class Configuration(PolymorphicModel):
         if not content_type:
             content_type = 'application/json'
             filename = '%s_%s.json' %(self.device.device_type.name, self.name)
-            content = json.dumps(self.parms_to_dict())
+            content = json.dumps(self.parms_to_dict(), indent=2)
             
         fields = {'content_type':content_type,
                   'filename':filename,

@@ -15,21 +15,25 @@
     <div id="collapse{{line.id}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{line.id}}">
       <div class="panel-body">
         {% bootstrap_form line.form layout='horizontal' size='small' %}
-        <br><br>
+        <br><br>        
+        {% for f in line.subforms %}
+          <div class="form-group form-group-sm">
+          <label class="col-md-3 control-label">{{line.line_type.name}}-{{ forloop.counter }}</label>
+          <div class="col-md-9">{% if edit %}<button type='button' name="bt_remove_subline" class="btn-xs btn-default" data-url="{% url 'url_remove_rc_subline' dev_conf.id line.id forloop.counter %}"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>{% endif %}</div>
+          </div><div class="clearfix"></div>
+          {% bootstrap_form f layout='horizontal' size='small' %}
+          <div class="clearfix"></div>
+        {% endfor %}
+          
+        {% if edit and line.subform %}
+          <br>
+          <button type="button" class="btn btn-sm btn-default" style="margin-left: 10px" name="bt_add_subline" value="{{line.pk}}">Add {{line.line_type.name}}</button>
+        {% endif %}
         
-	        {% for f in line.subforms %}
-	          <div class="form-group form-group-sm">
-	          <label class="col-md-3 control-label">{{line.line_type.name}}-{{ forloop.counter }}</label>
-	          <div class="col-md-9">{% if edit %}<button type='button' name="bt_remove_subline" class="btn-xs btn-default" data-url="{% url 'url_remove_rc_subline' dev_conf.id line.id forloop.counter %}"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>{% endif %}</div>
-	          </div><div class="clearfix"></div>
-	          {% bootstrap_form f layout='horizontal' size='small' %}
-	          <div class="clearfix"></div>
-	        {% endfor %}
-	          
-	        {% if edit and line.subform %}
-	          <br>
-	          <button type="button" class="btn btn-sm btn-default" style="margin-left: 10px" name="bt_add_subline" value="{{line.pk}}">Add {{line.line_type.name}}</button>
-	        {% endif %}
+        {% if edit and line.line_type.name == 'codes' %}
+          <br>
+          <button type="button" class="btn btn-sm btn-default" style="margin-left: 10px" name="bt_edit_codes" value="{{line.pk}}">Edit</button>
+        {% endif %}
         
       </div>
     </div>

@@ -1,4 +1,5 @@
 from django.template.defaulttags import register
+from django.utils.safestring import mark_safe
 
 @register.filter
 def attr(instance, key):
@@ -32,4 +33,5 @@ def get_verbose_field_name(instance, field_name):
     """
     Returns verbose_name for a field.
     """
-    return instance._meta.get_field(field_name).verbose_name.title()
+    
+    return mark_safe(instance._meta.get_field(field_name).verbose_name)
