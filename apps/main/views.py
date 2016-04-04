@@ -797,6 +797,7 @@ def operation(request, id_camp=None):
         campaigns = Campaign.objects.all().order_by('-start_date')
         
         if not campaigns:
+            kwargs = {}
             kwargs['title'] = 'No Campaigns'
             kwargs['suptitle'] = 'Empty'
             return render(request, 'operation.html', {})
