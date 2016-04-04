@@ -797,6 +797,8 @@ def operation(request, id_camp=None):
         campaigns = Campaign.objects.all().order_by('-start_date')
         
         if not campaigns:
+            kwargs['title'] = 'No Campaigns'
+            kwargs['suptitle'] = 'Empty'
             return render(request, 'operation.html', {})
         
         id_camp = campaigns[0].id
@@ -850,6 +852,7 @@ def operation_search(request, id_camp=None, location_play = None):
         kwargs = {}
         kwargs['title'] = 'All Campaigns'
         kwargs['form'] = form
+        kwargs['details'] = True
         return render(request, 'operation.html', kwargs)
     
     else:
