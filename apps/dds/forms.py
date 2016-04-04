@@ -17,14 +17,12 @@ class DDSConfigurationForm(forms.ModelForm):
             devices = Device.objects.filter(device_type__name='dds')
             
             self.fields['experiment'].widget.attrs['readonly'] = True
-            self.fields['experiment'].widget.choices = [(instance.experiment.id, instance.experiment)]
+            
+            if instance.experiment is not None:
+                self.fields['experiment'].widget.choices = [(instance.experiment.id, instance.experiment)]
             
             self.fields['device'].widget.choices = [(device.id, device) for device in devices]
     
-#     
-#     def clean(self):
-#         # Custom validation to force an integer when type of unit = "Unit"
-#         return 
 
     class Meta:
         model = DDSConfiguration
