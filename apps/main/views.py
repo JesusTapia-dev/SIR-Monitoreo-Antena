@@ -401,6 +401,7 @@ def experiment_new(request, id_camp=None):
         
         if form.is_valid():
             experiment = form.save()
+            ##AGREGAR!
             return redirect('url_experiment', id_exp=experiment.id)
         
     kwargs = {}
@@ -810,15 +811,16 @@ def operation(request, id_camp=None):
         
         if form.is_valid():
             return redirect('url_operation', id_camp=campaign.id)
-    locations = Location.objects.filter(experiment__campaign__pk = campaign.id).distinct()
+    #locations = Location.objects.filter(experiment__campaign__pk = campaign.id).distinct()
     experiments = Experiment.objects.filter(campaign__pk=campaign.id)
+    locations= Location.objects.filter(experiment=experiments).distinct()
     #experiments = [Experiment.objects.filter(location__pk=location.id).filter(campaign__pk=campaign.id) for location in locations]
     kwargs = {}
     #---Campaign
     kwargs['campaign'] = campaign
     kwargs['campaign_keys'] = ['name', 'start_date', 'end_date', 'tags', 'description']
     #---Experiment
-    keys = ['id', 'name', 'start_time', 'end_time']
+    keys = ['id', 'name', 'start_time', 'end_time', 'status']
     kwargs['experiment_keys'] = keys[1:]
     kwargs['experiments'] = experiments
     #---Radar
@@ -854,8 +856,10 @@ def operation_search(request, id_camp=None, location_play = None):
     
     else:
         campaign = get_object_or_404(Campaign, pk = id_camp)
-        locations = Location.objects.filter(experiment__campaign__pk = campaign.id).distinct()
+        #locations = Location.objects.filter(experiment__campaign__pk = campaign.id).distinct()
+        #experiments = Experiment.objects.filter(campaign__pk=campaign.id)
         experiments = Experiment.objects.filter(campaign__pk=campaign.id)
+        locations= Location.objects.filter(experiment=experiments).distinct()
         #experiments = [Experiment.objects.filter(location__pk=location.id).filter(campaign__pk=campaign.id) for location in locations]
         form = OperationSearchForm(initial={'campaign': campaign.id})
         
