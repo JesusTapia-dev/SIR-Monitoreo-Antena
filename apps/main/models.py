@@ -1,3 +1,6 @@
+
+from datetime import datetime
+
 from django.db import models
 from polymorphic import PolymorphicModel
 
@@ -103,35 +106,22 @@ class Device(models.Model):
 
 class Campaign(models.Model):
 
-    template = models.BooleanField(default=False)
-    
-    name = models.CharField(max_length=40, unique=True)
-    experiment = models.ManyToManyField('Experiment')
-
+    template = models.BooleanField(default=False)    
+    name = models.CharField(max_length=60, unique=True)
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
     tags = models.CharField(max_length=40)
     description = models.TextField(blank=True, null=True)
+    experiments = models.ManyToManyField('Experiment', blank=True)
 
     class Meta:
         db_table = 'db_campaigns'
+        ordering = ('name',)
     
     def __unicode__(self):
         return u'%s' % (self.name)
-    
-# class Radar(models.Model):
-# 
-# #     name = models.CharField(max_length = 30)
-#     experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE)
-#     location = models.OneToOneField('Location', on_delete=models.CASCADE)
-#     status = models.PositiveSmallIntegerField(default=0, choices=RADAR_STATES)
-# 
-#     class Meta:
-#         db_table = 'db_radar'
-#     
-#     def __unicode__(self):
-#         return u'%s' % self.location
 
+    
 class RunningExperiment(models.Model):
     radar = models.OneToOneField('Location', on_delete=models.CASCADE)
     running_experiment = models.ManyToManyField('Experiment')
@@ -140,22 +130,35 @@ class RunningExperiment(models.Model):
     
 class Experiment(models.Model):
 
-    template = models.BooleanField(default=False)
-    
-    #campaign = models.ForeignKey('Campaign', null=True, blank=True, on_delete=models.CASCADE)
+    template = models.BooleanField(default=False)    
+    location = models.ForeignKey('Location', null=True, blank=True, on_delete=models.CASCADE)    
+    name = models.CharField(max_length=40, default='', unique=True)
     location = models.ForeignKey('Location', null=True, blank=True, on_delete=models.CASCADE)
-    
-    name = models.CharField(max_length=40, default='')
     start_time = models.TimeField(default='00:00:00')
     end_time = models.TimeField(default='23:59:59')
     status = models.PositiveSmallIntegerField(default=0, choices=EXP_STATES)
 
     class Meta:
         db_table = 'db_experiments'
+        ordering = ('name',)
     
     def __unicode__(self):
         return u'%s' % (self.name)
     
+    def clone(self, **kwargs):
+        
+        confs = Configuration.objects.filter(experiment=self, type=0)
+        self.pk = None
+        self.name = '{} [{:%Y/%m/%d}]'.format(self.name, datetime.now())
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
+        
+        self.save()
+        
+        for conf in confs:
+            conf.clone(experiment=self, template=False)
+        
+        return self 
     
     def get_status(self):
         configurations =  Configuration.objects.filter(experiment=self)
@@ -198,6 +201,7 @@ class Experiment(models.Model):
         
         return color
     
+    
 class Configuration(PolymorphicModel):
 
     template = models.BooleanField(default=False)
@@ -228,7 +232,16 @@ class Configuration(PolymorphicModel):
         else:
             return u'%s' % self.device.name
 
+    def clone(self, **kwargs):
         
+        self.pk = None
+        self.id = None
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
+        
+        self.save()    
+
+        return self
     
     def parms_to_dict(self):
         

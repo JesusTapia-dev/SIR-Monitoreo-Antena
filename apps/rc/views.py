@@ -36,7 +36,7 @@ def conf(request, conf_id):
     
     kwargs['button'] = 'Edit Configuration'
     ###### SIDEBAR ######
-    kwargs.update(sidebar(conf))
+    kwargs.update(sidebar(conf=conf))
     
     return render(request, 'rc_conf.html', kwargs)
 
@@ -139,8 +139,6 @@ def conf_edit(request, conf_id):
     kwargs['suptitle'] = 'Edit'    
     kwargs['button'] = 'Update'
     kwargs['previous'] = conf.get_absolute_url()
-
-    kwargs.update(sidebar(conf))
     
     return render(request, 'rc_conf_edit.html', kwargs)
 
@@ -182,8 +180,6 @@ def add_line(request, conf_id, line_type_id=None, code_id=None):
     kwargs['previous'] = conf.get_absolute_url_edit()
     kwargs['dev_conf'] = conf
     kwargs['line_type'] = line_type
-    
-    kwargs.update(sidebar(conf))
     
     return render(request, 'rc_add_line.html', kwargs)
 

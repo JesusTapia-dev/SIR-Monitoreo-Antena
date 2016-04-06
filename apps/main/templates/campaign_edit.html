@@ -16,8 +16,10 @@
   {% csrf_token %}
   {% bootstrap_form form layout='horizontal' size='medium' %}
   <div style="clear: both;"></div>
-  <br>
-  <button type="submit" class="btn btn-primary pull-right">{{button}}</button>
+  {% if button %}
+    <br>
+    <button type="submit" class="btn btn-primary pull-right">{{button}}</button>
+  {% endif %}
 </form>
 {% endblock %}
 
@@ -31,6 +33,22 @@
 <script type="text/javascript">
 
   $('.input-group.date').datetimepicker({"format": "YYYY-MM-DD HH:mm"});
+  
+  $('#id_create_from').change(function() {
+    var url = "{% url 'url_add_campaign' %}";
+    if ($(this).val()=="2"){      
+      document.location = url+"?template=0";
+    }else if ($(this).val()=="1"){
+      document.location = url+"?blank=0";
+    }else{
+      document.location = url;
+    }
+  });
+  
+  $('#id_choose_template').change(function() {
+    var url = "{% url 'url_add_campaign' %}";          
+    document.location = url+"?template="+$(this).val();    
+  });
   
 </script>
 {% endblock %}

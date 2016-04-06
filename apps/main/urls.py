@@ -19,7 +19,7 @@ urlpatterns = (
     url(r'^campaign/(?P<id_camp>-?\d+)/edit/$', 'apps.main.views.campaign_edit', name='url_edit_campaign'),
     url(r'^campaign/(?P<id_camp>-?\d+)/delete/$', 'apps.main.views.campaign_delete', name='url_delete_campaign'),
     
-    url(r'^campaign/(?P<id_camp>-?\d+)/new_experiment/$', 'apps.main.views.experiment_new', name='url_add_experiment'),
+    url(r'^experiment/new/$', 'apps.main.views.experiment_new', name='url_add_experiment'),
     url(r'^experiment/$', 'apps.main.views.experiments', name='url_experiments'),
     url(r'^experiment/(?P<id_exp>-?\d+)/$', 'apps.main.views.experiment', name='url_experiment'),
     url(r'^experiment/(?P<id_exp>-?\d+)/edit/$', 'apps.main.views.experiment_edit', name='url_edit_experiment'),

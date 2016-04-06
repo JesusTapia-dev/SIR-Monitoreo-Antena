@@ -16,10 +16,8 @@ class DDSConfigurationForm(forms.ModelForm):
             
             devices = Device.objects.filter(device_type__name='dds')
             
-            self.fields['experiment'].widget.attrs['readonly'] = True
-            
-            if instance.experiment is not None:
-                self.fields['experiment'].widget.choices = [(instance.experiment.id, instance.experiment)]
+            if instance.experiment:
+                self.fields['experiment'].widget.attrs['disabled'] = 'disabled'
             
             self.fields['device'].widget.choices = [(device.id, device) for device in devices]
     

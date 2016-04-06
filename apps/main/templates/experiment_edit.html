@@ -17,7 +17,44 @@
   {% bootstrap_form form layout='horizontal' size='medium' %}
   <div style="clear: both;"></div>
   <br>
-  <button type="submit" class="btn btn-primary pull-right">{{button}}</button>
+  {% if configurations %}
+      <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">   
+      <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="headingTwo">
+          <h4 class="panel-title">
+            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseThree">
+              Device Configurations
+            </a>
+          </h4>
+        </div>
+        <div id="collapseTwo" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+          <table class="table table-hover">
+            <tr>
+              <th>#</th>
+              {% for key in configuration_keys %}
+              <th>{{ key|title }}</th>                     
+              {% endfor%}
+            </tr>
+            {% for item in configurations %}
+            <tr class="clickable-row" data-href="{{item.get_absolute_url}}">
+              <td>{{ forloop.counter }}</td>
+              {% for key in configuration_keys %}
+              <td>{{ item|value:key }}</td>              
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+  
+  {% if button %}
+    <br>
+    <button type="submit" class="btn btn-primary pull-right">{{button}}</button>
+  {% endif %}
 </form>
 {% endblock %}
 
@@ -29,10 +66,28 @@
 <script src="{% static 'js/moment.min.js' %}"></script>
 <script src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
 <script type="text/javascript">
+  
   $('.input-group.time').datetimepicker({
     format: 'HH:mm:ss',
     pickDate: false,
     pickSeconds: true
   });
+  
+  $('#id_create_from').change(function() {
+    var url = "{% url 'url_add_experiment' %}";
+    if ($(this).val()=="2"){      
+      document.location = url+"?template=0";
+    }else if ($(this).val()=="1"){
+      document.location = url+"?blank=0";
+    }else{
+      document.location = url;
+    }
+  });
+  
+  $('#id_choose_template').change(function() {
+    var url = "{% url 'url_add_experiment' %}";          
+    document.location = url+"?template="+$(this).val();    
+  });
+  
 </script>
 {% endblock %}

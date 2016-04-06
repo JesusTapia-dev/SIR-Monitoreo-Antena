@@ -66,7 +66,7 @@ def cgs_conf(request, id_conf):
     kwargs['no_play'] = True
     
     ###### SIDEBAR ######
-    kwargs.update(sidebar(conf))
+    kwargs.update(sidebar(conf=conf))
     
     return render(request, 'cgs_conf.html', kwargs)
 
@@ -100,10 +100,6 @@ def cgs_conf_edit(request, id_conf):
     kwargs['title'] = 'Device Configuration'
     kwargs['suptitle'] = 'Edit'
     kwargs['button'] = 'Save'
-    
-    
-    ###### SIDEBAR ######
-    kwargs.update(sidebar(conf))
     
     return render(request, 'cgs_conf_edit.html', kwargs)
 # 

@@ -37,10 +37,12 @@
 {% endblock %}
 
 {% block extra-js%}
+{% if id_exp %}
 <script type="text/javascript">
   $("#id_device").change(function() {
     var url = "{% url 'url_add_dev_conf' id_exp  %}";
     document.location = url+ $(this).val() + "/";
   });
- </script>
+</script>
+{% endif %}
 {% endblock %}

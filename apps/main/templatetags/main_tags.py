@@ -25,7 +25,6 @@ def value(instance, key):
     for my_key in key.split("__"):
         item = attr(item, my_key)
     
-    print item
     return item
 
 @register.simple_tag

@@ -90,6 +90,20 @@ class RCConfiguration(Configuration):
         return 20./3*(self.clock_in/self.clock_divider)
 
 
+    def clone(self, **kwargs):
+        
+        lines = self.get_lines()
+        self.pk = None
+        self.id = None
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
+        self.save()
+        
+        for line in lines:
+            line.clone(rc_configuration=self)
+        
+        return self  
+
     def get_lines(self, type=None):
         '''
         Retrieve configuration lines 
@@ -304,6 +318,10 @@ class RCConfiguration(Configuration):
                 line.save()                     
         
 
+    def status_device(self):
+        
+        return 0
+
 class RCLineCode(models.Model):
     
     name = models.CharField(max_length=40)
@@ -333,7 +351,7 @@ class RCLineType(models.Model):
     
 class RCLine(models.Model):
     
-    rc_configuration = models.ForeignKey(RCConfiguration)
+    rc_configuration = models.ForeignKey(RCConfiguration, on_delete=models.CASCADE)
     line_type = models.ForeignKey(RCLineType)
     channel = models.PositiveIntegerField(default=0)
     position = models.PositiveIntegerField(default=0)
@@ -347,6 +365,17 @@ class RCLine(models.Model):
     def __unicode__(self):
         if self.rc_configuration:
             return u'%s - %s' % (self.rc_configuration, self.get_name())
+    
+    def clone(self, **kwargs):
+        
+        self.pk = None
+        
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
+        
+        self.save()    
+
+        return self
     
     def get_name(self):
         

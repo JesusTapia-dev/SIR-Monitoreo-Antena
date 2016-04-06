@@ -3,7 +3,7 @@ from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.contrib import messages
 
-from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm, UploadFileForm, DownloadFileForm, OperationForm
+from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm, UploadFileForm, DownloadFileForm, OperationForm, NewForm
 from .forms import OperationSearchForm
 from apps.cgs.forms import CGSConfigurationForm
 from apps.jars.forms import JARSConfigurationForm
@@ -290,21 +290,50 @@ def campaign(request, id_camp):
 
 def campaign_new(request):
     
+    kwargs = {}
+    
     if request.method == 'GET':
-        form = CampaignForm()
+                    
+        if 'template' in request.GET:
+            if request.GET['template']=='0':
+                form = NewForm(initial={'create_from':2},
+                               template_choices=Campaign.objects.filter(template=True).values_list('id', 'name'))
+            else:
+                kwargs['button'] = 'Create'
+                kwargs['experiments'] = Configuration.objects.filter(experiment=request.GET['template'])                
+                kwargs['experiment_keys'] = ['name', 'start_time', 'end_time']
+                form = CampaignForm(instance=Campaign.objects.get(pk=request.GET['template']),
+                                    initial={'template':False})                
+        elif 'blank' in request.GET:
+            kwargs['button'] = 'Create'
+            form = CampaignForm()
+        else:
+            form = NewForm()
         
     if request.method == 'POST':
-        form = CampaignForm(request.POST)
+        kwargs['button'] = 'Create'
+        post = request.POST.copy()
+        experiments = []
+        
+        for id_exp in post.getlist('experiments'):
+            exp = Experiment.objects.get(pk=id_exp)
+            new_exp = exp.clone(template=False)
+            experiments.append(new_exp)
+        
+        post.setlist('experiments', [])
+        
+        form = CampaignForm(post)
         
         if form.is_valid():
             campaign = form.save()
+            for exp in experiments:
+                campaign.experiments.add(exp)
+            campaign.save()
             return redirect('url_campaign', id_camp=campaign.id)
         
-    kwargs = {}
     kwargs['form'] = form
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = 'New'
-    kwargs['button'] = 'Create'
         
     return render(request, 'campaign_edit.html', kwargs)
 
@@ -336,7 +365,13 @@ def campaign_delete(request, id_camp):
     
     if request.method=='POST':
         if request.user.is_staff:
+            
+            for exp in campaign.experiments.all():
+                for conf in Configuration.objects.filter(experiment=exp):
+                    conf.delete()
+                exp.delete()
             campaign.delete()
+            
             return redirect('url_campaigns')
         
         return HttpResponse("Not enough permission to delete this object")
@@ -348,14 +383,14 @@ def campaign_delete(request, id_camp):
 
 def experiments(request):
     
-    experiment_list = Experiment.objects.all().order_by('campaign')
+    experiment_list = Experiment.objects.all()
     
-    keys = ['id', 'name', 'start_time', 'end_time', 'campaign']
+    keys = ['id', 'name', 'start_time', 'end_time']
     
     kwargs = {}
     
     kwargs['experiment_keys'] = keys[1:]
-    kwargs['experiments'] = experiment_list#.values(*keys)
+    kwargs['experiments'] = experiment_list
     
     kwargs['title'] = 'Experiment'
     kwargs['suptitle'] = 'List'
@@ -367,20 +402,17 @@ def experiment(request, id_exp):
     
     experiment = get_object_or_404(Experiment, pk=id_exp)
     
-    experiments = Experiment.objects.filter(campaign=experiment.campaign)
     configurations = Configuration.objects.filter(experiment=experiment, type=0)
     
     kwargs = {}
     
-    exp_keys = ['id', 'campaign', 'location', 'name', 'start_time', 'end_time']
+    exp_keys = ['id', 'location', 'name', 'start_time', 'end_time']
     conf_keys = ['id', 'device__name', 'device__device_type', 'device__ip_address', 'device__port_address']
     
     conf_labels = ['id', 'device__name', 'device_type', 'ip_address', 'port_address']
     
     kwargs['experiment_keys'] = exp_keys[1:]
     kwargs['experiment'] = experiment
-    
-    kwargs['experiments'] = experiments.values(*exp_keys)
     
     kwargs['configuration_labels'] = conf_labels[1:]
     kwargs['configuration_keys'] = conf_keys[1:]
@@ -391,25 +423,48 @@ def experiment(request, id_exp):
     
     kwargs['button'] = 'Add Configuration'
     
+    ###### SIDEBAR ######
+    kwargs.update(sidebar(experiment=experiment))
+    
     return render(request, 'experiment.html', kwargs)
+
 
 def experiment_new(request, id_camp=None):
     
+    kwargs = {}
+    
     if request.method == 'GET':
-        form = ExperimentForm(initial={'campaign':id_camp})
+        if 'template' in request.GET:
+            if request.GET['template']=='0':
+                form = NewForm(initial={'create_from':2},
+                               template_choices=Experiment.objects.filter(template=True).values_list('id', 'name'))
+            else:
+                kwargs['button'] = 'Create'
+                kwargs['configurations'] = Configuration.objects.filter(experiment=request.GET['template'])                
+                kwargs['configuration_keys'] = ['name', 'device__name', 'device__ip_address', 'device__port_address']
+                form = ExperimentForm(instance=Experiment.objects.get(pk=request.GET['template']),
+                                      initial={'template':False})                
+        elif 'blank' in request.GET:
+            kwargs['button'] = 'Create'
+            form = ExperimentForm()
+        else:
+            form = NewForm()
         
     if request.method == 'POST':
-        form = ExperimentForm(request.POST, initial={'campaign':id_camp})
-        
+        form = ExperimentForm(request.POST)        
         if form.is_valid():
             experiment = form.save()
+
+            if 'template' in request.GET:
+                configurations = Configuration.objects.filter(experiment=request.GET['template'], type=0)            
+                for conf in configurations:
+                    conf.clone(experiment=experiment, template=False)
+            
             return redirect('url_experiment', id_exp=experiment.id)
-        
-    kwargs = {}
+            
     kwargs['form'] = form
     kwargs['title'] = 'Experiment'
     kwargs['suptitle'] = 'New'
-    kwargs['button'] = 'Create'
     
     return render(request, 'experiment_edit.html', kwargs)
 
@@ -441,9 +496,8 @@ def experiment_delete(request, id_exp):
     
     if request.method=='POST':
         if request.user.is_staff:
-            id_camp = experiment.campaign.id
             experiment.delete()
-            return redirect('url_campaign', id_camp=id_camp)
+            return redirect('url_experiments')
         
         return HttpResponse("Not enough permission to delete this object")
     
@@ -482,7 +536,7 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
     
     initial = {}
     
-    if id_exp==0:
+    if id_exp<>0:
         initial['experiment'] = id_exp
     
     if id_dev<>0:
@@ -544,7 +598,7 @@ def dev_conf_edit(request, id_conf):
     kwargs['button'] = 'Update'
     
     ###### SIDEBAR ######
-    kwargs.update(sidebar(conf))
+    kwargs.update(sidebar(conf=conf))
     
     return render(request, '%s_conf_edit.html' %conf.device.device_type.name, kwargs)
 
@@ -612,12 +666,8 @@ def dev_conf_write(request, id_conf):
     if answer:
         messages.success(request, conf.message)
         
-        #Creating a historical configuration
-        conf.pk = None
-        conf.id = None
-        conf.type = 1
-        conf.template = 0
-        conf.save()
+        #Creating a historical configuration        
+        conf.clone(type=0, template=False)
         
         #Original configuration
         conf = DevConfModel.objects.get(pk=id_conf)
@@ -663,7 +713,7 @@ def dev_conf_read(request, id_conf):
     kwargs['button'] = 'Save'
     
     ###### SIDEBAR ######
-    kwargs.update(sidebar(conf))
+    kwargs.update(sidebar(conf=conf))
     
     return render(request, '%s_conf_edit.html' %conf.device.device_type.name, kwargs)
 
@@ -672,8 +722,7 @@ def dev_conf_import(request, id_conf):
     conf = get_object_or_404(Configuration, pk=id_conf)
     
     DevConfModel = CONF_MODELS[conf.device.device_type.name]
-    DevConfForm = CONF_FORMS[conf.device.device_type.name]
-    
+    DevConfForm = CONF_FORMS[conf.device.device_type.name]    
     conf = DevConfModel.objects.get(pk=id_conf)
     
     if request.method == 'GET':
@@ -688,7 +737,6 @@ def dev_conf_import(request, id_conf):
         
             if parms:
                 messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
-                print parms
                 form = DevConfForm(initial=parms, instance=conf)
                 
                 kwargs = {}
@@ -701,7 +749,7 @@ def dev_conf_import(request, id_conf):
                 kwargs['previous'] = conf.get_absolute_url()
                 
                 ###### SIDEBAR ######
-                kwargs.update(sidebar(conf))
+                kwargs.update(sidebar(conf=conf))
                 
                 return render(request, '%s_conf_edit.html' % conf.device.device_type.name, kwargs)
 
@@ -714,7 +762,7 @@ def dev_conf_import(request, id_conf):
     kwargs['suptitle'] = 'Importing file'
     kwargs['button'] = 'Import'
     
-    kwargs.update(sidebar(conf))
+    kwargs.update(sidebar(conf=conf))
     
     return render(request, 'dev_conf_import.html', kwargs)
 
@@ -767,26 +815,32 @@ def dev_conf_delete(request, id_conf):
     kwargs = {'object':conf, 'conf_active':'active',
           'url_cancel':'url_dev_conf', 'id_item':id_conf}
     
-    ###### SIDEBAR ######
-    kwargs.update(sidebar(conf))
-    
     return render(request, 'item_delete.html', kwargs)
 
-def sidebar(conf):
+
+def sidebar(**kwargs):
     
-    kwargs = {}
+    side_data = {}
     
-    if conf.experiment:
-        experiments = Experiment.objects.filter(campaign=conf.experiment.campaign)
-        configurations = Configuration.objects.filter(experiment=conf.experiment, type=0)
-        exp_keys = ['id', 'campaign', 'name', 'start_time', 'end_time']
-        kwargs['experiment_keys'] = exp_keys[1:]
-        kwargs['experiments'] = experiments.values(*exp_keys)    
-        conf_keys = ['id', 'device']            
-        kwargs['configuration_keys'] = conf_keys[1:]
-        kwargs['configurations'] = configurations #.values(*conf_keys)
+    conf = kwargs.get('conf', None)
+    experiment = kwargs.get('experiment', None)
     
-    return kwargs
+    if not experiment:
+        experiment = conf.experiment
+    
+    if experiment:
+        side_data['experiment'] = experiment
+        campaign = experiment.campaign_set.all()
+        if campaign:
+            side_data['campaign'] = campaign[0]
+            experiments = campaign[0].experiments.all()
+        else:
+            experiments = [experiment]
+        configurations = experiment.configuration_set.filter(type=0)
+        side_data['side_experiments'] = experiments
+        side_data['side_configurations'] = configurations
+    
+    return side_data
 
 
 def operation(request, id_camp=None):
@@ -897,10 +951,11 @@ def radar_play(request, id_camp, id_radar):
         return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 
 def radar_stop(request, id_camp, id_radar):
-    
+
     route = request.META['HTTP_REFERER']
     route = str(route)
     if 'search' in route:
         return HttpResponseRedirect(reverse('url_operation_search', args=[id_camp]))
     else:
         return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
+    

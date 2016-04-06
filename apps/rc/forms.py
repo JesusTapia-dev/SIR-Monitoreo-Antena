@@ -64,8 +64,8 @@ class RCConfigurationForm(forms.ModelForm):
             
             devices = Device.objects.filter(device_type__name='rc')
             if instance.experiment:
-                self.fields['experiment'].widget.attrs['readonly'] = True
-                self.fields['experiment'].widget.choices = [(instance.experiment.id, instance.experiment)]            
+                self.fields['experiment'].widget.attrs['disabled'] = 'disabled'
+                #self.fields['experiment'].widget.choices = [(instance.experiment.id, instance.experiment)]            
             self.fields['device'].widget.choices = [(device.id, device) for device in devices]
             self.fields['ipp'].widget = KmUnitHzWidget(attrs={'km2unit':instance.km2unit})
             self.fields['clock'].widget.attrs['readonly'] = True
@@ -73,6 +73,8 @@ class RCConfigurationForm(forms.ModelForm):
         self.fields['time_before'].label = mark_safe(self.fields['time_before'].label)
         self.fields['time_after'].label = mark_safe(self.fields['time_after'].label)
     
+        if 'initial' in kwargs and 'experiment' in kwargs['initial'] and kwargs['initial']['experiment'] not in (0, '0'):
+            self.fields['experiment'].widget.attrs['disabled'] = 'disabled'
     
     class Meta:
         model = RCConfiguration

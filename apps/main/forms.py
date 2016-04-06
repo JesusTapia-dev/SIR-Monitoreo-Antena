@@ -39,10 +39,16 @@ class TimepickerWidget(forms.widgets.TextInput):
         return mark_safe(html)
 
 class CampaignForm(forms.ModelForm):
+    
+    experiments = forms.ModelMultipleChoiceField(widget=forms.CheckboxSelectMultiple(),
+                                                 queryset=Experiment.objects.filter(template=True),
+                                                 required=False)
+    
     def __init__(self, *args, **kwargs):
         super(CampaignForm, self).__init__(*args, **kwargs)
         self.fields['start_date'].widget = DatepickerWidget(self.fields['start_date'].widget.attrs)
         self.fields['end_date'].widget = DatepickerWidget(self.fields['end_date'].widget.attrs)
+        self.fields['description'].widget.attrs = {'rows': 2}
     
     class Meta:
         model = Campaign
@@ -54,8 +60,6 @@ class ExperimentForm(forms.ModelForm):
         super(ExperimentForm, self).__init__(*args, **kwargs)
         self.fields['start_time'].widget = TimepickerWidget(self.fields['start_time'].widget.attrs)
         self.fields['end_time'].widget = TimepickerWidget(self.fields['end_time'].widget.attrs)
-    
-        self.fields['campaign'].widget.attrs['readonly'] = True
         
     class Meta:
         model = Experiment
@@ -72,6 +76,13 @@ class DeviceForm(forms.ModelForm):
         exclude = ['status']
 
 class ConfigurationForm(forms.ModelForm):
+    
+    def __init__(self, *args, **kwargs):
+        super(ConfigurationForm, self).__init__(*args, **kwargs)
+        
+        if 'initial' in kwargs and 'experiment' in kwargs['initial'] and kwargs['initial']['experiment'] not in (0, '0'):
+            self.fields['experiment'].widget.attrs['disabled'] = 'disabled'
+    
     class Meta:
         model = Configuration
         exclude = ['type', 'created_date', 'programmed_date', 'parameters']
@@ -124,4 +135,17 @@ class OperationSearchForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(OperationSearchForm, self).__init__(*args, **kwargs)
         self.fields['campaign'].choices=Campaign.objects.all().order_by('-start_date').values_list('id', 'name')
+        
+class NewForm(forms.Form):
+    
+    create_from = forms.ChoiceField(choices=((0, '-----'),
+                                             (1, 'Empty (blank)'),
+                                             (2, 'Template')))
+    choose_template = forms.ChoiceField()
+    
+    def __init__(self, *args, **kwargs):
+        
+        template_choices = kwargs.pop('template_choices', [])
+        super(NewForm, self).__init__(*args, **kwargs)
+        self.fields['choose_template'].choices = add_empty_choice(template_choices)
     

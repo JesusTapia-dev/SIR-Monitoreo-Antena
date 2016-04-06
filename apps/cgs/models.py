@@ -15,8 +15,6 @@ class CGSConfiguration(Configuration):
     freq1 = models.IntegerField(verbose_name='Frequency 1',validators=[MinValueValidator(0), MaxValueValidator(450e6)], blank=True, null=True)
     freq2 = models.IntegerField(verbose_name='Frequency 2',validators=[MinValueValidator(0), MaxValueValidator(450e6)], blank=True, null=True)
     freq3 = models.IntegerField(verbose_name='Frequency 3',validators=[MinValueValidator(0), MaxValueValidator(450e6)], blank=True, null=True)
-    #jfreqs = JSONField(default={"frequencies":[{"f0":freq0,"f1":freq1,"f2":freq2,"f3":freq3}]}, blank=True)
-    
     
     def verify_frequencies(self):
         

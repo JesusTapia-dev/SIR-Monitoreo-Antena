@@ -28,7 +28,6 @@
 	</tr>
   {% endfor %}
 </table>
-<button class="btn btn-primary pull-right" id="bt_add">{{button}}</button>
 {% endblock %}
 
 {% block sidebar%}
@@ -37,14 +36,10 @@
 
 {% block extra-js%}
 <script type="text/javascript">
-
-  $("#bt_add").click(function() {
-    document.location = "{% url 'url_add_dev_conf' 0%}";
-  });
  
   $(".clickable-row").click(function() {
 	    document.location = $(this).data("href");
-	  });
+  });
   
 </script>
 {% endblock %}

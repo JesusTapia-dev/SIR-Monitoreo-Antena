@@ -52,8 +52,7 @@
 			  {% endfor %}
 			</tr>
 			{% endfor %}
-		  </table>  
-		  <button class="btn btn-primary pull-right" id="bt_add">{{button}}</button>
+		  </table>		  
 	      </div>
 	    </div>
 	  </div>
@@ -72,12 +71,8 @@
 	  });
   
   $("#bt_edit").click(function() {
-	    document.location = "{% url 'url_edit_campaign' campaign.id%}";
+	    document.location = "{% url 'url_edit_campaign' campaign.id %}";
 	  });
-  
-  $("#bt_add").click(function() {
-    document.location = "{% url 'url_add_experiment' campaign.id%}";
-  });
   
 </script>
 {% endblock %}
