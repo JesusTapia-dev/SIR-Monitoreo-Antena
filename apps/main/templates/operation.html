@@ -41,18 +41,20 @@
 	  <div class="panel panel-default">
 	    <div class="panel-heading" role="tab" id="headingTwo">
 	      <h4 class="panel-title">
+	        
 	        <a class="collapsed" role="button" data-toggle="collapse"  href="#collapseTwo-{{ location.id }}" aria-expanded="false" aria-controls="collapseTwo">
 	          {{location.name}}: Experiment List
 	          <span>
 	          </span>
 	        </a>
-	        <button id="play-{{ location.id }}" type="button" class="btn btn-primary pull-right btn-xs" aria-label="Left Align" style="margin-left: 10px">
+	        
+	        <button type="button" name="bt_play" class="btn btn-primary pull-right btn-xs" data-url="{% url 'url_radar_play' campaign.id location.id %}" style="margin-left: 10px">
                 <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
             </button>
-            <button id="stop-{{ location.id }}" type="button" class="btn btn-primary pull-right btn-xs" aria-label="Left Align" style="margin-left: 10px">
+            <button type="button" name="bt_stop" class="btn btn-primary pull-right btn-xs" data-url="{% url 'url_radar_stop' campaign.id location.id %}" aria-label="Left Align" style="margin-left: 10px">
                 <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
             </button>
-	        
+            
 	      </h4>
 	    </div>
 	    
@@ -72,7 +74,11 @@
 					<tr class="clickable-row" data-href="{% url 'url_experiment' item.id %}" >
 						<td>{{ forloop.counter }}</td>
 			        	{% for key in experiment_keys %}
-			        	   <td>{{ item|value:key }}</td>
+			        	    {% if 'status' in key %}
+			        	        <td class="text-{{item.status_color}}">{{ item|value:key }}</td>
+			        	    {% else %}
+			        	        <td>{{ item|value:key }}</td>
+			        	    {% endif %}
 			           {% endfor %}
 					</tr>
 			     {% endif %}
@@ -92,25 +98,18 @@
 
 {% block extra-js%}
 <script type="text/javascript">
-//for (i = 0; i < locations.length; i++) {
-//    text += cars[i] + "<br>";
-//}
-	//------For PLAY Button-------
-    {%  for location in locations %} 
-       $("#play-{{ location.id }}").click(function() {
-	       //alert("Play-{{location}}");
-	       var id_loc = {{location.id}}
-	       //document.location = 
-       });
-    {% endfor %} 
-
-  //--------For STOP Button-------
-    {%  for location in locations %} 
-       $("#stop-{{ location.id }}").click(function() {
-	       alert("Stop-{{location}}");
-	    //   document.location = "{% url 'url_operation' campaign.id %}";
-       });
-    {% endfor %} 
+    
+  //--------For PLAY Button-------  
+    $("#accordion").on("click", "button[name=bt_play]", function(){
+    	//alert($(this).data('url'));
+    	document.location = $(this).data('url');
+    });
+  
+  //--------For STOP Button-------  
+    $("#accordion").on("click", "button[name=bt_stop]", function(){
+    	//alert($(this).data('url'));
+    	document.location = $(this).data('url');
+    });
  
   $(".clickable-row").click(function() {
       document.location = $(this).data("href");
