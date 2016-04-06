@@ -1,6 +1,5 @@
 from django.db import models
 from apps.main.models import Configuration
-#from json_field import JSONField
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
@@ -72,7 +71,7 @@ class CGSConfiguration(Configuration):
         
         route = "http://" + str(ip) + ":" + str(port) + "/status/ad9548"
         try:
-            r = requests.get(route)
+            r = requests.get(route,timeout=1)
         except:
             self.device.status = 0
             self.device.save()
@@ -111,7 +110,7 @@ class CGSConfiguration(Configuration):
         
         route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
         try:
-            frequencies = requests.get(route)
+            frequencies = requests.get(route,timeout=1)
         
         except:
             self.message = "Could not read CGS parameters from this device"
@@ -149,7 +148,7 @@ class CGSConfiguration(Configuration):
         route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
         
         try:            
-            r = requests.post(route, post_data)
+            r = requests.post(route, post_data, timeout=1)
         except:
             self.message = "Could not write CGS parameters"
             return None
