@@ -72,12 +72,8 @@
 					<tr class="clickable-row" data-href="{% url 'url_experiment' item.id %}" >
 						<td>{{ forloop.counter }}</td>
 			        	{% for key in experiment_keys %}
-			        	    {% if 'status' in key %}
-			        	     <td></td>
-			        	    {% else %}
-			              <td>{{ item|value:key }}</td>
-			                {% endif %}
-			       		{% endfor %}
+			        	   <td>{{ item|value:key }}</td>
+			           {% endfor %}
 					</tr>
 			     {% endif %}
 			{% endfor %}
