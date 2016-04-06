@@ -10,11 +10,11 @@ CONF_STATES = (
              )
 
 EXP_STATES = (
-                 (0,'Error'),        #RED
-                 (1,'Configurated'), #BLUE
-                 (2,'Running'),      #GREEN
-                 (3,'Waiting'),      #YELLOW
-                 (4,'Nothing'),      #WHITE
+                 (0,'Error'),                 #RED
+                 (1,'Configurated'),          #BLUE
+                 (2,'Running'),               #GREEN
+                 (3,'Waiting'),               #YELLOW
+                 (4,'Not Configured'),        #WHITE
              )
 
 CONF_TYPES = (
@@ -50,13 +50,12 @@ DEV_PORTS = {
 
 RADAR_STATES = (
                  (0, 'No connected'),
-                 (1, 'Connnected'),
+                 (1, 'Connected'),
                  (2, 'Configured'),
                  (3, 'Running'),
                  (4, 'Scheduled'),
              )
 # Create your models here.
-
     
 class Location(models.Model):
 
@@ -107,6 +106,8 @@ class Campaign(models.Model):
     template = models.BooleanField(default=False)
     
     name = models.CharField(max_length=40, unique=True)
+    experiment = models.ManyToManyField('Experiment')
+
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
     tags = models.CharField(max_length=40)
@@ -131,28 +132,71 @@ class Campaign(models.Model):
 #     def __unicode__(self):
 #         return u'%s' % self.location
 
-#class RunningExperiment(models.Model):
-#    radar = models.OneToOneField('Location', on_delete=models.CASCADE)
-#    running_experiment = models.OneToOneField('Experiment', on_delete=models.CASCADE)
-#    status = models.PositiveSmallIntegerField(default=0, choices=RADAR_STATES)
+class RunningExperiment(models.Model):
+    radar = models.OneToOneField('Location', on_delete=models.CASCADE)
+    running_experiment = models.ManyToManyField('Experiment')
+    status = models.PositiveSmallIntegerField(default=0, choices=RADAR_STATES)
     
     
 class Experiment(models.Model):
 
     template = models.BooleanField(default=False)
     
-    campaign = models.ForeignKey('Campaign', null=True, blank=True, on_delete=models.CASCADE)
+    #campaign = models.ForeignKey('Campaign', null=True, blank=True, on_delete=models.CASCADE)
     location = models.ForeignKey('Location', null=True, blank=True, on_delete=models.CASCADE)
     
     name = models.CharField(max_length=40, default='')
     start_time = models.TimeField(default='00:00:00')
     end_time = models.TimeField(default='23:59:59')
+    status = models.PositiveSmallIntegerField(default=0, choices=EXP_STATES)
 
     class Meta:
         db_table = 'db_experiments'
     
     def __unicode__(self):
         return u'%s' % (self.name)
+    
+    
+    def get_status(self):
+        configurations =  Configuration.objects.filter(experiment=self)
+        exp_status=[]
+        for conf in configurations:
+            print conf.status_device()
+            exp_status.append(conf.status_device())
+            
+        if not exp_status: #No Configuration
+            self.status = 4
+            self.save()
+            return 
+        
+        total = 1
+        for e_s in exp_status:
+            total = total*e_s
+            
+        if total == 0:                      #Error
+            status = 0
+        elif total == (3**len(exp_status)): #Running
+            status = 2
+        else:
+            status = 1                      #Configurated
+        
+        self.status = status
+        self.save()
+        
+    def status_color(self):
+        color = 'danger'
+        if self.status == 0:
+            color = "danger"
+        elif self.status == 1:
+            color = "info"
+        elif self.status == 2:
+            color = "succes"
+        elif self.status == 3:
+            color = "warning"
+        else:
+            color = "muted"
+        
+        return color
     
 class Configuration(PolymorphicModel):
 
