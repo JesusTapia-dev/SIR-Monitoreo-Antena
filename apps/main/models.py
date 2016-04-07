@@ -71,6 +71,10 @@ class Location(models.Model):
     def __unicode__(self):
         return u'%s' % self.name
 
+    def get_absolute_url(self):
+        return reverse('url_device', args=[str(self.id)])
+
+
 class DeviceType(models.Model):
 
     name = models.CharField(max_length = 10, choices = DEV_TYPES, default = 'rc')
@@ -99,9 +103,11 @@ class Device(models.Model):
     def __unicode__(self):
         return u'%s | %s' % (self.name, self.ip_address)
     
-    def get_status(self):
-        
+    def get_status(self):        
         return self.status
+    
+    def get_absolute_url(self):
+        return reverse('url_device', args=[str(self.id)])
     
 
 class Campaign(models.Model):
@@ -121,6 +127,9 @@ class Campaign(models.Model):
     def __unicode__(self):
         return u'%s' % (self.name)
 
+    def get_absolute_url(self):
+        return reverse('url_campaign', args=[str(self.id)])
+    
     
 class RunningExperiment(models.Model):
     radar = models.OneToOneField('Location', on_delete=models.CASCADE)
@@ -144,6 +153,10 @@ class Experiment(models.Model):
     
     def __unicode__(self):
         return u'%s' % (self.name)
+    
+    @property
+    def radar(self):
+        return self.location
     
     def clone(self, **kwargs):
         
@@ -200,6 +213,9 @@ class Experiment(models.Model):
             color = "muted"
         
         return color
+    
+    def get_absolute_url(self):
+        return reverse('url_experiment', args=[str(self.id)])
     
     
 class Configuration(PolymorphicModel):

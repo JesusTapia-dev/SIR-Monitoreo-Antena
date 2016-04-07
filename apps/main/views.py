@@ -41,10 +41,12 @@ CONF_MODELS = {
     'usrp': USRPConfiguration,
 }
 
+
 def index(request):
     kwargs = {}
     
     return render(request, 'index.html', kwargs)
+
 
 def locations(request):
     
@@ -60,6 +62,7 @@ def locations(request):
     kwargs['button'] = 'New Location'
     
     return render(request, 'locations.html', kwargs)
+
 
 def location(request, id_loc):
     
@@ -95,6 +98,7 @@ def location_new(request):
         
     return render(request, 'location_edit.html', kwargs)
 
+
 def location_edit(request, id_loc):
     
     location = get_object_or_404(Location, pk=id_loc)
@@ -117,6 +121,7 @@ def location_edit(request, id_loc):
     
     return render(request, 'location_edit.html', kwargs)
 
+
 def location_delete(request, id_loc):
     
     location = get_object_or_404(Location, pk=id_loc)
@@ -127,12 +132,19 @@ def location_delete(request, id_loc):
             location.delete()
             return redirect('url_locations')
         
-        return HttpResponse("Not enough permission to delete this object")
+        messages.error(request, 'Not enough permission to delete this object')
+        return redirect(location.get_absolute_url())
     
-    kwargs = {'object':location, 'loc_active':'active',
-              'url_cancel':'url_location', 'id_item':id_loc}
+    kwargs = {
+              'title': 'Delete',
+              'suptitle': 'Location',
+              'object': location, 
+              'previous': location.get_absolute_url(),
+              'delete': True
+              }
     
-    return render(request, 'item_delete.html', kwargs)
+    return render(request, 'confirm.html', kwargs)
+
 
 def devices(request):
     
@@ -150,6 +162,7 @@ def devices(request):
     
     return render(request, 'devices.html', kwargs)
 
+
 def device(request, id_dev):
     
     device = get_object_or_404(Device, pk=id_dev)
@@ -162,6 +175,7 @@ def device(request, id_dev):
     kwargs['suptitle'] = 'Details'
     
     return render(request, 'device.html', kwargs)
+
 
 def device_new(request):
     
@@ -183,6 +197,7 @@ def device_new(request):
         
     return render(request, 'device_edit.html', kwargs)
 
+
 def device_edit(request, id_dev):
     
     device = get_object_or_404(Device, pk=id_dev)
@@ -195,7 +210,7 @@ def device_edit(request, id_dev):
         
         if form.is_valid():
             form.save()
-            return redirect('url_devices')
+            return redirect(device.get_absolute_url())
           
     kwargs = {}
     kwargs['form'] = form
@@ -204,6 +219,7 @@ def device_edit(request, id_dev):
     kwargs['button'] = 'Update'
     
     return render(request, 'device_edit.html', kwargs)
+
 
 def device_delete(request, id_dev):
     
@@ -215,12 +231,19 @@ def device_delete(request, id_dev):
             device.delete()
             return redirect('url_devices')
         
-        return HttpResponse("Not enough permission to delete this object")
+        messages.error(request, 'Not enough permission to delete this object')
+        return redirect(device.get_absolute_url())
     
-    kwargs = {'object':device, 'dev_active':'active',
-              'url_cancel':'url_device', 'id_item':id_dev}
+    kwargs = {
+              'title': 'Delete',
+              'suptitle': 'Device',
+              'object': device, 
+              'previous': device.get_absolute_url(),
+              'delete': True
+              }
     
-    return render(request, 'item_delete.html', kwargs)
+    return render(request, 'confirm.html', kwargs)
+
     
 def campaigns(request):
     
@@ -237,6 +260,7 @@ def campaigns(request):
     
     return render(request, 'campaigns.html', kwargs)
 
+
 def campaign(request, id_camp):
     
     campaign = get_object_or_404(Campaign, pk=id_camp)
@@ -246,12 +270,10 @@ def campaign(request, id_camp):
     
     kwargs = {}
     kwargs['campaign'] = campaign
-    kwargs['campaign_keys'] = ['name', 'start_date', 'end_date', 'tags', 'description']
+    kwargs['campaign_keys'] = ['template', 'name', 'start_date', 'end_date', 'tags', 'description']
     
-    keys = ['id', 'name', 'start_time', 'end_time']
-    
-    kwargs['experiment_keys'] = keys[1:]
-    kwargs['experiments'] = experiments.values(*keys)
+    kwargs['experiments'] = experiments
+    kwargs['experiment_keys'] = ['name', 'radar', 'start_time', 'end_time']
     
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = 'Details'
@@ -260,6 +282,7 @@ def campaign(request, id_camp):
     kwargs['button'] = 'Add Experiment'
     
     return render(request, 'campaign.html', kwargs)
+
 
 def campaign_new(request):
     
@@ -310,6 +333,7 @@ def campaign_new(request):
         
     return render(request, 'campaign_edit.html', kwargs)
 
+
 def campaign_edit(request, id_camp):
     
     campaign = get_object_or_404(Campaign, pk=id_camp)
@@ -332,6 +356,7 @@ def campaign_edit(request, id_camp):
     
     return render(request, 'campaign_edit.html', kwargs)
 
+
 def campaign_delete(request, id_camp):
      
     campaign = get_object_or_404(Campaign, pk=id_camp)
@@ -347,12 +372,19 @@ def campaign_delete(request, id_camp):
             
             return redirect('url_campaigns')
         
-        return HttpResponse("Not enough permission to delete this object")
+        messages.error(request, 'Not enough permission to delete this object')
+        return redirect(campaign.get_absolute_url())
     
-    kwargs = {'object':campaign, 'camp_active':'active',
-              'url_cancel':'url_campaign', 'id_item':id_camp}
+    kwargs = {
+              'title': 'Delete',
+              'suptitle': 'Campaign',
+              'object': campaign, 
+              'previous': campaign.get_absolute_url(),
+              'delete': True
+              }
     
-    return render(request, 'item_delete.html', kwargs)
+    return render(request, 'confirm.html', kwargs)
+
 
 def experiments(request):
     
@@ -370,6 +402,7 @@ def experiments(request):
     kwargs['button'] = 'New Experiment'
     
     return render(request, 'experiments.html', kwargs)
+
 
 def experiment(request, id_exp):
     
@@ -441,6 +474,7 @@ def experiment_new(request, id_camp=None):
     
     return render(request, 'experiment_edit.html', kwargs)
 
+
 def experiment_edit(request, id_exp):
     
     experiment = get_object_or_404(Experiment, pk=id_exp)
@@ -463,6 +497,7 @@ def experiment_edit(request, id_exp):
         
     return render(request, 'experiment_edit.html', kwargs)
 
+
 def experiment_delete(request, id_exp):
      
     experiment = get_object_or_404(Experiment, pk=id_exp)
@@ -478,6 +513,7 @@ def experiment_delete(request, id_exp):
               'url_cancel':'url_experiment', 'id_item':id_exp}
     
     return render(request, 'item_delete.html', kwargs)
+
 
 def dev_confs(request):
     
@@ -497,6 +533,7 @@ def dev_confs(request):
     kwargs['button'] = 'New Configuration'
     
     return render(request, 'dev_confs.html', kwargs)
+
 
 def dev_conf(request, id_conf):
     
@@ -544,7 +581,8 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
     kwargs['button'] = 'Create'
     
     return render(request, 'dev_conf_edit.html', kwargs)
-    
+
+
 def dev_conf_edit(request, id_conf):
     
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -575,6 +613,7 @@ def dev_conf_edit(request, id_conf):
     
     return render(request, '%s_conf_edit.html' %conf.device.device_type.name, kwargs)
 
+
 def dev_conf_start(request, id_conf):
     
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -592,6 +631,7 @@ def dev_conf_start(request, id_conf):
     
     return redirect(conf.get_absolute_url())
 
+
 def dev_conf_stop(request, id_conf):
     
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -608,6 +648,7 @@ def dev_conf_stop(request, id_conf):
     conf.status_device()
     
     return redirect(conf.get_absolute_url())
+
 
 def dev_conf_status(request, id_conf):
     
@@ -649,6 +690,7 @@ def dev_conf_write(request, id_conf):
     
     return redirect(conf.get_absolute_url())
 
+
 def dev_conf_read(request, id_conf):
     
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -689,6 +731,7 @@ def dev_conf_read(request, id_conf):
     kwargs.update(sidebar(conf=conf))
     
     return render(request, '%s_conf_edit.html' %conf.device.device_type.name, kwargs)
+
 
 def dev_conf_import(request, id_conf):
     
@@ -739,6 +782,7 @@ def dev_conf_import(request, id_conf):
     
     return render(request, 'dev_conf_import.html', kwargs)
 
+
 def dev_conf_export(request, id_conf):
     
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -772,6 +816,7 @@ def dev_conf_export(request, id_conf):
     kwargs['button'] = 'Export'
     
     return render(request, 'dev_conf_export.html', kwargs)
+
 
 def dev_conf_delete(request, id_conf):
      
@@ -864,6 +909,7 @@ def operation(request, id_camp=None):
     kwargs['search_button'] = True
     
     return render(request, 'operation.html', kwargs)
+
 
 def operation_search(request, id_camp=None):
     

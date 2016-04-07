@@ -6,25 +6,21 @@
 {% block content %}
         
 <form action="" method="post" class="form">{% csrf_token %}
-{% if next %}
-  <input name="next" type="hidden" value="{{ next }}" />
-{% endif %}
-{% if delete_view %}
-  {% if object_name %}
-  <h3>Are you sure you wish to delete {{ object_name }} from {{ object }}?</h3>
-  {% else %}
+{% if delete %}
   <h3>Are you sure you wish to delete: {{ object }}?</h3>
-  {% endif %}
 {% else %}
   <h4>Are you sure you wish to proceed?</h4>
 {% endif %}
-  {% if message %}<h4>{{ message }}</h4>{% endif %}
+  {% if message %}<p>{{ message }}</p>{% endif %}
   <br>
+  <div class="pull-right">
   <button class="btn btn-primary" type="submit">
     <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Yes
   </button>
   <button type="button" class="btn btn-primary" onclick="{% if previous %}window.location.replace('{{ previous }}');{% else %}history.go(-1);{% endif %}">
     <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> No
   </button>
+  </div>
 </form>
+
 {% endblock %}
