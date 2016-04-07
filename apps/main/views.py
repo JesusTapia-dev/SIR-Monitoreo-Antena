@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.contrib import messages
+from datetime import datetime
 
 from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm, UploadFileForm, DownloadFileForm, OperationForm, NewForm
 from .forms import OperationSearchForm
@@ -73,34 +74,6 @@ def location(request, id_loc):
     
     return render(request, 'location.html', kwargs)
 
-#def location_play(request, id_camp, id_loc):
-    
-#    campaign = get_object_or_404(Campaign, pk=id_camp)
-#    print campaign
-#    location = get_object_or_404(Location, pk=id_loc)
-#    experiments =  Experiment.objects.filter(location__pk=location.id).filter(campaign__pk=campaign.id)
-#    locations = Location.objects.filter(pk=id_loc)
-    
-#    if request.method=='GET':
-#        form = OperationForm(initial={'campaign': campaign.id})
-    
-#    kwargs = {}
-    #---Campaign
-#    kwargs['campaign'] = campaign
-#    kwargs['campaign_keys'] = ['name', 'start_date', 'end_date', 'tags', 'description']
-    #---Experiment
-#    keys = ['id', 'name', 'start_time', 'end_time']
-#    kwargs['experiment_keys'] = keys[1:]
-#    kwargs['experiments'] = experiments
-    #---Radar
-#    kwargs['location'] = location
-    #---Else
-#    kwargs['title'] = 'Campaign'
-#    kwargs['suptitle'] = campaign.name
-#    kwargs['form'] = form
-#    kwargs['button'] = 'Search'
-    
-#    return render(request, 'operation_play.html', kwargs)
 
 def location_new(request):
     
@@ -868,8 +841,8 @@ def operation(request, id_camp=None):
             return redirect('url_operation', id_camp=campaign.id)
     #locations = Location.objects.filter(experiment__campaign__pk = campaign.id).distinct()
     experiments = Experiment.objects.filter(campaign__pk=campaign.id)
-    for exs in experiments:
-        exs.get_status()
+    #for exs in experiments:
+    #    exs.get_status()
     locations= Location.objects.filter(experiment=experiments).distinct()
     #experiments = [Experiment.objects.filter(location__pk=location.id).filter(campaign__pk=campaign.id) for location in locations]
     kwargs = {}
@@ -915,8 +888,8 @@ def operation_search(request, id_camp=None):
         
     #locations = Location.objects.filter(experiment__campaign__pk = campaign.id).distinct()
     experiments = Experiment.objects.filter(campaign__pk=campaign.id)
-    for exs in experiments:
-        exs.get_status()
+    #for exs in experiments:
+    #    exs.get_status()
     locations= Location.objects.filter(experiment=experiments).distinct()
     form = OperationSearchForm(initial={'campaign': campaign.id})
         
@@ -942,6 +915,17 @@ def operation_search(request, id_camp=None):
 
 
 def radar_play(request, id_camp, id_radar):
+    campaign = get_object_or_404(Campaign, pk = id_camp)
+    radar = get_object_or_404(Location, pk = id_radar)
+    experiments = Experiment.objects.filter(campaign=campaign).filter(location=radar)
+    current_time = datetime.today()
+    #exp = RunningExperiment(
+    #                radar = purchase_request.user_id,
+    #                running_experiment = purchase_request,
+    #                status = ,
+    #            )
+    #new_pos.append(exp)
+    #exp.save()
     
     route = request.META['HTTP_REFERER']
     route = str(route)
@@ -950,7 +934,24 @@ def radar_play(request, id_camp, id_radar):
     else:
         return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 
+
 def radar_stop(request, id_camp, id_radar):
+
+    route = request.META['HTTP_REFERER']
+    route = str(route)
+    if 'search' in route:
+        return HttpResponseRedirect(reverse('url_operation_search', args=[id_camp]))
+    else:
+        return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
+    
+
+def radar_refresh(request, id_camp, id_radar):
+    
+    campaign = get_object_or_404(Campaign, pk = id_camp)
+    radar = get_object_or_404(Location, pk = id_radar)
+    experiments = Experiment.objects.filter(campaign=campaign).filter(location=radar)
+    for exs in experiments:
+        exs.get_status()
 
     route = request.META['HTTP_REFERER']
     route = str(route)

@@ -46,5 +46,6 @@ urlpatterns = (
     url(r'^operation/search/(?P<id_camp>-?\d+)/$', 'apps.main.views.operation_search', name='url_operation_search'),
     url(r'^operation/(?P<id_camp>-?\d+)/radar/(?P<id_radar>-?\d+)/play/$', 'apps.main.views.radar_play', name='url_radar_play'),
     url(r'^operation/(?P<id_camp>-?\d+)/radar/(?P<id_radar>-?\d+)/stop/$', 'apps.main.views.radar_stop', name='url_radar_stop'),
+    url(r'^operation/(?P<id_camp>-?\d+)/radar/(?P<id_radar>-?\d+)/refresh/$', 'apps.main.views.radar_refresh', name='url_radar_refresh'),
     
 )
