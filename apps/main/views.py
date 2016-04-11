@@ -963,15 +963,49 @@ def operation_search(request, id_camp=None):
 def radar_play(request, id_camp, id_radar):
     campaign = get_object_or_404(Campaign, pk = id_camp)
     radar = get_object_or_404(Location, pk = id_radar)
-    experiments = Experiment.objects.filter(campaign=campaign).filter(location=radar)
-    current_time = datetime.today()
-    #exp = RunningExperiment(
-    #                radar = purchase_request.user_id,
-    #                running_experiment = purchase_request,
-    #                status = ,
-    #            )
-    #new_pos.append(exp)
-    #exp.save()
+    today = datetime.today()
+    now = today.time()
+    
+    #--If campaign datetime is ok:
+    if today >= campaign.start_date and today <= campaign.end_date:
+        experiments = Experiment.objects.filter(campaign=campaign).filter(location=radar)
+        for exp in experiments:
+            #--If experiment time is ok:
+            if now >= exp.start_time and now <= exp.end_time:
+                configurations =  Configuration.objects.filter(experiment = exp)
+                for conf in configurations:
+                    if 'cgs' in conf.device.device_type.name:
+                        conf.status_device()
+                    else:
+                        answer = conf.start_device()
+                        conf.status_device()
+                        #--Running Experiment
+                        r_e = RunningExperiment.objects.filter(radar=radar)
+                        #--If RunningExperiment element exists
+                        if r_e:
+                            r_e = r_e[0]
+                            r_e.running_experiment = exp
+                            r_e.status = 3
+                            r_e.save()
+                        else:
+                            running_experiment = RunningExperiment(
+                                                                   radar = radar,
+                                                                   running_experiment = exp,
+                                                                   status = 3,
+                                                                   )
+                            running_experiment.save()
+                        
+                        if answer:
+                            messages.success(request, conf.message)
+                            exp.status=2
+                            exp.save()
+                        else:
+                            messages.error(request, conf.message)
+            else:
+                if exp.status == 1 or exp.status == 3:
+                    exp.status=3
+                    exp.save()
+   
     
     route = request.META['HTTP_REFERER']
     route = str(route)
