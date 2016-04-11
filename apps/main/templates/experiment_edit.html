@@ -1,31 +1,9 @@
-{% extends "base.html" %}
+{% extends "base_edit.html" %}
 {% load bootstrap3 %}
 {% load static %}
 {% load main_tags %}
 {% block extra-head %}
 <link href="{% static 'css/bootstrap-datetimepicker.min.css' %}" media="screen" rel="stylesheet">
-{% endblock %}
-
-{% block exp-active %}active{% endblock %}
-
-{% block content-title %}{{title}}{% endblock %}
-{% block content-suptitle %}{{suptitle}}{% endblock %}
-
-{% block content %}
-<form class="form" method="post" action="">
-  {% csrf_token %}
-  {% bootstrap_form form layout='horizontal' size='medium' %}
-  <div style="clear: both;"></div>
-  <br>
-  {% if button %}
-    <br>
-    <button type="submit" class="btn btn-primary pull-right">{{button}}</button>
-  {% endif %}
-</form>
-{% endblock %}
-
-{% block sidebar%}
-   {% include "sidebar_devices.html" %}
 {% endblock %}
 
 {% block extra-js%}
@@ -41,7 +19,7 @@
   
   $('#id_create_from').change(function() {
     var url = "{% url 'url_add_experiment' %}";
-    if ($(this).val()=="2"){      
+    if ($(this).val()=="2"){
       document.location = url+"?template=0";
     }else if ($(this).val()=="1"){
       document.location = url+"?blank=0";

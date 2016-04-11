@@ -49,6 +49,9 @@ class CampaignForm(forms.ModelForm):
         self.fields['start_date'].widget = DatepickerWidget(self.fields['start_date'].widget.attrs)
         self.fields['end_date'].widget = DatepickerWidget(self.fields['end_date'].widget.attrs)
         self.fields['description'].widget.attrs = {'rows': 2}
+        
+        if self.instance:
+            self.fields['experiments'].queryset |= self.instance.experiments.all()
     
     class Meta:
         model = Campaign

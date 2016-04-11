@@ -298,8 +298,10 @@ def campaign_new(request):
                 kwargs['button'] = 'Create'
                 kwargs['experiments'] = Configuration.objects.filter(experiment=request.GET['template'])                
                 kwargs['experiment_keys'] = ['name', 'start_time', 'end_time']
-                form = CampaignForm(instance=Campaign.objects.get(pk=request.GET['template']),
-                                    initial={'template':False})                
+                camp = Campaign.objects.get(pk=request.GET['template'])
+                form = CampaignForm(instance=camp,
+                                    initial={'name':'{} [{:%Y/%m/%d}]'.format(camp.name, datetime.now()),
+                                             'template':False})                
         elif 'blank' in request.GET:
             kwargs['button'] = 'Create'
             form = CampaignForm()
@@ -342,10 +344,27 @@ def campaign_edit(request, id_camp):
         form = CampaignForm(instance=campaign)
          
     if request.method=='POST':
-        form = CampaignForm(request.POST, instance=campaign)
+        exps = campaign.experiments.all().values_list('pk', flat=True)
+        post = request.POST.copy()
+        new_exps = post.getlist('experiments')
+        post.setlist('experiments', [])
+        form = CampaignForm(post, instance=campaign)
         
         if form.is_valid():
-            form.save()
+            camp = form.save()
+            for id_exp in new_exps:
+                if int(id_exp) in exps:
+                    exps.pop(id_exp)
+                else:
+                    exp = Experiment.objects.get(pk=id_exp)
+                    if exp.template:
+                        camp.experiments.add(exp.clone(template=False))
+                    else:
+                        camp.experiments.add(exp)
+            
+            for id_exp in exps:
+                camp.experiments.remove(Experiment.objects.get(pk=id_exp))
+            
             return redirect('url_campaign', id_camp=id_camp)
           
     kwargs = {}
@@ -412,17 +431,11 @@ def experiment(request, id_exp):
     
     kwargs = {}
     
-    exp_keys = ['id', 'location', 'name', 'start_time', 'end_time']
-    conf_keys = ['id', 'device__name', 'device__device_type', 'device__ip_address', 'device__port_address']
-    
-    conf_labels = ['id', 'device__name', 'device_type', 'ip_address', 'port_address']
-    
-    kwargs['experiment_keys'] = exp_keys[1:]
+    kwargs['experiment_keys'] = ['template', 'radar', 'name', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
     
-    kwargs['configuration_labels'] = conf_labels[1:]
-    kwargs['configuration_keys'] = conf_keys[1:]
-    kwargs['configurations'] = configurations #.values(*conf_keys)
+    kwargs['configuration_keys'] = ['device__name', 'device__device_type', 'device__ip_address', 'device__port_address']
+    kwargs['configurations'] = configurations
     
     kwargs['title'] = 'Experiment'
     kwargs['suptitle'] = 'Details'
@@ -448,8 +461,10 @@ def experiment_new(request, id_camp=None):
                 kwargs['button'] = 'Create'
                 kwargs['configurations'] = Configuration.objects.filter(experiment=request.GET['template'])                
                 kwargs['configuration_keys'] = ['name', 'device__name', 'device__ip_address', 'device__port_address']
-                form = ExperimentForm(instance=Experiment.objects.get(pk=request.GET['template']),
-                                      initial={'template':False})                
+                exp=Experiment.objects.get(pk=request.GET['template'])
+                form = ExperimentForm(instance=exp, 
+                                      initial={'name': '{} [{:%Y/%m/%d}]'.format(exp.name, datetime.now()),
+                                               'template': False})                
         elif 'blank' in request.GET:
             kwargs['button'] = 'Create'
             form = ExperimentForm()
@@ -504,33 +519,36 @@ def experiment_delete(request, id_exp):
     
     if request.method=='POST':
         if request.user.is_staff:
+            for conf in Configuration.objects.filter(experiment=experiment):
+                conf.delete()                
             experiment.delete()
             return redirect('url_experiments')
         
-        return HttpResponse("Not enough permission to delete this object")
+        messages.error(request, 'Not enough permission to delete this object')
+        return redirect(experiment.get_absolute_url())    
     
-    kwargs = {'object':experiment, 'exp_active':'active',
-              'url_cancel':'url_experiment', 'id_item':id_exp}
+    kwargs = {
+              'title': 'Delete',
+              'suptitle': 'Experiment',
+              'object': experiment, 
+              'previous': experiment.get_absolute_url(),
+              'delete': True
+              }
     
-    return render(request, 'item_delete.html', kwargs)
+    return render(request, 'confirm.html', kwargs)
 
 
 def dev_confs(request):
     
     configurations = Configuration.objects.all().order_by('type', 'device__device_type', 'experiment')
-    
-#     keys = ['id', 'device__device_type__name', 'device__name', 'experiment__campaign__name', 'experiment__name']
-    
-    keys = ['id', 'device', 'experiment', 'type', 'programmed_date']
 
     kwargs = {}
     
-    kwargs['configuration_keys'] = keys[1:]
-    kwargs['configurations'] = configurations#.values(*keys)
+    kwargs['configuration_keys'] = ['device', 'experiment', 'type', 'programmed_date']
+    kwargs['configurations'] = configurations
     
     kwargs['title'] = 'Configuration'
     kwargs['suptitle'] = 'List'
-    kwargs['button'] = 'New Configuration'
     
     return render(request, 'dev_confs.html', kwargs)
 
@@ -611,7 +629,7 @@ def dev_conf_edit(request, id_conf):
     ###### SIDEBAR ######
     kwargs.update(sidebar(conf=conf))
     
-    return render(request, '%s_conf_edit.html' %conf.device.device_type.name, kwargs)
+    return render(request, '%s_conf_edit.html' % conf.device.device_type.name, kwargs)
 
 
 def dev_conf_start(request, id_conf):
@@ -824,16 +842,21 @@ def dev_conf_delete(request, id_conf):
     
     if request.method=='POST':
         if request.user.is_staff:
-            id_exp = conf.experiment.id
             conf.delete()
-            return redirect('url_experiment', id_exp=id_exp)
+            return redirect('url_dev_confs')
         
-        return HttpResponse("Not enough permission to delete this object")
+        messages.error(request, 'Not enough permission to delete this object')
+        return redirect(conf.get_absolute_url())    
     
-    kwargs = {'object':conf, 'conf_active':'active',
-          'url_cancel':'url_dev_conf', 'id_item':id_conf}
+    kwargs = {
+              'title': 'Delete',
+              'suptitle': 'Experiment',
+              'object': conf, 
+              'previous': conf.get_absolute_url(),
+              'delete': True
+              }
     
-    return render(request, 'item_delete.html', kwargs)
+    return render(request, 'confirm.html', kwargs)
 
 
 def sidebar(**kwargs):

@@ -149,10 +149,13 @@ class Experiment(models.Model):
 
     class Meta:
         db_table = 'db_experiments'
-        ordering = ('name',)
+        ordering = ('template', 'name')
     
     def __unicode__(self):
-        return u'%s' % (self.name)
+        if self.template:
+            return u'%s (template)' % (self.name)
+        else:
+            return u'%s' % (self.name)
     
     @property
     def radar(self):
@@ -206,7 +209,7 @@ class Experiment(models.Model):
         elif self.status == 1:
             color = "info"
         elif self.status == 2:
-            color = "succes"
+            color = "success"
         elif self.status == 3:
             color = "warning"
         else:

@@ -16,7 +16,7 @@ def attr(instance, key):
 
 @register.filter
 def title(s):
-    return s.replace('_', ' ').title()
+    return s.split('__')[-1].replace('_', ' ').title()
 
 @register.filter
 def value(instance, key):
