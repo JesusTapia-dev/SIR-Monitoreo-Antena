@@ -989,6 +989,12 @@ def radar_play(request, id_camp, id_radar):
     today = datetime.today()
     now = today.time()
     
+    #--Clear Old Experiments From RunningExperiment Object
+    running_experiment = RunningExperiment.objects.get(radar=radar)
+    if running_experiment:
+        running_experiment.running_experiment.clear()
+        running_experiment.save()
+    
     #--If campaign datetime is ok:
     if today >= campaign.start_date and today <= campaign.end_date:
         experiments = Experiment.objects.filter(campaign=campaign).filter(location=radar)
@@ -1003,21 +1009,21 @@ def radar_play(request, id_camp, id_radar):
                         answer = conf.start_device()
                         conf.status_device()
                         #--Running Experiment
-                        r_e = RunningExperiment.objects.filter(radar=radar)
+                        old_running_experiment = RunningExperiment.objects.get(radar=radar)
                         #--If RunningExperiment element exists
-                        if r_e:
-                            r_e = r_e[0]
-                            r_e.running_experiment = exp
-                            r_e.status = 3
-                            r_e.save()
+                        if old_running_experiment:
+                            old_running_experiment.running_experiment.add(exp)
+                            old_running_experiment.status = 3
+                            old_running_experiment.save()
+                        #--Create a new Running_Experiment Object
                         else:
-                            running_experiment = RunningExperiment(
+                            new_running_experiment = RunningExperiment(
                                                                    radar = radar,
                                                                    status = 3,
                                                                    )
-                            running_experiment.save()
-                            running_experiment.running_experiment.add(exp)
-                            running_experiment.save()
+                            new_running_experiment.save()
+                            new_running_experiment.running_experiment.add(exp)
+                            new_running_experiment.save()
                         
                         if answer:
                             messages.success(request, conf.message)
@@ -1040,6 +1046,10 @@ def radar_play(request, id_camp, id_radar):
 
 
 def radar_stop(request, id_camp, id_radar):
+    campaign = get_object_or_404(Campaign, pk = id_camp)
+    radar = get_object_or_404(Location, pk = id_radar)
+    today = datetime.today()
+    now = today.time()
 
     route = request.META['HTTP_REFERER']
     route = str(route)
