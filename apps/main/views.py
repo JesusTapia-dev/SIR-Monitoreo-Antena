@@ -1048,8 +1048,24 @@ def radar_play(request, id_camp, id_radar):
 def radar_stop(request, id_camp, id_radar):
     campaign = get_object_or_404(Campaign, pk = id_camp)
     radar = get_object_or_404(Location, pk = id_radar)
-    today = datetime.today()
-    now = today.time()
+    experiments = Experiment.objects.filter(campaign=campaign).filter(location=radar)
+    
+    for exp in experiments:
+        configurations =  Configuration.objects.filter(experiment = exp)
+        for conf in configurations:
+            if 'cgs' in conf.device.device_type.name:
+                conf.status_device()
+            else:
+                answer = conf.stop_device()
+                conf.status_device()
+                
+                if answer:
+                    messages.success(request, conf.message)
+                    exp.status=1
+                    exp.save()
+                else:
+                    messages.error(request, conf.message)
+        
 
     route = request.META['HTTP_REFERER']
     route = str(route)
