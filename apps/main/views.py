@@ -1013,9 +1013,10 @@ def radar_play(request, id_camp, id_radar):
                         else:
                             running_experiment = RunningExperiment(
                                                                    radar = radar,
-                                                                   running_experiment = exp,
                                                                    status = 3,
                                                                    )
+                            running_experiment.save()
+                            running_experiment.running_experiment.add(exp)
                             running_experiment.save()
                         
                         if answer:

@@ -133,7 +133,7 @@ class Campaign(models.Model):
     
 class RunningExperiment(models.Model):
     radar = models.OneToOneField('Location', on_delete=models.CASCADE)
-    running_experiment = models.ManyToManyField('Experiment')
+    running_experiment = models.ManyToManyField('Experiment', blank = True)
     status = models.PositiveSmallIntegerField(default=0, choices=RADAR_STATES)
     
     
