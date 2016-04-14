@@ -990,8 +990,9 @@ def radar_play(request, id_camp, id_radar):
     now = today.time()
     
     #--Clear Old Experiments From RunningExperiment Object
-    running_experiment = RunningExperiment.objects.get(radar=radar)
+    running_experiment = RunningExperiment.objects.filter(radar=radar)
     if running_experiment:
+        running_experiment = running_experiment[0]
         running_experiment.running_experiment.clear()
         running_experiment.save()
     
@@ -1009,9 +1010,10 @@ def radar_play(request, id_camp, id_radar):
                         answer = conf.start_device()
                         conf.status_device()
                         #--Running Experiment
-                        old_running_experiment = RunningExperiment.objects.get(radar=radar)
+                        old_running_experiment = RunningExperiment.objects.filter(radar=radar)
                         #--If RunningExperiment element exists
                         if old_running_experiment:
+                            old_running_experiment = old_running_experiment[0]
                             old_running_experiment.running_experiment.add(exp)
                             old_running_experiment.status = 3
                             old_running_experiment.save()
