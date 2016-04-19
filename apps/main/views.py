@@ -404,6 +404,18 @@ def campaign_delete(request, id_camp):
     
     return render(request, 'confirm.html', kwargs)
 
+def campaign_export(request, id_camp):
+    
+    campaign = get_object_or_404(Campaign, pk=id_camp)
+    content = campaign.parms_to_dict()            
+    content_type = 'application/json'
+    filename     =  '%s_%s.json' %(campaign.name, campaign.id)
+    
+    response = HttpResponse(content_type=content_type)
+    response['Content-Disposition'] = 'attachment; filename="%s"' %filename
+    response.write(content)
+    
+    return response
 
 def experiments(request):
     
@@ -536,6 +548,20 @@ def experiment_delete(request, id_exp):
               }
     
     return render(request, 'confirm.html', kwargs)
+
+
+def experiment_export(request, id_exp):
+    
+    experiment = get_object_or_404(Experiment, pk=id_exp)
+    content = experiment.parms_to_dict()            
+    content_type = 'application/json'
+    filename     =  '%s_%s.json' %(experiment.name, experiment.id)
+    
+    response = HttpResponse(content_type=content_type)
+    response['Content-Disposition'] = 'attachment; filename="%s"' %filename
+    response.write(content)
+    
+    return response
 
 
 def dev_confs(request):

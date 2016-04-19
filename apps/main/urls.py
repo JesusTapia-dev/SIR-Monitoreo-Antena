@@ -18,12 +18,14 @@ urlpatterns = (
     url(r'^campaign/(?P<id_camp>-?\d+)/$', 'apps.main.views.campaign', name='url_campaign'),
     url(r'^campaign/(?P<id_camp>-?\d+)/edit/$', 'apps.main.views.campaign_edit', name='url_edit_campaign'),
     url(r'^campaign/(?P<id_camp>-?\d+)/delete/$', 'apps.main.views.campaign_delete', name='url_delete_campaign'),
+    url(r'^campaign/(?P<id_camp>-?\d+)/export/$', 'apps.main.views.campaign_export', name='url_export_campaign'),
     
     url(r'^experiment/new/$', 'apps.main.views.experiment_new', name='url_add_experiment'),
     url(r'^experiment/$', 'apps.main.views.experiments', name='url_experiments'),
     url(r'^experiment/(?P<id_exp>-?\d+)/$', 'apps.main.views.experiment', name='url_experiment'),
     url(r'^experiment/(?P<id_exp>-?\d+)/edit/$', 'apps.main.views.experiment_edit', name='url_edit_experiment'),
     url(r'^experiment/(?P<id_exp>-?\d+)/delete/$', 'apps.main.views.experiment_delete', name='url_delete_experiment'),
+    url(r'^experiment/(?P<id_exp>-?\d+)/export/$', 'apps.main.views.experiment_export', name='url_export_experiment'),
     
     url(r'^experiment/(?P<id_exp>-?\d+)/new_dev_conf/$', 'apps.main.views.dev_conf_new', name='url_add_dev_conf'),
     url(r'^experiment/(?P<id_exp>-?\d+)/new_dev_conf/(?P<id_dev>-?\d+)/$', 'apps.main.views.dev_conf_new', name='url_add_dev_conf'),

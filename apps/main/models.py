@@ -1,4 +1,4 @@
-
+from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from datetime import datetime
 
 from django.db import models
@@ -130,6 +130,24 @@ class Campaign(models.Model):
     def get_absolute_url(self):
         return reverse('url_campaign', args=[str(self.id)])
     
+    def parms_to_dict(self):
+                
+        import json
+        
+        parameters = {}
+        experiments = Experiment.objects.filter(campaign = campaign)
+        
+        
+        parameters['campaign'] = self.name
+        
+        #parameters = json.dumps(parameters, indent=2)
+        parameters = json.dumps(parameters)
+        return parameters
+    
+    def get_absolute_url_export(self):
+        return reverse('url_export_campaign', args=[str(self.id)])
+    
+    
     
 class RunningExperiment(models.Model):
     radar = models.OneToOneField('Location', on_delete=models.CASCADE)
@@ -219,6 +237,41 @@ class Experiment(models.Model):
     
     def get_absolute_url(self):
         return reverse('url_experiment', args=[str(self.id)])
+    
+    def parms_to_dict(self):
+                
+        import json
+        
+        configurations = Configuration.objects.filter(experiment=self)
+        conf_parameters = {}
+        parameters={}
+        
+        for configuration in configurations:
+            if 'cgs' in configuration.device.device_type.name:
+                conf_parameters['cgs'] = configuration.parms_to_dict()
+            if 'dds' in configuration.device.device_type.name:
+                conf_parameters['dds'] = configuration.parms_to_dict()
+            if 'rc' in configuration.device.device_type.name:
+                conf_parameters['rc'] = configuration.parms_to_dict()
+            if 'jars' in configuration.device.device_type.name:
+                conf_parameters['jars'] = configuration.parms_to_dict()
+            if 'usrp' in configuration.device.device_type.name:
+                conf_parameters['usrp'] = configuration.parms_to_dict()
+            if 'abs' in configuration.device.device_type.name:
+                conf_parameters['abs'] = configuration.parms_to_dict()
+        
+        parameters['configurations'] = conf_parameters
+        parameters['end_time'] = self.end_time.strftime("%Y-%m-%d")
+        parameters['start_time'] = self.start_time.strftime("%Y-%m-%d")
+        parameters['radar'] = self.radar.name
+        parameters['experiment'] = self.name
+        parameters = json.dumps(parameters, indent=2)
+        #parameters = json.dumps(parameters)
+        
+        return parameters
+    
+    def get_absolute_url_export(self):
+        return reverse('url_export_experiment', args=[str(self.id)])
     
     
 class Configuration(PolymorphicModel):
