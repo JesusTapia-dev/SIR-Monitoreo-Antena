@@ -54,9 +54,11 @@
 			{% endfor %}
 		  </table>		  
 	      </div>
-	    </div>
+	    </div>	    
 	  </div>
 	</div>
+	<br>
+	<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_mix">Mix Experiments</button>
 {% endblock %}
 
 {% block sidebar%}
@@ -73,6 +75,10 @@
   $("#bt_edit").click(function() {
 	    document.location = "{% url 'url_edit_campaign' campaign.id %}";
 	  });
+	  
+  $("#bt_mix").click(function() {
+        document.location = "{% url 'url_mix_campaign' campaign.id %}";
+      });
   
 </script>
 {% endblock %}

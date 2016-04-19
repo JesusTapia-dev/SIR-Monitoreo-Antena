@@ -1,48 +1,38 @@
-{% extends "base.html" %}
+{% extends "base_edit.html" %}
 {% load bootstrap3 %}
 {% load static %}
 {% load main_tags %}
 
-{% block conf-active %}active{% endblock %}
-
-{% block content-title %}{{title}}{% endblock %}
-{% block content-suptitle %}{{suptitle}}{% endblock %}
-
-{% block content %}
-
-{% if form.is_multipart %}
-    <form class="form" enctype="multipart/form-data" method="post" action="{{action}}">
-{% else %}
-    <form class="form" method="post" action="{{action}}">
-{% endif %}
-
-  {% csrf_token %}
-  {% bootstrap_form form layout='horizontal' size='medium' %}
-  <div style="clear: both;"></div>
-  <br>
-  {% if extra_button %}
-  <div class="pull-left">
-  <button type="button" class="btn btn-primary" id="bt_{{extra_button}}">{{extra_button}}</button>  
-  </div>
-  {% endif %}
-  <div class="pull-right">
-  <button type="button" class="btn btn-primary" onclick="{% if previous %}window.location.replace('{{ previous }}');{% else %}history.go(-1);{% endif %}">Cancel</button>
-  <button type="submit" class="btn btn-primary">{{button}}</button>
-  </div>
-</form>
-{% endblock %}
-
-{% block sidebar%}
-{% include "sidebar_devices.html" %}
-{% endblock %}
 
 {% block extra-js%}
+
 {% if id_exp %}
+
 <script type="text/javascript">
+
   $("#id_device").change(function() {
     var url = "{% url 'url_add_dev_conf' id_exp  %}";
-    document.location = url+ $(this).val() + "/";
+    document.location = url+ $(this).val() + "/?name=" + $("#id_name").val();
   });
+
+  $('#id_create_from').change(function() {
+    var url = "{% url 'url_add_dev_conf' id_exp %}";
+    if ($(this).val()=="2"){      
+      document.location = url+"?template=0";
+    }else if ($(this).val()=="1"){
+      document.location = url+"?blank=0";
+    }else{
+      document.location = url;
+    }
+  });
+  
+  $('#id_choose_template').change(function() {
+    var url = "{% url 'url_add_dev_conf' id_exp %}";          
+    document.location = url+"?template="+$(this).val();
+  });
+
 </script>
+
 {% endif %}
+
 {% endblock %}
