@@ -10,10 +10,10 @@ from files import read_json_file
 
 class CGSConfiguration(Configuration):
     
-    freq0 = models.IntegerField(verbose_name='Frequency 0',validators=[MinValueValidator(0), MaxValueValidator(450e6)], blank=True, null=True)
-    freq1 = models.IntegerField(verbose_name='Frequency 1',validators=[MinValueValidator(0), MaxValueValidator(450e6)], blank=True, null=True)
-    freq2 = models.IntegerField(verbose_name='Frequency 2',validators=[MinValueValidator(0), MaxValueValidator(450e6)], blank=True, null=True)
-    freq3 = models.IntegerField(verbose_name='Frequency 3',validators=[MinValueValidator(0), MaxValueValidator(450e6)], blank=True, null=True)
+    freq0 = models.PositiveIntegerField(verbose_name='Frequency 0',validators=[MaxValueValidator(450e6)], default = 60)
+    freq1 = models.PositiveIntegerField(verbose_name='Frequency 1',validators=[MaxValueValidator(450e6)], default = 60)
+    freq2 = models.PositiveIntegerField(verbose_name='Frequency 2',validators=[MaxValueValidator(450e6)], default = 60)
+    freq3 = models.PositiveIntegerField(verbose_name='Frequency 3',validators=[MaxValueValidator(450e6)], default = 60)
     
     def verify_frequencies(self):
         
