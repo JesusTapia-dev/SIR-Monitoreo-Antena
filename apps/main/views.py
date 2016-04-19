@@ -598,6 +598,11 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
     kwargs['suptitle'] = 'New'
     kwargs['button'] = 'Create'
     
+    if id_dev != 0:
+        device = Device.objects.get(pk=id_dev)
+        if 'dds' in device.device_type.name:
+            kwargs['dds_device'] = True
+    
     return render(request, 'dev_conf_edit.html', kwargs)
 
 
