@@ -135,7 +135,7 @@ class Campaign(models.Model):
         import json
         
         parameters = {}
-        experiments = Experiment.objects.filter(campaign = campaign)
+        #experiments = Experiment.objects.filter(campaign = self)
         
         
         parameters['campaign'] = self.name
