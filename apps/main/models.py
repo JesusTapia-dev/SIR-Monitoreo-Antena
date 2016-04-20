@@ -133,6 +133,7 @@ class Campaign(models.Model):
     def parms_to_dict(self):
                 
         import json
+        from collections import OrderedDict
         
         parameters = {}
         exp_parameters = {}
@@ -143,11 +144,13 @@ class Campaign(models.Model):
             exp_parameters['experiment-'+str(i)]  = json.loads(experiment.parms_to_dict())
             i += 1
         
-        parameters['campaign']   = self.__unicode__()
-        parameters['start_date'] = self.start_date.strftime("%Y-%m-%d")
-        parameters['end_date']   = self.end_date.strftime("%Y-%m-%d")
+        
         parameters['experimets'] =exp_parameters
-        parameters = json.dumps(parameters, indent=2)
+        parameters['end_date']   = self.end_date.strftime("%Y-%m-%d")
+        parameters['start_date'] = self.start_date.strftime("%Y-%m-%d")
+        parameters['campaign']   = self.__unicode__()
+        
+        parameters = json.dumps(parameters, indent=2, sort_keys=False)
         
         return parameters
     
