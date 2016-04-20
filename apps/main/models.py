@@ -135,13 +135,20 @@ class Campaign(models.Model):
         import json
         
         parameters = {}
-        #experiments = Experiment.objects.filter(campaign = self)
+        exp_parameters = {}
+        experiments = Experiment.objects.filter(campaign = self)
         
+        i=1
+        for experiment in experiments:
+            exp_parameters['experiment-'+str(i)]  = json.loads(experiment.parms_to_dict())
+            i += 1
         
-        parameters['campaign'] = self.name
+        parameters['campaign']   = self.__unicode__()
+        parameters['start_date'] = self.start_date.strftime("%Y-%m-%d")
+        parameters['end_date']   = self.end_date.strftime("%Y-%m-%d")
+        parameters['experimets'] =exp_parameters
+        parameters = json.dumps(parameters, indent=2)
         
-        #parameters = json.dumps(parameters, indent=2)
-        parameters = json.dumps(parameters)
         return parameters
     
     def get_absolute_url_export(self):
