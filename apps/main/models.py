@@ -133,7 +133,6 @@ class Campaign(models.Model):
     def parms_to_dict(self):
                 
         import json
-        from collections import OrderedDict
         
         parameters = {}
         exp_parameters = {}
