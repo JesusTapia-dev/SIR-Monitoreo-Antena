@@ -22,6 +22,8 @@ def title(s):
 def value(instance, key):
     
     item = instance
+    if key=='name':
+        return '%s' % item
     for my_key in key.split("__"):
         item = attr(item, my_key)
     

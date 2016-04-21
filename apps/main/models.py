@@ -35,6 +35,7 @@ DEV_STATES = (
 DEV_TYPES = (
                 ('', 'Select a device type'),
                 ('rc', 'Radar Controller'),
+                ('rc_mix', 'Radar Controller (Mix)'),
                 ('dds', 'Direct Digital Synthesizer'),
                 ('jars', 'Jicamarca Radar Acquisition System'),
                 ('usrp', 'Universal Software Radio Peripheral'),
@@ -44,6 +45,7 @@ DEV_TYPES = (
 
 DEV_PORTS = {
                 'rc'    : 2000,
+                'rc_mix': 2000,
                 'dds'   : 2000,
                 'jars'  : 2000,
                 'usrp'  : 2000,
@@ -290,7 +292,7 @@ class Configuration(PolymorphicModel):
     name = models.CharField(verbose_name="Configuration Name", max_length=40, default='')
     
     experiment = models.ForeignKey('Experiment', null=True, blank=True, on_delete=models.CASCADE)
-    device = models.ForeignKey(Device, on_delete=models.CASCADE)
+    device = models.ForeignKey(Device, null=True, on_delete=models.CASCADE)
     
     type = models.PositiveSmallIntegerField(default=0, choices=CONF_TYPES)
     
@@ -305,13 +307,8 @@ class Configuration(PolymorphicModel):
         db_table = 'db_configurations'
     
     def __unicode__(self):
-        
-        if self.experiment:
-            return u'[%s, %s]: %s' % (self.experiment.name,
-                                      self.device.name,
-                                      self.name)
-        else:
-            return u'%s' % self.device.name
+
+        return u'[%s]: %s' % (self.device.name, self.name)
 
     def clone(self, **kwargs):
         

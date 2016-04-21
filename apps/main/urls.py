@@ -26,6 +26,8 @@ urlpatterns = (
     url(r'^experiment/(?P<id_exp>-?\d+)/edit/$', 'apps.main.views.experiment_edit', name='url_edit_experiment'),
     url(r'^experiment/(?P<id_exp>-?\d+)/delete/$', 'apps.main.views.experiment_delete', name='url_delete_experiment'),
     url(r'^experiment/(?P<id_exp>-?\d+)/export/$', 'apps.main.views.experiment_export', name='url_export_experiment'),
+    url(r'^experiment/(?P<id_exp>-?\d+)/mix/$', 'apps.main.views.experiment_mix', name='url_mix_experiment'),
+    url(r'^experiment/(?P<id_exp>-?\d+)/mix/delete/$', 'apps.main.views.experiment_mix_delete', name='url_delete_mix_experiment'),
     
     url(r'^experiment/(?P<id_exp>-?\d+)/new_dev_conf/$', 'apps.main.views.dev_conf_new', name='url_add_dev_conf'),
     url(r'^experiment/(?P<id_exp>-?\d+)/new_dev_conf/(?P<id_dev>-?\d+)/$', 'apps.main.views.dev_conf_new', name='url_add_dev_conf'),

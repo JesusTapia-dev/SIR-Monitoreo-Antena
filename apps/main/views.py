@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
+from django.utils.safestring import mark_safe
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.contrib import messages
@@ -10,7 +11,7 @@ from apps.cgs.forms import CGSConfigurationForm
 from apps.jars.forms import JARSConfigurationForm
 from apps.usrp.forms import USRPConfigurationForm
 from apps.abs.forms import ABSConfigurationForm
-from apps.rc.forms import RCConfigurationForm
+from apps.rc.forms import RCConfigurationForm, RCMixConfigurationForm
 from apps.dds.forms import DDSConfigurationForm
 
 from .models import Campaign, Experiment, Device, Configuration, Location, RunningExperiment
@@ -18,13 +19,14 @@ from apps.cgs.models import CGSConfiguration
 from apps.jars.models import JARSConfiguration
 from apps.usrp.models import USRPConfiguration
 from apps.abs.models import ABSConfiguration
-from apps.rc.models import RCConfiguration
+from apps.rc.models import RCConfiguration, RCLine, RCLineType
 from apps.dds.models import DDSConfiguration
 
 # Create your views here.
 
 CONF_FORMS = {
     'rc': RCConfigurationForm,
+    'rc_mix': RCMixConfigurationForm,
     'dds': DDSConfigurationForm,
     'jars': JARSConfigurationForm,
     'cgs': CGSConfigurationForm,
@@ -39,6 +41,13 @@ CONF_MODELS = {
     'cgs': CGSConfiguration,
     'abs': ABSConfiguration,
     'usrp': USRPConfiguration,
+}
+
+MIX_MODES = {
+    '0': 'OR',
+    '1': 'XOR',
+    '2': 'AND',
+    '3': 'NAND'
 }
 
 
@@ -446,7 +455,7 @@ def experiment(request, id_exp):
     kwargs['experiment_keys'] = ['template', 'radar', 'name', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
     
-    kwargs['configuration_keys'] = ['device__name', 'device__device_type', 'device__ip_address', 'device__port_address']
+    kwargs['configuration_keys'] = ['name', 'device__device_type', 'device__ip_address', 'device__port_address']
     kwargs['configurations'] = configurations
     
     kwargs['title'] = 'Experiment'
@@ -564,13 +573,150 @@ def experiment_export(request, id_exp):
     return response
 
 
+def experiment_mix(request, id_exp):
+    
+    experiment = get_object_or_404(Experiment, pk=id_exp)
+    rc_confs = [conf for conf in RCConfiguration.objects.filter(experiment=id_exp,
+                                                                mix=False)]
+    
+    if len(rc_confs)<2:
+        messages.warning(request, 'You need at least two RC Configurations to make a mix')
+        return redirect(experiment.get_absolute_url())
+    
+    mix_confs = RCConfiguration.objects.filter(experiment=id_exp, mix=True)
+    
+    if mix_confs:
+        mix = mix_confs[0]
+    else:
+        mix = RCConfiguration(experiment=experiment,
+                              device=rc_confs[0].device,
+                              ipp=rc_confs[0].ipp,
+                              clock_in=rc_confs[0].clock_in,
+                              clock_divider=rc_confs[0].clock_divider,
+                              mix=True, 
+                              parameters='')
+        mix.save()
+
+        line_type = RCLineType.objects.get(name='mix')
+        for i in range(len(rc_confs[0].get_lines())):
+            line = RCLine(rc_configuration=mix, line_type=line_type, channel=i)
+            line.save()
+    
+    initial = {'name': mix.name,
+               'result': parse_mix_result(mix.parameters),
+               'delay': 0,
+               'mask': [0,1,2,3,4,5,6,7]
+               }
+    
+    if request.method=='GET':     
+        form = RCMixConfigurationForm(confs=rc_confs, initial=initial)
+    
+    if request.method=='POST':        
+
+        result = mix.parameters
+
+        if '{}|'.format(request.POST['experiment']) in result:
+            messages.error(request, 'Configuration already added')
+        else:
+            if result:
+                result = '{}-{}|{}|{}|{}'.format(mix.parameters,
+                                              request.POST['experiment'],
+                                              MIX_MODES[request.POST['operation']],
+                                              float(request.POST['delay']),
+                                              parse_mask(request.POST.getlist('mask'))
+                                              )
+            else:
+                result = '{}|{}|{}|{}'.format(request.POST['experiment'],
+                                           MIX_MODES[request.POST['operation']],
+                                           float(request.POST['delay']),
+                                           parse_mask(request.POST.getlist('mask'))
+                                           )
+            
+            mix.parameters = result
+            mix.name = request.POST['name']
+            mix.save()
+            mix.update_pulses()
+            
+        
+        initial['result'] = parse_mix_result(result)
+        initial['name'] = mix.name
+        
+        form = RCMixConfigurationForm(initial=initial, confs=rc_confs)
+            
+    
+    kwargs = {
+              'title': 'Experiment',
+              'suptitle': 'Mix Configurations',
+              'form' : form,
+              'extra_button': 'Delete',
+              'button': 'Add',
+              'cancel': 'Back',
+              'previous': experiment.get_absolute_url(),
+              'id_exp':id_exp,
+
+              }
+    
+    return render(request, 'experiment_mix.html', kwargs)
+
+
+def experiment_mix_delete(request, id_exp):
+    
+    conf = RCConfiguration.objects.get(experiment=id_exp, mix=True)
+    values = conf.parameters.split('-')
+    conf.parameters = '-'.join(values[:-1])
+    conf.save()
+    
+    return redirect('url_mix_experiment', id_exp=id_exp)
+
+
+def parse_mix_result(s):
+    
+    values = s.split('-')
+    html = ''
+    
+    
+    for i, value in enumerate(values):
+        if not value:
+            continue
+        pk, mode, delay, mask = value.split('|')
+        conf = RCConfiguration.objects.get(pk=pk)
+        if i==0:
+            html += '{:20.18}{:4}{:9}km{:>6}\r\n'.format( 
+                                conf.name[:18],
+                                '---',
+                                delay,
+                                mask)
+        else:
+            html += '{:20.18}{:4}{:9}km{:>6}\r\n'.format(
+                                conf.name[:18],
+                                mode,
+                                delay,
+                                mask)
+    
+    return mark_safe(html)
+
+def parse_mask(l):
+    
+    values = []
+    
+    for x in range(8):
+        if '{}'.format(x) in l:
+            values.append(1)
+        else:
+            values.append(0)
+    
+    values.reverse()
+    
+    return int(''.join([str(x) for x in values]), 2)
+
+
 def dev_confs(request):
     
     configurations = Configuration.objects.all().order_by('type', 'device__device_type', 'experiment')
 
     kwargs = {}
     
-    kwargs['configuration_keys'] = ['device', 'experiment', 'type', 'programmed_date']
+    kwargs['configuration_keys'] = ['device', 'name', 'experiment', 'type', 'programmed_date']
     kwargs['configurations'] = configurations
     
     kwargs['title'] = 'Configuration'
@@ -589,6 +735,7 @@ def dev_conf(request, id_conf):
 def dev_conf_new(request, id_exp=0, id_dev=0):
     
     initial = {}
+    kwargs = {}
     
     if id_exp<>0:
         initial['experiment'] = id_exp
@@ -597,13 +744,30 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
         initial['device'] = id_dev
 
     if request.method == 'GET':
-        if id_dev==0:
-            form = ConfigurationForm(initial=initial)
-        else:
+        
+        if id_dev:
+            kwargs['button'] = 'Create'
             device = Device.objects.get(pk=id_dev)
             DevConfForm = CONF_FORMS[device.device_type.name]
-                                        
+            initial['name'] = request.GET['name']                                          
             form = DevConfForm(initial=initial)
+        else:
+            if 'template' in request.GET:
+                if request.GET['template']=='0':
+                    form = NewForm(initial={'create_from':2},
+                                   template_choices=Configuration.objects.filter(template=True).values_list('id', 'name'))
+                else:
+                    kwargs['button'] = 'Create'                    
+                    conf = Configuration.objects.get(pk=request.GET['template'])
+                    DevConfForm = CONF_FORMS[conf.device.device_type.name]
+                    form = DevConfForm(instance=conf, 
+                                       initial={'name': '{} [{:%Y/%m/%d}]'.format(conf.name, datetime.now()),
+                                                'template': False})                
+            elif 'blank' in request.GET:
+                kwargs['button'] = 'Create'             
+                form = ConfigurationForm(initial=initial)
+            else:
+                form = NewForm()                                                               
         
     if request.method == 'POST':
         
@@ -613,16 +777,21 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
         form = DevConfForm(request.POST)
         
         if form.is_valid():
-            dev_conf = form.save()
+            conf = form.save()
     
-            return redirect('url_dev_confs')
+            if 'template' in request.GET and conf.device.device_type.name=='rc':
+                lines = RCLine.objects.filter(rc_configuration=request.GET['template'])            
+                for line in lines:
+                    line.clone(rc_configuration=conf)
+    
+            return redirect('url_dev_conf', id_conf=conf.pk)
         
-    kwargs = {}
+    
     kwargs['id_exp'] = id_exp
     kwargs['form'] = form
     kwargs['title'] = 'Configuration'
     kwargs['suptitle'] = 'New'
-    kwargs['button'] = 'Create'
+    
     
     if id_dev != 0:
         device = Device.objects.get(pk=id_dev)

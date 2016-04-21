@@ -4,11 +4,23 @@
 {% load main_tags %}
 {% block extra-head %}
 <link href="{% static 'css/bootstrap-datetimepicker.min.css' %}" media="screen" rel="stylesheet">
+<style type="text/css">
+      .tabuled {font-family: Courier New}
+      .check-inline {display: inline}
+</style>
 {% endblock %}
 
 {% block extra-js%}
 <script src="{% static 'js/moment.min.js' %}"></script>
 <script src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
 <script src="{% static 'js/cr.js' %}"></script>
+
+<script type="text/javascript">
+
+  $("#bt_Delete").click(function() {
+    document.location = "{% url 'url_delete_mix_experiment' id_exp  %}";
+  });
+
+</script>
 
 {% endblock %}

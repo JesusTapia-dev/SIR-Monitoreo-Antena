@@ -50,12 +50,13 @@ class CampaignForm(forms.ModelForm):
         self.fields['end_date'].widget = DatepickerWidget(self.fields['end_date'].widget.attrs)
         self.fields['description'].widget.attrs = {'rows': 2}
         
-        if self.instance:
+        if self.instance.pk:
             self.fields['experiments'].queryset |= self.instance.experiments.all()
     
     class Meta:
         model = Campaign
         exclude = ['']
+    
          
 class ExperimentForm(forms.ModelForm):
     
