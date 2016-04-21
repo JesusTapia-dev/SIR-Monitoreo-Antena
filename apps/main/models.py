@@ -6,6 +6,7 @@ from polymorphic import PolymorphicModel
 
 from django.core.urlresolvers import reverse
 
+
 CONF_STATES = (
                  (0, 'Disconnected'),
                  (1, 'Connected'),
@@ -146,17 +147,40 @@ class Campaign(models.Model):
             i += 1
         
         
-        parameters['experimets'] =exp_parameters
-        parameters['end_date']   = self.end_date.strftime("%Y-%m-%d")
-        parameters['start_date'] = self.start_date.strftime("%Y-%m-%d")
-        parameters['campaign']   = self.__unicode__()
+        parameters['experiments'] = exp_parameters
+        parameters['end_date']    = self.end_date.strftime("%Y-%m-%d")
+        parameters['start_date']  = self.start_date.strftime("%Y-%m-%d")
+        parameters['campaign']    = self.__unicode__()
+        parameters['tags']        =self.tags
         
         parameters = json.dumps(parameters, indent=2, sort_keys=False)
         
         return parameters
     
+    def import_from_file(self, fp):
+        
+        import os, json
+        
+        parms = {}
+        
+        path, ext = os.path.splitext(fp.name)
+        
+        if ext == '.json':
+            parms = json.load(fp)
+        
+        return parms
+    
+    def get_absolute_url(self):
+        return reverse('url_campaign', args=[str(self.id)])
+    
+    def get_absolute_url_edit(self):
+        return reverse('url_edit_campaign', args=[str(self.id)])
+    
     def get_absolute_url_export(self):
         return reverse('url_export_campaign', args=[str(self.id)])
+    
+    def get_absolute_url_import(self):
+        return reverse('url_import_campaign', args=[str(self.id)])
     
     
     
@@ -169,7 +193,6 @@ class RunningExperiment(models.Model):
 class Experiment(models.Model):
 
     template = models.BooleanField(default=False)    
-    location = models.ForeignKey('Location', null=True, blank=True, on_delete=models.CASCADE)    
     name = models.CharField(max_length=40, default='', unique=True)
     location = models.ForeignKey('Location', null=True, blank=True, on_delete=models.CASCADE)
     start_time = models.TimeField(default='00:00:00')
@@ -272,14 +295,83 @@ class Experiment(models.Model):
                 conf_parameters['abs'] = configuration.parms_to_dict()
         
         parameters['configurations'] = conf_parameters
-        parameters['end_time'] = self.end_time.strftime("%Y-%m-%d")
-        parameters['start_time'] = self.start_time.strftime("%Y-%m-%d")
-        parameters['radar'] = self.radar.name
-        parameters['experiment'] = self.name
+        parameters['end_time']       = self.end_time.strftime("%H:%M:%S")
+        parameters['start_time']     = self.start_time.strftime("%H:%M:%S")
+        parameters['radar']          = self.radar.name
+        parameters['experiment']     = self.name
         parameters = json.dumps(parameters, indent=2)
-        #parameters = json.dumps(parameters)
         
         return parameters
+    
+    def import_from_file(self, fp):
+        
+        import os, json
+        
+        parms = {}
+        
+        path, ext = os.path.splitext(fp.name)
+        
+        if ext == '.json':
+            parms = json.load(fp)
+        
+        return parms
+    
+    def dict_to_parms(self, parms, CONF_MODELS):
+        
+        #self.name       = parameters['experiment']
+        #self.location   = parameters['radar']
+        #self.start_time = parameters['start_time']
+        #self.end_time   = parameters['end_time']
+        
+        configurations = Configuration.objects.filter(experiment=self)
+        
+        if configurations:
+                    for configuration in configurations:
+                        configuration.delete()
+        
+        for conf_type in parms['configurations']:
+                    #--For ABS Device:
+                    #--For USRP Device:
+                    #--For JARS Device:
+                    #--For RC Device:
+                    if conf_type == 'rc':
+                        device = get_object_or_404(Device, pk=parms['configurations']['rc']['device_id'])
+                        DevConfModel = CONF_MODELS[conf_type]
+                        confrc_form = DevConfModel(
+                                                  experiment = self,
+                                                  name = 'RC',
+                                                  device=device,
+                                                  )
+                        confrc_form.dict_to_parms(parms['configurations']['rc'])
+                        confrc_form.save()
+                    #--For DDS Device:
+                    if conf_type == 'dds':
+                        device = get_object_or_404(Device, pk=parms['configurations']['dds']['device_id'])
+                        DevConfModel = CONF_MODELS[conf_type]
+                        confdds_form = DevConfModel(
+                                                  experiment = self,
+                                                  name = 'DDS',
+                                                  device=device,
+                                                  )
+                        confdds_form.dict_to_parms(parms['configurations']['dds'])
+                        confdds_form.save()
+                    #--For CGS Device:
+                    if conf_type == 'cgs':
+                        device = get_object_or_404(Device, pk=parms['configurations']['cgs']['device_id'])
+                        DevConfModel = CONF_MODELS[conf_type]
+                        confcgs_form = DevConfModel(
+                                                  experiment = self,
+                                                  name = 'CGS',
+                                                  device=device,
+                                                  )
+                        confcgs_form.dict_to_parms(parms['configurations']['cgs'])
+                        confcgs_form.save()
+    
+    def get_absolute_url_edit(self):
+        return reverse('url_edit_experiment', args=[str(self.id)])
+    
+    def get_absolute_url_import(self):
+        return reverse('url_import_experiment', args=[str(self.id)])
     
     def get_absolute_url_export(self):
         return reverse('url_export_experiment', args=[str(self.id)])

@@ -73,6 +73,8 @@ class DDSConfiguration(Configuration):
         
         parameters = {}
         
+        parameters['device_id'] = self.device.id
+        
         parameters['clock'] = float(self.clock)
         parameters['multiplier'] = int(self.multiplier)
         

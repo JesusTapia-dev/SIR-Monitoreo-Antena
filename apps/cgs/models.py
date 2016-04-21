@@ -38,6 +38,8 @@ class CGSConfiguration(Configuration):
         
         parameters = {}
         
+        parameters['device_id'] = self.device.id
+        
         if self.freq0 == None or self.freq0 == '':
             parameters['freq0'] = 0
         else:
@@ -58,9 +60,16 @@ class CGSConfiguration(Configuration):
         else:
             parameters['freq3'] = self.freq3
         
-        
         return parameters
     
+    
+    def dict_to_parms(self, parameters):
+        
+        self.freq0 = parameters['freq0']
+        self.freq1 = parameters['freq1']
+        self.freq2 = parameters['freq2']
+        self.freq3 = parameters['freq3']
+        
     
     def status_device(self):
         
