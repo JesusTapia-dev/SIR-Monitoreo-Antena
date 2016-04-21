@@ -117,13 +117,7 @@ def conf_edit(request, conf_id):
                 line.save()
             
             #update pulses field
-            for line in conf.get_lines():
-                if line.line_type.name=='tr':
-                    continue
-                line.update_pulses()
-            
-            for tr in conf.get_lines('tr'):
-                tr.update_pulses()                    
+            conf.update_pulses()                    
             
             messages.success(request, 'RC Configuration successfully updated')
             
@@ -376,7 +370,7 @@ def view_pulses(request, conf_id):
     
     unit = (conf.clock/conf.clock_divider)*3./20
     
-    N = int(conf.ipp*(conf.clock/conf.clock_divider)*20./3)*conf.ntx
+    N = conf.ipp*conf.km2unit*conf.ntx
         
     script, div = plot_pulses(unit, N, lines) 
     

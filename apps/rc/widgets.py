@@ -1,9 +1,12 @@
 
 import ast
 import json
+from itertools import chain
 
 from django import forms
 from django.utils.safestring import mark_safe
+from django.utils.encoding import force_unicode
+from django.utils.html import conditional_escape
      
 
 class KmUnitWidget(forms.widgets.TextInput):
@@ -26,7 +29,7 @@ class KmUnitWidget(forms.widgets.TextInput):
         if 'line' in attrs:
             label += '_{0}'.format(attrs['line'].pk)
         
-        html = '<div class="col-md-12 col-no-padding"><div class="col-md-5 col-no-padding"><input type="text" {0} class="form-control" id="id_{1}" name="{2}" value="{3}"></div><div class="col-md-1 col-no-padding">Km</div><div class="col-md-5 col-no-padding"><input type="text" {4} class="form-control" id="id_{5}_unit" value="{6}"></div><div class="col-md-1 col-no-padding">Units</div></div>'.format(disabled, label, name, value, disabled, label, unit)
+        html = '<div class="col-md-12 col-no-padding"><div class="col-md-5 col-no-padding"><input type="text" {0} class="form-control" id="id_{1}" name="{2}" value="{3}"></div><div class="col-md-1 col-no-padding">Km</div><div class="col-md-5 col-no-padding"><input type="text" {4} class="form-control" id="id_{5}_unit" value="{6}"></div><div class="col-md-1 col-no-padding">Units</div></div><br>'.format(disabled, label, name, value, disabled, label, unit)
         
         script = '''<script type="text/javascript">
         $(document).ready(function () {{
@@ -162,7 +165,7 @@ class KmUnitDcWidget(forms.widgets.TextInput):
         
         label += '_{0}'.format(attrs['line'].pk)
         
-        dc = float(json.loads(attrs['line'].params)['pulse_width'])*attrs['line'].rc_configuration.ipp/100
+        dc = float(json.loads(attrs['line'].params)['pulse_width'])*100/attrs['line'].rc_configuration.ipp
         
         html = '''<div class="col-md-12 col-no-padding">
         <div class="col-md-3 col-no-padding"><input type="number" {0} class="form-control" id="id_{1}" name="{2}" value="{3}"></div>
@@ -188,7 +191,7 @@ class KmUnitDcWidget(forms.widgets.TextInput):
           }});
           
           $("#id_{label}_dc").change(function() {{
-            $("#id_{label}").val(parseFloat($(this).val())*parseFloat($("#id_ipp").val())/100);
+            $("#id_{label}").val(parseFloat($(this).val())*100/parseFloat($("#id_ipp").val()));
             $("#id_{label}_unit").val(str2unit($("#id_{label}").val()));
           }});          
         }});  
@@ -242,4 +245,31 @@ class CodesWidget(forms.widgets.Textarea):
         html = '<textarea rows="5" {0} class="form-control" id="id_{1}" name="{2}" style="white-space:nowrap; overflow:scroll;">{3}</textarea>'.format(disabled, label, name, codes)
         
         return mark_safe(html)
+
+class HCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
+    
+    def render(self, name, value, attrs=None, choices=()):
+        
+        if value is None: value = []
+        has_id = attrs and 'id' in attrs
+        final_attrs = self.build_attrs(attrs, name=name)
+        output = [u'<br><ul>']
+        # Normalize to strings
+        str_values = set([force_unicode(v) for v in value])
+        for i, (option_value, option_label) in enumerate(chain(self.choices, choices)):
+            # If an ID attribute was given, add a numeric index as a suffix,
+            # so that the checkboxes don't all have the same ID attribute.
+            if has_id:
+                final_attrs = dict(final_attrs, id='%s_%s' % (attrs['id'], i))
+                label_for = u' for="%s"' % final_attrs['id']
+            else:
+                label_for = ''
+
+            cb = forms.CheckboxInput(final_attrs, check_test=lambda value: value in str_values)
+            option_value = force_unicode(option_value)
+            rendered_cb = cb.render(name, option_value)
+            option_label = conditional_escape(force_unicode(option_label))
+            output.append(u'<span><label%s>%s %s</label></span>' % (label_for, rendered_cb, option_label))
+        output.append(u'</div><br>')
+        return mark_safe(u'\n'.join(output))
     

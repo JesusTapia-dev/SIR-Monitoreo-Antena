@@ -7,13 +7,13 @@ from django.utils.safestring import mark_safe
 from apps.main.models import Device
 from apps.main.forms import add_empty_choice
 from .models import RCConfiguration, RCLine, RCLineType, RCLineCode
-from .widgets import KmUnitWidget, KmUnitHzWidget, KmUnitDcWidget, UnitKmWidget, DefaultWidget, CodesWidget, HiddenWidget
+from .widgets import KmUnitWidget, KmUnitHzWidget, KmUnitDcWidget, UnitKmWidget, DefaultWidget, CodesWidget, HiddenWidget, HCheckboxSelectMultiple
 
 def create_choices_from_model(model, conf_id, all=False):
     
     if model=='RCLine':
         instance = RCConfiguration.objects.get(pk=conf_id)
-        choices =  [(line.pk, line.get_name()) for line in instance.get_lines(type='tx')]
+        choices =  [(line.pk, line.get_name()) for line in instance.get_lines(line_type__name='tx')]
         choices = add_empty_choice(choices, label='All')
     else:
         instance = globals()[model]
@@ -64,7 +64,7 @@ class RCConfigurationForm(forms.ModelForm):
             
             devices = Device.objects.filter(device_type__name='rc')
             if instance.experiment:
-                self.fields['experiment'].widget.attrs['disabled'] = 'disabled'
+                self.fields['experiment'].widget.attrs['read_only'] = True
                 #self.fields['experiment'].widget.choices = [(instance.experiment.id, instance.experiment)]            
             self.fields['device'].widget.choices = [(device.id, device) for device in devices]
             self.fields['ipp'].widget = KmUnitHzWidget(attrs={'km2unit':instance.km2unit})
@@ -91,7 +91,39 @@ class RCConfigurationForm(forms.ModelForm):
                     self.add_error('ipp', 'Invalid IPP units={}'.format(form_data['ipp']*(20./3*(form_data['clock_in']/form_data['clock_divider']))))
         
         return form_data
-        
+
+
+class RCMixConfigurationForm(forms.Form):
+    
+    clock_in = forms.CharField(widget=forms.HiddenInput())
+    clock_divider = forms.CharField(widget=forms.HiddenInput())
+    name = forms.CharField()
+    experiment = forms.ChoiceField()
+    operation = forms.ChoiceField(widget=forms.RadioSelect(),
+                                  choices=[(0, 'OR'), (1, 'XOR'), (2, 'AND'), (3, 'NAND')], 
+                                  initial=1)
+    delay = forms.CharField()
+    mask = forms.MultipleChoiceField(choices=[(0, 'L1'),(1, 'L2'),(2, 'L3'),(3, 'L4'),(4, 'L5'),(5, 'L6'),(6, 'L7'),(7, 'L8')],
+                                     widget=HCheckboxSelectMultiple())
+    result = forms.CharField(required=False,
+                             widget=forms.Textarea(attrs={'readonly':True, 'rows':5, 'class':'tabuled'}))
+    
+    def __init__(self, *args, **kwargs):
+        confs = kwargs.pop('confs', [])
+        if confs:
+            km2unit = confs[0].km2unit
+            clock_in = confs[0].clock_in
+            clock_divider = confs[0].clock_divider
+        else:
+            km2unit = clock_in = clock_divider = 0
+        super(RCMixConfigurationForm, self).__init__(*args, **kwargs)
+        self.fields['experiment'].choices = [(conf.pk, '{} | {}'.format(conf.pk, conf.name)) for conf in confs]
+        self.fields['delay'].widget = KmUnitWidget(attrs = {'km2unit':km2unit})
+        self.fields['clock_in'].initial = clock_in
+        self.fields['clock_divider'].initial = clock_divider
+    
+    
+    
 class RCLineForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):

@@ -223,27 +223,28 @@ def pulses_to_points(X):
     dw += 1
 
     return [(tup[0], tup[1]-tup[0]) for tup in zip(up, dw)]
-        
 
-def pulses_from_code(ipp, ntx, codes, width, before=0):
+def pulses_from_code(X, codes, width):
     
-    if ntx>len(codes):
-        ipp_codes = [c for __ in xrange(ntx) for c in codes][:ntx]
-    else:
-        ipp_codes = codes[:ntx]
+    d = X[1:]-X[:-1]
+    
+    up = np.where(d==1)[0]
+    if X[0]==1:
+        up = np.concatenate((np.array([-1]), up))
+    up += 1
     
     f = width/len(codes[0])
+    codes = [(np.fromstring(''.join([s*f for s in code]), dtype=np.uint8)-48).astype(np.int8) for code in codes]
     
-    ipp_codes = [''.join([s*f for s in code]) for code in ipp_codes]
+    y = np.zeros(len(X))
     
-    if before>0:
-        sbefore = '{0:0{1}d}'.format(0, before)
-    else:
-        sbefore = ''
+    j=0
+    n = len(codes)
+    for i in up:
+        y[i:i+width] = codes[j%n]
+        j += 1
     
-    temp = ['{0}{1}{2:0{3}d}'.format(sbefore, ipp_codes[i], 0, int(ipp)-len(ipp_codes[i])-before) for i in range(ntx)]
-    
-    return (np.fromstring(''.join(temp), dtype=np.uint8)-48).astype(np.int8)
+    return y
     
 
 def create_mask(ranges, ipp, ntx, sync):
@@ -301,10 +302,10 @@ def plot_pulses(unit, maximun, lines):
     labels = []
     
     for i, line in enumerate(lines):
-        print line
         labels.append(line.get_name())
+        l = ax.plot((0, maximun),(N-i-1, N-i-1))        
         ax.broken_barh(pulses_to_points(line.pulses_as_array()), (N-i-1, 0.5), 
-                       edgecolor='none', facecolor='#2c3e50')
+                       edgecolor=l[0].get_color(), facecolor='none')
         
     labels.reverse()
     ax.set_yticklabels(labels)

@@ -10,6 +10,7 @@ from django.core.urlresolvers import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from apps.main.models import Configuration
+from devices.rc import api
 from .utils import RCFile, pulses, pulses_from_code, create_mask, pulses_to_points
 
 # Create your models here.
@@ -23,6 +24,7 @@ LINE_TYPES = (
     ('sync', 'Synchronizing signal'),
     ('flip', 'IPP related periodic signal'),
     ('prog_pulses', 'Programmable pulse'),
+    ('mix', 'Mixed line'),
     )
 
 
@@ -55,22 +57,29 @@ DAT_CMDS = {
 
 class RCConfiguration(Configuration):
     
-    ipp = models.FloatField(verbose_name='Inter pulse period (Km)', validators=[MinValueValidator(1), MaxValueValidator(1000)], default=10)
-    ntx = models.PositiveIntegerField(verbose_name='Number of TX', validators=[MinValueValidator(1), MaxValueValidator(256)], default=1)    
+    ipp = models.FloatField(verbose_name='Inter pulse period (Km)', validators=[MinValueValidator(1), MaxValueValidator(9000)], default=300)
+    ntx = models.PositiveIntegerField(verbose_name='Number of TX', validators=[MinValueValidator(1), MaxValueValidator(300)], default=1)    
     clock_in = models.FloatField(verbose_name='Clock in (MHz)', validators=[MinValueValidator(1), MaxValueValidator(80)], default=1)
     clock_divider = models.PositiveIntegerField(verbose_name='Clock divider', validators=[MinValueValidator(1), MaxValueValidator(256)], default=1)
     clock = models.FloatField(verbose_name='Clock Master (MHz)', blank=True, default=1)
-    time_before = models.PositiveIntegerField(verbose_name='Time before (&mu;S)', default=0)
-    time_after = models.PositiveIntegerField(verbose_name='Time after (&mu;S)', default=0)
+    time_before = models.PositiveIntegerField(verbose_name='Time before (&mu;S)', default=12)
+    time_after = models.PositiveIntegerField(verbose_name='Time after (&mu;S)', default=1)
     sync = models.PositiveIntegerField(verbose_name='Synchro delay', default=0)
     sampling_reference = models.CharField(verbose_name='Sampling Reference', choices=SAMPLING_REFS, default='none', max_length=40)
     control_tx = models.BooleanField(verbose_name='Control Switch TX', default=False)
     control_sw = models.BooleanField(verbose_name='Control Switch SW', default=False)
-
+    mix = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'rc_configurations'
     
+    
+    def __unicode__(self):
+
+        if self.mix:
+            return u'[MIXED]: %s' % self.name
+        else:
+            return u'[%s]: %s' % (self.device.name, self.name)
     
     def get_absolute_url_plot(self):
         return reverse('url_plot_rc_pulses', args=[str(self.id)])
@@ -83,12 +92,10 @@ class RCConfiguration(Configuration):
         
         return self.clock_in/self.clock_divider
 
-
     @property
     def km2unit(self):
         
         return 20./3*(self.clock_in/self.clock_divider)
-
 
     def clone(self, **kwargs):
         
@@ -104,15 +111,13 @@ class RCConfiguration(Configuration):
         
         return self  
 
-    def get_lines(self, type=None):
+    def get_lines(self, **kwargs):
         '''
         Retrieve configuration lines 
         '''
         
-        if type is not None:
-            return RCLine.objects.filter(rc_configuration=self.pk, line_type__name=type)
-        else:
-            return RCLine.objects.filter(rc_configuration=self.pk)
+        return RCLine.objects.filter(rc_configuration=self.pk, **kwargs)
+        
 
     def clean_lines(self):
         '''
@@ -146,126 +151,15 @@ class RCConfiguration(Configuration):
             line_data['type'] = line.line_type.name
             data['lines'].append(line_data)
         
+        data['delays'] = self.get_delays()
+        data['pulses'] = self.get_pulses()
         
         return data
     
-    def get_delays(self):
-        
-        pulses = [line.get_pulses() for line in self.get_lines()]
-        points = [tup for tups in pulses for tup in tups]
-        points = set([x for tup in points for x in tup])
-        points = list(points)
-        points.sort()        
-        
-        if points[0]<>0:
-            points.insert(0, 0)
-        
-        return [points[i+1]-points[i] for i in range(len(points)-1)]
-        
-    
-    def get_flips(self):
-        
-        line_points = [pulses_to_points(line.pulses_as_array()) for line in self.get_lines()]
-        line_points = [[(x, x+y) for x,y in tups] for tups in line_points]
-        line_points = [[t for x in tups for t in x] for tups in line_points]        
-        states = [[1 if x in tups else 0 for tups in line_points] for x in points]
-        
-        return states
-    
-    def add_cmd(self, cmd):
-        
-        if cmd in DAT_CMDS:
-            return (255, DAT_CMDS[cmd])
-    
-    def add_data(self, value):            
-            
-        return (254, value-1)
-        
-    def parms_to_binary(self):
+    def dict_to_parms(self, data):
         '''
-        Create "dat" stream to be send to CR
         '''
         
-        data = []
-        # create header
-        data.append(self.add_cmd('DISABLE'))
-        data.append(self.add_cmd('CONTINUE'))
-        data.append(self.add_cmd('RESTART'))
-        
-        if self.control_sw:
-            data.append(self.add_cmd('SW_ONE'))
-        else:
-            data.append(self.add_cmd('SW_ZERO'))
-        
-        if self.control_tx:
-            data.append(self.add_cmd('TX_ONE'))
-        else:
-            data.append(self.add_cmd('TX_ZERO'))
-        
-        # write divider
-        data.append(self.add_cmd('CLOCK_DIVIDER'))
-        data.append(self.add_data(self.clock_divider))
-        
-        # write delays
-        data.append(self.add_cmd('DELAY_START'))
-        # first delay is always zero
-        data.append(self.add_data(1))
-        line_points = [pulses_to_points(line.pulses_as_array()) for line in self.get_lines()]
-        points = [tup for tups in line_points for tup in tups]
-        points = [(x, x+y) for x,y in points]
-        points = set([x for tup in points for x in tup])
-        points = list(points)
-        points.sort()        
-        
-        if points[0]<>0:
-            points.insert(0, 0)
-        
-        delays = [points[i+1]-points[i] for i in range(len(points)-1)]        
-        
-        for delay in delays:            
-            while delay>252:                
-                data.append(self.add_data(253))
-                delay -= 253
-            data.append(self.add_data(delay))
-        
-        # write flips
-        data.append(self.add_cmd('FLIP_START'))        
-        line_points = [[(x, x+y) for x,y in tups] for tups in line_points]
-        line_points = [[t for x in tups for t in x] for tups in line_points]        
-        states = [[1 if x in tups else 0 for tups in line_points] for x in points]
-        for flips, delay in zip(states[:-1], delays):
-            flips.reverse()
-            flip = int(''.join([str(x) for x in flips]), 2)            
-            data.append(self.add_data(flip+1))
-            while delay>252:
-                data.append(self.add_data(1))
-                delay -= 253
-        
-        # write sampling period
-        data.append(self.add_cmd('SAMPLING_PERIOD'))
-        wins = self.get_lines(type='windows')
-        if wins:
-            win_params = json.loads(wins[0].params)['params']
-            if win_params:
-                dh = int(win_params[0]['resolution']*self.km2unit)
-            else:
-                dh = 1
-        else:
-            dh = 1
-        data.append(self.add_data(dh))
-        
-        # write enable
-        data.append(self.add_cmd('ENABLE'))
-        
-        return '\n'.join(['{}'.format(x) for tup in data for x in tup])
-    
-    def update_from_file(self, filename):
-        '''
-        Update instance from file
-        '''
-        
-        f = RCFile(filename)
-        data = f.data
         self.name = data['name']
         self.ipp = data['ipp']
         self.ntx = data['ntx']
@@ -315,12 +209,178 @@ class RCConfiguration(Configuration):
                 else:
                     params['TX_ref'] = [l.pk for l in lines if l.line_type.name=='tx' and l.get_name()==line_data['TX_ref']][0]
                 line.params = json.dumps(params)
-                line.save()                     
+                line.save()
         
+    
+    def get_delays(self):
+        
+        pulses = [line.get_pulses() for line in self.get_lines()]
+        points = [tup for tups in pulses for tup in tups]
+        points = set([x for tup in points for x in tup])
+        points = list(points)
+        points.sort()        
+        
+        if points[0]<>0:
+            points.insert(0, 0)
+        
+        return [points[i+1]-points[i] for i in range(len(points)-1)]
+        
+    
+    def get_pulses(self, binary=True):
+        
+        pulses = [line.get_pulses() for line in self.get_lines()]
+        points = [tup for tups in pulses for tup in tups]
+        points = set([x for tup in points for x in tup])
+        points = list(points)
+        points.sort()        
+        
+        line_points = [pulses_to_points(line.pulses_as_array()) for line in self.get_lines()]
+        line_points = [[(x, x+y) for x,y in tups] for tups in line_points]
+        line_points = [[t for x in tups for t in x] for tups in line_points]        
+        states = [[1 if x in tups else 0 for tups in line_points] for x in points]
+        
+        if binary:
+            states.reverse()
+            states = [int(''.join([str(x) for x in flips]), 2) for flips in states]
+        
+        return states[:-1]
+    
+    def add_cmd(self, cmd):
+        
+        if cmd in DAT_CMDS:
+            return (255, DAT_CMDS[cmd])
+    
+    def add_data(self, value):            
+            
+        return (254, value-1)
+        
+    def parms_to_binary(self):
+        '''
+        Create "dat" stream to be send to CR
+        '''
+        
+        data = []
+        # create header
+        data.append(self.add_cmd('DISABLE'))
+        data.append(self.add_cmd('CONTINUE'))
+        data.append(self.add_cmd('RESTART'))
+        
+        if self.control_sw:
+            data.append(self.add_cmd('SW_ONE'))
+        else:
+            data.append(self.add_cmd('SW_ZERO'))
+        
+        if self.control_tx:
+            data.append(self.add_cmd('TX_ONE'))
+        else:
+            data.append(self.add_cmd('TX_ZERO'))
+        
+        # write divider
+        data.append(self.add_cmd('CLOCK_DIVIDER'))
+        data.append(self.add_data(self.clock_divider))
+        
+        # write delays
+        data.append(self.add_cmd('DELAY_START'))
+        # first delay is always zero
+        data.append(self.add_data(1))
+              
+        delays = self.get_delays()
+        
+        for delay in delays:            
+            while delay>252:                
+                data.append(self.add_data(253))
+                delay -= 253
+            data.append(self.add_data(delay))
+        
+        # write flips
+        data.append(self.add_cmd('FLIP_START'))        
+              
+        states = self.get_pulses(binary=False)
 
+        for flips, delay in zip(states, delays):
+            flips.reverse()
+            flip = int(''.join([str(x) for x in flips]), 2)            
+            data.append(self.add_data(flip+1))
+            while delay>252:
+                data.append(self.add_data(1))
+                delay -= 253
+        
+        # write sampling period
+        data.append(self.add_cmd('SAMPLING_PERIOD'))
+        wins = self.get_lines(line_type__name='windows')
+        if wins:
+            win_params = json.loads(wins[0].params)['params']
+            if win_params:
+                dh = int(win_params[0]['resolution']*self.km2unit)
+            else:
+                dh = 1
+        else:
+            dh = 1
+        data.append(self.add_data(dh))
+        
+        # write enable
+        data.append(self.add_cmd('ENABLE'))
+        
+        return '\n'.join(['{}'.format(x) for tup in data for x in tup])
+    
+    def update_from_file(self, filename):
+        '''
+        Update instance from file
+        '''
+        
+        f = RCFile(filename)
+        self.dict_to_parms(f.data)
+
+    def update_pulses(self):
+        
+        for line in self.get_lines():
+            if line.line_type.name=='tr':
+                continue
+            line.update_pulses()
+        
+        for tr in self.get_lines(line_type__name='tr'):
+            tr.update_pulses()
+    
     def status_device(self):
         
         return 0
+
+    def stop_device(self):
+        
+        answer = api.disable(ip = self.device.ip_address,
+                             port = self.device.port_address)
+        
+        if answer[0] != "1":
+            self.message = answer[0:]
+            return 0
+        
+        self.message = answer[2:]
+        return 1
+    
+    def start_device(self):
+        
+        answer = api.enable(ip = self.device.ip_address,
+                            port = self.device.port_address)
+        
+        if answer[0] != "1":
+            self.message = answer[0:]
+            return 0
+        
+        self.message = answer[2:]
+        return 1
+
+    def write_device(self):
+        answer = api.write_config(ip = self.device.ip_address,
+                                 port = self.device.port_address,
+                                 parms = self.parms_to_dict())
+    
+        if answer[0] != "1":
+            self.message = answer[0:]
+            return 0
+        
+        self.message = answer[2:]
+        return 1
+
 
 class RCLineCode(models.Model):
     
@@ -335,6 +395,7 @@ class RCLineCode(models.Model):
     
     def __unicode__(self):
         return u'%s' % self.name    
+
 
 class RCLineType(models.Model):
     
@@ -388,28 +449,23 @@ class RCLine(models.Model):
                 return self.line_type.name.upper()
             pk = json.loads(self.params)['TX_ref']
             if pk in (0, '0'):
-                refs = ','.join(chars[l.position] for l in self.rc_configuration.get_lines('tx'))
+                refs = ','.join(chars[l.position] for l in self.rc_configuration.get_lines(line_type__name='tx'))
                 return '%s (%s)' % (self.line_type.name.upper(), refs)
             else:
                 ref = RCLine.objects.get(pk=pk)
                 return '%s (%s)' % (self.line_type.name.upper(), chars[ref.position])
-        elif self.line_type.name in ('flip', 'prog_pulses', 'sync', 'none'):
+        elif self.line_type.name in ('flip', 'prog_pulses', 'sync', 'none', 'mix'):
             return '%s %s' % (self.line_type.name.upper(), self.channel)
         else:
             return self.line_type.name.upper()
 
-    def get_lines(self, type=None):
-        
-        if type is not None:
-            return RCLine.objects.filter(rc_configuration=self.rc_configuration, line_type__name=type)
-        else:
-            return RCLine.objects.filter(rc_configuration=self.rc_configuration)
-    
+    def get_lines(self, **kwargs):
+                
+        return RCLine.objects.filter(rc_configuration=self.rc_configuration, **kwargs)        
     
     def pulses_as_array(self):
         
         return (np.fromstring(self.pulses, dtype=np.uint8)-48).astype(np.int8)
-    
     
     def get_pulses(self):
         
@@ -432,12 +488,10 @@ class RCLine(models.Model):
     def get_win_ref(self, params, tx_id, km2unit):
         
         ref = self.rc_configuration.sampling_reference
-        
-        codes = [line for line in self.get_lines(type='code') if int(json.loads(line.params)['TX_ref'])==int(tx_id)]
-        
-        if codes:
-            code_line = RCLineCode.objects.get(pk=json.loads(codes[0].params)['code'])
-            tx_width = float(json.loads(RCLine.objects.get(pk=tx_id).params)['pulse_width'])*km2unit/code_line.bits_per_code
+        codes = [line for line in self.get_lines(line_type__name='codes') if int(json.loads(line.params)['TX_ref'])==int(tx_id)]
+       
+        if codes:            
+            tx_width = float(json.loads(RCLine.objects.get(pk=tx_id).params)['pulse_width'])*km2unit/len(json.loads(codes[0].params)['codes'][0])
         else:
             tx_width = float(json.loads(RCLine.objects.get(pk=tx_id).params)['pulse_width'])*km2unit
         
@@ -464,7 +518,7 @@ class RCLine(models.Model):
         if self.line_type.name=='tr':
             params = json.loads(self.params)
             if params['TX_ref'] in ('0', 0):
-                txs = [tx.update_pulses(save=False, tr=True) for tx in self.get_lines('tx')]
+                txs = [tx.update_pulses(save=False, tr=True) for tx in self.get_lines(line_type__name='tx')]
             else:
                 txs = [tx.update_pulses(save=False, tr=True) for tx in RCLine.objects.filter(pk=params['TX_ref'])]
             if len(txs)==0 or 0 in [len(tx) for tx in txs]:
@@ -498,13 +552,12 @@ class RCLine(models.Model):
         
         elif self.line_type.name=='codes':
             params = json.loads(self.params)
-            #codes = ast.literal_eval(RCLineCode.objects.get(pk=json.loads(self.params)['code']).codes)
             tx = RCLine.objects.get(pk=params['TX_ref'])
             tx_params = json.loads(tx.params)
-            
-            y = pulses_from_code(ipp_u, ntx, params['codes'],
-                                 int(float(tx_params['pulse_width'])*km2unit), 
-                                 before=int(self.rc_configuration.time_before*us2unit)+self.rc_configuration.sync)
+            delays = [float(d)*km2unit for d in tx_params['delays'].split(',') if d]
+            y = pulses_from_code(tx.pulses_as_array(), 
+                                 params['codes'],
+                                 int(float(tx_params['pulse_width'])*km2unit))
             
             ranges = tx_params['range'].split(',')
             if len(ranges)>0 and ranges[0]<>'0':
@@ -533,20 +586,53 @@ class RCLine(models.Model):
         
         elif self.line_type.name=='windows':
             params = json.loads(self.params)
+            
             if 'params' in params and len(params['params'])>0:
-                print 'REFS'
-                print [self.get_win_ref(pp, params['TX_ref'],km2unit) for pp in params['params']]
                 y = sum([pulses(x, ipp_u, pp['resolution']*pp['number_of_samples']*km2unit,
                                 shift=0, 
                                 before=int(self.rc_configuration.time_before*us2unit)+self.get_win_ref(pp, params['TX_ref'],km2unit),
                                 sync=self.rc_configuration.sync) for pp in params['params']])
-                tr = self.get_lines('tr')[0]
+                tr = self.get_lines(line_type__name='tr')[0]
                 ranges = json.loads(tr.params)['range'].split(',')
                 if len(ranges)>0 and ranges[0]<>'0':
                     mask = create_mask(ranges, ipp_u, ntx, self.rc_configuration.sync)
                     y = y & mask
             else:
                 y = np.zeros(ipp_u*ntx)
+        
+        elif self.line_type.name=='mix':
+            values = self.rc_configuration.parameters.split('-')
+            confs = RCConfiguration.objects.filter(pk__in=[value.split('|')[0] for value in values])
+            modes = [value.split('|')[1] for value in values]
+            delays = [value.split('|')[2] for value in values]
+            masks = [value.split('|')[3] for value in values]
+            
+            y = confs[0].get_lines(channel=self.channel)[0].pulses_as_array()
+            
+            for i in range(1, len(values)):
+                mask = list('{:8b}'.format(int(masks[i])))
+                mask.reverse()        
+                
+                if mask[self.channel] in ('0', '', ' '):
+                    continue
+                Y = confs[i].get_lines(channel=self.channel)[0].pulses_as_array()
+                delay = float(delays[i])*km2unit
+                if delay>0:                    
+                    y_temp = np.empty_like(Y)
+                    y_temp[:delay] = 0
+                    y_temp[delay:] = Y[:-delay]
+                
+                if modes[i]=='OR':
+                    y2 = y | y_temp
+                elif modes[i]=='XOR':
+                    y2 = y ^ y_temp
+                elif modes[i]=='AND':
+                    y2 = y & y_temp
+                elif modes[i]=='NAND':
+                    y2 = y & ~y_temp
+                
+                y = y2
+                
         else:
             y = np.zeros(ipp_u*ntx)
         
@@ -555,5 +641,5 @@ class RCLine(models.Model):
             self.save()
         else:
             return y
-    
+        
     
