@@ -444,23 +444,12 @@ def campaign_import(request, id_camp):
             if parms:
                 parms['name'] = parms['campaign']
                 
-                campaign.dict_to_parms(parms, CONF_MODELS)
+                new_camp = campaign.dict_to_parms(parms, CONF_MODELS)
             
                 messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
                 
-                form = CampaignForm(initial=parms, instance=campaign)
-                
-                kwargs = {}
-                kwargs['form'] = form
-                kwargs['title'] = 'Campaign'
-                kwargs['suptitle'] = 'Parameters imported'
-                kwargs['button'] = 'Save'
-                kwargs['action'] = campaign.get_absolute_url_edit()
-                kwargs['previous'] = campaign.get_absolute_url()
-                
-                return render(request, 'campaign_edit.html', kwargs)
-            
-
+                return redirect(new_camp.get_absolute_url_edit())
+        
         messages.error(request, "Could not import parameters from file")
     
     kwargs = {}
@@ -634,35 +623,16 @@ def experiment_import(request, id_exp):
             parms = experiment.import_from_file(request.FILES['file'])
             
             if parms:
-                location = Location.objects.get(name = parms['radar'])
-                parms['location'] = location.id
-                parms['name']     = parms['experiment']
                 
-                experiment.dict_to_parms(parms, CONF_MODELS)
+                new_exp = experiment.dict_to_parms(parms, CONF_MODELS)
             
                 messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
                 
-                form = ExperimentForm(initial=parms, instance=experiment)
-                
-                kwargs = {}
-                #kwargs['id_dev'] = conf.id
-                kwargs['form'] = form
-                kwargs['title'] = 'Experiment'
-                kwargs['suptitle'] = 'Parameters imported'
-                kwargs['button'] = 'Save'
-                kwargs['action'] = experiment.get_absolute_url_edit()
-                kwargs['previous'] = experiment.get_absolute_url()
-                
-                ###### SIDEBAR ######
-                #kwargs.update(sidebar(conf=conf))
-                kwargs.update(sidebar(experiment=experiment))
-                
-                return render(request, 'experiment_edit.html', kwargs)
+                return redirect(new_exp.get_absolute_url_edit()) 
 
         messages.error(request, "Could not import parameters from file")
     
     kwargs = {}
-    #kwargs['id_dev'] = conf.id
     kwargs['title'] = 'Experiment'
     kwargs['form'] = file_form
     kwargs['suptitle'] = 'Importing file'

@@ -195,8 +195,14 @@ class Campaign(models.Model):
             new_exp.dict_to_parms(parms['experiments'][parms_exp],CONF_MODELS)
             new_exp.save()
             
+            self.name       = parms['campaign']
+            self.start_date = parms['start_date']
+            self.end_date   = parms['end_date']
+            self.tags       = parms['tags']
             self.experiments.add(new_exp)
-            self.save()              
+            self.save()
+            
+        return self              
     
     def get_absolute_url(self):
         return reverse('url_campaign', args=[str(self.id)])
@@ -389,6 +395,15 @@ class Experiment(models.Model):
                                                   )
                         confcgs_form.dict_to_parms(parms['configurations']['cgs'])
                         confcgs_form.save()
+                        
+        location = Location.objects.get(name = parms['radar'])             
+        self.name       = parms['experiment']
+        self.location   = location
+        self.start_time = parms['start_time']
+        self.end_time   = parms['end_time']
+        self.save()
+                        
+        return self
     
     def get_absolute_url_edit(self):
         return reverse('url_edit_experiment', args=[str(self.id)])
