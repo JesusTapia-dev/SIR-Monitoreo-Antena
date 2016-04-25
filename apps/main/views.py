@@ -428,10 +428,8 @@ def campaign_export(request, id_camp):
 
 
 def campaign_import(request, id_camp):
-    ###------FALTA CORREGIR!!!!!-----###
+    
     campaign = get_object_or_404(Campaign, pk=id_camp)
-    experiments     = Experiment.objects.filter(campaign=campaign)
-    configurations = Configuration.objects.filter(experiment=experiments)
     
     if request.method == 'GET':
         file_form = UploadFileForm()
@@ -444,9 +442,7 @@ def campaign_import(request, id_camp):
             parms = campaign.import_from_file(request.FILES['file'])
             
             if parms:
-                location = Location.objects.get(name = parms['radar'])
-                parms['location'] = location.id
-                parms['name']     = parms['experiment']
+                parms['name'] = parms['campaign']
                 
                 campaign.dict_to_parms(parms, CONF_MODELS)
             
@@ -455,31 +451,23 @@ def campaign_import(request, id_camp):
                 form = CampaignForm(initial=parms, instance=campaign)
                 
                 kwargs = {}
-                #kwargs['id_dev'] = conf.id
                 kwargs['form'] = form
                 kwargs['title'] = 'Campaign'
                 kwargs['suptitle'] = 'Parameters imported'
                 kwargs['button'] = 'Save'
                 kwargs['action'] = campaign.get_absolute_url_edit()
                 kwargs['previous'] = campaign.get_absolute_url()
-    
-                
-                ###### SIDEBAR ######
-                #kwargs.update(sidebar(conf=conf))
-                #kwargs.update(sidebar(campaign=campaign))
                 
                 return render(request, 'campaign_edit.html', kwargs)
+            
 
         messages.error(request, "Could not import parameters from file")
     
     kwargs = {}
-    #kwargs['id_dev'] = conf.id
     kwargs['title'] = 'Campaign'
     kwargs['form'] = file_form
     kwargs['suptitle'] = 'Importing file'
     kwargs['button'] = 'Import'
-    
-    #kwargs.update(sidebar(campaign=campaign))
     
     return render(request, 'campaign_import.html', kwargs)
 

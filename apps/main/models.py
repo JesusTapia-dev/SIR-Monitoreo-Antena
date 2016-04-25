@@ -170,6 +170,34 @@ class Campaign(models.Model):
         
         return parms
     
+    def dict_to_parms(self, parms, CONF_MODELS):
+        
+        experiments = Experiment.objects.filter(campaign = self)
+        configurations = Configuration.objects.filter(experiment = experiments)
+        
+        if configurations:
+            for configuration in configurations:
+                configuration.delete()
+        
+        if experiments:
+            for experiment in experiments:
+                experiment.delete()
+                
+        for parms_exp in parms['experiments']:
+            location = Location.objects.get(name = parms['experiments'][parms_exp]['radar'])
+            new_exp = Experiment(
+                                 name        = parms['experiments'][parms_exp]['experiment'],
+                                 location    = location,
+                                 start_time  = parms['experiments'][parms_exp]['start_time'],
+                                 end_time    = parms['experiments'][parms_exp]['end_time'],
+                                 )
+            new_exp.save()
+            new_exp.dict_to_parms(parms['experiments'][parms_exp],CONF_MODELS)
+            new_exp.save()
+            
+            self.experiments.add(new_exp)
+            self.save()              
+    
     def get_absolute_url(self):
         return reverse('url_campaign', args=[str(self.id)])
     
@@ -317,11 +345,6 @@ class Experiment(models.Model):
         return parms
     
     def dict_to_parms(self, parms, CONF_MODELS):
-        
-        #self.name       = parameters['experiment']
-        #self.location   = parameters['radar']
-        #self.start_time = parameters['start_time']
-        #self.end_time   = parameters['end_time']
         
         configurations = Configuration.objects.filter(experiment=self)
         
