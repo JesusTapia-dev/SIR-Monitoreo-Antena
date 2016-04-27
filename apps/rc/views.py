@@ -10,7 +10,6 @@ from apps.main.views import sidebar
 
 from .models import RCConfiguration, RCLine, RCLineType, RCLineCode
 from .forms import RCConfigurationForm, RCLineForm, RCLineViewForm, RCLineEditForm, RCImportForm, RCLineCodesForm
-from .utils import plot_pulses
 
 
 def conf(request, conf_id):
@@ -329,25 +328,13 @@ def import_file(request, conf_id):
     if request.method=='POST':
         form = RCImportForm(request.POST, request.FILES)
         if form.is_valid():
-            #try:
-            if True:
-                
+            try:
                 conf.update_from_file(request.FILES['file_name'])
-                conf.save()
-                
-                for line in conf.get_lines():
-                    if line.line_type.name=='tr':
-                        continue
-                    line.update_pulses()
-                
-                for tr in conf.get_lines('tr'):
-                    tr.update_pulses()                            
-                
                 messages.success(request, 'Configuration "%s" loaded succesfully' % request.FILES['file_name'])
-                return redirect(conf.get_absolute_url())
+                return redirect(conf.get_absolute_url_edit())
             
-            #except Exception as e:    
-            #    messages.error(request, 'Error parsing file: "%s" - %s' % (request.FILES['file_name'], e))
+            except Exception as e:    
+                messages.error(request, 'Error parsing file: "%s" - %s' % (request.FILES['file_name'], e))
         
     else:
         messages.warning(request, 'Your current configuration will be replaced')
@@ -363,16 +350,11 @@ def import_file(request, conf_id):
     return render(request, 'rc_import.html', kwargs)
     
 
-def view_pulses(request, conf_id):
+def plot_pulses(request, conf_id):
     
-    conf = get_object_or_404(RCConfiguration, pk=conf_id)
-    lines = RCLine.objects.filter(rc_configuration=conf)
-    
-    unit = (conf.clock/conf.clock_divider)*3./20
-    
-    N = conf.ipp*conf.km2unit*conf.ntx
+    conf = get_object_or_404(RCConfiguration, pk=conf_id)    
         
-    script, div = plot_pulses(unit, N, lines) 
+    script, div = conf.plot_pulses() 
     
     kwargs = {}
         
@@ -380,6 +362,9 @@ def view_pulses(request, conf_id):
     kwargs['suptitle'] = conf.name
     kwargs['div'] = mark_safe(div)
     kwargs['script'] = mark_safe(script)
-                   
-    return render(request, 'rc_pulses.html', kwargs)
+    
+    if 'json' in request.GET:        
+        return HttpResponse(json.dumps({'div':mark_safe(div), 'script':mark_safe(script)}), content_type="application/json")
+    else:
+        return render(request, 'rc_pulses.html', kwargs)
 

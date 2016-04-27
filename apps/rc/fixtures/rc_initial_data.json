@@ -23,4 +23,5 @@
  {"fields": {"params": "{\"invert\":{\"value\": 0, \"help\": \"Set to 1 for synchro pulse at the end\"}}", "name": "sync", "description": ""}, "model": "rc.rclinetype", "pk": 5}, 
  {"fields": {"params": "{ \"periodic\": { \"value\": 0, \"help\": \"Set to 1 for IPP periodic\"}, \"params\": {\"begin\": { \"value\": 0, \"widget\":\"unit\"}, \"end\": {\"value\": 0, \"widget\":\"unit\"}}}", "name": "prog_pulses", "description": ""}, "model": "rc.rclinetype", "pk": 6}, 
  {"fields": {"params": "{\"number_of_flips\": {\"value\": 0}}", "name": "flip", "description": ""}, "model": "rc.rclinetype", "pk": 7}, 
- {"fields": {"params": "{}", "name": "none", "description": ""}, "model": "rc.rclinetype", "pk": 8}]
+ {"fields": {"params": "{}", "name": "none", "description": ""}, "model": "rc.rclinetype", "pk": 8},
+ {"fields": {"params": "{}", "name": "mix", "description": ""}, "model": "rc.rclinetype", "pk": 9}]

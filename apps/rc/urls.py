@@ -4,7 +4,7 @@ urlpatterns = (
     url(r'^(?P<conf_id>-?\d+)/$', 'apps.rc.views.conf', name='url_rc_conf'),
     url(r'^(?P<conf_id>-?\d+)/import/$', 'apps.rc.views.import_file', name='url_import_rc_conf'),
     url(r'^(?P<conf_id>-?\d+)/edit/$', 'apps.rc.views.conf_edit', name='url_edit_rc_conf'),
-    url(r'^(?P<conf_id>-?\d+)/plot/$', 'apps.rc.views.view_pulses', name='url_plot_rc_pulses'),
+    url(r'^(?P<conf_id>-?\d+)/plot/$', 'apps.rc.views.plot_pulses', name='url_plot_rc_pulses'),
     url(r'^(?P<id_conf>-?\d+)/write/$', 'apps.main.views.dev_conf_write', name='url_write_rc_conf'),
     url(r'^(?P<id_conf>-?\d+)/read/$', 'apps.main.views.dev_conf_read', name='url_read_rc_conf'),
     

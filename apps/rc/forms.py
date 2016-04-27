@@ -78,7 +78,7 @@ class RCConfigurationForm(forms.ModelForm):
     
     class Meta:
         model = RCConfiguration
-        exclude = ('type', 'parameters', 'status')
+        exclude = ('type', 'parameters', 'status', 'mix')
 
     def clean(self):
         form_data = super(RCConfigurationForm, self).clean()

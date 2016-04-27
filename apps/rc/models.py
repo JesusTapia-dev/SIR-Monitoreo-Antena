@@ -11,7 +11,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 from apps.main.models import Configuration
 from devices.rc import api
-from .utils import RCFile, pulses, pulses_from_code, create_mask, pulses_to_points
+from .utils import RCFile
 
 # Create your models here.
 
@@ -123,7 +123,7 @@ class RCConfiguration(Configuration):
         '''
         '''
         
-        empty_line = RCLineType.objects.get(pk=8)
+        empty_line = RCLineType.objects.get(name='none')
         
         for line in self.get_lines():
             line.line_type = empty_line
@@ -134,12 +134,15 @@ class RCConfiguration(Configuration):
         '''        
         '''
         
+        ignored = ('parameters', 'type', 'polymorphic_ctype', 'configuration_ptr',
+                   'created_date', 'programmed_date')
+        
         data = {}
         for field in self._meta.fields:
-            
+            if field.name in ignored:
+                continue
             data[field.name] = '{}'.format(field.value_from_object(self))
         
-        data.pop('parameters')
         data['lines'] = []
         
         for line in self.get_lines():
@@ -214,7 +217,7 @@ class RCConfiguration(Configuration):
     
     def get_delays(self):
         
-        pulses = [line.get_pulses() for line in self.get_lines()]
+        pulses = [line.pulses_as_points() for line in self.get_lines()]
         points = [tup for tups in pulses for tup in tups]
         points = set([x for tup in points for x in tup])
         points = list(points)
@@ -228,13 +231,13 @@ class RCConfiguration(Configuration):
     
     def get_pulses(self, binary=True):
         
-        pulses = [line.get_pulses() for line in self.get_lines()]
+        pulses = [line.pulses_as_points() for line in self.get_lines()]
         points = [tup for tups in pulses for tup in tups]
         points = set([x for tup in points for x in tup])
         points = list(points)
         points.sort()        
         
-        line_points = [pulses_to_points(line.pulses_as_array()) for line in self.get_lines()]
+        line_points = [line.pulses_as_points() for line in self.get_lines()]
         line_points = [[(x, x+y) for x,y in tups] for tups in line_points]
         line_points = [[t for x in tups for t in x] for tups in line_points]        
         states = [[1 if x in tups else 0 for tups in line_points] for x in points]
@@ -330,16 +333,44 @@ class RCConfiguration(Configuration):
         
         f = RCFile(filename)
         self.dict_to_parms(f.data)
+        self.update_pulses()
+        self.save()
 
     def update_pulses(self):
         
         for line in self.get_lines():
-            if line.line_type.name=='tr':
-                continue
             line.update_pulses()
+    
+    def plot_pulses(self):
+    
+        import matplotlib.pyplot as plt
+        from bokeh.resources import CDN
+        from bokeh.embed import components
+        from bokeh.mpl import to_bokeh    
+        from bokeh.models.tools import WheelZoomTool, ResetTool, PanTool, PreviewSaveTool
         
-        for tr in self.get_lines(line_type__name='tr'):
-            tr.update_pulses()
+        lines = self.get_lines()
+        
+        max_value = self.ipp*self.km2unit*self.ntx                
+        
+        N = len(lines)
+        fig = plt.figure(figsize=(10, 2+N*0.5))
+        ax = fig.add_subplot(111)
+        labels = []
+        
+        for i, line in enumerate(lines):
+            labels.append(line.get_name())
+            l = ax.plot((0, max_value),(N-i-1, N-i-1))
+            points = [(tup[0], tup[1]-tup[0]) for tup in line.pulses_as_points() if tup<>(0,0)]
+            ax.broken_barh(points, (N-i-1, 0.5), 
+                           edgecolor=l[0].get_color(), facecolor='none')
+            
+        labels.reverse()
+        ax.set_yticklabels(labels)
+        plot = to_bokeh(fig, use_pandas=False)
+        plot.tools = [PanTool(dimensions=['width']), WheelZoomTool(dimensions=['width']), ResetTool(), PreviewSaveTool()]
+        
+        return components(plot, CDN)
     
     def status_device(self):
         
@@ -441,23 +472,23 @@ class RCLine(models.Model):
     def get_name(self):
         
         chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        s = ''        
         
         if self.line_type.name in ('tx',):
-            return '%s%s' % (self.line_type.name.upper(), chars[self.position])
+            s = chars[self.position]
         elif self.line_type.name in ('codes', 'windows', 'tr'):
-            if 'TX_ref' not in json.loads(self.params):
-                return self.line_type.name.upper()
-            pk = json.loads(self.params)['TX_ref']
-            if pk in (0, '0'):
-                refs = ','.join(chars[l.position] for l in self.rc_configuration.get_lines(line_type__name='tx'))
-                return '%s (%s)' % (self.line_type.name.upper(), refs)
-            else:
-                ref = RCLine.objects.get(pk=pk)
-                return '%s (%s)' % (self.line_type.name.upper(), chars[ref.position])
-        elif self.line_type.name in ('flip', 'prog_pulses', 'sync', 'none', 'mix'):
-            return '%s %s' % (self.line_type.name.upper(), self.channel)
+            if 'TX_ref' in json.loads(self.params):
+                pk = json.loads(self.params)['TX_ref']
+                if pk in (0, '0'):
+                    s = ','.join(chars[l.position] for l in self.rc_configuration.get_lines(line_type__name='tx'))                
+                else:
+                    ref = RCLine.objects.get(pk=pk)
+                    s = chars[ref.position]
+
+        if s:
+            return '{}({}) {}'.format(self.line_type.name.upper(), s, self.channel)
         else:
-            return self.line_type.name.upper()
+            return '{} {}'.format(self.line_type.name.upper(), self.channel)
 
     def get_lines(self, **kwargs):
                 
@@ -465,25 +496,16 @@ class RCLine(models.Model):
     
     def pulses_as_array(self):
         
-        return (np.fromstring(self.pulses, dtype=np.uint8)-48).astype(np.int8)
-    
-    def get_pulses(self):
+        y = np.zeros(self.rc_configuration.ntx*self.rc_configuration.ipp*self.rc_configuration.km2unit)
         
-        X = self.pulses_as_array()
-        
-        d = X[1:]-X[:-1]
+        for tup in ast.literal_eval(self.pulses):
+            y[tup[0]:tup[1]] = 1
+            
+        return y.astype(np.int8)
     
-        up = np.where(d==1)[0]
-        if X[0]==1:
-            up = np.concatenate((np.array([-1]), up))
-        up += 1
+    def pulses_as_points(self):
         
-        dw = np.where(d==-1)[0]
-        if X[-1]==1:
-            dw = np.concatenate((dw, np.array([len(X)-1])))
-        dw += 1
-    
-        return [(tup[0], tup[1]) for tup in zip(up, dw)]
+        return ast.literal_eval(self.pulses)
     
     def get_win_ref(self, params, tx_id, km2unit):
         
@@ -502,7 +524,7 @@ class RCLine(models.Model):
         else:
             return 0
     
-    def update_pulses(self, save=True, tr=False):
+    def update_pulses(self):
         '''
         Update pulses field 
         '''
@@ -513,93 +535,128 @@ class RCLine(models.Model):
         ntx = self.rc_configuration.ntx
         ipp_u = int(ipp*km2unit)
         
-        x = np.arange(0, ipp_u*ntx)
+        y = []
         
         if self.line_type.name=='tr':
-            params = json.loads(self.params)
-            if params['TX_ref'] in ('0', 0):
-                txs = [tx.update_pulses(save=False, tr=True) for tx in self.get_lines(line_type__name='tx')]
-            else:
-                txs = [tx.update_pulses(save=False, tr=True) for tx in RCLine.objects.filter(pk=params['TX_ref'])]
-            if len(txs)==0 or 0 in [len(tx) for tx in txs]:
-                return
+            tr_params = json.loads(self.params)
             
-            y = np.any(txs, axis=0, out=np.ones(ipp_u*ntx))
-
-            ranges = params['range'].split(',')
-            if len(ranges)>0 and ranges[0]<>'0':
-                mask = create_mask(ranges, ipp_u, ntx, self.rc_configuration.sync)
-                y = y.astype(np.int8) & mask
+            if tr_params['TX_ref'] in ('0', 0):
+                txs = self.get_lines(line_type__name='tx')
+            else:
+                txs = [RCLine.objects.filter(pk=tr_params['TX_ref'])]
+            
+            for tx in txs:
+                params = json.loads(tx.params)
+                if float(params['pulse_width'])==0:
+                    continue
+                delays = [float(d)*km2unit for d in params['delays'].split(',') if d]
+                width = float(params['pulse_width'])*km2unit+int(self.rc_configuration.time_before*us2unit)
+                before = 0
+                after = int(self.rc_configuration.time_after*us2unit)
+            
+                y_tx = self.points(ntx, ipp_u, width,
+                                   delay=delays,
+                                   before=before,
+                                   after=after,
+                                   sync=self.rc_configuration.sync)
+                
+                ranges = params['range'].split(',')
+            
+                if len(ranges)>0 and ranges[0]<>'0':
+                    y_tx = self.mask_ranges(y_tx, ranges)
+                
+                tr_ranges = tr_params['range'].split(',')
+            
+                if len(tr_ranges)>0 and tr_ranges[0]<>'0':
+                    y_tx = self.mask_ranges(y_tx, tr_ranges)
+                
+                y.extend(y_tx)
         
         elif self.line_type.name=='tx':
             params = json.loads(self.params)
-            delays = [float(d)*km2unit for d in params['delays'].split(',') if d]
-            y = pulses(x, ipp_u, float(params['pulse_width'])*km2unit, 
-                       delay=delays, 
-                       before=int(self.rc_configuration.time_before*us2unit),
-                       after=int(self.rc_configuration.time_after*us2unit) if tr else 0,
-                       sync=self.rc_configuration.sync)
+            delays = [float(d)*km2unit for d in params['delays'].split(',') if d]            
+            width = float(params['pulse_width'])*km2unit
             
-            ranges = params['range'].split(',')
-            
-            if len(ranges)>0 and ranges[0]<>'0':
-                mask = create_mask(ranges, ipp_u, ntx, self.rc_configuration.sync)
-                y = y & mask
+            if width>0:                
+                before = int(self.rc_configuration.time_before*us2unit)
+                after = 0
+                
+                y = self.points(ntx, ipp_u, width,
+                                delay=delays,
+                                before=before,
+                                after=after,
+                                sync=self.rc_configuration.sync)            
+                
+                ranges = params['range'].split(',')
+                
+                if len(ranges)>0 and ranges[0]<>'0':
+                    y = self.mask_ranges(y, ranges)
         
         elif self.line_type.name=='flip':
-            width = float(json.loads(self.params)['number_of_flips'])*ipp*km2unit
-            y = pulses(x, 2*width, width)
+            n = float(json.loads(self.params)['number_of_flips'])
+            width = n*ipp*km2unit
+            y = self.points(int((ntx+1)/(2*n)), ipp_u*n*2, width)
         
         elif self.line_type.name=='codes':
             params = json.loads(self.params)
             tx = RCLine.objects.get(pk=params['TX_ref'])
             tx_params = json.loads(tx.params)
-            delays = [float(d)*km2unit for d in tx_params['delays'].split(',') if d]
-            y = pulses_from_code(tx.pulses_as_array(), 
-                                 params['codes'],
-                                 int(float(tx_params['pulse_width'])*km2unit))
+            delays = [float(d)*km2unit for d in tx_params['delays'].split(',') if d]                        
+            f = int(float(tx_params['pulse_width'])*km2unit)/len(params['codes'][0])
+            codes = [(np.fromstring(''.join([s*f for s in code]), dtype=np.uint8)-48).astype(np.int8) for code in params['codes']]            
+            codes = [self.array_to_points(code) for code in codes]
+            n = len(codes)
             
+            for i, tup in enumerate(tx.pulses_as_points()):
+                code = codes[i%n]
+                y.extend([(c[0]+tup[0], c[1]+tup[0]) for c in code])
+                        
             ranges = tx_params['range'].split(',')
             if len(ranges)>0 and ranges[0]<>'0':
-                mask = create_mask(ranges, ipp_u, ntx, self.rc_configuration.sync)
-                y = y.astype(np.int8) & mask
+                y = self.mask_ranges(y, ranges)
         
         elif self.line_type.name=='sync':
             params = json.loads(self.params)
-            y = np.zeros(ipp_u*ntx)
+            n = ipp_u*ntx
             if params['invert'] in ('1', 1):
-                y[-1] = 1
+                y = [(n-1, n)]
             else:
-                y[0] = 1
+                y = [(0, 1)]
         
         elif self.line_type.name=='prog_pulses':
             params = json.loads(self.params)
             if int(params['periodic'])==0:
-                nntx = ntx
-            else:
                 nntx = 1
+                nipp = ipp_u*ntx
+            else:
+                nntx = ntx
+                nipp = ipp_u
             
             if 'params' in params and len(params['params'])>0:                
-                y = sum([pulses(x, ipp_u*nntx, (pp['end']-pp['begin']), shift=pp['begin']) for pp in params['params']])
-            else:
-                y = np.zeros(ipp_u*ntx)
-        
+                for p in params['params']:
+                    y_pp = self.points(nntx, nipp, 
+                                       p['end']-p['begin'], 
+                                       before=p['begin'])                                
+                        
+                    y.extend(y_pp) 
+                    
         elif self.line_type.name=='windows':
-            params = json.loads(self.params)
+            params = json.loads(self.params)            
             
             if 'params' in params and len(params['params'])>0:
-                y = sum([pulses(x, ipp_u, pp['resolution']*pp['number_of_samples']*km2unit,
-                                shift=0, 
-                                before=int(self.rc_configuration.time_before*us2unit)+self.get_win_ref(pp, params['TX_ref'],km2unit),
-                                sync=self.rc_configuration.sync) for pp in params['params']])
-                tr = self.get_lines(line_type__name='tr')[0]
-                ranges = json.loads(tr.params)['range'].split(',')
-                if len(ranges)>0 and ranges[0]<>'0':
-                    mask = create_mask(ranges, ipp_u, ntx, self.rc_configuration.sync)
-                    y = y & mask
-            else:
-                y = np.zeros(ipp_u*ntx)
-        
+                tr_params = json.loads(self.get_lines(line_type__name='tr')[0].params)
+                tr_ranges = tr_params['range'].split(',')
+                for p in params['params']:
+                    y_win = self.points(ntx, ipp_u, 
+                                        p['resolution']*p['number_of_samples']*km2unit, 
+                                        before=int(self.rc_configuration.time_before*us2unit)+self.get_win_ref(p, params['TX_ref'], km2unit),
+                                        sync=self.rc_configuration.sync)
+            
+                    if len(tr_ranges)>0 and tr_ranges[0]<>'0':
+                        y_win = self.mask_ranges(y_win, tr_ranges)
+                        
+                    y.extend(y_win)            
+            
         elif self.line_type.name=='mix':
             values = self.rc_configuration.parameters.split('-')
             confs = RCConfiguration.objects.filter(pk__in=[value.split('|')[0] for value in values])
@@ -608,7 +665,7 @@ class RCLine(models.Model):
             masks = [value.split('|')[3] for value in values]
             
             y = confs[0].get_lines(channel=self.channel)[0].pulses_as_array()
-            
+            ysize = len(y)
             for i in range(1, len(values)):
                 mask = list('{:8b}'.format(int(masks[i])))
                 mask.reverse()        
@@ -621,25 +678,60 @@ class RCLine(models.Model):
                     y_temp = np.empty_like(Y)
                     y_temp[:delay] = 0
                     y_temp[delay:] = Y[:-delay]
-                
+                y_tempsize = len(y_temp)
                 if modes[i]=='OR':
-                    y2 = y | y_temp
+                    y = y | y_temp
                 elif modes[i]=='XOR':
-                    y2 = y ^ y_temp
+                    y = y ^ y_temp
                 elif modes[i]=='AND':
-                    y2 = y & y_temp
+                    y = y & y_temp
                 elif modes[i]=='NAND':
-                    y2 = y & ~y_temp
+                    y = y & ~y_temp
                 
-                y = y2
+            y = self.array_to_points(y)
                 
         else:
-            y = np.zeros(ipp_u*ntx)
+            y = []
         
-        if save:            
-            self.pulses = (y+48).astype(np.uint8).tostring()
-            self.save()
-        else:
-            return y
-        
+        self.pulses = y
+        self.save()
     
+    @staticmethod
+    def array_to_points(X):
+    
+        d = X[1:]-X[:-1]
+        
+        up = np.where(d==1)[0]
+        if X[0]==1:
+            up = np.concatenate((np.array([-1]), up))
+        up += 1
+        
+        dw = np.where(d==-1)[0]
+        if X[-1]==1:
+            dw = np.concatenate((dw, np.array([len(X)-1])))
+        dw += 1
+    
+        return [(tup[0], tup[1]) for tup in zip(up, dw)]
+
+    @staticmethod
+    def mask_ranges(Y, ranges):
+        
+        y = [(0, 0) for __ in Y]
+    
+        for index in ranges:
+            if '-' in index:
+                args = [int(a) for a in index.split('-')]
+                y[args[0]-1:args[1]] = Y[args[0]-1:args[1]] 
+            else:
+                y[int(index-1)] = Y[int(index-1)] 
+    
+        return y
+    
+    @staticmethod
+    def points(ntx, ipp, width, delay=[0], before=0, after=0, sync=0):
+        
+        delays = len(delay)
+        
+        Y = [(ipp*x+before+delay[x%delays], ipp*x+width+before+delay[x%delays]+after) for x in range(ntx)]
+        
+        return Y    
