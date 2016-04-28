@@ -57,17 +57,18 @@ DAT_CMDS = {
 
 class RCConfiguration(Configuration):
     
-    ipp = models.FloatField(verbose_name='Inter pulse period (Km)', validators=[MinValueValidator(1), MaxValueValidator(9000)], default=300)
+    ipp = models.FloatField(verbose_name='Inter pulse period [Km]', validators=[MinValueValidator(1), MaxValueValidator(9000)], default=300)
     ntx = models.PositiveIntegerField(verbose_name='Number of TX', validators=[MinValueValidator(1), MaxValueValidator(300)], default=1)    
-    clock_in = models.FloatField(verbose_name='Clock in (MHz)', validators=[MinValueValidator(1), MaxValueValidator(80)], default=1)
+    clock_in = models.FloatField(verbose_name='Clock in [MHz]', validators=[MinValueValidator(1), MaxValueValidator(80)], default=1)
     clock_divider = models.PositiveIntegerField(verbose_name='Clock divider', validators=[MinValueValidator(1), MaxValueValidator(256)], default=1)
-    clock = models.FloatField(verbose_name='Clock Master (MHz)', blank=True, default=1)
-    time_before = models.PositiveIntegerField(verbose_name='Time before (&mu;S)', default=12)
-    time_after = models.PositiveIntegerField(verbose_name='Time after (&mu;S)', default=1)
+    clock = models.FloatField(verbose_name='Clock Master [MHz]', blank=True, default=1)
+    time_before = models.PositiveIntegerField(verbose_name='Time before [&mu;S]', default=12)
+    time_after = models.PositiveIntegerField(verbose_name='Time after [&mu;S]', default=1)
     sync = models.PositiveIntegerField(verbose_name='Synchro delay', default=0)
     sampling_reference = models.CharField(verbose_name='Sampling Reference', choices=SAMPLING_REFS, default='none', max_length=40)
     control_tx = models.BooleanField(verbose_name='Control Switch TX', default=False)
     control_sw = models.BooleanField(verbose_name='Control Switch SW', default=False)
+    total_units = models.PositiveIntegerField(default=0)
     mix = models.BooleanField(default=False)
 
     class Meta:
@@ -86,6 +87,11 @@ class RCConfiguration(Configuration):
     
     def get_absolute_url_import(self):
         return reverse('url_import_rc_conf', args=[str(self.id)])
+    
+    @property
+    def ipp_unit(self):
+        
+        return '{} ({})'.format(self.ipp, int(self.ipp*self.km2unit))
     
     @property
     def us2unit(self):
@@ -334,12 +340,11 @@ class RCConfiguration(Configuration):
         f = RCFile(filename)
         self.dict_to_parms(f.data)
         self.update_pulses()
-        self.save()
 
     def update_pulses(self):
         
         for line in self.get_lines():
-            line.update_pulses()
+            line.update_pulses()               
     
     def plot_pulses(self):
     
@@ -349,9 +354,7 @@ class RCConfiguration(Configuration):
         from bokeh.mpl import to_bokeh    
         from bokeh.models.tools import WheelZoomTool, ResetTool, PanTool, PreviewSaveTool
         
-        lines = self.get_lines()
-        
-        max_value = self.ipp*self.km2unit*self.ntx                
+        lines = self.get_lines()              
         
         N = len(lines)
         fig = plt.figure(figsize=(10, 2+N*0.5))
@@ -360,7 +363,7 @@ class RCConfiguration(Configuration):
         
         for i, line in enumerate(lines):
             labels.append(line.get_name())
-            l = ax.plot((0, max_value),(N-i-1, N-i-1))
+            l = ax.plot((0, self.total_units),(N-i-1, N-i-1))
             points = [(tup[0], tup[1]-tup[0]) for tup in line.pulses_as_points() if tup<>(0,0)]
             ax.broken_barh(points, (N-i-1, 0.5), 
                            edgecolor=l[0].get_color(), facecolor='none')
@@ -496,7 +499,7 @@ class RCLine(models.Model):
     
     def pulses_as_array(self):
         
-        y = np.zeros(self.rc_configuration.ntx*self.rc_configuration.ipp*self.rc_configuration.km2unit)
+        y = np.zeros(self.rc_configuration.total_units)
         
         for tup in ast.literal_eval(self.pulses):
             y[tup[0]:tup[1]] = 1
@@ -534,7 +537,7 @@ class RCLine(models.Model):
         ipp = self.rc_configuration.ipp
         ntx = self.rc_configuration.ntx
         ipp_u = int(ipp*km2unit)
-        
+        total = ipp_u*ntx
         y = []
         
         if self.line_type.name=='tr':
@@ -661,37 +664,58 @@ class RCLine(models.Model):
             values = self.rc_configuration.parameters.split('-')
             confs = RCConfiguration.objects.filter(pk__in=[value.split('|')[0] for value in values])
             modes = [value.split('|')[1] for value in values]
-            delays = [value.split('|')[2] for value in values]
-            masks = [value.split('|')[3] for value in values]
+            ops = [value.split('|')[2] for value in values]
+            delays = [value.split('|')[3] for value in values]
+            masks = [value.split('|')[4] for value in values]
+            mask = list('{:8b}'.format(int(masks[0])))
+            mask.reverse()
+            if mask[self.channel] in ('0', '', ' '):
+                y = np.zeros(total, dtype=np.int8)
+            else:
+                y = confs[0].get_lines(channel=self.channel)[0].pulses_as_array()           
             
-            y = confs[0].get_lines(channel=self.channel)[0].pulses_as_array()
-            ysize = len(y)
             for i in range(1, len(values)):
                 mask = list('{:8b}'.format(int(masks[i])))
                 mask.reverse()        
                 
                 if mask[self.channel] in ('0', '', ' '):
                     continue
-                Y = confs[i].get_lines(channel=self.channel)[0].pulses_as_array()
+                Y = confs[i].get_lines(channel=self.channel)[0].pulses_as_array()                
                 delay = float(delays[i])*km2unit
-                if delay>0:                    
-                    y_temp = np.empty_like(Y)
-                    y_temp[:delay] = 0
-                    y_temp[delay:] = Y[:-delay]
-                y_tempsize = len(y_temp)
-                if modes[i]=='OR':
-                    y = y | y_temp
-                elif modes[i]=='XOR':
-                    y = y ^ y_temp
-                elif modes[i]=='AND':
-                    y = y & y_temp
-                elif modes[i]=='NAND':
-                    y = y & ~y_temp
                 
+                if delay>0:
+                    if delay<self.rc_configuration.ipp*km2unit and len(Y)==len(y):                    
+                        y_temp = np.empty_like(Y)
+                        y_temp[:delay] = 0
+                        y_temp[delay:] = Y[:-delay]
+                    elif delay+len(Y)>len(y):
+                        y_new = np.zeros(delay+len(Y), dtype=np.int8)
+                        y_new[:len(y)] = y
+                        y = y_new
+                        y_temp = np.zeros(delay+len(Y), dtype=np.int8)
+                        y_temp[-len(Y):] = Y
+                    elif delay+len(Y)==len(y):
+                        y_temp = np.zeros(delay+len(Y))
+                        y_temp[-len(Y):] = Y
+                
+                if ops[i]=='OR':
+                    y = y | y_temp
+                elif ops[i]=='XOR':
+                    y = y ^ y_temp
+                elif ops[i]=='AND':
+                    y = y & y_temp
+                elif ops[i]=='NAND':
+                    y = y & ~y_temp
+            
+            total = len(y)
             y = self.array_to_points(y)
                 
         else:
             y = []
+        
+        if self.rc_configuration.total_units <> total:
+            self.rc_configuration.total_units = total
+            self.rc_configuration.save()        
         
         self.pulses = y
         self.save()

@@ -21,6 +21,14 @@
     document.location = "{% url 'url_delete_mix_experiment' id_exp  %}";
   });
 
+  $('input[type=radio][name=mode]').change(function() {
+    if (this.value == '0') {
+      $('input[type=radio][name=operation]').prop('disabled', false);
+    }else{
+      $('input[type=radio][name=operation]').prop('disabled', true);
+    }
+  });
+
 </script>
 
 {% endblock %}

@@ -78,7 +78,7 @@ class RCConfigurationForm(forms.ModelForm):
     
     class Meta:
         model = RCConfiguration
-        exclude = ('type', 'parameters', 'status', 'mix')
+        exclude = ('type', 'parameters', 'status', 'total_units', 'mix')
 
     def clean(self):
         form_data = super(RCConfigurationForm, self).clean()
@@ -99,6 +99,9 @@ class RCMixConfigurationForm(forms.Form):
     clock_divider = forms.CharField(widget=forms.HiddenInput())
     name = forms.CharField()
     experiment = forms.ChoiceField()
+    mode = forms.ChoiceField(widget=forms.RadioSelect(),
+                             choices=[(0, 'Parallel'), (1, 'Sequence')], 
+                             initial=0)
     operation = forms.ChoiceField(widget=forms.RadioSelect(),
                                   choices=[(0, 'OR'), (1, 'XOR'), (2, 'AND'), (3, 'NAND')], 
                                   initial=1)
@@ -121,8 +124,7 @@ class RCMixConfigurationForm(forms.Form):
         self.fields['delay'].widget = KmUnitWidget(attrs = {'km2unit':km2unit})
         self.fields['clock_in'].initial = clock_in
         self.fields['clock_divider'].initial = clock_divider
-    
-    
+        
     
 class RCLineForm(forms.ModelForm):
     

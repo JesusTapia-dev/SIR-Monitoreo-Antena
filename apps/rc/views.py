@@ -27,7 +27,7 @@ def conf(request, conf_id):
     kwargs = {}
     kwargs['dev_conf'] = conf
     kwargs['rc_lines'] = lines
-    kwargs['dev_conf_keys'] = ['name', 'ipp', 'ntx', 'clock_in', 'clock_divider', 'clock', 
+    kwargs['dev_conf_keys'] = ['name', 'ipp_unit', 'ntx', 'clock_in', 'clock_divider', 'clock', 
                                'time_before', 'time_after', 'sync', 'sampling_reference', 'control_tx', 'control_sw']
     
     kwargs['title'] = 'RC Configuration'
@@ -116,7 +116,7 @@ def conf_edit(request, conf_id):
                 line.save()
             
             #update pulses field
-            conf.update_pulses()                    
+            conf.update_pulses()                
             
             messages.success(request, 'RC Configuration successfully updated')
             

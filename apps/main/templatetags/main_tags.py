@@ -34,5 +34,6 @@ def get_verbose_field_name(instance, field_name):
     """
     Returns verbose_name for a field.
     """
-    
+    if field_name=='ipp_unit':
+        return 'Inter pulse period [Km(Units)]'
     return mark_safe(instance._meta.get_field(field_name).verbose_name)

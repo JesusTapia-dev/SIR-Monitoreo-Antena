@@ -44,10 +44,15 @@ CONF_MODELS = {
 }
 
 MIX_MODES = {
+    '0': 'P',
+    '1': 'S',
+}
+
+MIX_OPERATIONS = {
     '0': 'OR',
     '1': 'XOR',
     '2': 'AND',
-    '3': 'NAND'
+    '3': 'NAND',
 }
 
 
@@ -680,33 +685,40 @@ def experiment_mix(request, id_exp):
     if request.method=='GET':     
         form = RCMixConfigurationForm(confs=rc_confs, initial=initial)
     
-    if request.method=='POST':        
-
+    if request.method=='POST':
         result = mix.parameters
 
         if '{}|'.format(request.POST['experiment']) in result:
             messages.error(request, 'Configuration already added')
         else:
-            if result:
-                result = '{}-{}|{}|{}|{}'.format(mix.parameters,
-                                              request.POST['experiment'],
-                                              MIX_MODES[request.POST['operation']],
-                                              float(request.POST['delay']),
-                                              parse_mask(request.POST.getlist('mask'))
-                                              )
+            if 'operation' in request.POST:
+                operation = MIX_OPERATIONS[request.POST['operation']]
             else:
-                result = '{}|{}|{}|{}'.format(request.POST['experiment'],
-                                           MIX_MODES[request.POST['operation']],
-                                           float(request.POST['delay']),
-                                           parse_mask(request.POST.getlist('mask'))
-                                           )
+                operation = '---'
+            
+            mode = MIX_MODES[request.POST['mode']]
+            
+            if result:
+                result = '{}-{}|{}|{}|{}|{}'.format(mix.parameters,
+                                            request.POST['experiment'],
+                                            mode,
+                                            operation,
+                                            float(request.POST['delay']),
+                                            parse_mask(request.POST.getlist('mask'))
+                                            )
+            else:
+                result = '{}|{}|{}|{}|{}'.format(request.POST['experiment'],
+                                        mode,
+                                        operation,
+                                        float(request.POST['delay']),
+                                        parse_mask(request.POST.getlist('mask'))
+                                        )
             
             mix.parameters = result
             mix.name = request.POST['name']
             mix.save()
             mix.update_pulses()
-            
-        
+                    
         initial['result'] = parse_mix_result(result)
         initial['name'] = mix.name
         
@@ -741,24 +753,28 @@ def experiment_mix_delete(request, id_exp):
 def parse_mix_result(s):
     
     values = s.split('-')
-    html = ''
+    html = 'EXP                MOD OPE DELAY         MASK\r\n'    
     
+    if not values or values[0] in ('', ' '):
+        return mark_safe(html)
     
     for i, value in enumerate(values):
         if not value:
             continue
-        pk, mode, delay, mask = value.split('|')
+        pk, mode, operation, delay, mask = value.split('|')
         conf = RCConfiguration.objects.get(pk=pk)
         if i==0:
-            html += '{:20.18}{:4}{:9}km{:>6}\r\n'.format( 
-                                conf.name[:18],
+            html += '{:20.18}{:3}{:4}{:9}km{:>6}\r\n'.format( 
+                                conf.name,
+                                mode,
                                 '---',
                                 delay,
                                 mask)
         else:
-            html += '{:20.18}{:4}{:9}km{:>6}\r\n'.format(
-                                conf.name[:18],
+            html += '{:20.18}{:3}{:4}{:9}km{:>6}\r\n'.format(
+                                conf.name,
                                 mode,
+                                operation,
                                 delay,
                                 mask)
     
