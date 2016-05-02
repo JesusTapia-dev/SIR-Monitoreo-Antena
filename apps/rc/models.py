@@ -179,6 +179,7 @@ class RCConfiguration(Configuration):
         self.time_after = data['time_after']
         self.sync = data['sync']
         self.sampling_reference = data['sampling_reference']
+        self.save()
         self.clean_lines()
                         
         lines = []
