@@ -547,7 +547,7 @@ class RCLine(models.Model):
             if tr_params['TX_ref'] in ('0', 0):
                 txs = self.get_lines(line_type__name='tx')
             else:
-                txs = [RCLine.objects.filter(pk=tr_params['TX_ref'])]
+                txs = RCLine.objects.filter(pk=tr_params['TX_ref'])
             
             for tx in txs:
                 params = json.loads(tx.params)
