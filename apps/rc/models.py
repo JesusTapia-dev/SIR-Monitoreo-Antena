@@ -216,7 +216,7 @@ class RCConfiguration(Configuration):
                 if line_data['TX_ref'] in (0, '0'):
                     params['TX_ref'] = '0'
                 else:
-                    params['TX_ref'] = [l.pk for l in lines if l.line_type.name=='tx' and l.get_name()==line_data['TX_ref']][0]
+                    params['TX_ref'] = [l.pk for l in lines if l.line_type.name=='tx' and line_data['TX_ref'] in l.get_name()][0]
                 line.params = json.dumps(params)
                 line.save()
         
@@ -483,13 +483,13 @@ class RCLine(models.Model):
             if 'TX_ref' in json.loads(self.params):
                 pk = json.loads(self.params)['TX_ref']
                 if pk in (0, '0'):
-                    s = ','.join(chars[l.position] for l in self.rc_configuration.get_lines(line_type__name='tx'))                
+                    s = ','.join(chars[l.position] for l in self.rc_configuration.get_lines(line_type__name='tx'))                                
                 else:
                     ref = RCLine.objects.get(pk=pk)
                     s = chars[ref.position]
-
+                s = '({})'.format(s)
         if s:
-            return '{}({}) {}'.format(self.line_type.name.upper(), s, self.channel)
+            return '{}{} {}'.format(self.line_type.name.upper(), s, self.channel)
         else:
             return '{} {}'.format(self.line_type.name.upper(), self.channel)
 
