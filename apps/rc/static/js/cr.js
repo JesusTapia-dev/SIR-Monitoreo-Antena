@@ -14,7 +14,7 @@ function str2unit(s){
   var ret = "";
   values = s.split(",");
   for (i=0; i<values.length; i++) {
-    ret += parseFloat(values[i])*km2unit;
+    ret += Math.round(parseFloat(values[i]))*km2unit;
     ret += ","; 
   }
   return ret.substring(0, ret.length-1);

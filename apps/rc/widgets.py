@@ -25,15 +25,19 @@ class KmUnitWidget(forms.widgets.TextInput):
         
         disabled = 'disabled' if attrs.get('disabled', False) else ''
         name = attrs.get('name', label)
+        if attrs['id'] in ('id_delays',):
+            input_type = 'text'
+        else:
+            input_type = 'number'
         
         if 'line' in attrs:
             label += '_{0}'.format(attrs['line'].pk)
         
         html = '''<div class="col-md-12 col-no-padding">
-        <div class="col-md-5 col-no-padding"><input type="number" step="any" {0} class="form-control" id="id_{1}" name="{2}" value="{3}"></div>
+        <div class="col-md-5 col-no-padding"><input type="{0}" step="any" {1} class="form-control" id="id_{2}" name="{3}" value="{4}"></div>
         <div class="col-md-1 col-no-padding">Km</div>
-        <div class="col-md-5 col-no-padding"><input type="number" {4} class="form-control" id="id_{5}_unit" value="{6}"></div>
-        <div class="col-md-1 col-no-padding">Units</div></div><br>'''.format(disabled, label, name, value, disabled, label, unit)
+        <div class="col-md-5 col-no-padding"><input type="{0}" {1} class="form-control" id="id_{2}_unit" value="{5}"></div>
+        <div class="col-md-1 col-no-padding">Units</div></div><br>'''.format(input_type, disabled, label, name, value, unit)
         
         script = '''<script type="text/javascript">
         $(document).ready(function () {{
@@ -42,11 +46,11 @@ class KmUnitWidget(forms.widgets.TextInput):
           unit_fields.push("id_{label}_unit");                       
           
           $("#id_{label}").change(function() {{
-            $("#id_{label}_unit").val(Math.round(str2unit($(this).val())));
+            $("#id_{label}_unit").val(str2unit($(this).val()));
             $("#id_{label}").val(str2km($("#id_{label}_unit").val()));
           }});
           $("#id_{label}_unit").change(function() {{
-            $(this).val(Math.round(parseFloat($(this).val())));
+            $(this).val(parseFloat($(this).val()));
             $("#id_{label}").val(str2km($(this).val()));
           }});
         }});  

@@ -35,7 +35,7 @@
 
 {% endif %}
 
-{% if dds_device %}
+{% if device == 'dds' %}
 <script src="{% static 'js/dds_conversion.js' %}"></script>
 <script type="text/javascript">
   
@@ -104,6 +104,10 @@
     }
     
 </script>
+{% endif %}
+
+{% if device == 'rc' %}
+<script src="{% static 'js/cr.js' %}"></script>
 {% endif %}
 
 {% endblock %}

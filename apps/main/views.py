@@ -844,6 +844,7 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
                 else:
                     kwargs['button'] = 'Create'                    
                     conf = Configuration.objects.get(pk=request.GET['template'])
+                    id_dev = conf.device.pk
                     DevConfForm = CONF_FORMS[conf.device.device_type.name]
                     form = DevConfForm(instance=conf, 
                                        initial={'name': '{} [{:%Y/%m/%d}]'.format(conf.name, datetime.now()),
@@ -881,8 +882,7 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
     
     if id_dev != 0:
         device = Device.objects.get(pk=id_dev)
-        if 'dds' in device.device_type.name:
-            kwargs['dds_device'] = True
+        kwargs['device'] = device.device_type.name
     
     return render(request, 'dev_conf_edit.html', kwargs)
 

@@ -179,13 +179,14 @@ class RCConfiguration(Configuration):
         self.time_after = data['time_after']
         self.sync = data['sync']
         self.sampling_reference = data['sampling_reference']
+        self.total_units = self.ipp*self.ntx*self.km2unit
         self.save()
         self.clean_lines()
                         
         lines = []
         positions = {'tx':0, 'tr':0}                
         
-        for i, line_data in enumerate(data['lines']):
+        for i, line_data in enumerate(data['lines']):            
             line_type = RCLineType.objects.get(name=line_data.pop('type'))
             if line_type.name=='codes':
                 code = RCLineCode.objects.get(name=line_data['code'])
@@ -345,7 +346,7 @@ class RCConfiguration(Configuration):
     def update_pulses(self):
         
         for line in self.get_lines():
-            line.update_pulses()               
+            line.update_pulses()
     
     def plot_pulses(self):
     
@@ -552,9 +553,10 @@ class RCLine(models.Model):
             
             for tx in txs:
                 params = json.loads(tx.params)
+                
                 if float(params['pulse_width'])==0:
                     continue
-                delays = [float(d)*km2unit for d in params['delays'].split(',') if d]
+                delays = [float(d)*km2unit for d in params['delays'].split(',') if d]                
                 width = float(params['pulse_width'])*km2unit+int(self.rc_configuration.time_before*us2unit)
                 before = 0
                 after = int(self.rc_configuration.time_after*us2unit)
@@ -576,12 +578,12 @@ class RCLine(models.Model):
                     y_tx = self.mask_ranges(y_tx, tr_ranges)
                 
                 y.extend(y_tx)
-        
-            self.pulses = unicode(y)
+
+            self.pulses = unicode(y)            
             y = self.array_to_points(self.pulses_as_array())
             
         elif self.line_type.name=='tx':
-            params = json.loads(self.params)
+            params = json.loads(self.params)            
             delays = [float(d)*km2unit for d in params['delays'].split(',') if d]            
             width = float(params['pulse_width'])*km2unit
             
@@ -715,8 +717,7 @@ class RCLine(models.Model):
                         y = y & y_temp
                     elif ops[i]=='NAND':
                         y = y & ~y_temp
-                else:
-                    print len(y), len(Y)
+                else:                    
                     y = np.concatenate([y, Y])
             
             total = len(y)
@@ -727,7 +728,7 @@ class RCLine(models.Model):
         
         if self.rc_configuration.total_units <> total:
             self.rc_configuration.total_units = total
-            self.rc_configuration.save()        
+            self.rc_configuration.save()
         
         self.pulses = unicode(y)
         self.save()
