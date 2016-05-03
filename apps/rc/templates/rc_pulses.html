@@ -9,6 +9,10 @@
 
 {% block content %}
 <div id="div_plot">{{div}}</div>
+<br>
+<div class="col-md-2">1 Km =</div><div class="col-md-3">{{units}} Units</div>
+<br>
+<div class="col-md-2">1 Unit=</div><div class="col-md-3">{{kms}} Km</div>
 {% endblock %}
 
 {% block extra-js%}

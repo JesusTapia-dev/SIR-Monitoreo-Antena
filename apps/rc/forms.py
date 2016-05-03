@@ -74,7 +74,7 @@ class RCConfigurationForm(forms.ModelForm):
         self.fields['time_after'].label = mark_safe(self.fields['time_after'].label)
     
         if 'initial' in kwargs and 'experiment' in kwargs['initial'] and kwargs['initial']['experiment'] not in (0, '0'):
-            self.fields['experiment'].widget.attrs['disabled'] = 'disabled'
+            self.fields['experiment'].widget.attrs['readonly'] = True
     
     class Meta:
         model = RCConfiguration
@@ -92,6 +92,12 @@ class RCConfigurationForm(forms.ModelForm):
         
         return form_data
 
+    def save(self):        
+        conf = super(RCConfigurationForm, self).save()
+        conf.total_units = conf.ipp*conf.ntx*conf.km2unit
+        conf.save()
+        return conf
+        
 
 class RCMixConfigurationForm(forms.Form):
     

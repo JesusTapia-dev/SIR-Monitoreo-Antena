@@ -29,7 +29,11 @@ class KmUnitWidget(forms.widgets.TextInput):
         if 'line' in attrs:
             label += '_{0}'.format(attrs['line'].pk)
         
-        html = '<div class="col-md-12 col-no-padding"><div class="col-md-5 col-no-padding"><input type="text" {0} class="form-control" id="id_{1}" name="{2}" value="{3}"></div><div class="col-md-1 col-no-padding">Km</div><div class="col-md-5 col-no-padding"><input type="text" {4} class="form-control" id="id_{5}_unit" value="{6}"></div><div class="col-md-1 col-no-padding">Units</div></div><br>'.format(disabled, label, name, value, disabled, label, unit)
+        html = '''<div class="col-md-12 col-no-padding">
+        <div class="col-md-5 col-no-padding"><input type="number" step="any" {0} class="form-control" id="id_{1}" name="{2}" value="{3}"></div>
+        <div class="col-md-1 col-no-padding">Km</div>
+        <div class="col-md-5 col-no-padding"><input type="number" {4} class="form-control" id="id_{5}_unit" value="{6}"></div>
+        <div class="col-md-1 col-no-padding">Units</div></div><br>'''.format(disabled, label, name, value, disabled, label, unit)
         
         script = '''<script type="text/javascript">
         $(document).ready(function () {{
@@ -77,7 +81,7 @@ class UnitKmWidget(forms.widgets.TextInput):
         html = '''<div class="col-md-12 col-no-padding">
         <div class="col-md-5 col-no-padding"><input type="number" {0} class="form-control" id="id_{1}_unit" name="{2}" value="{3}"></div>
         <div class="col-md-1 col-no-padding">Units</div>
-        <div class="col-md-5 col-no-padding"><input type="number" {4} class="form-control" id="id_{5}" value="{6}"></div>
+        <div class="col-md-5 col-no-padding"><input type="number" step="any" {4} class="form-control" id="id_{5}" value="{6}"></div>
         <div class="col-md-1 col-no-padding">Km</div></div>'''.format(disabled, label, name, value, disabled, label, km)
         
         script = '''<script type="text/javascript">
@@ -117,11 +121,11 @@ class KmUnitHzWidget(forms.widgets.TextInput):
             label += '_{0}'.format(attrs['line'].pk)
         
         html = '''<div class="col-md-12 col-no-padding">
-        <div class="col-md-3 col-no-padding"><input type="number" {0} class="form-control" id="id_{1}" name="{2}" value="{3}"></div>
+        <div class="col-md-3 col-no-padding"><input type="number" step="any" {0} class="form-control" id="id_{1}" name="{2}" value="{3}"></div>
         <div class="col-md-1 col-no-padding">Km</div>
         <div class="col-md-3 col-no-padding"><input type="number" {4} class="form-control" id="id_{1}_unit" value="{5}"></div>
         <div class="col-md-1 col-no-padding">Units</div>
-        <div class="col-md-3 col-no-padding"><input type="number" {4} class="form-control" id="id_{1}_hz" value="{6}"></div>
+        <div class="col-md-3 col-no-padding"><input type="number" step="any" {4} class="form-control" id="id_{1}_hz" value="{6}"></div>
         <div class="col-md-1 col-no-padding">Hz</div>
         </div>'''.format(disabled, label, name, value, disabled, unit, hz)
         
@@ -168,11 +172,11 @@ class KmUnitDcWidget(forms.widgets.TextInput):
         dc = float(json.loads(attrs['line'].params)['pulse_width'])*100/attrs['line'].rc_configuration.ipp
         
         html = '''<div class="col-md-12 col-no-padding">
-        <div class="col-md-3 col-no-padding"><input type="number" {0} class="form-control" id="id_{1}" name="{2}" value="{3}"></div>
+        <div class="col-md-3 col-no-padding"><input type="number" step="any" {0} class="form-control" id="id_{1}" name="{2}" value="{3}"></div>
         <div class="col-md-1 col-no-padding">Km</div>
         <div class="col-md-3 col-no-padding"><input type="number" {4} class="form-control" id="id_{1}_unit" value="{5}"></div>
         <div class="col-md-1 col-no-padding">Units</div>
-        <div class="col-md-3 col-no-padding"><input type="number" {4} class="form-control" id="id_{1}_dc" value="{6}"></div>
+        <div class="col-md-3 col-no-padding"><input type="number" step="any" {4} class="form-control" id="id_{1}_dc" value="{6}"></div>
         <div class="col-md-1 col-no-padding">DC[%]</div>
         </div>'''.format(disabled, label, name, value, disabled, unit, dc)
         

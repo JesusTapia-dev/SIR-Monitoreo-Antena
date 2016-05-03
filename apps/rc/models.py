@@ -353,7 +353,7 @@ class RCConfiguration(Configuration):
         from bokeh.resources import CDN
         from bokeh.embed import components
         from bokeh.mpl import to_bokeh    
-        from bokeh.models.tools import WheelZoomTool, ResetTool, PanTool, PreviewSaveTool
+        from bokeh.models.tools import WheelZoomTool, ResetTool, PanTool, PreviewSaveTool        
         
         lines = self.get_lines()              
         
@@ -371,7 +371,8 @@ class RCConfiguration(Configuration):
             
         labels.reverse()
         ax.set_yticklabels(labels)
-        plot = to_bokeh(fig, use_pandas=False)
+        ax.set_xlabel = 'Units'
+        plot = to_bokeh(fig, use_pandas=False)        
         plot.tools = [PanTool(dimensions=['width']), WheelZoomTool(dimensions=['width']), ResetTool(), PreviewSaveTool()]
         
         return components(plot, CDN)
@@ -538,7 +539,7 @@ class RCLine(models.Model):
         ipp = self.rc_configuration.ipp
         ntx = self.rc_configuration.ntx
         ipp_u = int(ipp*km2unit)
-        total = ipp_u*ntx
+        total = ipp_u*ntx if self.rc_configuration.total_units==0 else self.rc_configuration.total_units
         y = []
         
         if self.line_type.name=='tr':
@@ -576,6 +577,9 @@ class RCLine(models.Model):
                 
                 y.extend(y_tx)
         
+            self.pulses = unicode(y)
+            y = self.array_to_points(self.pulses_as_array())
+            
         elif self.line_type.name=='tx':
             params = json.loads(self.params)
             delays = [float(d)*km2unit for d in params['delays'].split(',') if d]            
@@ -663,7 +667,7 @@ class RCLine(models.Model):
             
         elif self.line_type.name=='mix':
             values = self.rc_configuration.parameters.split('-')
-            confs = RCConfiguration.objects.filter(pk__in=[value.split('|')[0] for value in values])
+            confs = [RCConfiguration.objects.get(pk=value.split('|')[0]) for value in values]
             modes = [value.split('|')[1] for value in values]
             ops = [value.split('|')[2] for value in values]
             delays = [value.split('|')[3] for value in values]
@@ -671,9 +675,9 @@ class RCLine(models.Model):
             mask = list('{:8b}'.format(int(masks[0])))
             mask.reverse()
             if mask[self.channel] in ('0', '', ' '):
-                y = np.zeros(total, dtype=np.int8)
+                y = np.zeros(confs[0].total_units, dtype=np.int8)
             else:
-                y = confs[0].get_lines(channel=self.channel)[0].pulses_as_array()           
+                y = confs[0].get_lines(channel=self.channel)[0].pulses_as_array()
             
             for i in range(1, len(values)):
                 mask = list('{:8b}'.format(int(masks[i])))
@@ -681,32 +685,39 @@ class RCLine(models.Model):
                 
                 if mask[self.channel] in ('0', '', ' '):
                     continue
-                Y = confs[i].get_lines(channel=self.channel)[0].pulses_as_array()                
+                Y = confs[i].get_lines(channel=self.channel)[0].pulses_as_array()
                 delay = float(delays[i])*km2unit
                 
-                if delay>0:
-                    if delay<self.rc_configuration.ipp*km2unit and len(Y)==len(y):                    
-                        y_temp = np.empty_like(Y)
-                        y_temp[:delay] = 0
-                        y_temp[delay:] = Y[:-delay]
-                    elif delay+len(Y)>len(y):
-                        y_new = np.zeros(delay+len(Y), dtype=np.int8)
-                        y_new[:len(y)] = y
-                        y = y_new
-                        y_temp = np.zeros(delay+len(Y), dtype=np.int8)
-                        y_temp[-len(Y):] = Y
-                    elif delay+len(Y)==len(y):
-                        y_temp = np.zeros(delay+len(Y))
-                        y_temp[-len(Y):] = Y
-                
-                if ops[i]=='OR':
-                    y = y | y_temp
-                elif ops[i]=='XOR':
-                    y = y ^ y_temp
-                elif ops[i]=='AND':
-                    y = y & y_temp
-                elif ops[i]=='NAND':
-                    y = y & ~y_temp
+                if modes[i]=='P':
+                    if delay>0:
+                        if delay<self.rc_configuration.ipp*km2unit and len(Y)==len(y):                    
+                            y_temp = np.empty_like(Y)
+                            y_temp[:delay] = 0
+                            y_temp[delay:] = Y[:-delay]
+                        elif delay+len(Y)>len(y):
+                            y_new = np.zeros(delay+len(Y), dtype=np.int8)
+                            y_new[:len(y)] = y
+                            y = y_new
+                            y_temp = np.zeros(delay+len(Y), dtype=np.int8)
+                            y_temp[-len(Y):] = Y
+                        elif delay+len(Y)==len(y):
+                            y_temp = np.zeros(delay+len(Y))
+                            y_temp[-len(Y):] = Y
+                        elif delay+len(Y)<len(y):
+                            y_temp = np.zeros(len(y), dtype=np.int8)
+                            y_temp[delay:delay+len(Y)] = Y
+                    
+                    if ops[i]=='OR':
+                        y = y | y_temp
+                    elif ops[i]=='XOR':
+                        y = y ^ y_temp
+                    elif ops[i]=='AND':
+                        y = y & y_temp
+                    elif ops[i]=='NAND':
+                        y = y & ~y_temp
+                else:
+                    print len(y), len(Y)
+                    y = np.concatenate([y, Y])
             
             total = len(y)
             y = self.array_to_points(y)
@@ -718,7 +729,7 @@ class RCLine(models.Model):
             self.rc_configuration.total_units = total
             self.rc_configuration.save()        
         
-        self.pulses = y
+        self.pulses = unicode(y)
         self.save()
     
     @staticmethod

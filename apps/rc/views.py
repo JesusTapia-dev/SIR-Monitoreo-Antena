@@ -327,7 +327,7 @@ def import_file(request, conf_id):
     conf = get_object_or_404(RCConfiguration, pk=conf_id)
     if request.method=='POST':
         form = RCImportForm(request.POST, request.FILES)
-        if form.is_valid():
+        if form.is_valid():            
             try:
                 conf.update_from_file(request.FILES['file_name'])
                 messages.success(request, 'Configuration "%s" loaded succesfully' % request.FILES['file_name'])
@@ -362,6 +362,8 @@ def plot_pulses(request, conf_id):
     kwargs['suptitle'] = conf.name
     kwargs['div'] = mark_safe(div)
     kwargs['script'] = mark_safe(script)
+    kwargs['units'] = conf.km2unit
+    kwargs['kms'] = 1/conf.km2unit
     
     if 'json' in request.GET:        
         return HttpResponse(json.dumps({'div':mark_safe(div), 'script':mark_safe(script)}), content_type="application/json")

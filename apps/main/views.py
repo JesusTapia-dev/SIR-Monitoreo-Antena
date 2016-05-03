@@ -694,7 +694,7 @@ def experiment_mix(request, id_exp):
             if 'operation' in request.POST:
                 operation = MIX_OPERATIONS[request.POST['operation']]
             else:
-                operation = '---'
+                operation = '   '
             
             mode = MIX_MODES[request.POST['mode']]
             
@@ -767,7 +767,7 @@ def parse_mix_result(s):
             html += '{:20.18}{:3}{:4}{:9}km{:>6}\r\n'.format( 
                                 conf.name,
                                 mode,
-                                '---',
+                                '   ',
                                 delay,
                                 mask)
         else:
@@ -847,7 +847,8 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
                     DevConfForm = CONF_FORMS[conf.device.device_type.name]
                     form = DevConfForm(instance=conf, 
                                        initial={'name': '{} [{:%Y/%m/%d}]'.format(conf.name, datetime.now()),
-                                                'template': False})                
+                                                'template': False,
+                                                'experiment':id_exp})                
             elif 'blank' in request.GET:
                 kwargs['button'] = 'Create'             
                 form = ConfigurationForm(initial=initial)
@@ -865,7 +866,7 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
             conf = form.save()
     
             if 'template' in request.GET and conf.device.device_type.name=='rc':
-                lines = RCLine.objects.filter(rc_configuration=request.GET['template'])            
+                lines = RCLine.objects.filter(rc_configuration=request.GET['template'])
                 for line in lines:
                     line.clone(rc_configuration=conf)
     
