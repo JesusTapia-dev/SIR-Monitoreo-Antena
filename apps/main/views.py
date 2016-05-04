@@ -26,7 +26,6 @@ from apps.dds.models import DDSConfiguration
 
 CONF_FORMS = {
     'rc': RCConfigurationForm,
-    'rc_mix': RCMixConfigurationForm,
     'dds': DDSConfigurationForm,
     'jars': JARSConfigurationForm,
     'cgs': CGSConfigurationForm,
@@ -495,7 +494,7 @@ def experiment(request, id_exp):
     kwargs['experiment_keys'] = ['template', 'radar', 'name', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
     
-    kwargs['configuration_keys'] = ['name', 'device__device_type', 'device__ip_address', 'device__port_address', 'device__status']
+    kwargs['configuration_keys'] = ['name', 'device__ip_address', 'device__port_address', 'device__status']
     kwargs['configurations'] = configurations
     
     kwargs['title'] = 'Experiment'
@@ -835,12 +834,13 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
             device = Device.objects.get(pk=id_dev)
             DevConfForm = CONF_FORMS[device.device_type.name]
             initial['name'] = request.GET['name']                                          
-            form = DevConfForm(initial=initial)
+            form = DevConfForm(initial=initial)            
         else:
             if 'template' in request.GET:
                 if request.GET['template']=='0':
+                    choices = [(conf.pk, '{}'.format(conf)) for conf in Configuration.objects.filter(template=True)]
                     form = NewForm(initial={'create_from':2},
-                                   template_choices=Configuration.objects.filter(template=True).values_list('id', 'name'))
+                                   template_choices=choices)
                 else:
                     kwargs['button'] = 'Create'                    
                     conf = Configuration.objects.get(pk=request.GET['template'])
@@ -851,7 +851,7 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
                                                 'template': False,
                                                 'experiment':id_exp})                
             elif 'blank' in request.GET:
-                kwargs['button'] = 'Create'             
+                kwargs['button'] = 'Create'                    
                 form = ConfigurationForm(initial=initial)
             else:
                 form = NewForm()                                                               

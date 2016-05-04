@@ -78,9 +78,9 @@ class RCConfiguration(Configuration):
     def __unicode__(self):
 
         if self.mix:
-            return u'[MIXED]: %s' % self.name
+            return u'[RC MIXED]: {}'.format(self.name)
         else:
-            return u'[%s]: %s' % (self.device.name, self.name)
+            return u'[RC]: {}'.format(self.name)
     
     def get_absolute_url_plot(self):
         return reverse('url_plot_rc_pulses', args=[str(self.id)])

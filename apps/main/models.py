@@ -104,7 +104,8 @@ class Device(models.Model):
         db_table = 'db_devices'
         
     def __unicode__(self):
-        return u'%s | %s' % (self.name, self.ip_address)
+        return u'[{}]: {}'.format(self.device_type.name.upper(), 
+                                    self.name)
     
     def get_status(self):        
         return self.status
@@ -303,7 +304,7 @@ class Experiment(models.Model):
         self.save()
         
     def status_color(self):
-        color = 'danger'
+        color = 'muted'
         if self.status == 0:
             color = "danger"
         elif self.status == 1:
@@ -312,8 +313,6 @@ class Experiment(models.Model):
             color = "success"
         elif self.status == 3:
             color = "warning"
-        else:
-            color = "muted"
         
         return color
     
@@ -452,7 +451,7 @@ class Configuration(PolymorphicModel):
     
     def __unicode__(self):
 
-        return u'[%s]: %s' % (self.device.name, self.name)
+        return u'[{}]: {}'.format(self.device.device_type.name.upper(), self.name)
 
     def clone(self, **kwargs):
         
