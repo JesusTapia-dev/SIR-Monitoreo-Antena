@@ -15,7 +15,7 @@ CONF_STATES = (
 
 EXP_STATES = (
                  (0,'Error'),                 #RED
-                 (1,'Configurated'),          #BLUE
+                 (1,'Configured'),            #BLUE
                  (2,'Running'),               #GREEN
                  (3,'Waiting'),               #YELLOW
                  (4,'Not Configured'),        #WHITE
@@ -108,6 +108,20 @@ class Device(models.Model):
     
     def get_status(self):        
         return self.status
+    
+    @property
+    def status_color(self):
+        color = 'muted'
+        if self.status == 0:
+            color = "danger"
+        elif self.status == 1:
+            color = "warning"
+        elif self.status == 2:
+            color = "info"
+        elif self.status == 3:
+            color = "success"
+        
+        return color
     
     def get_absolute_url(self):
         return reverse('url_device', args=[str(self.id)])

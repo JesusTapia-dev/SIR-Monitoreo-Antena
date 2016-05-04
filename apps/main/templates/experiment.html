@@ -62,7 +62,11 @@
 		<tr class="clickable-row" data-href="{{item.get_absolute_url}}">
 		  <td>{{ forloop.counter }}</td>
 		  {% for key in configuration_keys %}
-		  <td>{{ item|value:key }}</td>
+		  {% if key == 'device__status' %}
+		    <td class="text-{{item.device.status_color}}">{{ item|value:key }}</td>
+		  {% else %}  
+		    <td>{{ item|value:key }}</td>
+		  {% endif %}
 		  {% endfor %}
 		</tr>
 		{% endfor %}

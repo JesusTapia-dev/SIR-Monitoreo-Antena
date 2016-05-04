@@ -495,7 +495,7 @@ def experiment(request, id_exp):
     kwargs['experiment_keys'] = ['template', 'radar', 'name', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
     
-    kwargs['configuration_keys'] = ['name', 'device__device_type', 'device__ip_address', 'device__port_address']
+    kwargs['configuration_keys'] = ['name', 'device__device_type', 'device__ip_address', 'device__port_address', 'device__status']
     kwargs['configurations'] = configurations
     
     kwargs['title'] = 'Experiment'
