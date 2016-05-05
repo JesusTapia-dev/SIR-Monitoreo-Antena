@@ -13,11 +13,16 @@ class JARSConfigurationForm(forms.ModelForm):
             if instance.experiment:
                 self.fields['experiment'].widget.attrs['disabled'] = 'disabled'
             
-            #self.fields['experiment'].widget.attrs['readonly'] = True
-            #self.fields['experiment'].widget.choices = [(instance.experiment.id, instance.experiment)]
-            
             self.fields['device'].widget.choices = [(device.id, device) for device in devices]
             
+    #-------------JARS Configuration needs an Experiment-----------------
+    def clean(self):
+        cleaned_data = super(JARSConfigurationForm, self).clean()
+        experiment = cleaned_data.get("experiment")
+        if experiment == None:
+            msg = "Jars Configuration needs an Experiment."
+            self.add_error('experiment', msg)
+
     class Meta:
         model = JARSConfiguration
         exclude = ('type', 'parameters', 'status')

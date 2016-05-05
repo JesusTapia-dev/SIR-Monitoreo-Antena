@@ -862,7 +862,7 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
         DevConfForm = CONF_FORMS[device.device_type.name]
                                         
         form = DevConfForm(request.POST)
-        
+        kwargs['button'] = 'Create'
         if form.is_valid():
             conf = form.save()
     
