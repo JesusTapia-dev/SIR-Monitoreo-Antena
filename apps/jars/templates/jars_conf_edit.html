@@ -4,5 +4,44 @@
 {% load main_tags %}
 
 {% block extra-js%}
+<script type="text/javascript">
+$("#id_exp_type").on('change', function() {
+});
 
+$("#id_channels_number").on('change', function() {
+	updateChannelsNumber();
+});
+	
+function updateChannelsNumber() {
+	
+	var channels_number = $("#id_channels_number").val();
+	channels = $("#id_channels")
+	
+	if (channels_number == 1) {
+	    $(channels).val('1')
+	}
+	else if (channels_number == 2){
+		$(channels).val('1,2')
+	}
+	else if (channels_number == 3){
+		$(channels).val('1,2,3')
+	}
+	else if (channels_number == 4){
+		$(channels).val('1,2,3,4')
+	}
+	else if (channels_number == 5){
+		$(channels).val('1,2,3,4,5')
+	}
+	else if (channels_number == 6){
+		$(channels).val('1,2,3,4,5,6')
+	}
+	else if (channels_number == 7){
+		$(channels).val('1,2,3,5,6,7')
+	}
+	else {
+		$(channels).val('1,2,3,4,5,6,7,8')
+	}
+
+}
+</script>
 {% endblock %}

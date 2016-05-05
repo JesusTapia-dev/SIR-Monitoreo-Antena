@@ -52,7 +52,7 @@ def jars_conf_edit(request, id_conf):
         
         if form.is_valid():
             conf = form.save(commit=False)
-            
+            conf.save()
             return redirect('url_jars_conf', id_conf=conf.id)
             
             ##ERRORS
