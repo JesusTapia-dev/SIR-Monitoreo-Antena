@@ -65,3 +65,39 @@ def jars_conf_edit(request, id_conf):
     kwargs['button'] = 'Save'
     
     return render(request, 'jars_conf_edit.html', kwargs)
+
+def jars_conf_edit_prueba(request, id_conf, type):
+        
+    conf = get_object_or_404(JARSConfiguration, pk=id_conf)
+    
+    if request.method=='GET':
+        if type == 'PDATA':
+            form = JARSConfigurationForm_Pro(instance=conf)
+            html = 'jars_conf_edit_pro.html'
+        else:
+            form = JarsConfigurationForm_Raw(instance=conf)
+            html = 'jars_conf_edit_raw.html'
+        
+    if request.method=='POST':
+        if type == 'PDATA':
+            form = JARSConfigurationForm_Pro(instance=conf)
+            html = 'jars_conf_edit_pro.html'
+        else:
+            form = JarsConfigurationForm_Raw(instance=conf)
+            html = 'jars_conf_edit_raw.html'
+        
+        if form.is_valid():
+            conf = form.save(commit=False)
+            conf.save()
+            return redirect('url_jars_conf', id_conf=conf.id)
+            
+            ##ERRORS
+        
+    kwargs = {}
+    kwargs['id_dev'] = conf.id
+    kwargs['form'] = form
+    kwargs['title'] = 'Device Configuration'
+    kwargs['suptitle'] = 'Edit'
+    kwargs['button'] = 'Save'
+    
+    return render(request, html, kwargs)
