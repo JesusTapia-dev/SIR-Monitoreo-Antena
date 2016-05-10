@@ -18,9 +18,13 @@ DATA_TYPE = (
 class JARSfilter(models.Model):
     
     name       = models.CharField(max_length=60, unique=True, default='')
-    filter_fir = models.PositiveIntegerField(verbose_name='FIR Filter',validators=[MinValueValidator(1), MaxValueValidator(20)], default = 1)
-    filter_2   = models.PositiveIntegerField(verbose_name='Filter 2',validators=[MinValueValidator(1), MaxValueValidator(20)], default = 1)
+    clock      = models.FloatField(verbose_name='Clock Input (MHz)',validators=[MinValueValidator(5), MaxValueValidator(75)], null=True, default=60)
+    mult       = models.PositiveIntegerField(verbose_name='Multiplier',validators=[MinValueValidator(1), MaxValueValidator(20)], default=5)
+    fch        = models.DecimalField(verbose_name='Frequency (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16, null=True, default=49.9200)
+    filter_fir = models.PositiveIntegerField(verbose_name='FIR Filter',validators=[MinValueValidator(1), MaxValueValidator(20)], default = 6)
+    filter_2   = models.PositiveIntegerField(verbose_name='Filter 2',validators=[MinValueValidator(1), MaxValueValidator(20)], default = 10)
     filter_5   = models.PositiveIntegerField(verbose_name='Filter 5',validators=[MinValueValidator(1), MaxValueValidator(20)], default = 1)
+    speed      = models.PositiveIntegerField(verbose_name='Speed',validators=[MinValueValidator(0), MaxValueValidator(100000)], default = 0)
         
     class Meta:
         db_table = 'jars_filters'

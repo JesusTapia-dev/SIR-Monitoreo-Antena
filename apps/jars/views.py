@@ -26,7 +26,7 @@ def jars_conf(request, id_conf):
                                'cards_number', 'channels_number',
                                'rd_directory', 'create_directory',
                                'include_expname', 'raw_data_blocks',
-                               'acq_profiles', 'profiles_block']
+                               'acq_profiles', 'profiles_block', 'filter']
     
     kwargs['title'] = 'JARS Configuration'
     kwargs['suptitle'] = 'Details'
