@@ -16,26 +16,32 @@ class SpectralWidget(forms.widgets.TextInput):
         disabled = 'disabled' if attrs.get('disabled', False) else ''
         name = attrs.get('name', label)
         if '[' in value:
-            value = ast.literal_eval(value)
+            if value[len(value)-1] == ",":
+                value = ast.literal_eval(value)
+            else:
+                value = value + ","
+                value = ast.literal_eval(value)
         
         codes = value
         if not isinstance(value, list):
-            if len(value) > 1:
-                text=''
-                for val in value:
-                    text = text+str(val)+','
+            text=''
+            #lista = []
+            #if len(value) > 1:
+            for val in value:
+                text = text+str(val)+','
+                #lista.append(val)
             codes=text
         else:
-            codes=value+","
+            codes=''
                 
         html = '''<textarea rows="5" {0} class="form-control" id="id_{1}" name="{2}" style="white-space:nowrap; overflow:scroll;">{3}</textarea>
                   <input type="text" class="col-md-1 col-no-padding" id="num1" value=0>
                   <input type="text" class="col-md-1 col-no-padding" id="num2" value=0>
                   <button type="button" class="button" id="add_spectral_button"> Add </button>
-                  <button type="button" class="button" id="all_spectral_button"> All </button>
-                  <button type="button" class="button" id="self_spectral_button"> Self </button>
-                  <button type="button" class="button" id="cross_spectral_button"> Cross </button>
                   <button type="button" class="button" id="delete_spectral_button"> Delete </button>
+                  <button type="button" class="button pull-right" id="cross_spectral_button"> Cross </button>
+                  <button type="button" class="button pull-right" id="self_spectral_button"> Self </button>
+                  <button type="button" class="button pull-right" id="all_spectral_button"> All </button>
                   '''.format(disabled, label, name, codes)
         
         script = '''
@@ -47,8 +53,12 @@ class SpectralWidget(forms.widgets.TextInput):
                     
                     
                     $("#all_spectral_button").click(function(){{
-                        alert(spectral_comb)
+                        var sequence1 = selfSpectral()
+                        var sequence2 = crossSpectral()
+                        $("#id_spectral").val(sequence1+sequence2)
+                        updateSpectralNumber()
                     }});
+                    
                     
                     $("#add_spectral_button").click(function(){{
                         var spectral_comb = $("#id_spectral").val();
@@ -59,8 +69,64 @@ class SpectralWidget(forms.widgets.TextInput):
                         var n = spectral_comb.search(str);
                         if (n==-1){
                             $("#id_spectral").val(spectral_comb+"["+$("#num1").val()+", "+$("#num2").val()+"],")   
-                        }                     
+                        }
+                        updateSpectralNumber()                     
                     }});
+                    
+                    
+                    $("#self_spectral_button").click(function(){{
+                        var sequence = selfSpectral()
+                        $("#id_spectral").val(sequence)
+                        
+                        updateSpectralNumber()
+                    }});
+                    
+                    $("#cross_spectral_button").click(function(){{
+                        var sequence = crossSpectral()
+                        $("#id_spectral").val(sequence)
+                        
+                        updateSpectralNumber()
+                    }});
+                    
+                    
+                    function selfSpectral() {
+                        var channels = $("#id_channels").val();
+                        var n = (channels.length)-1;
+                        var num = parseInt(channels[n]);
+                        sequence = ""
+                        for (i = 0; i < num; i++) {
+                            sequence = sequence + "[" + i.toString() + ", " + i.toString() + "],"
+                        }
+                        return sequence
+                    }
+                    
+                    
+                    function crossSpectral() {
+                        var channels = $("#id_channels").val();
+                        var n = (channels.length)-1;
+                        var num = parseInt(channels[n]);
+                        sequence = ""
+                        for (i = 0; i < num; i++) {
+                            for (j = i+1; j < num; j++) {
+                            sequence = sequence + "[" + i.toString() + ", " + j.toString() + "],"
+                            }
+                        }
+                        return sequence
+                    }
+                    
+                    
+                    function updateSpectralNumber(){
+                        var spectral_comb = $("#id_spectral").val();
+                        var num = spectral_comb.length;
+                        var cont = 0
+                        for (i = 0; i < num; i++) {
+                            if (spectral_comb[i] == "]"){
+                                cont = cont + 1
+                            }
+                        }
+                        $("#id_spectral_number").val(cont)
+                    }
+                    
                     
                     $("#delete_spectral_button").click(function(){{
                         var spectral_comb = $("#id_spectral").val();
@@ -86,8 +152,10 @@ class SpectralWidget(forms.widgets.TextInput):
                             var tuple = "["+$("#num1").val()+", "+$("#num2").val()+"],"
                             var txt = spectral_comb.replace(tuple,'');
                             $("#id_spectral").val(txt)
-                        }                     
+                        }
+                        updateSpectralNumber()                     
                     }});
+                    
                     
                 }});
                 </script>
