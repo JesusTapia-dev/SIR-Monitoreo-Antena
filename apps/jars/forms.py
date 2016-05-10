@@ -1,6 +1,7 @@
 from django import forms
 from apps.main.models import Device, Experiment
 from .models import JARSConfiguration
+from .widgets import SpectralWidget
 
 class JARSConfigurationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -15,6 +16,7 @@ class JARSConfigurationForm(forms.ModelForm):
                 self.fields['experiment'].widget.choices = [(experiment.id, experiment) for experiment in experiments]
                 
             self.fields['device'].widget.choices = [(device.id, device) for device in devices]
+            self.fields['spectral'].widget = SpectralWidget()
             
     #-------------JARS Configuration needs an Experiment-----------------
     def clean(self):

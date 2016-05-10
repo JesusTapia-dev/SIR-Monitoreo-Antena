@@ -49,7 +49,7 @@ class JARSConfiguration(Configuration):
     incohe_integr    = models.PositiveIntegerField(verbose_name='Incoherent Integrations',validators=[MinValueValidator(1)], default = 30)
     filter           = models.ForeignKey(JARSfilter, on_delete=models.CASCADE, null=True, blank=True)
     spectral_number  = models.PositiveIntegerField(verbose_name='# Spectral Combinations',validators=[MinValueValidator(1)], null=True, blank=True)
-    spectral         = models.CharField(verbose_name='Combinations', max_length=15, default = '0,0|')
+    spectral         = models.CharField(verbose_name='Combinations', max_length=5000, default = '[0,0]')
     create_directory = models.BooleanField(verbose_name='Create Directory Per Day', default=True)
     include_expname  = models.BooleanField(verbose_name='Experiment Name in Directory', default=True)
     acq_link         = models.BooleanField(verbose_name='Acquisition Link', default=True)
