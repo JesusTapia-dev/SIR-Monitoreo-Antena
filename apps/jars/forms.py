@@ -28,7 +28,7 @@ class JARSConfigurationForm(forms.ModelForm):
     
     class Meta:
         model = JARSConfiguration
-        exclude = ('type', 'parameters', 'status')
+        exclude = ('type', 'parameters', 'status', 'filter_parms')
         
         
 class JARSfilterForm(forms.ModelForm):

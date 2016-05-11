@@ -28,7 +28,35 @@ class JARSfilter(models.Model):
         
     class Meta:
         db_table = 'jars_filters'
-        #ordering = ['channel']
+        
+    def __unicode__(self):
+        return u'%s' % (self.name)
+    
+    def parms_to_dict(self):
+        
+        parameters = {}
+        
+        parameters['name']       = self.name
+        parameters['clock']      = float(self.clock)
+        parameters['mult']       = int(self.mult)
+        parameters['fch']        = float(self.fch)
+        parameters['filter_fir'] = int(self.filter_fir)
+        parameters['filter_2']   = int(self.filter_2)
+        parameters['filter_5']   = int(self.filter_5)
+        parameters['speed']      = int(self.speed)
+        
+        return parameters
+    
+    def dict_to_parms(self, parameters):
+        
+        self.name       = parameters['name']
+        self.clock      = parameters['clock']
+        self.mult       = parameters['mult']
+        self.fch        = parameters['fch']
+        self.filter_fir = parameters['filter_fir']
+        self.filter_2   = parameters['filter_2']
+        self.filter_5   = parameters['filter_5']
+        self.speed      = parameters['speed']
         
 
 class JARSConfiguration(Configuration):
@@ -59,6 +87,7 @@ class JARSConfiguration(Configuration):
     acq_link         = models.BooleanField(verbose_name='Acquisition Link', default=True)
     view_raw_data    = models.BooleanField(verbose_name='View Raw Data', default=True)
     save_ch_dc       = models.BooleanField(verbose_name='Save Channels DC', default=True)
+    filter_parms    = models.CharField(max_length=10000, default='{}')
 
     class Meta:
         db_table = 'jars_configurations'
@@ -85,6 +114,10 @@ class JARSConfiguration(Configuration):
         parameters['view_raw_data']    = bool(self.view_raw_data)          
         
         return parameters
+    
+    def add_parms_to_filter(self):
+        self.filter_parms = self.filter.parms_to_dict()
+        self.save()
     
     def dict_to_parms(self, parameters):
         return

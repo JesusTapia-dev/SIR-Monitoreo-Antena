@@ -23,10 +23,12 @@ def jars_conf(request, id_conf):
     
     kwargs['dev_conf'] = conf
     kwargs['dev_conf_keys'] = ['experiment', 'device',
-                               'cards_number', 'channels_number',
-                               'rd_directory', 'create_directory',
-                               'include_expname', 'raw_data_blocks',
-                               'acq_profiles', 'profiles_block', 'filter']
+                               'cards_number', 'channels_number', 'channels',
+                               'rd_directory', 'raw_data_blocks', 'data_type',
+                               'acq_profiles', 'profiles_block', 'fftpoints',
+                               'incohe_integr', 'filter', 'spectral_number',
+                               'spectral', 'create_directory', 'include_expname',
+                               'acq_link', 'view_raw_data', 'save_ch_dc']
     
     kwargs['title'] = 'JARS Configuration'
     kwargs['suptitle'] = 'Details'
@@ -73,6 +75,16 @@ def view_filter(request, conf_id, filter_id):
     conf = get_object_or_404(JARSConfiguration, pk=conf_id)
     filter = get_object_or_404(JARSfilter, pk=filter_id)
     
+    filter_parms      = eval(conf.filter_parms)
+    filter.name       = filter_parms['name']
+    filter.clock      = filter_parms['clock']
+    filter.mult       = filter_parms['mult']
+    filter.fch        = filter_parms['fch']
+    filter.filter_fir = filter_parms['filter_fir']
+    filter.filter_2   = filter_parms['filter_2']
+    filter.filter_5   = filter_parms['filter_5']
+    filter.speed      = filter_parms['speed']
+    
     kwargs = {}
     kwargs['conf']          = conf
     kwargs['filter']        = filter
@@ -93,20 +105,35 @@ def view_filter(request, conf_id, filter_id):
 def edit_filter(request, conf_id, filter_id):
     
     conf = get_object_or_404(JARSConfiguration, pk=conf_id)
+    filter_parms = eval(conf.filter_parms)
     
     if filter_id:
         filter = get_object_or_404(JARSfilter, pk=filter_id)
     
     if request.method=='GET':
-        form = JARSfilterForm(instance=filter)
+        form = JARSfilterForm(initial=filter_parms)
         
     if request.method=='POST':
+        parms = {}
+        parms['name']       = request.POST['name']
+        parms['clock']      = request.POST['clock']
+        parms['mult']       = request.POST['mult']
+        parms['fch']        = request.POST['fch']
+        parms['filter_fir'] = request.POST['filter_fir']
+        parms['filter_2']   = request.POST['filter_2']
+        parms['filter_5']   = request.POST['filter_5']
+        parms['speed']      = request.POST['speed']
+        
+        conf.filter_parms = parms
+        conf.save()
+        
         #form = JARSfilterForm(request.POST)
-        form = JARSfilterForm(request.POST, instance=filter)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'JARS Filter successfully updated')
-            return redirect('url_jars_filter', conf.id, filter.id)
+        #form = JARSfilterForm(request.POST, instance=filter)
+        #if form.is_valid():
+            #form.save()
+        #    messages.success(request, 'JARS Filter successfully updated')
+        #    return redirect('url_jars_filter', conf.id, filter.id)
+        return redirect('url_jars_filter', conf.id, filter.id)
           
     kwargs = {}
     kwargs['form'] = form
