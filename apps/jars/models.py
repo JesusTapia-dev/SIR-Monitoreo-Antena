@@ -51,7 +51,7 @@ class JARSConfiguration(Configuration):
     profiles_block   = models.PositiveIntegerField(verbose_name='Profiles Per Block', validators=[MaxValueValidator(5000)], default=400)
     fftpoints        = models.PositiveIntegerField(verbose_name='FFT Points',default=16)
     incohe_integr    = models.PositiveIntegerField(verbose_name='Incoherent Integrations',validators=[MinValueValidator(1)], default=30)
-    filter           = models.ForeignKey(JARSfilter, on_delete=models.CASCADE, null=True, blank=True)
+    filter           = models.ForeignKey(JARSfilter, on_delete=models.CASCADE, null=True)
     spectral_number  = models.PositiveIntegerField(verbose_name='# Spectral Combinations',validators=[MinValueValidator(1)], default=1)
     spectral         = models.CharField(verbose_name='Combinations', max_length=5000, default = '[0, 0],')
     create_directory = models.BooleanField(verbose_name='Create Directory Per Day', default=True)

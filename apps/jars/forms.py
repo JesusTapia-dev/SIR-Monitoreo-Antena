@@ -1,6 +1,6 @@
 from django import forms
 from apps.main.models import Device, Experiment
-from .models import JARSConfiguration
+from .models import JARSConfiguration, JARSfilter
 from .widgets import SpectralWidget
 
 class JARSConfigurationForm(forms.ModelForm):
@@ -28,4 +28,14 @@ class JARSConfigurationForm(forms.ModelForm):
     
     class Meta:
         model = JARSConfiguration
+        exclude = ('type', 'parameters', 'status')
+        
+        
+class JARSfilterForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(JARSfilterForm, self).__init__(*args, **kwargs)
+        instance = getattr(self, 'instance', None)
+                    
+    class Meta:
+        model = JARSfilter
         exclude = ('type', 'parameters', 'status')

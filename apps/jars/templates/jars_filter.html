@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load main_tags %}
+
+{% block search-active %}active{% endblock %}
+
+{% block content-title %}{{title}}{% endblock %}
+{% block content-suptitle %}{{suptitle}}{% endblock %}
+
+{% block content %}
+
+{% block menu-actions %}
+
+{% endblock %}
+
+<table class="table table-bordered">
+		
+	{% for key in dev_conf_keys %}
+	<tr>
+		<th>{% get_verbose_field_name dev_conf key %}</th>
+		<td>{{dev_conf|attr:key}}</td>
+	</tr>
+	{% endfor %}
+</table>
+{% if button %}
+  <div class="pull-right">
+  <button type="button" class="btn btn-primary" id="back_button">{% if cancel %}{{cancel}}{% else %}Back{% endif %}</button>
+  <button type="button" id="edit_button" class="btn btn-primary">{{edit_button}}</button>
+  <button type="button" id="add_button" class="btn btn-primary">{{add_button}}</button>
+  </div>
+{% endif %}
+
+{% block extra-content %}
+{% endblock %}
+
+{% endblock %}
+
+{% block sidebar%}
+{% include "sidebar_devices.html" %}
+{% endblock %}
+
+{% block extra-js%}
+<script type="text/javascript">
+  
+  $("#edit_button").click(function() {
+    document.location = "{% url 'url_edit_jars_filter' conf.id filter.id%}";
+  });
+  
+  $("#back_button").click(function() {
+	    document.location = "{% url 'url_edit_jars_conf' conf.id%}";
+  });
+  
+</script>
+{% endblock %}
