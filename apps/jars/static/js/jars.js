@@ -8,7 +8,7 @@ $("#id_exp_type").change(function() {
 
 function RawDataOrPData(){
 	var type = $("#id_exp_type").val();
-	//spectral_number = $("#id_spectral_number")
+	incohe_integr = $("#id_incohe_integr")
 	spectral        = $("#id_spectral")
 	fftpoints       = $("#id_fftpoints")
 	save_ch_dc      = $("#id_save_ch_dc")
@@ -19,7 +19,7 @@ function RawDataOrPData(){
 	all_spec_button = $("#all_spectral_button")
 	
 	if (type == 0) {
-		//$(spectral_number).attr('readonly', true);	
+		$(incohe_integr).attr('readonly', true);	
 		$(spectral).attr('readonly', true);
 		$(fftpoints).attr('readonly', true);
 		$(save_ch_dc).attr('disabled', true);
@@ -31,7 +31,7 @@ function RawDataOrPData(){
 		$(all_spec_button).attr('disabled', true);
 	}
 	else {
-		//$(spectral_number).attr('readonly', true);
+		$(incohe_integr).attr('readonly', false);
 		$(spectral).attr('readonly', false);
 		$(fftpoints).attr('readonly', false);
 		$(save_ch_dc).attr('disabled', false);

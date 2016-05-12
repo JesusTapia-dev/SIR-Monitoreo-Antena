@@ -83,6 +83,7 @@ class JARSConfiguration(Configuration):
     acq_profiles     = models.PositiveIntegerField(verbose_name='Acquired Profiles', validators=[MaxValueValidator(5000)], default=400)
     profiles_block   = models.PositiveIntegerField(verbose_name='Profiles Per Block', validators=[MaxValueValidator(5000)], default=400)
     fftpoints        = models.PositiveIntegerField(verbose_name='FFT Points',default=16)
+    cohe_integr      = models.PositiveIntegerField(verbose_name='Coherent Integrations',validators=[MinValueValidator(1)], default=30)
     incohe_integr    = models.PositiveIntegerField(verbose_name='Incoherent Integrations',validators=[MinValueValidator(1)], default=30)
     filter           = models.ForeignKey(JARSfilter, on_delete=models.CASCADE, null=True)
     spectral_number  = models.PositiveIntegerField(verbose_name='# Spectral Combinations',validators=[MinValueValidator(1)], default=1)
