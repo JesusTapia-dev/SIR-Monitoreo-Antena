@@ -33,7 +33,9 @@
 <br>
 
 {% endif %}
-
+<div class="clearfix"></div>
+<h2>Radar Systems</h2>
+<br>
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true" >
       
 	  {% for location in locations %}
@@ -43,7 +45,7 @@
 	      <h4 class="panel-title">
 	        
 	        <a class="collapsed" role="button" data-toggle="collapse"  href="#collapseTwo-{{ location.id }}" aria-expanded="false" aria-controls="collapseTwo">
-	          {{location.name}}: Experiment List
+	          {{location.name}}: Experiments
 	          <span>
 	          </span>
 	        </a>

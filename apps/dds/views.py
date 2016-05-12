@@ -21,8 +21,6 @@ def dds_conf(request, id_conf):
     
     kwargs['dev_conf'] = conf
     kwargs['dev_conf_keys'] = ['name',
-                               'experiment',
-                               'device',
                                'clock',
                                'multiplier',
                                'frequencyA_Mhz',

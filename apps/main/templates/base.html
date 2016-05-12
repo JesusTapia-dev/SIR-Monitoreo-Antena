@@ -52,6 +52,7 @@
               <li><a href="{% url 'url_add_experiment' %}">Experiment</a></li>
               <li><a href="{% url 'url_add_dev_conf' 0%}">Device Configuration</a></li>
               <li><a href="{% url 'url_add_device'%}">Device</a></li>
+              <li><a href="{% url 'url_add_location'%}">Radar System</a></li>
             </ul>          
           </li>
           <li class=" dropdown {% block search-active %}{% endblock %}">
@@ -61,6 +62,7 @@
               <li><a href="{% url 'url_experiments' %}">Experiments</a></li>
               <li><a href="{% url 'url_dev_confs' %}">Configurations</a></li>
               <li><a href="{% url 'url_devices' %}">Devices</a></li>
+              <li><a href="{% url 'url_locations' %}">Radar Systems</a></li>
             </ul>
           </li>          
         </ul>

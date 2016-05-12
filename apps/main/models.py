@@ -75,7 +75,7 @@ class Location(models.Model):
         return u'%s' % self.name
 
     def get_absolute_url(self):
-        return reverse('url_device', args=[str(self.id)])
+        return reverse('url_location', args=[str(self.id)])
 
 
 class DeviceType(models.Model):
@@ -143,10 +143,11 @@ class Campaign(models.Model):
         ordering = ('name',)
     
     def __unicode__(self):
-        return u'%s' % (self.name)
+        if self.template:
+            return u'{} (template)'.format(self.name)
+        else:
+            return u'{}'.format(self.name)
 
-    def get_absolute_url(self):
-        return reverse('url_campaign', args=[str(self.id)])
     
     def parms_to_dict(self):
                 
@@ -259,7 +260,7 @@ class Experiment(models.Model):
             return u'%s' % (self.name)
     
     @property
-    def radar(self):
+    def radar_system(self):
         return self.location
     
     def clone(self, **kwargs):
@@ -434,8 +435,8 @@ class Configuration(PolymorphicModel):
     
     name = models.CharField(verbose_name="Configuration Name", max_length=40, default='')
     
-    experiment = models.ForeignKey('Experiment', null=True, blank=True, on_delete=models.CASCADE)
-    device = models.ForeignKey(Device, null=True, on_delete=models.CASCADE)
+    experiment = models.ForeignKey('Experiment', verbose_name='Experiment', null=True, blank=True, on_delete=models.CASCADE)
+    device = models.ForeignKey('Device', verbose_name='Device', null=True, on_delete=models.CASCADE)
     
     type = models.PositiveSmallIntegerField(default=0, choices=CONF_TYPES)
     
@@ -450,8 +451,17 @@ class Configuration(PolymorphicModel):
         db_table = 'db_configurations'
     
     def __unicode__(self):
-
-        return u'[{}]: {}'.format(self.device.device_type.name.upper(), self.name)
+        
+        device = '{}:'.format(self.device.device_type.name.upper())
+        
+        if 'mix' in self._meta.get_all_field_names():
+            if self.mix:
+                device = '{} MIXED:'.format(self.device.device_type.name.upper())                
+        
+        if self.template:
+            return u'{} {} (template)'.format(device, self.name)
+        else:
+            return u'{} {}'.format(device, self.name)
 
     def clone(self, **kwargs):
         

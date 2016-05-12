@@ -57,8 +57,8 @@ DAT_CMDS = {
 
 class RCConfiguration(Configuration):
     
-    ipp = models.FloatField(verbose_name='Inter pulse period [Km]', validators=[MinValueValidator(1), MaxValueValidator(9000)], default=300)
-    ntx = models.PositiveIntegerField(verbose_name='Number of TX', validators=[MinValueValidator(1), MaxValueValidator(300)], default=1)    
+    ipp = models.FloatField(verbose_name='IPP [Km]', validators=[MinValueValidator(1), MaxValueValidator(9000)], default=300)
+    ntx = models.PositiveIntegerField(verbose_name='Number of TX', validators=[MinValueValidator(1), MaxValueValidator(400)], default=1)    
     clock_in = models.FloatField(verbose_name='Clock in [MHz]', validators=[MinValueValidator(1), MaxValueValidator(80)], default=1)
     clock_divider = models.PositiveIntegerField(verbose_name='Clock divider', validators=[MinValueValidator(1), MaxValueValidator(256)], default=1)
     clock = models.FloatField(verbose_name='Clock Master [MHz]', blank=True, default=1)
@@ -73,14 +73,6 @@ class RCConfiguration(Configuration):
 
     class Meta:
         db_table = 'rc_configurations'
-    
-    
-    def __unicode__(self):
-
-        if self.mix:
-            return u'[RC MIXED]: {}'.format(self.name)
-        else:
-            return u'[RC]: {}'.format(self.name)
     
     def get_absolute_url_plot(self):
         return reverse('url_plot_rc_pulses', args=[str(self.id)])

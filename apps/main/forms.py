@@ -32,6 +32,20 @@ class DatepickerWidget(forms.widgets.TextInput):
         html = '<div class="input-group date">'+input_html+'<span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span></div>'
         return mark_safe(html)
 
+class DateRangepickerWidget(forms.widgets.TextInput):
+    def render(self, name, value, attrs=None):
+        start = attrs['start_date']
+        end = attrs['end_date']      
+        html = '''<div class="col-md-5 input-group date" style="float:inherit">
+        <input class="form-control" id="id_start_date" name="start_date" placeholder="Start" title="" type="text" value="{}">
+        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+        </div>
+        <div class="col-md-5 col-md-offset-2 input-group date" style="float:inherit">
+        <input class="form-control" id="id_end_date" name="end_date" placeholder="End" title="" type="text" value="{}">
+        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+        </div>'''.format(start, end)
+        return mark_safe(html)
+
 class TimepickerWidget(forms.widgets.TextInput):
     def render(self, name, value, attrs=None):
         input_html = super(TimepickerWidget, self).render(name, value, attrs)
@@ -132,6 +146,7 @@ class OperationForm(forms.Form):
         super(OperationForm, self).__init__(*args, **kwargs)
         self.fields['campaign'].choices=Campaign.objects.all().order_by('-start_date').values_list('id', 'name')[:length]
         
+
 class OperationSearchForm(forms.Form):
     # -----ALL Campaigns------
     campaign = forms.ChoiceField(label="Campaign")
@@ -140,6 +155,7 @@ class OperationSearchForm(forms.Form):
         super(OperationSearchForm, self).__init__(*args, **kwargs)
         self.fields['campaign'].choices=Campaign.objects.all().order_by('-start_date').values_list('id', 'name')
         
+
 class NewForm(forms.Form):
     
     create_from = forms.ChoiceField(choices=((0, '-----'),
@@ -152,4 +168,23 @@ class NewForm(forms.Form):
         template_choices = kwargs.pop('template_choices', [])
         super(NewForm, self).__init__(*args, **kwargs)
         self.fields['choose_template'].choices = add_empty_choice(template_choices)
+        
+
+class FilterForm(forms.Form):
+    
+    def __init__(self, *args, **kwargs):
+        extra_fields = kwargs.pop('extra_fields', [])
+        super(FilterForm, self).__init__(*args, **kwargs)
+        
+        for field in extra_fields:            
+            if 'range_date' in field:
+                self.fields[field] = forms.CharField(required=False)
+                self.fields[field].widget = DateRangepickerWidget()
+                if 'initial' in kwargs:
+                    self.fields[field].widget.attrs = {'start_date':kwargs['initial'].get('start_date', ''),
+                                                       'end_date':kwargs['initial'].get('end_date', '')}  
+            elif 'template' in field:
+                self.fields['template'] = forms.BooleanField(required=False)
+            else:
+                self.fields[field] = forms.CharField(required=False)
     

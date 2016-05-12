@@ -22,7 +22,7 @@ def jars_conf(request, id_conf):
     
     
     kwargs['dev_conf'] = conf
-    kwargs['dev_conf_keys'] = ['experiment', 'device',
+    kwargs['dev_conf_keys'] = ['name',
                                'cards_number', 'channels_number', 'channels',
                                'rd_directory', 'raw_data_blocks', 'data_type',
                                'acq_profiles', 'profiles_block', 'fftpoints',

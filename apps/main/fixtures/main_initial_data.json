@@ -1,5 +1,5 @@
 [
-{"fields": {"name": "MAIN RADAR", "description": ""}, "model": "main.location", "pk": 1}, 
+{"fields": {"name": "JRO Imaging", "description": ""}, "model": "main.location", "pk": 1}, 
 {"fields": {"name": "JASMET", "description": ""}, "model": "main.location", "pk": 2},
 {"fields": {"name": "SOUSY", "description": ""}, "model": "main.location", "pk": 3},
 {"fields": {"name": "JULIA", "description": ""}, "model": "main.location", "pk": 4},

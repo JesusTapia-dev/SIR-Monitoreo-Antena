@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load main_tags %}
+
+{% block extra-head %}
+<link href="{% static 'css/bootstrap-datetimepicker.min.css' %}" media="screen" rel="stylesheet">
+{% endblock %}
+
+{% block search-active %}active{% endblock %}
+{% block content-title %}{{title}}{% endblock %}
+{% block content-suptitle %}{{suptitle}}{% endblock %}
+
+{% block content %}
+
+{% block content-filter %}
+{% if form %}
+<form class="form" method="get">
+  {% bootstrap_form form layout='horizontal' size='medium' %}
+  <div class="pull-right">
+  <button type="button" class="btn btn-primary" onclick="window.location.replace('?');"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+  <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+  </div>
+ </form>
+{% endif %}
+{% endblock %}
+<br><br>
+<table class="table table-hover">
+  <tr>
+    <th>#</th>
+    {% for key in keys %}
+    <th>{{ key|title }}</th>
+    {% endfor%}
+  </tr>
+  {% for object in objects %}
+    <tr class="clickable-row" data-href="{{object.get_absolute_url}}">
+      <td>{{ forloop.counter|add:offset }}</td>
+      {% for key in keys %}
+      <td>{{ object|attr:key }}</td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+</table>
+
+<div class="pagination">
+  <span class="step-links">
+    {% if objects.has_previous %}
+    <a href="?page={{ objects.previous_page_number }}&{{q}}"><span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span></a>
+    {% endif %}
+  <span class="current">
+    Page {{ objects.number }} of {{ objects.paginator.num_pages }}.
+  </span>
+  {% if objects.has_next %}
+  <a href="?page={{ objects.next_page_number }}&{{q}}"><span class="glyphicon glyphicon-menu-right aria-hidden="true"></span></a>
+  {% endif %}
+  </span>
+</div>
+
+{% endblock %}
+
+{% block extra-js%}
+<script src="{% static 'js/moment.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
+<script type="text/javascript">
+
+  $('.input-group.date').datetimepicker({"format": "YYYY-MM-DD"});
+  
+  $(".clickable-row").click(function() {
+    document.location = $(this).data("href");
+  });
+  
+</script>
+{% endblock %}

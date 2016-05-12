@@ -54,7 +54,7 @@ def cgs_conf(request, id_conf):
     #    messages.error(request, message=status)
     
     kwargs['dev_conf'] = conf
-    kwargs['dev_conf_keys'] = ['experiment', 'device',
+    kwargs['dev_conf_keys'] = ['name',
                                'freq0', 'freq1',
                                'freq2', 'freq3']
     

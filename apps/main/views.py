@@ -2,11 +2,14 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.utils.safestring import mark_safe
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
+from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
 from datetime import datetime
+import urllib
 
 from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm, UploadFileForm, DownloadFileForm, OperationForm, NewForm
-from .forms import OperationSearchForm
+from .forms import OperationSearchForm, FilterForm
 from apps.cgs.forms import CGSConfigurationForm
 from apps.jars.forms import JARSConfigurationForm
 from apps.usrp.forms import USRPConfigurationForm
@@ -21,6 +24,7 @@ from apps.usrp.models import USRPConfiguration
 from apps.abs.models import ABSConfiguration
 from apps.rc.models import RCConfiguration, RCLine, RCLineType
 from apps.dds.models import DDSConfiguration
+from django.http.request import QueryDict
 
 # Create your views here.
 
@@ -63,18 +67,16 @@ def index(request):
 
 def locations(request):
     
-    locations = Location.objects.all().order_by('name')
+    page = request.GET.get('page')
+    order = ('name',)
+        
+    kwargs = get_paginator(Location, page, order)      
     
-    keys = ['id', 'name', 'description']
-    
-    kwargs = {}
-    kwargs['location_keys'] = keys[1:]
-    kwargs['locations'] = locations
-    kwargs['title'] = 'Location'
+    kwargs['keys'] = ['name', 'description']
+    kwargs['title'] = 'Radar System'
     kwargs['suptitle'] = 'List'
-    kwargs['button'] = 'New Location'
     
-    return render(request, 'locations.html', kwargs)
+    return render(request, 'base_list.html', kwargs)
 
 
 def location(request, id_loc):
@@ -105,11 +107,11 @@ def location_new(request):
         
     kwargs = {}
     kwargs['form'] = form
-    kwargs['title'] = 'Location'
+    kwargs['title'] = 'Radar System'
     kwargs['suptitle'] = 'New'
     kwargs['button'] = 'Create'
         
-    return render(request, 'location_edit.html', kwargs)
+    return render(request, 'base_edit.html', kwargs)
 
 
 def location_edit(request, id_loc):
@@ -132,7 +134,7 @@ def location_edit(request, id_loc):
     kwargs['suptitle'] = 'Edit'
     kwargs['button'] = 'Update'
     
-    return render(request, 'location_edit.html', kwargs)
+    return render(request, 'base_edit.html', kwargs)
 
 
 def location_delete(request, id_loc):
@@ -161,19 +163,15 @@ def location_delete(request, id_loc):
 
 def devices(request):
     
-    devices = Device.objects.all().order_by('device_type__name')
-    
-#     keys = ['id', 'device_type__name', 'name', 'ip_address']
-    keys = ['id', 'name', 'ip_address', 'port_address', 'device_type']
-    
-    kwargs = {}
-    kwargs['device_keys'] = keys[1:]
-    kwargs['devices'] = devices#.values(*keys)
+    page = request.GET.get('page')
+    order = ('device_type', 'name')
+        
+    kwargs = get_paginator(Device, page, order)        
+    kwargs['keys'] = ['name', 'ip_address', 'port_address', 'device_type'] 
     kwargs['title'] = 'Device'
     kwargs['suptitle'] = 'List'
-    kwargs['button'] = 'New Device'
     
-    return render(request, 'devices.html', kwargs)
+    return render(request, 'base_list.html', kwargs)
 
 
 def device(request, id_dev):
@@ -208,7 +206,7 @@ def device_new(request):
     kwargs['suptitle'] = 'New'
     kwargs['button'] = 'Create'
         
-    return render(request, 'device_edit.html', kwargs)
+    return render(request, 'base_edit.html', kwargs)
 
 
 def device_edit(request, id_dev):
@@ -231,7 +229,7 @@ def device_edit(request, id_dev):
     kwargs['suptitle'] = 'Edit'
     kwargs['button'] = 'Update'
     
-    return render(request, 'device_edit.html', kwargs)
+    return render(request, 'base_edit.html', kwargs)
 
 
 def device_delete(request, id_dev):
@@ -260,18 +258,21 @@ def device_delete(request, id_dev):
     
 def campaigns(request):
     
-    campaigns = Campaign.objects.all().order_by('start_date')
+    page = request.GET.get('page')
+    order = ('start_date',)
+    filters = request.GET.copy()
+
+    kwargs = get_paginator(Campaign, page, order, filters)
     
-    keys = ['id', 'name', 'start_date', 'end_date']
-    
-    kwargs = {}
-    kwargs['campaign_keys'] = keys[1:]
-    kwargs['campaigns'] = campaigns#.values(*keys)
+    form = FilterForm(initial=request.GET, extra_fields=['range_date', 'tags','template'])
+    kwargs['keys'] = ['name', 'start_date', 'end_date']    
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = 'List'
-    kwargs['button'] = 'New Campaign'
+    kwargs['form'] = form    
+    filters.pop('page', None)
+    kwargs['q'] = urllib.urlencode(filters)
     
-    return render(request, 'campaigns.html', kwargs)
+    return render(request, 'base_list.html', kwargs)
 
 
 def campaign(request, id_camp):
@@ -286,7 +287,7 @@ def campaign(request, id_camp):
     kwargs['campaign_keys'] = ['template', 'name', 'start_date', 'end_date', 'tags', 'description']
     
     kwargs['experiments'] = experiments
-    kwargs['experiment_keys'] = ['name', 'radar', 'start_time', 'end_time']
+    kwargs['experiment_keys'] = ['name', 'radar_system', 'start_time', 'end_time']
     
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = 'Details'
@@ -467,20 +468,22 @@ def campaign_import(request, id_camp):
 
 def experiments(request):
     
-    experiment_list = Experiment.objects.all()
+    page = request.GET.get('page')
+    order = ('location',)
+    filters = request.GET.copy()
+
+    kwargs = get_paginator(Experiment, page, order, filters)
     
-    keys = ['id', 'name', 'start_time', 'end_time']
+    form = FilterForm(initial=request.GET, extra_fields=['tags','template']) 
     
-    kwargs = {}
-    
-    kwargs['experiment_keys'] = keys[1:]
-    kwargs['experiments'] = experiment_list
-    
+    kwargs['keys'] = ['name', 'radar_system', 'start_time', 'end_time']    
     kwargs['title'] = 'Experiment'
     kwargs['suptitle'] = 'List'
-    kwargs['button'] = 'New Experiment'
+    kwargs['form'] = form
+    filters.pop('page', None)
+    kwargs['q'] = urllib.urlencode(filters)
     
-    return render(request, 'experiments.html', kwargs)
+    return render(request, 'base_list.html', kwargs)
 
 
 def experiment(request, id_exp):
@@ -491,7 +494,7 @@ def experiment(request, id_exp):
     
     kwargs = {}
     
-    kwargs['experiment_keys'] = ['template', 'radar', 'name', 'start_time', 'end_time']
+    kwargs['experiment_keys'] = ['template', 'radar_system', 'name', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
     
     kwargs['configuration_keys'] = ['name', 'device__ip_address', 'device__port_address', 'device__status']
@@ -532,7 +535,8 @@ def experiment_new(request, id_camp=None):
             form = NewForm()
         
     if request.method == 'POST':
-        form = ExperimentForm(request.POST)        
+        form = ExperimentForm(request.POST)
+        print form.data      
         if form.is_valid():
             experiment = form.save()
 
@@ -792,21 +796,26 @@ def parse_mask(l):
     values.reverse()
     
     return int(''.join([str(x) for x in values]), 2)
-
+    
 
 def dev_confs(request):
     
-    configurations = Configuration.objects.all().order_by('type', 'device__device_type', 'experiment')
+    
+    page = request.GET.get('page')
+    order = ('type', 'device__device_type', 'experiment')
+    filters = request.GET.copy()
 
-    kwargs = {}
+    kwargs = get_paginator(Configuration, page, order, filters)
     
-    kwargs['configuration_keys'] = ['device', 'name', 'experiment', 'type', 'programmed_date']
-    kwargs['configurations'] = configurations
-    
+    form = FilterForm(initial=request.GET, extra_fields=['tags','template'])
+    kwargs['keys'] = ['name', 'experiment', 'type', 'programmed_date']        
     kwargs['title'] = 'Configuration'
     kwargs['suptitle'] = 'List'
+    kwargs['form'] = form    
+    filters.pop('page', None)
+    kwargs['q'] = urllib.urlencode(filters)
     
-    return render(request, 'dev_confs.html', kwargs)
+    return render(request, 'base_list.html', kwargs)
 
 
 def dev_conf(request, id_conf):
@@ -874,8 +883,7 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
             if conf.device.device_type.name=='jars':       
                 conf.add_parms_to_filter()
     
-            return redirect('url_dev_conf', id_conf=conf.pk)
-        
+            return redirect('url_dev_conf', id_conf=conf.pk)                
     
     kwargs['id_exp'] = id_exp
     kwargs['form'] = form
@@ -1172,6 +1180,44 @@ def sidebar(**kwargs):
     
     return side_data
 
+def get_paginator(model, page, order, filters={}, n=10):
+    
+    kwargs = {}
+    query = Q()
+    if isinstance(filters, QueryDict):
+        filters = filters.dict()
+    [filters.pop(key) for key in filters.keys() if filters[key] in ('', ' ')]
+    filters.pop('page', None)
+    
+    if 'start_date' in filters:
+        filters['start_date__gte'] = filters.pop('start_date')
+    if 'end_date' in filters:
+        filters['start_date__lte'] = filters.pop('end_date')
+    if 'tags' in filters:
+        tags = filters.pop('tags')        
+        if 'tags' in model._meta.get_all_field_names():
+            query = query | Q(tags__icontains=tags)  
+        if 'name' in model._meta.get_all_field_names():
+            query = query | Q(name__icontains=tags)  
+        if 'location' in model._meta.get_all_field_names():
+            query = query | Q(location__name__icontains=tags)
+        if 'device' in model._meta.get_all_field_names():
+            query = query | Q(device__name__icontains=tags) 
+
+    object_list = model.objects.filter(query, **filters).order_by(*order)
+    paginator = Paginator(object_list, n)
+    
+    try:
+        objects = paginator.page(page)
+    except PageNotAnInteger:
+        objects = paginator.page(1)
+    except EmptyPage:
+        objects = paginator.page(paginator.num_pages)
+    
+    kwargs['objects'] = objects
+    kwargs['offset'] = (int(page)-1)*n if page else 0
+    
+    return kwargs
 
 def operation(request, id_camp=None):
     

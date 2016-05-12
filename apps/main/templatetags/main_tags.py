@@ -6,6 +6,9 @@ def attr(instance, key):
     
     display_key = "get_" + key + "_display"
     
+    if key=='name':
+        return '{}'.format(instance)
+    
     if hasattr(instance, display_key):
         return getattr(instance, display_key)()
     
@@ -35,5 +38,5 @@ def get_verbose_field_name(instance, field_name):
     Returns verbose_name for a field.
     """
     if field_name=='ipp_unit':
-        return 'Inter pulse period [Km(Units)]'
+        return 'IPP [Km(Units)]'
     return mark_safe(instance._meta.get_field(field_name).verbose_name)
