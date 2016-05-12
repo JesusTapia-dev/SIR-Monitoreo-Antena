@@ -75,22 +75,23 @@ def view_filter(request, conf_id, filter_id):
     conf = get_object_or_404(JARSConfiguration, pk=conf_id)
     filter = get_object_or_404(JARSfilter, pk=filter_id)
     
-    filter_parms      = eval(conf.filter_parms)
-    filter.name       = filter_parms['name']
-    filter.clock      = filter_parms['clock']
-    filter.mult       = filter_parms['mult']
-    filter.fch        = filter_parms['fch']
-    filter.filter_fir = filter_parms['filter_fir']
-    filter.filter_2   = filter_parms['filter_2']
-    filter.filter_5   = filter_parms['filter_5']
-    filter.speed      = filter_parms['speed']
+    filter_parms       = eval(conf.filter_parms)
+    filter.name        = filter_parms['name']
+    filter.clock       = filter_parms['clock']
+    filter.mult        = filter_parms['mult']
+    filter.fch         = filter_parms['fch']
+    filter.fch_decimal = filter_parms['fch_decimal']
+    filter.filter_fir  = filter_parms['filter_fir']
+    filter.filter_2    = filter_parms['filter_2']
+    filter.filter_5    = filter_parms['filter_5']
+    filter.speed       = filter_parms['speed']
     
     kwargs = {}
     kwargs['conf']          = conf
     kwargs['filter']        = filter
     kwargs['dev_conf']      = filter
     kwargs['dev_conf_keys'] = ['name', 'clock',
-                               'mult', 'fch',
+                               'mult', 'fch', 'fch_decimal',
                                'filter_fir', 'filter_2',
                                'filter_5', 'speed']
     
@@ -98,7 +99,7 @@ def view_filter(request, conf_id, filter_id):
     kwargs['suptitle']      = 'Details'
     kwargs['button']        = 'SI'
     kwargs['edit_button']   = 'Edit Filter'
-    kwargs['add_button']    = 'Add Filter'
+    kwargs['add_button']    = 'New Filter'
     
     return render(request, 'jars_filter.html', kwargs)
 
@@ -115,10 +116,11 @@ def edit_filter(request, conf_id, filter_id):
         
     if request.method=='POST':
         parms = {}
-        parms['name']       = request.POST['name']
-        parms['clock']      = request.POST['clock']
-        parms['mult']       = request.POST['mult']
-        parms['fch']        = request.POST['fch']
+        parms['name']        = request.POST['name']
+        parms['clock']       = request.POST['clock']
+        parms['mult']        = request.POST['mult']
+        parms['fch']         = request.POST['fch']
+        parms['fch_decimal'] = request.POST['fch_decimal']
         parms['filter_fir'] = request.POST['filter_fir']
         parms['filter_2']   = request.POST['filter_2']
         parms['filter_5']   = request.POST['filter_5']
@@ -144,3 +146,30 @@ def edit_filter(request, conf_id, filter_id):
     kwargs['dev_conf'] = conf
     
     return render(request, 'jars_filter_edit.html', kwargs)
+
+def new_filter(request, conf_id):
+    
+    conf = get_object_or_404(JARSConfiguration, pk=conf_id)
+    
+    if request.method=='GET':
+        form = JARSfilterForm()
+        
+    if request.method=='POST':
+        form = JARSfilterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            new_filter  = get_object_or_404(JARSfilter, name=request.POST['name'])
+            conf.filter = new_filter
+            conf.add_parms_to_filter()
+            messages.success(request, 'New JARS Filter successfully created')
+            return redirect('url_edit_jars_conf', id_conf=conf.id)
+          
+    kwargs = {}
+    kwargs['form'] = form
+    kwargs['title'] = 'New Filter'
+    kwargs['suptitle'] = ''
+    kwargs['button'] = 'Create'
+   # kwargs['previous'] = conf.get_absolute_url_edit()
+    kwargs['dev_conf'] = conf
+    
+    return render(request, 'jars_new_filter.html', kwargs)

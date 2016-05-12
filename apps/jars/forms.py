@@ -17,7 +17,9 @@ class JARSConfigurationForm(forms.ModelForm):
                 
             self.fields['device'].widget.choices = [(device.id, device) for device in devices]
             #self.fields['spectral'].widget = SpectralWidget()
+        self.fields['spectral_number'].widget.attrs['readonly'] = True
         self.fields['spectral'].widget = SpectralWidget()
+            
     #-------------JARS Configuration needs an Experiment-----------------
     def clean(self):
         cleaned_data = super(JARSConfigurationForm, self).clean()
@@ -35,6 +37,8 @@ class JARSfilterForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(JARSfilterForm, self).__init__(*args, **kwargs)
         instance = getattr(self, 'instance', None)
+        
+        self.fields['fch_decimal'].widget.attrs['readonly'] = True
                     
     class Meta:
         model = JARSfilter

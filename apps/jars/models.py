@@ -17,14 +17,17 @@ DATA_TYPE = (
 
 class JARSfilter(models.Model):
     
-    name       = models.CharField(max_length=60, unique=True, default='')
-    clock      = models.FloatField(verbose_name='Clock Input (MHz)',validators=[MinValueValidator(5), MaxValueValidator(75)], null=True, default=60)
-    mult       = models.PositiveIntegerField(verbose_name='Multiplier',validators=[MinValueValidator(1), MaxValueValidator(20)], default=5)
-    fch        = models.DecimalField(verbose_name='Frequency (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16, null=True, default=49.9200)
-    filter_fir = models.PositiveIntegerField(verbose_name='FIR Filter',validators=[MinValueValidator(1), MaxValueValidator(20)], default = 6)
-    filter_2   = models.PositiveIntegerField(verbose_name='Filter 2',validators=[MinValueValidator(1), MaxValueValidator(20)], default = 10)
-    filter_5   = models.PositiveIntegerField(verbose_name='Filter 5',validators=[MinValueValidator(1), MaxValueValidator(20)], default = 1)
-    speed      = models.PositiveIntegerField(verbose_name='Speed',validators=[MinValueValidator(0), MaxValueValidator(100000)], default = 0)
+    JARS_NBITS = 32
+    
+    name        = models.CharField(max_length=60, unique=True, default='')
+    clock       = models.FloatField(verbose_name='Clock Input (MHz)',validators=[MinValueValidator(5), MaxValueValidator(75)], null=True, default=60)
+    mult        = models.PositiveIntegerField(verbose_name='Multiplier',validators=[MinValueValidator(1), MaxValueValidator(20)], default=5)
+    fch         = models.DecimalField(verbose_name='Frequency (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16, null=True, default=49.9200)
+    fch_decimal = models.BigIntegerField(verbose_name='Frequency (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**JARS_NBITS-1)], null=True, default=721554505)
+    filter_fir  = models.PositiveIntegerField(verbose_name='FIR Filter',validators=[MinValueValidator(1), MaxValueValidator(20)], default = 6)
+    filter_2    = models.PositiveIntegerField(verbose_name='Filter 2',validators=[MinValueValidator(1), MaxValueValidator(20)], default = 10)
+    filter_5    = models.PositiveIntegerField(verbose_name='Filter 5',validators=[MinValueValidator(1), MaxValueValidator(20)], default = 1)
+    speed       = models.PositiveIntegerField(verbose_name='Speed',validators=[MinValueValidator(0), MaxValueValidator(100000)], default = 0)
         
     class Meta:
         db_table = 'jars_filters'
@@ -36,27 +39,29 @@ class JARSfilter(models.Model):
         
         parameters = {}
         
-        parameters['name']       = self.name
-        parameters['clock']      = float(self.clock)
-        parameters['mult']       = int(self.mult)
-        parameters['fch']        = float(self.fch)
-        parameters['filter_fir'] = int(self.filter_fir)
-        parameters['filter_2']   = int(self.filter_2)
-        parameters['filter_5']   = int(self.filter_5)
-        parameters['speed']      = int(self.speed)
+        parameters['name']        = self.name
+        parameters['clock']       = float(self.clock)
+        parameters['mult']        = int(self.mult)
+        parameters['fch']         = float(self.fch)
+        parameters['fch_decimal'] = int(self.fch)
+        parameters['filter_fir']  = int(self.filter_fir)
+        parameters['filter_2']    = int(self.filter_2)
+        parameters['filter_5']    = int(self.filter_5)
+        parameters['speed']       = int(self.speed)
         
         return parameters
     
     def dict_to_parms(self, parameters):
         
-        self.name       = parameters['name']
-        self.clock      = parameters['clock']
-        self.mult       = parameters['mult']
-        self.fch        = parameters['fch']
-        self.filter_fir = parameters['filter_fir']
-        self.filter_2   = parameters['filter_2']
-        self.filter_5   = parameters['filter_5']
-        self.speed      = parameters['speed']
+        self.name        = parameters['name']
+        self.clock       = parameters['clock']
+        self.mult        = parameters['mult']
+        self.fch         = parameters['fch']
+        self.fch_decimal = parameters['fch_decimal']
+        self.filter_fir  = parameters['filter_fir']
+        self.filter_2    = parameters['filter_2']
+        self.filter_5    = parameters['filter_5']
+        self.speed       = parameters['speed']
         
 
 class JARSConfiguration(Configuration):
@@ -67,7 +72,7 @@ class JARSConfiguration(Configuration):
     BEGIN_ON_START   = True
     REFRESH_RATE     = 1
         
-    rc               = models.ForeignKey(RCConfiguration, on_delete=models.CASCADE, null=True)
+    #rc               = models.ForeignKey(RCConfiguration, on_delete=models.CASCADE, null=True)
     exp_type         = models.PositiveIntegerField(verbose_name='Experiment Type', choices=EXPERIMENT_TYPE, default=0)
     cards_number     = models.PositiveIntegerField(verbose_name='Number of Cards', validators=[MinValueValidator(1), MaxValueValidator(4)], default = 1)
     channels_number  = models.PositiveIntegerField(verbose_name='Number of Channels', validators=[MinValueValidator(1), MaxValueValidator(8)], default = 5)
