@@ -11,7 +11,8 @@
   <br>
   <div class="pull-right">
   <button type="button" class="btn btn-primary" id="bt_view_filter">View Filter</button>
-  <button type="button" class="btn btn-primary" onclick="{% if previous %}window.location.replace('{{ previous }}');{% else %}history.go(-1);{% endif %}">Cancel</button>
+  <!-- <button type="button" class="btn btn-primary" onclick="{% if previous %}window.location.replace('{{ previous }}');{% else %}history.go(-1);{% endif %}">Cancel</button>  -->
+  <button type="button" class="btn btn-primary" id="bt_cancel">Cancel</button> 
   <button type="submit" class="btn btn-primary">{{button}}</button>
   </div>
 </form>
@@ -23,6 +24,10 @@
 <script type="text/javascript">
 $("#bt_view_filter").click(function() {
     document.location = "{% url 'url_jars_filter' id_dev filter_id%}";
+  });
+  
+$("#bt_cancel").click(function() {
+    document.location = "{% url 'url_jars_conf' id_dev %}";
   });
 </script>
 {% endblock %}

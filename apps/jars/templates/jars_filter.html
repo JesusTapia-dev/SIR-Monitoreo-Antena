@@ -27,7 +27,7 @@
   <div class="pull-right">
   <button type="button" class="btn btn-primary" id="back_button">{% if cancel %}{{cancel}}{% else %}Back{% endif %}</button>
   <button type="button" id="edit_button" class="btn btn-primary">{{edit_button}}</button>
-  <button type="button" id="add_button" class="btn btn-primary">{{add_button}}</button>
+  <button type="button" id="new_button" class="btn btn-primary">{{add_button}}</button>
   </div>
 {% endif %}
 
@@ -49,6 +49,10 @@
   
   $("#back_button").click(function() {
 	    document.location = "{% url 'url_edit_jars_conf' conf.id%}";
+  });
+  
+  $("#new_button").click(function() {
+	    document.location = "{% url 'url_new_jars_filter' conf.id%}";
   });
   
 </script>
