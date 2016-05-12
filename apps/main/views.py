@@ -870,6 +870,9 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
                 lines = RCLine.objects.filter(rc_configuration=request.GET['template'])
                 for line in lines:
                     line.clone(rc_configuration=conf)
+                    
+            if conf.device.device_type.name=='jars':       
+                conf.add_parms_to_filter()
     
             return redirect('url_dev_conf', id_conf=conf.pk)
         
