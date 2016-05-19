@@ -211,6 +211,9 @@ class RCLineForm(forms.ModelForm):
         if 'code' in self.data and self.data['TX_ref']=="0":            
             self.add_error('TX_ref', 'Choose a valid TX reference')
         
+        if RCLineType.objects.get(pk=self.data['line_type']).name=='mix':
+            self.add_error('line_type', 'Invalid Line type')
+        
         return form_data
     
     

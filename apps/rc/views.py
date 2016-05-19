@@ -263,8 +263,9 @@ def remove_line(request, conf_id, line_id):
     kwargs = {}
     
     kwargs['object'] = line
-    kwargs['delete_view'] = True
-    kwargs['title'] = 'Confirm delete'
+    kwargs['delete'] = True
+    kwargs['title'] = 'Delete'
+    kwargs['suptitle'] = 'Line'
     kwargs['previous'] = conf.get_absolute_url_edit()
     return render(request, 'confirm.html', kwargs)
 
