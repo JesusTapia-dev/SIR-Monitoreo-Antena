@@ -20,7 +20,7 @@ class JARSfilter(models.Model):
     JARS_NBITS = 32
     
     name        = models.CharField(max_length=60, unique=True, default='')
-    clock       = models.FloatField(verbose_name='Clock Input (MHz)',validators=[MinValueValidator(5), MaxValueValidator(75)], null=True, default=60)
+    clock       = models.FloatField(verbose_name='Clock In (MHz)',validators=[MinValueValidator(5), MaxValueValidator(75)], null=True, default=60)
     mult        = models.PositiveIntegerField(verbose_name='Multiplier',validators=[MinValueValidator(1), MaxValueValidator(20)], default=5)
     fch         = models.DecimalField(verbose_name='Frequency (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16, null=True, default=49.9200)
     fch_decimal = models.BigIntegerField(verbose_name='Frequency (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**JARS_NBITS-1)], null=True, default=721554505)
