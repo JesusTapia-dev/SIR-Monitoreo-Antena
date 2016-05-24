@@ -163,11 +163,11 @@ class RCConfiguration(Configuration):
         '''
         
         self.name = data['name']
-        self.ipp = data['ipp']
-        self.ntx = data['ntx']
-        self.clock_in = data['clock_in']        
-        self.clock_divider = data['clock_divider']
-        self.clock = data['clock']
+        self.ipp = float(data['ipp'])
+        self.ntx = int(data['ntx'])
+        self.clock_in = float(data['clock_in'])        
+        self.clock_divider = int(data['clock_divider'])
+        self.clock = float(data['clock'])
         self.time_before = data['time_before']
         self.time_after = data['time_after']
         self.sync = data['sync']
