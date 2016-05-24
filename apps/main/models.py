@@ -345,7 +345,7 @@ class Experiment(models.Model):
         parameters['configurations'] = conf_parameters
         parameters['end_time']       = self.end_time.strftime("%H:%M:%S")
         parameters['start_time']     = self.start_time.strftime("%H:%M:%S")
-        parameters['radar']          = self.radar.name
+        parameters['radar']          = self.radar_system.name
         parameters['experiment']     = self.name
         parameters = json.dumps(parameters, indent=2)
         
