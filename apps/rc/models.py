@@ -141,6 +141,7 @@ class RCConfiguration(Configuration):
                 continue
             data[field.name] = '{}'.format(field.value_from_object(self))
         
+        data['device_id'] = data.pop('device')
         data['lines'] = []
         
         for line in self.get_lines():
