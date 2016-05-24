@@ -26,9 +26,9 @@ def jars_conf(request, id_conf):
                                'cards_number', 'channels_number', 'channels',
                                'rd_directory', 'raw_data_blocks', 'data_type',
                                'acq_profiles', 'profiles_block', 'fftpoints',
-                               'incohe_integr', 'filter', 'spectral_number',
+                               'incohe_integr', 'cohe_integr', 'filter', 'spectral_number',
                                'spectral', 'create_directory', 'include_expname',
-                               'acq_link', 'view_raw_data', 'save_ch_dc']
+                               'acq_link', 'view_raw_data', 'save_ch_dc',]
     
     kwargs['title'] = 'JARS Configuration'
     kwargs['suptitle'] = 'Details'
