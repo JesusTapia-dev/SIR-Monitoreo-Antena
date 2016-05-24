@@ -9,12 +9,13 @@ from apps.main.forms import add_empty_choice
 from .models import RCConfiguration, RCLine, RCLineType, RCLineCode
 from .widgets import KmUnitWidget, KmUnitHzWidget, KmUnitDcWidget, UnitKmWidget, DefaultWidget, CodesWidget, HiddenWidget, HCheckboxSelectMultiple
 
-def create_choices_from_model(model, conf_id, all=False):
+def create_choices_from_model(model, conf_id, all_choice=False):
     
     if model=='RCLine':
         instance = RCConfiguration.objects.get(pk=conf_id)
         choices =  [(line.pk, line.get_name()) for line in instance.get_lines(line_type__name='tx')]
-        choices = add_empty_choice(choices, label='All')
+        if all_choice:
+            choices = add_empty_choice(choices, label='All')
     else:
         instance = globals()[model]
         choices = instance.objects.all().values_list('pk', 'name')
@@ -310,8 +311,12 @@ class RCLineEditForm(forms.ModelForm):
             else:
                 help_text = ''
             
-            if 'model' in params[label]:                    
-                self.fields[label] = forms.ChoiceField(choices=create_choices_from_model(params[label]['model'], conf.id),
+            if 'model' in params[label]:
+                if line.line_type.name=='tr':
+                    all_choice = True
+                else:
+                    all_choice = False
+                self.fields[label] = forms.ChoiceField(choices=create_choices_from_model(params[label]['model'], conf.id, all_choice=all_choice),
                                             initial=value,
                                             widget=forms.Select(attrs={'name':'%s|%s|%s' % (count, line.id, label)}),
                                             help_text=help_text)
