@@ -781,7 +781,7 @@ def experiment_summary(request, id_exp):
         
         if configuration.device.device_type.name == 'rc':
             rc_lines = experiment_data['configurations']['rc']['lines']
-            if experiment_data['configurations']['rc']['mix'] == True:
+            if experiment_data['configurations']['rc']['mix'] == 'True':
                 tx = ''
                 code = ''
                 window = ''
