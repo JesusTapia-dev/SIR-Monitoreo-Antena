@@ -93,7 +93,7 @@ class JARSConfiguration(Configuration):
     acq_link         = models.BooleanField(verbose_name='Acquisition Link', default=True)
     view_raw_data    = models.BooleanField(verbose_name='View Raw Data', default=True)
     save_ch_dc       = models.BooleanField(verbose_name='Save Channels DC', default=True)
-    filter_parms    = models.CharField(max_length=10000, default='{}')
+    filter_parms     = models.CharField(max_length=10000, default='{}')
 
     class Meta:
         db_table = 'jars_configurations'
@@ -103,8 +103,9 @@ class JARSConfiguration(Configuration):
         parameters = {}
         
         parameters['name']             = self.name
-        parameters['rc']               = self.rc.name
+        #parameters['rc']               = self.rc.name
         parameters['exp_type']         = self.exp_type
+        parameters['exptype']          = EXPERIMENT_TYPE[self.exp_type][1]
         parameters['cards_number']     = self.cards_number
         parameters['channels_number']  = self.channels_number
         parameters['channels']         = self.channels
@@ -113,11 +114,22 @@ class JARSConfiguration(Configuration):
         parameters['data_type']        = self.data_type
         parameters['acq_profiles']     = self.acq_profiles
         parameters['profiles_block']   = self.profiles_block
+        parameters['fftpoints']        = self.fftpoints
+        parameters['cohe_integr']      = self.cohe_integr
+        #parameters['incohe_integr']    = self.incohe_integr
         parameters['filter']           = self.filter.name
+        #parameters['spectral_number']  = self.spectral_number
+        #parameters['spectral']         = self.spectral
         parameters['create_directory'] = bool(self.create_directory)
         parameters['include_expname']  = bool(self.include_expname)
         parameters['acq_link']         = bool(self.acq_link)
-        parameters['view_raw_data']    = bool(self.view_raw_data)          
+        parameters['view_raw_data']    = bool(self.view_raw_data)
+        parameters['save_ch_dc']       = bool(self.save_ch_dc)
+        
+        if parameters['exptype'] == 'PDATA':
+            parameters['incohe_integr']    = self.incohe_integr
+            parameters['spectral_number']  = self.spectral_number
+            parameters['spectral']         = self.spectral
         
         return parameters
     
@@ -126,7 +138,34 @@ class JARSConfiguration(Configuration):
         self.save()
     
     def dict_to_parms(self, parameters):
-        return
+        
+        self.exp_type        = int(parameters['exp_type'])
+        if parameters['exptype'] == 'PDATA': 
+            self.incohe_integr   = parameters['incohe_integr']
+            self.spectral_number = parameters['spectral_number']
+            self.spectral        =  parameters['spectral'] 
+            
+        self.cards_number    = int(parameters['cards_number'])
+        self.channels_number = int(parameters['channels_number'])
+        self.channels        = parameters['channels']
+        self.rd_directory    = parameters['rd_directory']
+        self.raw_data_blocks = parameters['raw_data_blocks']
+        self.data_type       = parameters['data_type']
+        self.acq_profiles    = parameters['acq_profiles']
+        self.profiles_block  = parameters['profiles_block']
+        self.fftpoints       = parameters['fftpoints']
+        self.cohe_integr     = parameters['cohe_integr']
+        
+        filter_name    = parameters['filter']
+        self.filter    = JARS.objects.get(name=filter_name)
+        self.save()
+        self.add_parms_to_filter()
+        
+        self.create_directory = bool(parameters['create_directory'])
+        self.include_expname  = bool(parameters['include_expname'])
+        self.acq_link         = bool(parameters['acq_link'])
+        self.view_raw_data    = bool(parameters['view_raw_data'])
+        self.save_ch_dc       = bool(parameters['save_ch_dc'])
     
     def status_device(self):
         return 
