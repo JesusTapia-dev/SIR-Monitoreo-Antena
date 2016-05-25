@@ -781,21 +781,26 @@ def experiment_summary(request, id_exp):
         
         if configuration.device.device_type.name == 'rc':
             rc_lines = experiment_data['configurations']['rc']['lines']
-            code = rc_lines[3]['code']
-            
-            window_data = rc_lines[6]['params'][0]
-            h0  = str(window_data['first_height'])
-            dh  = str(window_data['resolution'])
-            nsa = str(window_data['number_of_samples'])
-            window = 'Ho='+h0+'km\nDH='+dh+'km\nNSA='+nsa
-            
-            tx = ''
-            if float(rc_lines[1]['delays']) == 0:
-                tx = rc_lines[2]['pulse_width']
-            elif float(rc_lines[2]['delays']) == 0:
-                tx = rc_lines[1]['pulse_width']
+            if experiment_data['configurations']['rc'] == True:
+                tx = ''
+                code = ''
+                window = ''
             else:
-                tx = rc_lines[1]['pulse_width']+' | '+rc_lines[2]['pulse_width']
+                code = rc_lines[3]['code']
+                
+                window_data = rc_lines[6]['params'][0]
+                h0  = str(window_data['first_height'])
+                dh  = str(window_data['resolution'])
+                nsa = str(window_data['number_of_samples'])
+                window = 'Ho='+h0+'km\nDH='+dh+'km\nNSA='+nsa
+                
+                tx = ''
+                if float(rc_lines[1]['delays']) == 0:
+                    tx = rc_lines[2]['pulse_width']
+                elif float(rc_lines[2]['delays']) == 0:
+                    tx = rc_lines[1]['pulse_width']
+                else:
+                    tx = rc_lines[1]['pulse_width']+' | '+rc_lines[2]['pulse_width']
             
             kwargs['tx']   = tx
             kwargs['code'] = code
