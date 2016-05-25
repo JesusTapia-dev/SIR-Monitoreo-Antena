@@ -19,7 +19,7 @@ from apps.dds.forms import DDSConfigurationForm
 
 from .models import Campaign, Experiment, Device, Configuration, Location, RunningExperiment
 from apps.cgs.models import CGSConfiguration
-from apps.jars.models import JARSConfiguration
+from apps.jars.models import JARSConfiguration, EXPERIMENT_TYPE
 from apps.usrp.models import USRPConfiguration
 from apps.abs.models import ABSConfiguration
 from apps.rc.models import RCConfiguration, RCLine, RCLineType
@@ -753,6 +753,60 @@ def experiment_mix_delete(request, id_exp):
     return redirect('url_mix_experiment', id_exp=id_exp)
 
 
+def experiment_summary(request, id_exp):
+    
+    import json
+    
+    experiment      = get_object_or_404(Experiment, pk=id_exp)
+    experiment_data = json.loads(experiment.parms_to_dict())
+    configurations  = Configuration.objects.filter(experiment=experiment, type=0)
+    
+    kwargs = {}
+    
+    kwargs['experiment_keys'] = ['template', 'radar_system', 'name', 'start_time', 'end_time']
+    kwargs['experiment'] = experiment
+    
+    kwargs['configuration_keys'] = ['name', 'device__ip_address', 'device__port_address', 'device__status']
+    kwargs['configurations'] = configurations
+    kwargs['experiment_data'] = experiment_data
+    
+    kwargs['title'] = 'Experiment Summary'
+    kwargs['suptitle'] = 'Details'
+    
+    kwargs['button'] = 'Verify Parameters'
+    
+    for configuration in configurations:
+        if configuration.device.device_type.name == 'jars':
+            kwargs['exp_type'] =  EXPERIMENT_TYPE[configuration.exp_type][1]
+        
+        if configuration.device.device_type.name == 'rc':
+            rc_lines = experiment_data['configurations']['rc']['lines']
+            code = rc_lines[3]['code']
+            
+            window_data = rc_lines[6]['params'][0]
+            h0  = str(window_data['first_height'])
+            dh  = str(window_data['resolution'])
+            nsa = str(window_data['number_of_samples'])
+            window = 'Ho='+h0+'km\nDH='+dh+'km\nNSA='+nsa
+            
+            tx = ''
+            if float(rc_lines[1]['delays']) == 0:
+                tx = rc_lines[2]['pulse_width']
+            elif float(rc_lines[2]['delays']) == 0:
+                tx = rc_lines[1]['pulse_width']
+            else:
+                tx = rc_lines[1]['pulse_width']+' | '+rc_lines[2]['pulse_width']
+            
+            kwargs['tx']   = tx
+            kwargs['code'] = code
+            kwargs['window'] = window
+    
+    ###### SIDEBAR ######
+    kwargs.update(sidebar(experiment=experiment))
+    
+    return render(request, 'experiment_summary.html', kwargs)
+
+
 def parse_mix_result(s):
     
     values = s.split('-')
@@ -1426,4 +1480,3 @@ def radar_refresh(request, id_camp, id_radar):
         return HttpResponseRedirect(reverse('url_operation_search', args=[id_camp]))
     else:
         return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
-    

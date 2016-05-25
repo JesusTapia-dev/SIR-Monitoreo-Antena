@@ -30,6 +30,7 @@ urlpatterns = (
     url(r'^experiment/(?P<id_exp>-?\d+)/import/$', 'apps.main.views.experiment_import', name='url_import_experiment'),
     url(r'^experiment/(?P<id_exp>-?\d+)/mix/$', 'apps.main.views.experiment_mix', name='url_mix_experiment'),
     url(r'^experiment/(?P<id_exp>-?\d+)/mix/delete/$', 'apps.main.views.experiment_mix_delete', name='url_delete_mix_experiment'),
+    url(r'^experiment/(?P<id_exp>-?\d+)/summary/$', 'apps.main.views.experiment_summary', name='url_sum_experiment'),
     
     url(r'^experiment/(?P<id_exp>-?\d+)/new_dev_conf/$', 'apps.main.views.dev_conf_new', name='url_add_dev_conf'),
     url(r'^experiment/(?P<id_exp>-?\d+)/new_dev_conf/(?P<id_dev>-?\d+)/$', 'apps.main.views.dev_conf_new', name='url_add_dev_conf'),

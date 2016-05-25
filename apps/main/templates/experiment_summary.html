@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load main_tags %}
+{% block extra-head %}
+<link href="{% static 'css/bootstrap-datetimepicker.min.css' %}" media="screen" rel="stylesheet">
+{% endblock %}
+
+{% block exp-active %}active{% endblock %}
+
+{% block content-title %}{{title}}{% endblock %}
+{% block content-suptitle %}{{suptitle}}{% endblock %}
+
+{% block content %}
+
+{% block menu-actions %}
+<!-- <span class=" dropdown pull-right">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-menu-hamburger gi-2x" aria-hidden="true"></span></a>
+  <ul class="dropdown-menu" role="menu">
+    <li><a href="{% url 'url_edit_experiment' experiment.id %}"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> Edit</a></li>
+    <li><a href="{% url 'url_delete_experiment' experiment.id %}"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Delete</a></li>
+    <li><a href="{{ experiment.get_absolute_url_import }}"><span class="glyphicon glyphicon-import" aria-hidden="true"></span> Import </a></li>
+    <li><a href="{{ experiment.get_absolute_url_export }}"><span class="glyphicon glyphicon-export" aria-hidden="true"></span> Export </a></li>    
+    {% block extra-menu-actions %}
+    {% endblock %}
+    <li><a>----------------</a></li>
+    <li><a href="{% url 'url_mix_experiment' experiment.id %}"><span class="glyphicon glyphicon-random" aria-hidden="true"></span> Mix RC Configurations </a></li>
+    <li><a href="{% url 'url_add_dev_conf' experiment.id %}"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span> Add Configuration</a></li>
+    <li><a href=#><span class="glyphicon glyphicon-check" aria-hidden="true"></span> Verify Parameters</a></li>
+
+  </ul>          
+</span> -->
+{% endblock %}
+
+<table class="table table-bordered">
+{% for key in experiment_keys %}
+<tr><th>{{key|title}}</th><td>{{experiment|attr:key}}</td></tr>
+{% endfor %}
+</table>
+
+<div class="">
+<h4 class="panel-title"><b> Parameters </b></h4>
+<br>
+</div>
+
+<table class="table table-bordered">
+{% for configuration in configurations %}
+	{% if configuration.device.device_type.name == 'dds' %}
+		<!--<h4 class="panel-title">  </h4>-->
+		<tr><th>dds</th><td>(=</td></tr>
+	{% endif %}
+	
+	{% if configuration.device.device_type.name == 'rc' %}
+		<!--<h4 class="panel-title">  </h4>-->
+		<tr><th>IPP(km)</th><td>{{experiment_data.configurations.rc.ipp}}</td></tr>
+		<tr><th>NTX</th><td>{{experiment_data.configurations.rc.ntx}}</td></tr>
+		<tr><th>TX</th><td>{{tx}}</td></tr>
+		<tr><th>Code</th><td>{{code}}</td></tr>
+		<tr><th>Sampling Window</th><td>{{window|linebreaks}}</td></tr>
+	{% endif %}
+	
+	{% if configuration.device.device_type.name == 'rc_mix' %}
+		<!--<h4 class="panel-title">  </h4>-->
+		<tr><th>rc_mix</th><td>(=</td></tr>
+	{% endif %}
+	
+	{% if configuration.device.device_type.name == 'jars' %}
+		<!--<h4 class="panel-title"> JARS </h4>-->
+		<tr><th>Data Type</th><td>{{exp_type}}</td></tr>
+		<tr><th># Channels</th><td>{{configuration.channels_number}}</td></tr>
+		<tr><th>Coh Int</th><td>{{configuration.cohe_integr}}</td></tr>
+		<tr><th>FFT Points</th><td>{{configuration.fftpoints}}</td></tr>
+		{% if exp_type == 'PDATA'%}
+			<tr><th>Inc Int</th><td>{{configuration.incohe_integr}}</td></tr>
+			<tr><th>Spec. Comb.</th><td>{{configuration.spectral}}</td></tr>
+		{% endif %}
+		<tr><th>Acq Prof</th><td>{{configuration.acq_profiles}}</td></tr>
+		<tr><th>Prof x Block</th><td>{{configuration.profiles_block}}</td></tr>
+		<tr><th>Block x File</th><td>(=</td></tr>
+	{% endif %}
+	
+	{% if configuration.device.device_type.name == 'usrp' %}
+		<!--<h4 class="panel-title">  </h4>-->
+		<tr><th>usrp</th><td>(=</td></tr>
+	{% endif %}
+	
+	{% if configuration.device.device_type.name == 'cgs' %}
+		<!--<h4 class="panel-title"> CGS </h4>-->
+		<!--<tr><th>Frequency 0</th><td>{{configuration.freq0}}</td></tr>-->
+		<!--<tr><th>Frequency 1</th><td>{{configuration.freq1}}</td></tr>-->
+		<!--<tr><th>Frequency 2</th><td>{{configuration.freq2}}</td></tr>-->
+		<!--<tr><th>Frequency 3</th><td>{{configuration.freq3}}</td></tr>-->
+	{% endif %}
+	
+	{% if configuration.device.device_type.name == 'abs' %}
+		<!--<h4 class="panel-title">  </h4>-->
+		<tr><th>abs</th><td>(=</td></tr>
+	{% endif %}
+{% endfor %}
+</table>
+
+<div class="pull-right">
+<button type="button" class="btn btn-primary" id="bt_back">Back</button>
+<button type="button" class="btn btn-primary" id="bt_verify">Verify Parameters</button>
+</div>
+
+{% endblock %}
+
+{% block sidebar%}
+   {% include "sidebar_devices.html" %}
+{% endblock %}
+
+{% block extra-js%}
+<script type="text/javascript">
+  
+  $(".clickable-row").click(function() {
+    document.location = $(this).data("href");
+  });
+  
+  $("#bt_back").click(function() {
+	    document.location = "{% url 'url_experiment' experiment.id%}";
+  });
+  
+</script>
+{% endblock %}
