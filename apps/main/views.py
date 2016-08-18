@@ -25,6 +25,7 @@ from apps.abs.models import ABSConfiguration
 from apps.rc.models import RCConfiguration, RCLine, RCLineType
 from apps.dds.models import DDSConfiguration
 from django.http.request import QueryDict
+#from __builtin__ import False
 
 # Create your views here.
 
@@ -756,6 +757,7 @@ def experiment_mix_delete(request, id_exp):
 def experiment_summary(request, id_exp):
     
     import json
+    import ast
     
     experiment      = get_object_or_404(Experiment, pk=id_exp)
     experiment_data = json.loads(experiment.parms_to_dict())
@@ -775,12 +777,28 @@ def experiment_summary(request, id_exp):
     
     kwargs['button'] = 'Verify Parameters'
     
+    jars_conf = False
+    rc_conf   = False
+    
     for configuration in configurations:
+        #-------------------- JARS -----------------------:
         if configuration.device.device_type.name == 'jars':
-            kwargs['exp_type'] =  EXPERIMENT_TYPE[configuration.exp_type][1]
-        
+            jars_conf = True
+            kwargs['jars_conf'] = jars_conf
+            kwargs['exp_type']  = EXPERIMENT_TYPE[configuration.exp_type][1]
+            channels_number     = configuration.channels_number
+            exp_type            = configuration.exp_type
+            fftpoints           = configuration.fftpoints
+            filter_parms        = configuration.filter_parms
+            filter_parms        = ast.literal_eval(filter_parms)
+            spectral_number     = configuration.spectral_number
+            
+        #--------------------- RC ----------------------:
         if configuration.device.device_type.name == 'rc':
+            rc_conf = True
+            kwargs['rc_conf'] = rc_conf
             rc_lines = experiment_data['configurations']['rc']['lines']
+            ipp = configuration.ipp
             if experiment_data['configurations']['rc']['mix'] == 'True':
                 tx = ''
                 code = ''
@@ -805,11 +823,135 @@ def experiment_summary(request, id_exp):
             kwargs['tx']   = tx
             kwargs['code'] = code
             kwargs['window'] = window
-    
+            
+        #-------------------- DDS -----------------------:
+        if configuration.device.device_type.name == 'dds':
+            dds_conf = True
+            kwargs['dds_conf'] = dds_conf
+        
+        #------ RC & JARS ------:
+        ipp = 937.5 #
+        nsa = 200#
+        dh = 1.5             #
+        channels_number = 5 #
+        
+        if rc_conf and jars_conf:
+            if exp_type  == 0: #Short
+                bytes    = 2
+                b        = nsa*2*bytes*channels_number
+            else:              #Float
+                bytes    = 4
+                channels = channels_number + spectral_number
+                b        = nsa*2*bytes*fftpoints*channels
+               
+            ipps           = (ipp*pow(10,-6))/0.15
+            GB             = 1048576.0*1024.0
+            Hour           = 3600
+            rate           = b/ipps
+            rate           = rate *(1/GB)*(Hour)
+            kwargs['rate'] = str(rate)+" GB/h"
+        else:
+            kwargs['rate'] = ''
+            
     ###### SIDEBAR ######
     kwargs.update(sidebar(experiment=experiment))
     
     return render(request, 'experiment_summary.html', kwargs)
+
+def experiment_verify(request, id_exp):
+    
+    import json    
+    import ast
+    
+    experiment      = get_object_or_404(Experiment, pk=id_exp)
+    experiment_data = json.loads(experiment.parms_to_dict())
+    configurations  = Configuration.objects.filter(experiment=experiment, type=0)
+    
+    kwargs = {}
+    
+    kwargs['experiment_keys'] = ['template', 'radar_system', 'name', 'start_time', 'end_time']
+    kwargs['experiment'] = experiment
+    
+    kwargs['configuration_keys'] = ['name', 'device__ip_address', 'device__port_address', 'device__status']
+    kwargs['configurations'] = configurations
+    kwargs['experiment_data'] = experiment_data
+    
+    kwargs['title'] = 'Verify Experiment'
+    kwargs['suptitle'] = 'Parameters'
+    
+    kwargs['button'] = 'Update'
+    
+    jars_conf = False
+    rc_conf   = False
+    dds_conf   = False
+    
+    for configuration in configurations:
+        #-------------------- JARS -----------------------:
+        if configuration.device.device_type.name == 'jars':
+            jars_conf = True
+            kwargs['jars_conf']    = jars_conf
+            filter_parms           = configuration.filter_parms
+            filter_parms           = ast.literal_eval(filter_parms)
+            kwargs['filter_parms'] = filter_parms
+            #--Sampling Frequency
+            clock          = filter_parms['clock']
+            filter_2       = filter_parms['filter_2']
+            filter_5       = filter_parms['filter_5']
+            filter_fir     = filter_parms['filter_fir']
+            samp_freq_jars = clock/filter_2/filter_5/filter_fir
+            
+            kwargs['samp_freq_jars'] = samp_freq_jars
+            kwargs['jars']           = configuration
+        
+        #--------------------- RC ----------------------:
+        if configuration.device.device_type.name == 'rc':
+            rc_conf = True
+            rc_parms = configuration.parms_to_dict()
+            if rc_parms['mix'] == 'True':
+                pass
+            else:            
+                rc_lines     = rc_parms['lines']
+                dh           = rc_lines[6]['params'][0]['resolution']
+                #--Sampling Frequency
+                samp_freq_rc = 0.15/dh 
+                kwargs['samp_freq_rc'] = samp_freq_rc
+            
+            kwargs['rc_conf'] = rc_conf
+            kwargs['rc']      = configuration
+        
+        #-------------------- DDS ----------------------:
+        if configuration.device.device_type.name == 'dds':
+            dds_conf = True
+            dds_parms = configuration.parms_to_dict()
+            
+            kwargs['dds_conf'] = dds_conf
+            kwargs['dds']      = configuration
+    
+    
+    #------------Validation------------:
+    #Clock
+    if dds_conf and rc_conf and jars_conf:
+        if filter_parms['clock'] != rc_parms['clock_in'] and rc_parms['clock_in'] != dds_parms['clock']:
+            messages.warning(request, "Devices don't have the same clock.")
+    elif rc_conf and jars_conf:
+        if filter_parms['clock'] != rc_parms['clock_in']:
+            messages.warning(request, "Devices don't have the same clock.")
+    elif rc_conf and dds_conf:
+        if rc_parms['clock_in'] != dds_parms['clock']:
+            messages.warning(request, "Devices don't have the same clock.")
+        if float(samp_freq_rc) != float(dds_parms['frequencyA']):
+            messages.warning(request, "Devices don't have the same Frequency A.")
+                
+    
+    
+    ###### SIDEBAR ######
+    kwargs.update(sidebar(experiment=experiment))
+    
+    
+    
+    
+    
+    return render(request, 'experiment_verify.html', kwargs)
 
 
 def parse_mix_result(s):
@@ -1055,7 +1197,7 @@ def dev_conf_write(request, id_conf):
         messages.success(request, conf.message)
         
         #Creating a historical configuration        
-        conf.clone(type=0, template=False)
+        conf.clone(type=1, template=False)
         
         #Original configuration
         conf = DevConfModel.objects.get(pk=id_conf)

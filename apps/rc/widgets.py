@@ -31,7 +31,7 @@ class KmUnitWidget(forms.widgets.TextInput):
             input_type = 'number'
         
         if 'line' in attrs:
-            label += '_{0}'.format(attrs['line'].pk)
+            label += '_{0}_{1}'.format(attrs['line'].pk, name.split('|')[0])
         
         html = '''<div class="col-md-12 col-no-padding">
         <div class="col-md-5 col-no-padding"><input type="{0}" step="any" {1} class="form-control" id="id_{2}" name="{3}" value="{4}"></div>
@@ -48,13 +48,15 @@ class KmUnitWidget(forms.widgets.TextInput):
           $("#id_{label}").change(function() {{
             $("#id_{label}_unit").val(str2unit($(this).val()));
             $("#id_{label}").val(str2km($("#id_{label}_unit").val()));
+            updateWindows("#id_{label}");
           }});
           $("#id_{label}_unit").change(function() {{
-            $(this).val(parseFloat($(this).val()));
+            $(this).val(str2int($(this).val()));
             $("#id_{label}").val(str2km($(this).val()));
+            updateWindows("#id_{label}");
           }});
         }});  
-        </script>'''.format(label=label)
+        </script>'''.format(label=label)        
         
         if disabled:
             return mark_safe(html)
@@ -80,7 +82,7 @@ class UnitKmWidget(forms.widgets.TextInput):
         name = attrs.get('name', label)
         
         if 'line' in attrs:
-            label += '_{0}'.format(attrs['line'].pk)
+            label += '_{0}_{1}'.format(attrs['line'].pk, name.split('|')[0])
         
         html = '''<div class="col-md-12 col-no-padding">
         <div class="col-md-5 col-no-padding"><input type="number" {0} class="form-control" id="id_{1}_unit" name="{2}" value="{3}"></div>
@@ -139,6 +141,7 @@ class KmUnitHzWidget(forms.widgets.TextInput):
           unit_fields.push("id_{label}_unit");          
           $("#id_{label}").change(function() {{
             $("#id_{label}_unit").val(str2unit($(this).val()));
+            $("#id_{label}").val(str2km($("#id_{label}_unit").val()));
             $("#id_{label}_hz").val(str2hz($(this).val()));
             updateDc();
           }});
@@ -191,6 +194,7 @@ class KmUnitDcWidget(forms.widgets.TextInput):
           dc_fields.push("id_{label}");      
           $("#id_{label}").change(function() {{
             $("#id_{label}_unit").val(str2unit($(this).val()));
+            $("#id_{label}").val(str2km($("#id_{label}_unit").val()));
             $("#id_{label}_dc").val(str2dc($("#id_{label}").val()));
           }});
           $("#id_{label}_unit").change(function() {{
@@ -216,9 +220,31 @@ class DefaultWidget(forms.widgets.TextInput):
     def render(self, label, value, attrs=None):
         
         disabled = 'disabled' if attrs.get('disabled', False) else ''
+        itype = 'number' if label in ('number_of_samples', 'last_height') else 'text'
         name = attrs.get('name', label)
+        if 'line' in attrs:
+            label += '_{0}_{1}'.format(attrs['line'].pk, name.split('|')[0])
+        html = '<div class="col-md-12 col-no-padding"><div class="col-md-5 col-no-padding"><input {0} type="{1}" class="form-control" id="id_{2}" name="{3}" value="{4}"></div></div>'.format(disabled, itype, label, name, value)
         
-        html = '<div class="col-md-12 col-no-padding"><div class="col-md-5 col-no-padding"><input {0} type="text" class="form-control" id="id_{1}" name="{2}" value="{3}"></div></div>'.format(disabled, label, name, value)
+        if 'last_height' in label or 'number_of_samples' in label:
+            script = '''<script type="text/javascript">
+        $(document).ready(function () {{                     
+          
+          $("#id_{label}").change(function() {{
+            updateWindows("#id_{label}");
+          }});
+
+        }});  
+        </script>'''.format(label=label)        
+        else:
+            script = ''        
+        
+        if disabled:
+            return mark_safe(html)
+        else:
+            return mark_safe(html+script)
+        
+        
         
         return mark_safe(html)    
 

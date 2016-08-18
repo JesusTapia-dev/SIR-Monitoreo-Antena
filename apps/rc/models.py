@@ -30,6 +30,7 @@ LINE_TYPES = (
 
 SAMPLING_REFS = (
     ('none', 'No Reference'),
+    ('begin_baud', 'Begin of the first baud'),
     ('first_baud', 'Middle of the first baud'),
     ('sub_baud', 'Middle of the sub-baud')
                  )
@@ -145,12 +146,13 @@ class RCConfiguration(Configuration):
         data['lines'] = []
         
         for line in self.get_lines():
-            line_data = json.loads(line.params)
+            line_data = json.loads(line.params)            
             if 'TX_ref' in line_data and line_data['TX_ref'] not in (0, '0'):
-                line_data['TX_ref'] = RCLine.objects.get(pk=line_data['TX_ref']).get_name()
+                line_data['TX_ref'] = line.get_name()
             if 'code' in line_data:
                 line_data['code'] = RCLineCode.objects.get(pk=line_data['code']).name
             line_data['type'] = line.line_type.name
+            line_data['name'] = line.get_name()
             data['lines'].append(line_data)
         
         data['delays'] = self.get_delays()
@@ -341,7 +343,7 @@ class RCConfiguration(Configuration):
         for line in self.get_lines():
             line.update_pulses()
     
-    def plot_pulses(self):
+    def plot_pulses(self, km=False):
     
         import matplotlib.pyplot as plt
         from bokeh.resources import CDN
@@ -352,19 +354,29 @@ class RCConfiguration(Configuration):
         lines = self.get_lines()              
         
         N = len(lines)
+        npoints = self.total_units/self.km2unit if km else self.total_units 
         fig = plt.figure(figsize=(10, 2+N*0.5))
         ax = fig.add_subplot(111)
-        labels = []
+        labels = ['IPP']        
         
         for i, line in enumerate(lines):
-            labels.append(line.get_name())
-            l = ax.plot((0, self.total_units),(N-i-1, N-i-1))
-            points = [(tup[0], tup[1]-tup[0]) for tup in line.pulses_as_points() if tup<>(0,0)]
+            labels.append(line.get_name(channel=True))            
+            l = ax.plot((0, npoints),(N-i-1, N-i-1))
+            points = [(tup[0], tup[1]-tup[0]) for tup in line.pulses_as_points(km=km) if tup<>(0,0)]
             ax.broken_barh(points, (N-i-1, 0.5), 
                            edgecolor=l[0].get_color(), facecolor='none')
             
+        n = 0
+        f = ((self.ntx+50)/100)*5 if ((self.ntx+50)/100)*10>0 else 2
+        for x in np.arange(0, npoints, self.ipp if km else self.ipp*self.km2unit):
+            if n%f==0:
+                ax.text(x, N, '%s' % n, size=10)
+            n += 1
+            
+            
         labels.reverse()
         ax.set_yticklabels(labels)
+        
         ax.set_xlabel = 'Units'
         plot = to_bokeh(fig, use_pandas=False)        
         plot.tools = [PanTool(dimensions=['width']), WheelZoomTool(dimensions=['width']), ResetTool(), PreviewSaveTool()]
@@ -468,7 +480,7 @@ class RCLine(models.Model):
 
         return self
     
-    def get_name(self):
+    def get_name(self, channel=False):
         
         chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         s = ''        
@@ -484,10 +496,13 @@ class RCLine(models.Model):
                     ref = RCLine.objects.get(pk=pk)
                     s = chars[ref.position]
                 s = '({})'.format(s)
-        if s:
-            return '{}{} {}'.format(self.line_type.name.upper(), s, self.channel)
+        
+        s = '{}{}'.format(self.line_type.name.upper(), s)
+        
+        if channel:
+            return '{} {}'.format(s, self.channel)
         else:
-            return '{} {}'.format(self.line_type.name.upper(), self.channel)
+            return s
 
     def get_lines(self, **kwargs):
                 
@@ -502,9 +517,13 @@ class RCLine(models.Model):
             
         return y.astype(np.int8)
     
-    def pulses_as_points(self):
+    def pulses_as_points(self, km=False):
         
-        return ast.literal_eval(self.pulses)
+        if km:
+            unit2km = 1/self.rc_configuration.km2unit
+            return [(tup[0]*unit2km, tup[1]*unit2km) for tup in ast.literal_eval(self.pulses)]
+        else:
+            return ast.literal_eval(self.pulses)
     
     def get_win_ref(self, params, tx_id, km2unit):
         

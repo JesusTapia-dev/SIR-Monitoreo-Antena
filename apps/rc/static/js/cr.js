@@ -14,7 +14,18 @@ function str2unit(s){
   var ret = "";
   values = s.split(",");
   for (i=0; i<values.length; i++) {
-    ret += Math.round(parseFloat(values[i]))*km2unit;
+    ret += Math.round(parseFloat(values[i])*km2unit);
+    ret += ","; 
+  }
+  return ret.substring(0, ret.length-1);
+}
+
+
+function str2int(s){
+  var ret = "";
+  values = s.split(",");
+  for (i=0; i<values.length; i++) {
+    ret += Math.round(parseFloat(values[i]));
     ret += ","; 
   }
   return ret.substring(0, ret.length-1);
@@ -58,6 +69,44 @@ function updateDc() {
 }
 
 
+function updateWindows(label) {
+
+  if (label.indexOf("first_height")>0){
+    llabel = label.replace("first_height", "last_height");
+    rlabel = label.replace("first_height", "resolution");
+    nlabel = label.replace("first_height", "number_of_samples");
+    value = parseFloat($(label).val())+parseFloat($(rlabel).val())*(parseInt($(nlabel).val())-1);
+    $(llabel).val(value);
+  }
+  
+  if (label.indexOf("resolution")>0){
+    llabel = label.replace("resolution", "last_height");
+    flabel = label.replace("resolution", "first_height");
+    nlabel = label.replace("resolution", "number_of_samples");
+    value = parseFloat($(flabel).val())+parseFloat($(label).val())*(parseInt($(nlabel).val())-1);
+    $(llabel).val(value);
+  }
+  
+  if (label.indexOf("number_of_samples")>0){
+    llabel = label.replace("number_of_samples", "last_height");
+    rlabel = label.replace("number_of_samples", "resolution");
+    flabel = label.replace("number_of_samples", "first_height");
+    value = parseFloat($(flabel).val())+parseFloat($(rlabel).val())*(parseInt($(label).val())-1);
+    $(llabel).val(value);
+  }
+  
+  if (label.indexOf("last_height")>0){
+    flabel = label.replace("last_height", "first_height");
+    rlabel = label.replace("last_height", "resolution");
+    nlabel = label.replace("last_height", "number_of_samples");
+    
+    nvalue = Math.round((parseFloat($(label).val())-parseFloat($(flabel).val()))/parseFloat($(rlabel).val()))+1;
+    $(nlabel).val(nvalue);
+    value = parseFloat($(flabel).val())+parseFloat($(rlabel).val())*(nvalue-1);
+    $(label).val(value);
+  }
+
+}
   
   $("#id_clock_in").change(function() {
     $("#id_clock").val(parseFloat($('#id_clock_in').val())/parseFloat($('#id_clock_divider').val()));

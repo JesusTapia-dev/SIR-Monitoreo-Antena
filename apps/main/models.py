@@ -376,6 +376,16 @@ class Experiment(models.Model):
                     #--For ABS Device:
                     #--For USRP Device:
                     #--For JARS Device:
+                    if conf_type == 'jars':
+                        device = get_object_or_404(Device, pk=parms['configurations']['jars']['device_id'])
+                        DevConfModel = CONF_MODELS[conf_type]
+                        confjars_form = DevConfModel(
+                                                  experiment = self,
+                                                  name = 'JARS',
+                                                  device=device,
+                                                  )
+                        confjars_form.dict_to_parms(parms['configurations']['jars'])
+                        confjars_form.save()
                     #--For RC Device:
                     if conf_type == 'rc':
                         device = get_object_or_404(Device, pk=parms['configurations']['rc']['device_id'])

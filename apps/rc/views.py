@@ -330,6 +330,7 @@ def import_file(request, conf_id):
         form = RCImportForm(request.POST, request.FILES)
         if form.is_valid():            
             try:
+            #if True:
                 conf.update_from_file(request.FILES['file_name'])
                 messages.success(request, 'Configuration "%s" loaded succesfully' % request.FILES['file_name'])
                 return redirect(conf.get_absolute_url_edit())
@@ -354,17 +355,21 @@ def import_file(request, conf_id):
 def plot_pulses(request, conf_id):
     
     conf = get_object_or_404(RCConfiguration, pk=conf_id)    
-        
-    script, div = conf.plot_pulses() 
+    km = True if 'km' in request.GET else False
+    
+    script, div = conf.plot_pulses(km=km)
     
     kwargs = {}
         
     kwargs['title'] = 'RC Pulses'
-    kwargs['suptitle'] = conf.name
+    kwargs['suptitle'] = conf.name    
     kwargs['div'] = mark_safe(div)
     kwargs['script'] = mark_safe(script)
     kwargs['units'] = conf.km2unit
     kwargs['kms'] = 1/conf.km2unit
+    
+    if km:
+        kwargs['km_selected'] = True
     
     if 'json' in request.GET:        
         return HttpResponse(json.dumps({'div':mark_safe(div), 'script':mark_safe(script)}), content_type="application/json")

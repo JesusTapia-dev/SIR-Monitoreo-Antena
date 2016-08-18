@@ -35,6 +35,8 @@ CMD_ECHO            =0XFE
 RC_CMD_RESET        =0X10
 RC_CMD_WRITE        =0x50
 RC_CMD_READ         =0x8000
+RC_CMD_ENABLE       =0X24
+RC_CMD_DISABLE      =0X00
 
 @eth_device(ID_CLASS)
 def reset():
@@ -69,16 +71,32 @@ def echo():
     return cmd, payload
 
 @eth_device(ID_CLASS)
+def enable():
+    
+    cmd = RC_CMD_ENABLE
+    payload = chr(0x01)
+    
+    return cmd, payload
+
+@eth_device(ID_CLASS)
+def disable():
+    
+    cmd = RC_CMD_DISABLE
+    payload = chr(0x00)
+    
+    return cmd, payload
+
+@eth_device(ID_CLASS)
 def read_all_device():
     
     payload = ""
     
-    return CR_CMD_READ, payload
+    return RC_CMD_READ, payload
 
 @eth_device(ID_CLASS)
 def write_all_device(payload):
     
-    return CR_CMD_WRITE, payload
+    return RC_CMD_WRITE, payload
 
 def read_config(ip, port):
     """
@@ -99,7 +117,7 @@ def write_config(ip, port, parms):
     
     """
     
-    payload = data.dict_to_rc_str(parms)
+    payload = write_ram_memory(parms['pulses'], parms['delays'])
     
     answer = write_all_device(ip, port, payload)
     
@@ -107,13 +125,13 @@ def write_config(ip, port, parms):
 
 def __get_low_byte(valor):
    
-   return ord(valor & 0x00FF)
+    return ord(valor & 0x00FF)
    
 def __get_high_byte(valor):
    
-   return ord((valor & 0xFF00) >> 8)
+    return ord((valor & 0xFF00) >> 8)
 
-@eth_device(ID_CLASS)
+
 def write_ram_memory(vector_valores, vector_tiempos):
 
     l1 = len(vector_valores)
@@ -122,10 +140,10 @@ def write_ram_memory(vector_valores, vector_tiempos):
     cad = ""
     
     for i in range(l1):
-      cad += ord(84) + __get_low_byte(vector_valores[i]) + ord(85) + __get_high_byte(vector_valores[i]) + \
+        cad += ord(84) + __get_low_byte(vector_valores[i]) + ord(85) + __get_high_byte(vector_valores[i]) + \
              ord(84) + __get_low_byte(vector_tiempos[i]) + ord(85) + __get_high_byte(vector_tiempos[i])
     
-    return RC_CMD_WRITE, cad
+    return cad
 
 if __name__ == '__main__':
     ip = "10.10.20.150"

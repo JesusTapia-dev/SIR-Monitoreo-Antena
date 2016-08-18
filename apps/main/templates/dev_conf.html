@@ -23,7 +23,9 @@
     <li><a>----------------</a></li>
     <li><a href="{{ dev_conf.get_absolute_url_status }}"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span> Status</a></li>
     {% if not no_play %}
-    <li><a href="{{ dev_conf.get_absolute_url_start}}"><span class="glyphicon glyphicon-play" aria-hidden="true"></span> Start</a></li>
+        {% if not only_stop %}
+            <li><a href="{{ dev_conf.get_absolute_url_start}}"><span class="glyphicon glyphicon-play" aria-hidden="true"></span> Start</a></li>
+        {% endif %}
     <li><a href="{{ dev_conf.get_absolute_url_stop }}"><span class="glyphicon glyphicon-stop" aria-hidden="true"></span> Stop</a></li>
     {% endif %}
     <li><a href="{{ dev_conf.get_absolute_url_write }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Write</a></li>

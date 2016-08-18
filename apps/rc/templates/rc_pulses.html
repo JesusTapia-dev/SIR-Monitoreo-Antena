@@ -8,17 +8,55 @@
 {% endblock %}
 
 {% block content %}
+
 <div id="div_plot">{{div}}</div>
 <br>
-<div class="col-md-2">1 Km =</div><div class="col-md-3">{{units}} Units</div>
-<br>
-<div class="col-md-2">1 Unit=</div><div class="col-md-3">{{kms}} Km</div>
+
+<form class="form-horizontal">
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Axis</label>
+    <div class="col-sm-4">
+      <select class="form-control" id='id_axis'>
+        <option value=0>Units</option>
+        {%if km_selected %}
+        <option value=1 selected>Km</option>
+        {%else%}
+        <option value=1>Km</option>
+        {%endif%}  
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">1 Km</label>
+    <div class="col-sm-4">
+      <p class="form-control-static">{{units}} Units</p>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">1 Unit</label>
+    <div class="col-sm-4">
+      <p class="form-control-static">{{kms}} Km</p>
+    </div>
+  </div>
+</form>
+
 {% endblock %}
 
 {% block extra-js%}
 
 <script src="{% static 'js/bokeh-0.11.1.min.js' %}"></script>
- 
+
+<script type="text/javascript">
+
+  $("#id_axis").change(function() {
+    if($(this).val()=='0'){    
+      document.location = '?unit';
+    }else{
+      document.location = '?km'
+    }
+  });
+
+</script> 
 {{script}}
 
 {% endblock %}

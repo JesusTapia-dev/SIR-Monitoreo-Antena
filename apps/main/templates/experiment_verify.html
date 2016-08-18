@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load main_tags %}
+{% block extra-head %}
+<link href="{% static 'css/bootstrap-datetimepicker.min.css' %}" media="screen" rel="stylesheet">
+{% endblock %}
+
+{% block exp-active %}active{% endblock %}
+
+{% block content-title %}{{title}}{% endblock %}
+{% block content-suptitle %}{{suptitle}}{% endblock %}
+
+{% block content %}
+
+{% block menu-actions %}
+
+{% endblock %}
+
+
+
+<table class="table table-bordered" style="text-align:center;">
+			<!--<h4 class="panel-title">  </h4>-->
+			<tr>
+				<th style="text-align:center;">Parameters</th>
+				<th style="text-align:center;">DDS</th>
+				<th style="text-align:center;">RC</th>
+				<th style="text-align:center;">JARS</th>
+				<th style="text-align:center;">=P</th>
+			</tr>
+			
+			<tr>
+				<th>Clock In</th>
+				<td id="dds_clock">{{ dds.clock }}</td>
+				<td id="rc_clock">{{ rc.clock_in }}</td>
+				<td id="filter_clock">{{ filter_parms.clock }}</td>
+				<td><input id="suggest_clock"></input></td>
+			</tr>
+			
+			<tr>
+				<th>Frequency A (Mhz)</th>
+				<td>{{ dds.frequencyA_Mhz }}</td>
+				<td>x</td>
+				<td>{{ filter_parms.fch }}</td>
+				<td><input></input></td>
+			</tr>
+			
+			<tr>
+				<th>Frequency A (Decimal)</th>
+				<td>{{ dds.frequencyA }}</td>
+				<td>x</td>
+				<td>{{ filter_parms.fch_decimal }}</td>
+				<td><input></input></td>
+			</tr>
+			
+			<tr>
+				<th>Sampling Frequency (MHz)</th>
+				<td id="dds_sampfreq">{{ dds.frequencyA }}</td>
+				<td id="rc_sampfreq">{{ samp_freq_rc }}</td>
+				<td id="jars_sampfreq">{{ samp_freq_jars }}</td>
+				<td><input id="suggest_sampfreq"></input></td>
+			</tr>
+</table>
+
+
+
+<div class="">
+<h4 class="panel-title"><b> Extra Parameters </b></h4>
+<br>
+</div>
+
+<table class="table table-bordered" >
+{% for configuration in configurations %}
+	{% if configuration.device.device_type.name == 'jars' %}
+		<tr><th>Rate(MB/h)</th><td>{{ rate }}</td></tr>
+	{% endif %}
+{% endfor %}
+</table>
+
+
+<div class="pull-right">
+<button type="button" class="btn btn-primary" id="bt_back">Back</button>
+<button type="button" class="btn btn-primary" id="bt_update">{{ button }}</button>
+</div>
+
+{% endblock %}
+
+{% block sidebar%}
+   {% include "sidebar_devices.html" %}
+{% endblock %}
+
+{% block extra-js%}
+<script type="text/javascript">
+
+{% if dds_conf %}
+	$(document).ready(function() {
+	  $('#dds_clock').click(function(event) {
+		  clock = $("#dds_clock").text();
+		  $("#suggest_clock").val(clock);
+	  });
+	  $('#dds_sampfreq').click(function(event) {
+		  sampfreq = $("#dds_sampfreq").text();
+		  $("#suggest_sampfreq").val(sampfreq);
+	  });
+	});
+{% endif %}
+{% if rc_conf %}
+	$(document).ready(function() {
+	  $('#rc_clock').click(function(event) {
+		  clock = $("#rc_clock").text();
+		  $("#suggest_clock").val(clock);
+	  });
+	  $('#rc_sampfreq').click(function(event) {
+		  sampfreq = $("#rc_sampfreq").text();
+		  $("#suggest_sampfreq").val(sampfreq);
+	  });
+    });
+{% endif %}
+{% if jars_conf %}  
+    $(document).ready(function() {
+  	  $('#filter_clock').click(function(event) {
+  		  clock = $("#filter_clock").text();
+	      $("#suggest_clock").val(clock);
+  	  });
+  	  $('#jars_sampfreq').click(function(event) {
+  		  sampfreq = $("#jars_sampfreq").text();
+		  $("#suggest_sampfreq").val(sampfreq);
+	  });
+  	});
+{% endif %}
+
+
+  
+  
+  $(".clickable-row").click(function() {
+    document.location = $(this).data("href");
+  });
+  
+  $("#bt_back").click(function() {
+	    document.location = "{% url 'url_experiment' experiment.id%}";
+  });
+  
+  
+</script>
+{% endblock %}

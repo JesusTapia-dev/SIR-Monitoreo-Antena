@@ -7,7 +7,7 @@ from apps.main.models import Device
 from apps.main.views import sidebar
 
 from .models import JARSConfiguration, JARSfilter
-from .forms import JARSConfigurationForm, JARSfilterForm
+from .forms import JARSConfigurationForm, JARSfilterForm, JARSImportForm
 # Create your views here.
 
 def jars_conf(request, id_conf):
@@ -24,18 +24,22 @@ def jars_conf(request, id_conf):
     kwargs['dev_conf'] = conf
     kwargs['dev_conf_keys'] = ['name',
                                'cards_number', 'channels_number', 'channels',
-                               'rd_directory', 'raw_data_blocks', 'data_type',
-                               'acq_profiles', 'profiles_block', 'fftpoints',
+                               'rd_directory', 'pd_directory',  
+                               'data_type',
+                               'acq_profiles', 'profiles_block', 'ftp_interval', 'fftpoints',
+                               'cohe_integr_str',
                                'incohe_integr', 'cohe_integr', 'filter', 'spectral_number',
                                'spectral', 'create_directory', 'include_expname',
-                               'acq_link', 'view_raw_data', 'save_ch_dc',]
+                               'save_ch_dc', 'save_data']
     
     kwargs['title'] = 'JARS Configuration'
     kwargs['suptitle'] = 'Details'
     
     kwargs['button'] = 'Edit Configuration'
     
-    kwargs['no_play'] = True
+    #kwargs['no_play'] = True
+    
+    kwargs['only_stop'] = True
     
     ###### SIDEBAR ######
     kwargs.update(sidebar(conf=conf))
@@ -67,6 +71,74 @@ def jars_conf_edit(request, id_conf):
     kwargs['title'] = 'Device Configuration'
     kwargs['suptitle'] = 'Edit'
     kwargs['button'] = 'Save'
+    
+    return render(request, 'jars_conf_edit.html', kwargs)
+
+def import_file(request, conf_id):
+    
+    conf = get_object_or_404(JARSConfiguration, pk=conf_id)
+    if request.method=='POST':
+        form = JARSImportForm(request.POST, request.FILES)
+        if form.is_valid():            
+            try:
+                parms = conf.import_from_file(request.FILES['file_name'])
+            
+                if parms:
+                    conf.update_from_file(parms)
+                    messages.success(request, 'Configuration "%s" loaded succesfully' % request.FILES['file_name'])
+                    return redirect(conf.get_absolute_url_edit())
+            
+            except Exception as e:    
+                messages.error(request, 'Error parsing file: "%s" - %s' % (request.FILES['file_name'], e))
+        
+    else:
+        messages.warning(request, 'Your current configuration will be replaced')
+        form = JARSImportForm() 
+    
+    kwargs = {}
+    kwargs['form'] = form
+    kwargs['title'] = 'JARS Configuration'
+    kwargs['suptitle'] = 'Import file'
+    kwargs['button'] = 'Upload'
+    kwargs['previous'] = conf.get_absolute_url()
+    
+    return render(request, 'jars_import.html', kwargs)
+
+def read_conf(request, conf_id):
+    
+    conf   = get_object_or_404(JARSConfiguration, pk=conf_id)
+    #filter = get_object_or_404(JARSfilter, pk=filter_id)
+    
+    if request.method=='GET':
+        
+        parms = conf.read_device()
+        conf.status_device()
+        
+        if not parms:
+            messages.error(request, conf.message)
+            return redirect(conf.get_absolute_url())
+        
+        form = JARSConfigurationForm(initial=parms, instance=conf)
+    
+    if request.method=='POST':
+        form = JARSConfigurationForm(request.POST, instance=conf)
+        
+        if form.is_valid():
+            form.save()
+            return redirect(conf.get_absolute_url())
+        
+        messages.error(request, "Parameters could not be saved")
+        
+    kwargs = {}
+    kwargs['id_dev'] = conf.id
+    kwargs['filter_id'] = conf.filter.id
+    kwargs['form'] = form
+    kwargs['title'] = 'Device Configuration'
+    kwargs['suptitle'] = 'Parameters read from device'
+    kwargs['button'] = 'Save'
+    
+    ###### SIDEBAR ######
+    kwargs.update(sidebar(conf=conf))
     
     return render(request, 'jars_conf_edit.html', kwargs)
 

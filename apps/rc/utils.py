@@ -145,8 +145,10 @@ class RCFile(object):
                 windows = []
                 for w in range(int(data['Sampling Windows (Line %d)' % n])):
                     windows.append({'first_height':float(data['L%d_H0(%d)' % (n, w)]),
+                         'resolution':float(data['L%d_DH(%d)' % (n, w)]),
                          'number_of_samples':int(data['L%d_NSA(%d)' % (n, w)]),
-                         'resolution':float(data['L%d_DH(%d)' % (n, w)])}
+                         'last_height':float(data['L%d_DH(%d)' % (n, w)])*(int(data['L%d_NSA(%d)' % (n, w)])-1)+float(data['L%d_H0(%d)' % (n, w)])
+                         }
                         )
                 line['params'] = windows
             elif 'Line%d' % n in labels and data['Line%d' % n]=='Synchro':
@@ -184,7 +186,8 @@ class RCFile(object):
                 dh = raw_data[x+3+3*w].split('=')[-1]
                 windows.append({'first_height':float(h0),
                      'number_of_samples':int(nsa),
-                     'resolution':float(dh)}
+                     'resolution':float(dh),
+                     'last_height':float(h0)+float(dh)*(int(nsa)-1)}
                     )
             line['params'] = windows
             self.data['lines'].append(line)

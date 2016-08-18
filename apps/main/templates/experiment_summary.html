@@ -38,66 +38,76 @@
 {% endfor %}
 </table>
 
+
+{% for configuration in configurations %}
+
+	{% if configuration.device.device_type.name == 'dds' %}
+		<div class="">
+		<h4 class="panel-title"><b> DDS </b></h4>
+		<br>
+		</div>
+
+		<table class="table table-bordered">
+			<!--<h4 class="panel-title">  </h4>-->
+			<tr><th>dds</th><td>(=</td></tr>
+		</table>
+	{% endif %}
+	
+	{% if configuration.device.device_type.name == 'rc' %}
+		<div class="">
+		<h4 class="panel-title"><b> CR </b></h4>
+		<br>
+		</div>
+	
+		<table class="table table-bordered">
+			<!--<h4 class="panel-title">  </h4>-->
+			<tr><th>IPP(km)</th><td>{{experiment_data.configurations.rc.ipp}}</td></tr>
+			<tr><th>NTX</th><td>{{experiment_data.configurations.rc.ntx}}</td></tr>
+			<tr><th>TX</th><td>{{tx}}</td></tr>
+			<tr><th>Code</th><td>{{code}}</td></tr>
+			<tr><th>Sampling Window</th><td>{{window|linebreaks}}</td></tr>
+		</table>
+	{% endif %}
+	
+	{% if configuration.device.device_type.name == 'jars' %}
+		<div class="">
+		<h4 class="panel-title"><b> JARS </b></h4>
+		<br>
+		</div>
+	
+		<table class="table table-bordered">
+			<!--<h4 class="panel-title"> JARS </h4>-->
+			<tr><th>Data Type</th><td>{{exp_type}}</td></tr>
+			<tr><th># Channels</th><td>{{configuration.channels_number}}</td></tr>
+			<tr><th>Coh Int</th><td>{{configuration.cohe_integr}}</td></tr>
+			<tr><th>FFT Points</th><td>{{configuration.fftpoints}}</td></tr>
+			{% if exp_type == 'PDATA'%}
+				<tr><th>Inc Int</th><td>{{configuration.incohe_integr}}</td></tr>
+				<tr><th>Spec. Comb.</th><td>{{configuration.spectral}}</td></tr>
+			{% endif %}
+			<tr><th>Acq Prof</th><td>{{configuration.acq_profiles}}</td></tr>
+			<tr><th>Prof x Block</th><td>{{configuration.profiles_block}}</td></tr>
+			<tr><th>Block x File</th><td>{{ configuration.raw_data_blocks }}</td></tr>
+		</table>
+	{% endif %}
+		
+{% endfor %}
+
+
 <div class="">
-<h4 class="panel-title"><b> Parameters </b></h4>
+<h4 class="panel-title"><b> Extra Parameters </b></h4>
 <br>
 </div>
 
 <table class="table table-bordered">
-{% for configuration in configurations %}
-	{% if configuration.device.device_type.name == 'dds' %}
-		<!--<h4 class="panel-title">  </h4>-->
-		<tr><th>dds</th><td>(=</td></tr>
-	{% endif %}
-	
-	{% if configuration.device.device_type.name == 'rc' %}
-		<!--<h4 class="panel-title">  </h4>-->
-		<tr><th>IPP(km)</th><td>{{experiment_data.configurations.rc.ipp}}</td></tr>
-		<tr><th>NTX</th><td>{{experiment_data.configurations.rc.ntx}}</td></tr>
-		<tr><th>TX</th><td>{{tx}}</td></tr>
-		<tr><th>Code</th><td>{{code}}</td></tr>
-		<tr><th>Sampling Window</th><td>{{window|linebreaks}}</td></tr>
-	{% endif %}
-	
-	{% if configuration.device.device_type.name == 'rc_mix' %}
-		<!--<h4 class="panel-title">  </h4>-->
-		<tr><th>rc_mix</th><td>(=</td></tr>
-	{% endif %}
-	
-	{% if configuration.device.device_type.name == 'jars' %}
-		<!--<h4 class="panel-title"> JARS </h4>-->
-		<tr><th>Data Type</th><td>{{exp_type}}</td></tr>
-		<tr><th># Channels</th><td>{{configuration.channels_number}}</td></tr>
-		<tr><th>Coh Int</th><td>{{configuration.cohe_integr}}</td></tr>
-		<tr><th>FFT Points</th><td>{{configuration.fftpoints}}</td></tr>
-		{% if exp_type == 'PDATA'%}
-			<tr><th>Inc Int</th><td>{{configuration.incohe_integr}}</td></tr>
-			<tr><th>Spec. Comb.</th><td>{{configuration.spectral}}</td></tr>
-		{% endif %}
-		<tr><th>Acq Prof</th><td>{{configuration.acq_profiles}}</td></tr>
-		<tr><th>Prof x Block</th><td>{{configuration.profiles_block}}</td></tr>
-		<tr><th>Block x File</th><td>(=</td></tr>
-	{% endif %}
-	
-	{% if configuration.device.device_type.name == 'usrp' %}
-		<!--<h4 class="panel-title">  </h4>-->
-		<tr><th>usrp</th><td>(=</td></tr>
-	{% endif %}
-	
-	{% if configuration.device.device_type.name == 'cgs' %}
-		<!--<h4 class="panel-title"> CGS </h4>-->
-		<!--<tr><th>Frequency 0</th><td>{{configuration.freq0}}</td></tr>-->
-		<!--<tr><th>Frequency 1</th><td>{{configuration.freq1}}</td></tr>-->
-		<!--<tr><th>Frequency 2</th><td>{{configuration.freq2}}</td></tr>-->
-		<!--<tr><th>Frequency 3</th><td>{{configuration.freq3}}</td></tr>-->
-	{% endif %}
-	
-	{% if configuration.device.device_type.name == 'abs' %}
-		<!--<h4 class="panel-title">  </h4>-->
-		<tr><th>abs</th><td>(=</td></tr>
-	{% endif %}
-{% endfor %}
+{% if jars_conf %}
+		<tr><th>Rate (MB/h)</th><td>{{ rate }}</td></tr>
+{% endif %}
+{% if dds_conf %}
+		<tr><th>Vmax (m/s)</th><td>{{ rate }}</td></tr>
+{% endif %}
 </table>
+
 
 <div class="pull-right">
 <button type="button" class="btn btn-primary" id="bt_back">Back</button>
@@ -119,6 +129,10 @@
   
   $("#bt_back").click(function() {
 	    document.location = "{% url 'url_experiment' experiment.id%}";
+  });
+  
+  $("#bt_verify").click(function() {
+	    document.location = "{% url 'url_verify_experiment' experiment.id%}";
   });
   
 </script>

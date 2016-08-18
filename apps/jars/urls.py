@@ -6,4 +6,6 @@ urlpatterns = (
     url(r'^(?P<conf_id>-?\d+)/new_filter/$', 'apps.jars.views.new_filter', name='url_new_jars_filter'),
     url(r'^(?P<conf_id>-?\d+)/view_filter/(?P<filter_id>-?\d+)/$', 'apps.jars.views.view_filter', name='url_jars_filter'),
     url(r'^(?P<conf_id>-?\d+)/view_filter/(?P<filter_id>-?\d+)/edit$', 'apps.jars.views.edit_filter', name='url_edit_jars_filter'),
+    url(r'^(?P<conf_id>-?\d+)/import/$', 'apps.jars.views.import_file', name='url_import_jars_conf'),
+    url(r'^(?P<conf_id>-?\d+)/read/$', 'apps.jars.views.read_conf', name='url_read_jars_conf'),
 )
