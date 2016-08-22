@@ -293,7 +293,7 @@ class IPData(object):
     def __sendTCPData(self, cadena):
 
         sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sck.settimeout(2)
+        sck.settimeout(3)
         
         try:
             sck.connect(self.address)
@@ -314,7 +314,10 @@ class IPData(object):
                 if time.time() - ini > 0.5:
                     break
                 
-                tmp = sck.recv(255)
+                try:
+                    tmp = sck.recv(4096)
+                except:
+                    break
                 
                 if len(tmp) < 1:
                     continue

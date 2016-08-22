@@ -1,5 +1,4 @@
 import os
-import ast
 import json
 
 from django import forms
@@ -321,8 +320,7 @@ class RCLineEditForm(forms.ModelForm):
                                             widget=forms.Select(attrs={'name':'%s|%s|%s' % (count, line.id, label)}),
                                             help_text=help_text)
                 
-            else:
-                
+            else:                
                 self.fields[label] = forms.CharField(initial=value, help_text=help_text)
                 
                 if label in ('code', ):                    
@@ -337,9 +335,9 @@ class RCLineEditForm(forms.ModelForm):
                     elif params[label]['widget']=='dc':
                         self.fields[label].widget = KmUnitDcWidget(attrs={'line':line, 'km2unit':km2unit, 'name':'%s|%s|%s' % (count, line.id, label)})
                     elif params[label]['widget']=='codes':
-                        self.fields[label].widget = CodesWidget(attrs={'line':line, 'km2unit':km2unit, 'name':'%s|%s|%s' % (count, line.id, label)})                                                    
-                else:                                    
-                    self.fields[label].widget = DefaultWidget(attrs={'name':'%s|%s|%s' % (count, line.id, label)})
+                        self.fields[label].widget = CodesWidget(attrs={'line':line, 'km2unit':km2unit, 'name':'%s|%s|%s' % (count, line.id, label)})                                                                        
+                else:
+                    self.fields[label].widget = DefaultWidget(attrs={'line':line, 'name':'%s|%s|%s' % (count, line.id, label)})
                 
     
     class Meta:

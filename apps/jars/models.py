@@ -245,6 +245,11 @@ class JARSConfiguration(Configuration):
         return self.device.status
     
     
+    def start_device(self):
+        
+        self.write_device()
+    
+    
     def echo(self):
         
         answer = api.echo(self.device.ip_address,self.device.port_address,'(=')
