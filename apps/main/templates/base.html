@@ -21,7 +21,7 @@
     </style>
     <!--[if lt IE 9]>
 	<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
-	<![endif]-->    
+	<![endif]-->
     <script src="{% static 'js/jquery.min.js' %}"></script>
     {% block extra-head %}
     {% endblock %}
@@ -39,32 +39,32 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="{% url 'index' %}" style="padding-top:1px"><img class="logo" alt="JRO" src="{% static "images/logo-jro-white-trans.png" %}"></a>
+        <a class="navbar-brand" href="{% url 'index' %}" style="padding-top:1px"><img class="logo" alt="JRO" src="{% static "images/logo-jro-color-trans.png" %}"></a>
       </div>
       <div class="collapse navbar-collapse" id="navigationbar">
-        <ul class="nav navbar-nav"> 
+        <ul class="nav navbar-nav">
           <li class=" dropdown {% block operation-active %}{% endblock %}"><a href="{% url 'url_operation'%}">Operation</a>
           </li>
           <li class=" dropdown {% block new-active %}{% endblock %}">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">New<span class="caret"></span></a>          
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">New<span class="caret"></span></a>
             <ul class="dropdown-menu" role="menu">
               <li><a href="{% url 'url_add_campaign' %}">Campaign</a></li>
               <li><a href="{% url 'url_add_experiment' %}">Experiment</a></li>
               <li><a href="{% url 'url_add_dev_conf' 0%}">Device Configuration</a></li>
               <li><a href="{% url 'url_add_device'%}">Device</a></li>
               <li><a href="{% url 'url_add_location'%}">Radar System</a></li>
-            </ul>          
+            </ul>
           </li>
           <li class=" dropdown {% block search-active %}{% endblock %}">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Search<span class="caret"></span></a>          
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Search<span class="caret"></span></a>
             <ul class="dropdown-menu" role="menu">
-              <li><a href="{% url 'url_campaigns' %}">Campaigns</a></li>              
+              <li><a href="{% url 'url_campaigns' %}">Campaigns</a></li>
               <li><a href="{% url 'url_experiments' %}">Experiments</a></li>
               <li><a href="{% url 'url_dev_confs' %}">Configurations</a></li>
               <li><a href="{% url 'url_devices' %}">Devices</a></li>
               <li><a href="{% url 'url_locations' %}">Radar Systems</a></li>
             </ul>
-          </li>          
+          </li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
           <li class="nav-divider"></li>
@@ -78,7 +78,7 @@
           </li>
           {% else %}
           <li><a href="{% url 'django.contrib.auth.views.login' %}?next={{request.get_full_path}}">Login</a></li>
-          {% endif %}                         
+          {% endif %}
         </ul>
       </div>
     </div>
@@ -89,15 +89,24 @@
 <div class="container">
     <div id="page" class="row" style="min-height:600px">
 
-	   <div class="col-md-3 hidden-xs hidden-sm" role="complementary">
+    {% if no_sidebar %}
+    <div class="col-md-0 hidden-xs hidden-sm" role="complementary">
+
+    {% else %}
+     <div class="col-md-3 hidden-xs hidden-sm" role="complementary">
+    {% endif %}
 	   <br><br>
 	       <div id="sidebar">
-	       {% block sidebar%}          
+	       {% block sidebar%}
            {% endblock %}
 	       </div>
 	   </div>
-	   
-	   <div class="col-md-9 col-xs-12" role="main">
+
+    {% if no_sidebar %}
+	   <div class="col-md-12 col-xs-12" role="main">
+    {% else %}
+     <div class="col-md-9 col-xs-12" role="main">
+    {% endif %}
 	   <div class="page-header">
         <h1>{% block content-title %}{% endblock %} <small>{% block content-suptitle %}{% endblock %}</small></h1>
        </div>
@@ -111,13 +120,14 @@
 	         {% endfor %}
 	       {% endif %}
        {% endblock %}
-       
+
 	   {% block content %}
 	   {% endblock %}
-	     
+
 	   </div>
-	   
-	</div><!--/row-->	
+
+
+	</div><!--/row-->
 </div> <!-- container -->
 
 <div id="debug">{{debug}}</div>
@@ -127,7 +137,7 @@
   <div class="container">
   <p><hr></p>
   <p>
-  &copy; <a href="http://jro.igp.gob.pe">Jicamarca Radio Observatory</a> - {% now "Y" %}               
+  &copy; <a href="http://jro.igp.gob.pe">Jicamarca Radio Observatory</a> - {% now "Y" %}
   </p>
   </div>
 </footer>
@@ -140,4 +150,3 @@
 {% endblock%}
 </body>
 </html>
-

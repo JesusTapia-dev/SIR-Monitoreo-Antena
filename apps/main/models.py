@@ -62,7 +62,7 @@ RADAR_STATES = (
                  (4, 'Scheduled'),
              )
 # Create your models here.
-    
+
 class Location(models.Model):
 
     name = models.CharField(max_length = 30)
@@ -70,7 +70,7 @@ class Location(models.Model):
 
     class Meta:
         db_table = 'db_location'
-    
+
     def __unicode__(self):
         return u'%s' % self.name
 
@@ -85,15 +85,15 @@ class DeviceType(models.Model):
 
     class Meta:
         db_table = 'db_device_types'
-    
+
     def __unicode__(self):
         return u'%s' % self.get_name_display()
-    
+
 class Device(models.Model):
 
     device_type = models.ForeignKey(DeviceType, on_delete=models.CASCADE)
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
-    
+
     name = models.CharField(max_length=40, default='')
     ip_address = models.GenericIPAddressField(protocol='IPv4', default='0.0.0.0')
     port_address = models.PositiveSmallIntegerField(default=2000)
@@ -102,14 +102,14 @@ class Device(models.Model):
 
     class Meta:
         db_table = 'db_devices'
-        
+
     def __unicode__(self):
-        return u'[{}]: {}'.format(self.device_type.name.upper(), 
+        return u'[{}]: {}'.format(self.device_type.name.upper(),
                                     self.name)
-    
-    def get_status(self):        
+
+    def get_status(self):
         return self.status
-    
+
     @property
     def status_color(self):
         color = 'muted'
@@ -121,16 +121,16 @@ class Device(models.Model):
             color = "info"
         elif self.status == 3:
             color = "success"
-        
+
         return color
-    
+
     def get_absolute_url(self):
         return reverse('url_device', args=[str(self.id)])
-    
+
 
 class Campaign(models.Model):
 
-    template = models.BooleanField(default=False)    
+    template = models.BooleanField(default=False)
     name = models.CharField(max_length=60, unique=True)
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
@@ -141,64 +141,64 @@ class Campaign(models.Model):
     class Meta:
         db_table = 'db_campaigns'
         ordering = ('name',)
-    
+
     def __unicode__(self):
         if self.template:
             return u'{} (template)'.format(self.name)
         else:
             return u'{}'.format(self.name)
 
-    
+
     def parms_to_dict(self):
-                
+
         import json
-        
+
         parameters = {}
         exp_parameters = {}
         experiments = Experiment.objects.filter(campaign = self)
-        
+
         i=1
         for experiment in experiments:
             exp_parameters['experiment-'+str(i)]  = json.loads(experiment.parms_to_dict())
             i += 1
-        
-        
+
+
         parameters['experiments'] = exp_parameters
         parameters['end_date']    = self.end_date.strftime("%Y-%m-%d")
         parameters['start_date']  = self.start_date.strftime("%Y-%m-%d")
         parameters['campaign']    = self.__unicode__()
         parameters['tags']        =self.tags
-        
+
         parameters = json.dumps(parameters, indent=2, sort_keys=False)
-        
+
         return parameters
-    
+
     def import_from_file(self, fp):
-        
+
         import os, json
-        
+
         parms = {}
-        
+
         path, ext = os.path.splitext(fp.name)
-        
+
         if ext == '.json':
             parms = json.load(fp)
-        
+
         return parms
-    
+
     def dict_to_parms(self, parms, CONF_MODELS):
-        
+
         experiments = Experiment.objects.filter(campaign = self)
         configurations = Configuration.objects.filter(experiment = experiments)
-        
+
         if configurations:
             for configuration in configurations:
                 configuration.delete()
-        
+
         if experiments:
             for experiment in experiments:
                 experiment.delete()
-                
+
         for parms_exp in parms['experiments']:
             location = Location.objects.get(name = parms['experiments'][parms_exp]['radar'])
             new_exp = Experiment(
@@ -210,39 +210,39 @@ class Campaign(models.Model):
             new_exp.save()
             new_exp.dict_to_parms(parms['experiments'][parms_exp],CONF_MODELS)
             new_exp.save()
-            
+
             self.name       = parms['campaign']
             self.start_date = parms['start_date']
             self.end_date   = parms['end_date']
             self.tags       = parms['tags']
             self.experiments.add(new_exp)
             self.save()
-            
-        return self              
-    
+
+        return self
+
     def get_absolute_url(self):
         return reverse('url_campaign', args=[str(self.id)])
-    
+
     def get_absolute_url_edit(self):
         return reverse('url_edit_campaign', args=[str(self.id)])
-    
+
     def get_absolute_url_export(self):
         return reverse('url_export_campaign', args=[str(self.id)])
-    
+
     def get_absolute_url_import(self):
         return reverse('url_import_campaign', args=[str(self.id)])
-    
-    
-    
+
+
+
 class RunningExperiment(models.Model):
     radar = models.OneToOneField('Location', on_delete=models.CASCADE)
     running_experiment = models.ManyToManyField('Experiment', blank = True)
     status = models.PositiveSmallIntegerField(default=0, choices=RADAR_STATES)
-    
-    
+
+
 class Experiment(models.Model):
 
-    template = models.BooleanField(default=False)    
+    template = models.BooleanField(default=False)
     name = models.CharField(max_length=40, default='', unique=True)
     location = models.ForeignKey('Location', null=True, blank=True, on_delete=models.CASCADE)
     start_time = models.TimeField(default='00:00:00')
@@ -252,58 +252,58 @@ class Experiment(models.Model):
     class Meta:
         db_table = 'db_experiments'
         ordering = ('template', 'name')
-    
+
     def __unicode__(self):
         if self.template:
             return u'%s (template)' % (self.name)
         else:
             return u'%s' % (self.name)
-    
+
     @property
     def radar_system(self):
         return self.location
-    
+
     def clone(self, **kwargs):
-        
+
         confs = Configuration.objects.filter(experiment=self, type=0)
         self.pk = None
         self.name = '{} [{:%Y/%m/%d}]'.format(self.name, datetime.now())
         for attr, value in kwargs.items():
             setattr(self, attr, value)
-        
+
         self.save()
-        
+
         for conf in confs:
             conf.clone(experiment=self, template=False)
-        
-        return self 
-    
+
+        return self
+
     def get_status(self):
         configurations =  Configuration.objects.filter(experiment=self)
         exp_status=[]
         for conf in configurations:
             print conf.status_device()
             exp_status.append(conf.status_device())
-            
+
         if not exp_status: #No Configuration
             self.status = 4
             self.save()
-            return 
-        
+            return
+
         total = 1
         for e_s in exp_status:
             total = total*e_s
-            
+
         if total == 0:                      #Error
             status = 0
         elif total == (3**len(exp_status)): #Running
             status = 2
         else:
             status = 1                      #Configurated
-        
+
         self.status = status
         self.save()
-        
+
     def status_color(self):
         color = 'muted'
         if self.status == 0:
@@ -314,20 +314,20 @@ class Experiment(models.Model):
             color = "success"
         elif self.status == 3:
             color = "warning"
-        
+
         return color
-    
+
     def get_absolute_url(self):
         return reverse('url_experiment', args=[str(self.id)])
-    
+
     def parms_to_dict(self):
-                
+
         import json
-        
+
         configurations = Configuration.objects.filter(experiment=self)
         conf_parameters = {}
         parameters={}
-        
+
         for configuration in configurations:
             if 'cgs' in configuration.device.device_type.name:
                 conf_parameters['cgs'] = configuration.parms_to_dict()
@@ -341,37 +341,37 @@ class Experiment(models.Model):
                 conf_parameters['usrp'] = configuration.parms_to_dict()
             if 'abs' in configuration.device.device_type.name:
                 conf_parameters['abs'] = configuration.parms_to_dict()
-        
+
         parameters['configurations'] = conf_parameters
         parameters['end_time']       = self.end_time.strftime("%H:%M:%S")
         parameters['start_time']     = self.start_time.strftime("%H:%M:%S")
         parameters['radar']          = self.radar_system.name
         parameters['experiment']     = self.name
         parameters = json.dumps(parameters, indent=2)
-        
+
         return parameters
-    
+
     def import_from_file(self, fp):
-        
+
         import os, json
-        
+
         parms = {}
-        
+
         path, ext = os.path.splitext(fp.name)
-        
+
         if ext == '.json':
             parms = json.load(fp)
-        
+
         return parms
-    
+
     def dict_to_parms(self, parms, CONF_MODELS):
-        
+
         configurations = Configuration.objects.filter(experiment=self)
-        
+
         if configurations:
                     for configuration in configurations:
                         configuration.delete()
-        
+
         for conf_type in parms['configurations']:
                     #--For ABS Device:
                     #--For USRP Device:
@@ -419,194 +419,194 @@ class Experiment(models.Model):
                                                   )
                         confcgs_form.dict_to_parms(parms['configurations']['cgs'])
                         confcgs_form.save()
-                        
-        location = Location.objects.get(name = parms['radar'])             
+
+        location = Location.objects.get(name = parms['radar'])
         self.name       = parms['experiment']
         self.location   = location
         self.start_time = parms['start_time']
         self.end_time   = parms['end_time']
         self.save()
-                        
+
         return self
-    
+
     def get_absolute_url_edit(self):
         return reverse('url_edit_experiment', args=[str(self.id)])
-    
+
     def get_absolute_url_import(self):
         return reverse('url_import_experiment', args=[str(self.id)])
-    
+
     def get_absolute_url_export(self):
         return reverse('url_export_experiment', args=[str(self.id)])
-    
-    
+
+
 class Configuration(PolymorphicModel):
 
     template = models.BooleanField(default=False)
-    
+
     name = models.CharField(verbose_name="Configuration Name", max_length=40, default='')
-    
+
     experiment = models.ForeignKey('Experiment', verbose_name='Experiment', null=True, blank=True, on_delete=models.CASCADE)
     device = models.ForeignKey('Device', verbose_name='Device', null=True, on_delete=models.CASCADE)
-    
+
     type = models.PositiveSmallIntegerField(default=0, choices=CONF_TYPES)
-    
+
     created_date = models.DateTimeField(auto_now_add=True)
     programmed_date = models.DateTimeField(auto_now=True)
-    
+
     parameters = models.TextField(default='{}')
-    
+
     message = ""
-    
+
     class Meta:
         db_table = 'db_configurations'
-    
+
     def __unicode__(self):
-        
+
         device = '{}:'.format(self.device.device_type.name.upper())
-        
+
         if 'mix' in self._meta.get_all_field_names():
             if self.mix:
-                device = '{} MIXED:'.format(self.device.device_type.name.upper())                
-        
+                device = '{} MIXED:'.format(self.device.device_type.name.upper())
+
         if self.template:
             return u'{} {} (template)'.format(device, self.name)
         else:
             return u'{} {}'.format(device, self.name)
 
     def clone(self, **kwargs):
-        
+
         self.pk = None
         self.id = None
         for attr, value in kwargs.items():
             setattr(self, attr, value)
-        
-        self.save()    
+
+        self.save()
 
         return self
-    
+
     def parms_to_dict(self):
-        
+
         parameters = {}
-        
+
         for key in self.__dict__.keys():
             parameters[key] = getattr(self, key)
-        
+
         return parameters
-    
+
     def parms_to_text(self):
-        
+
         raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
-        
+
         return ''
-    
+
     def parms_to_binary(self):
-        
+
         raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
-        
+
         return ''
-    
+
     def dict_to_parms(self, parameters):
-        
+
         if type(parameters) != type({}):
             return
-            
+
         for key in parameters.keys():
             setattr(self, key, parameters[key])
-        
+
     def export_to_file(self, format="json"):
-        
+
         import json
-        
+
         content_type = ''
-            
+
         if format == 'text':
             content_type = 'text/plain'
             filename = '%s_%s.%s' %(self.device.device_type.name, self.name, self.device.device_type.name)
             content = self.parms_to_text()
-        
+
         if format == 'binary':
             content_type = 'application/octet-stream'
             filename = '%s_%s.bin' %(self.device.device_type.name, self.name)
             content = self.parms_to_binary()
-        
+
         if not content_type:
             content_type = 'application/json'
             filename = '%s_%s.json' %(self.device.device_type.name, self.name)
             content = json.dumps(self.parms_to_dict(), indent=2)
-            
+
         fields = {'content_type':content_type,
                   'filename':filename,
                   'content':content
                   }
-        
+
         return fields
-    
+
     def import_from_file(self, fp):
-        
+
         import os, json
-        
+
         parms = {}
-        
+
         path, ext = os.path.splitext(fp.name)
-        
+
         if ext == '.json':
             parms = json.load(fp)
-        
+
         return parms
-      
+
     def status_device(self):
-        
+
         raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
-        
+
         return None
-    
+
     def stop_device(self):
-        
+
         raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
-        
+
         return None
-    
+
     def start_device(self):
-        
+
         raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
-        
+
         return None
-    
+
     def write_device(self, parms):
-        
+
         raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
-        
+
         return None
-    
+
     def read_device(self):
-        
+
         raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
-        
+
         return None
-    
+
     def get_absolute_url(self):
         return reverse('url_%s_conf' % self.device.device_type.name, args=[str(self.id)])
-    
+
     def get_absolute_url_edit(self):
         return reverse('url_edit_%s_conf' % self.device.device_type.name, args=[str(self.id)])
-    
+
     def get_absolute_url_import(self):
         return reverse('url_import_dev_conf', args=[str(self.id)])
-    
+
     def get_absolute_url_export(self):
         return reverse('url_export_dev_conf', args=[str(self.id)])
-    
+
     def get_absolute_url_write(self):
         return reverse('url_write_dev_conf', args=[str(self.id)])
-    
+
     def get_absolute_url_read(self):
         return reverse('url_read_dev_conf', args=[str(self.id)])
-    
+
     def get_absolute_url_start(self):
         return reverse('url_start_dev_conf', args=[str(self.id)])
-    
+
     def get_absolute_url_stop(self):
         return reverse('url_stop_dev_conf', args=[str(self.id)])
-    
+
     def get_absolute_url_status(self):
         return reverse('url_status_dev_conf', args=[str(self.id)])
