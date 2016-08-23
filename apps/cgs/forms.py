@@ -18,10 +18,9 @@ class CGSConfigurationForm(forms.ModelForm):
                 self.fields['experiment'].widget.attrs['disabled'] = 'disabled'
 
             self.fields['device'].widget.choices = [(device.id, device) for device in devices]
-    
+
     def clean(self):
-        return
-#
+        return       
 
     class Meta:
         model = CGSConfiguration
