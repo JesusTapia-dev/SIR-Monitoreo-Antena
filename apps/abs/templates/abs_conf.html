@@ -1,0 +1,462 @@
+{% extends "dev_conf.html" %}
+
+{% block extra-menu-actions %}
+<li><a href="{{ dev_conf.get_absolute_url_plot }}" target="_blank"><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> View Patterns </a></li>
+<li><a href="{{ dev_conf.get_absolute_url_write }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Write</a></li>
+{% endblock %}
+
+{% block extra-content %}
+<style>
+
+.abs {
+    border: 2px solid #00334d;
+    vertical-align: center;
+    display: inline-block;
+}
+.abs tr:nth-child(1){
+    border-bottom: 1px dashed #00334d;
+}
+.abs tr{
+    border-bottom: 0px solid #00334d;
+}
+.abs td {
+    border-right: 1px dashed #00334d;
+    text-align: center;
+    padding: 5px;
+}
+
+
+.legend {
+    margin-left: 15px;
+    display: inline-block;
+    border: 2px solid #00334d;
+    vertical-align: top;
+}
+.legend th{
+    border-bottom: 1px dashed #00334d;
+    font-weight: bold;
+    vertical-align: center;
+    text-align: center;
+}
+.legend td {
+    padding: 2px;
+    text-align: center;
+}
+
+
+.north {
+    border: 2px solid #00334d;
+    vertical-align: center;
+    font-weight: bold;
+}
+.north tr{
+    border: 1px solid #ffffff;
+    background-color: #FF0000;
+}
+.north td{
+    border: 2px solid #e2e2e7;
+    text-align: center;
+    padding: 1px 15px 1px 15px;
+}
+.north tr:nth-child(even) td:nth-child(n){
+    border-bottom: 12px solid #e2e2e7;
+}
+.north td:nth-child(n) {
+    border-right: 12px solid #e2e2e7;
+}
+.north td:nth-last-child(4n+1) {
+    border-right:  2px solid #e2e2e7;
+}
+.north tr:nth-last-child(1) td:nth-child(n){
+    border-bottom: 3px solid #e2e2e7;
+}
+
+.north tr:nth-child(2) td:nth-child(2){
+    background-color: #00cc00;
+}
+
+.north tr:nth-child(2) td:nth-child(4){
+    background-color: #ee902c;
+}
+
+
+
+.east {
+    border: 2px solid #00334d;
+    vertical-align: center;
+    font-weight: bold;
+}
+.east tr{
+    border: 1px solid #ffffff;
+    background-color: #FF0000;
+}
+.east td{
+    border: 2px solid #e2e2e7;
+    text-align: center;
+    padding: 1px 15px 1px 15px;
+}
+.east tr:nth-child(even) td:nth-child(n){
+    border-bottom: 12px solid #e2e2e7;
+}
+.east td:nth-child(n) {
+    border-right: 12px solid #e2e2e7;
+}
+.east td:nth-last-child(4n+1) {
+    border-right:  2px solid #e2e2e7;
+}
+.east tr:nth-last-child(1) td:nth-child(n){
+    border-bottom: 3px solid #e2e2e7;
+}
+
+.east tr:nth-child(2) td:nth-child(2){
+    background-color: #00cc00;
+}
+
+.east tr:nth-child(2) td:nth-child(4){
+    background-color: #ee902c;
+}
+
+
+.west {
+    border: 2px solid #00334d;
+    vertical-align: center;
+    font-weight: bold;
+}
+.west tr{
+    border: 1px solid #ffffff;
+    background-color: #FF0000;
+}
+.west td{
+    border: 2px solid #e2e2e7;
+    text-align: center;
+    padding: 1px 15px 1px 15px;
+}
+.west tr:nth-child(even) td:nth-child(n){
+    border-bottom: 12px solid #e2e2e7;
+}
+.west td:nth-child(n) {
+    border-right: 12px solid #e2e2e7;
+}
+.west td:nth-last-child(4n+1) {
+    border-right:  2px solid #e2e2e7;
+}
+.west tr:nth-last-child(1) td:nth-child(n){
+    border-bottom: 3px solid #e2e2e7;
+}
+
+.west tr:nth-child(2) td:nth-child(2){
+    background-color: #00cc00;
+}
+
+.west tr:nth-child(2) td:nth-child(4){
+    background-color: #ee902c;
+}
+
+
+.south {
+    border: 2px solid #00334d;
+    vertical-align: center;
+    font-weight: bold;
+}
+.south tr{
+    border: 1px solid #ffffff;
+    background-color: #FF0000;
+}
+.south td{
+    border: 2px solid #e2e2e7;
+    text-align: center;
+    padding: 1px 15px 1px 15px;
+}
+.south tr:nth-child(even) td:nth-child(n){
+    border-bottom: 12px solid #e2e2e7;
+}
+.south td:nth-child(n) {
+    border-right: 12px solid #e2e2e7;
+}
+.south td:nth-last-child(4n+1) {
+    border-right:  2px solid #e2e2e7;
+}
+.south tr:nth-last-child(1) td:nth-child(n){
+    border-bottom: 3px solid #e2e2e7;
+}
+
+.south tr:nth-child(2) td:nth-child(2){
+    background-color: #00cc00;
+}
+
+.south tr:nth-child(2) td:nth-child(4){
+    background-color: #ee902c;
+}
+
+
+
+</style>
+
+<h4>Beams:</h4>
+{% if beams_id %}
+
+<div class="container">
+  <ul class="nav nav-pills">
+
+  {% for beam in beams %}
+  <li {% if forloop.counter == 1 %} class="active" {% endif %}>
+    <a data-toggle="pill" id="button-{{ forloop.counter }}" href="#">{{ forloop.counter }}</a>
+  </li>
+  {% endfor %}
+
+  </ul>
+</div>
+
+
+<script>
+$(document).ready(function() {
+
+  {% for beam in beams %}
+    $( "#button-{{ forloop.counter }}" ).click(function() {
+      //$(this).addClass('active');
+
+      var beam_upvalues   = {{beam.get_upvalues}};
+      var beam_downvalues = {{beam.get_downvalues}};
+      //alert(beam_upvalues)
+      var table = document.getElementById('abs_pattern');
+      var cells = table.getElementsByTagName('td');
+      //alert(cells[99].textContent);
+
+      for (var i = 1, len = 30; i < len; i++) {
+          if ((i > 24) && (i<29)){
+            cells[i].innerHTML = beam_upvalues[i-1].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-1].toFixed(1);
+            }
+          else if ((i > 16) && (i<21)){
+            cells[i].innerHTML = beam_upvalues[i-1].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-1].toFixed(1);
+            }
+          else if ((i > 8) && (i<13)){
+            cells[i].innerHTML = beam_upvalues[i-1].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-1].toFixed(1);
+            }
+          else if (i < 5) {
+            cells[i].innerHTML = beam_upvalues[i-1].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-1].toFixed(1);
+            }
+        }
+
+        for (var i = 34, len = 63; i < len; i++) {
+          if ((i > 57) && (i<62)) {
+            cells[i].innerHTML = beam_upvalues[i-30].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-30].toFixed(1);
+            }
+          if ((i > 49) && (i<54)) {
+            cells[i].innerHTML = beam_upvalues[i-30].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-30].toFixed(1);
+            }
+          else if ((i > 41) && (i<46)) {
+            cells[i].innerHTML = beam_upvalues[i-30].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-30].toFixed(1);
+            }
+          else if (i < 38) {
+            cells[i].innerHTML = beam_upvalues[i-30].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-30].toFixed(1);
+            }
+        }
+
+        for (var i = 67, len = 96; i < len; i++) {
+          if ((i > 90) && (i<95)) {
+            cells[i].innerHTML = beam_upvalues[i-35].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-35].toFixed(1);
+            }
+          else if ((i > 82) && (i<87)) {
+            cells[i].innerHTML = beam_upvalues[i-35].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-35].toFixed(1);
+            }
+          else if ((i > 74) && (i<79)) {
+            cells[i].innerHTML = beam_upvalues[i-35].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-35].toFixed(1);
+            }
+          else if (i < 71) {
+            cells[i].innerHTML = beam_upvalues[i-35].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-35].toFixed(1);
+            }
+        }
+
+        for (var i = 100, len = 129; i < len; i++) {
+          if ((i > 123) && (i<128)) {
+            cells[i].innerHTML = beam_upvalues[i-64].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-64].toFixed(1);
+            }
+          else if ((i > 115) && (i<120)) {
+            cells[i].innerHTML = beam_upvalues[i-64].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-64].toFixed(1);
+            }
+          else if ((i > 107) && (i<112)) {
+            cells[i].innerHTML = beam_upvalues[i-64].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-64].toFixed(1);
+            }
+          else if (i < 104) {
+            cells[i].innerHTML = beam_upvalues[i-64].toFixed(1);
+            cells[i+4].innerHTML = beam_downvalues[i-64].toFixed(1);
+            }
+        }
+
+        //$('#button-1').addClass("active");
+
+      });
+
+  {% endfor %}
+
+
+
+
+//})
+
+//function ChangeColor() {
+//    document.getElementById("button_1").style.backgroundColor = "#2c3e50";
+//    document.getElementById("button_1").style.color = "#ecf0f1";
+//}
+});
+</script>
+
+
+
+<br>
+
+<table id="abs_pattern" class="abs">
+  <tr>
+    <td> <b>North Quarter</b>
+      <table class="north ">
+        <tr>
+          <td>{{beams.0.get_upvalues.0}}</td> <td>{{beams.0.get_upvalues.1}}</td> <td>{{beams.0.get_upvalues.2}}</td> <td>{{beams.0.get_upvalues.3}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.0}}</td> <td>{{beams.0.get_downvalues.1}}</td> <td>{{beams.0.get_downvalues.2}}</td> <td>{{beams.0.get_downvalues.3}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_upvalues.8}}</td> <td>{{beams.0.get_upvalues.9}}</td> <td>{{beams.0.get_upvalues.10}}</td> <td>{{beams.0.get_upvalues.11}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.8}}</td> <td>{{beams.0.get_downvalues.9}}</td> <td>{{beams.0.get_downvalues.10}}</td> <td>{{beams.0.get_downvalues.11}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_upvalues.16}}</td> <td>{{beams.0.get_upvalues.17}}</td> <td>{{beams.0.get_upvalues.18}}</td> <td>{{beams.0.get_upvalues.19}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.16}}</td> <td>{{beams.0.get_downvalues.17}}</td> <td>{{beams.0.get_downvalues.18}}</td> <td>{{beams.0.get_downvalues.19}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_upvalues.24}}</td> <td>{{beams.0.get_upvalues.25}}</td> <td>{{beams.0.get_upvalues.26}}</td> <td>{{beams.0.get_upvalues.27}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.24}}</td> <td>{{beams.0.get_downvalues.25}}</td> <td>{{beams.0.get_downvalues.26}}</td> <td>{{beams.0.get_downvalues.27}}</td>
+        </tr>
+      </table>
+    </td>
+    <td> <b>East Quarter</b>
+      <table class="east ">
+        <tr>
+          <td>{{beams.0.get_upvalues.4}}</td> <td>{{beams.0.get_upvalues.5}}</td> <td>{{beams.0.get_upvalues.6}}</td> <td>{{beams.0.get_upvalues.7}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.4}}</td> <td>{{beams.0.get_downvalues.5}}</td> <td>{{beams.0.get_downvalues.6}}</td> <td>{{beams.0.get_downvalues.7}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_upvalues.12}}</td> <td>{{beams.0.get_upvalues.13}}</td> <td>{{beams.0.get_upvalues.14}}</td> <td>{{beams.0.get_upvalues.15}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.12}}</td> <td>{{beams.0.get_downvalues.13}}</td> <td>{{beams.0.get_downvalues.14}}</td> <td>{{beams.0.get_downvalues.15}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_upvalues.20}}</td> <td>{{beams.0.get_upvalues.21}}</td> <td>{{beams.0.get_upvalues.22}}</td> <td>{{beams.0.get_upvalues.23}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.20}}</td> <td>{{beams.0.get_downvalues.21}}</td> <td>{{beams.0.get_downvalues.22}}</td> <td>{{beams.0.get_downvalues.23}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_upvalues.28}}</td> <td>{{beams.0.get_upvalues.29}}</td> <td>{{beams.0.get_upvalues.30}}</td> <td>{{beams.0.get_upvalues.31}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.28}}</td> <td>{{beams.0.get_downvalues.29}}</td> <td>{{beams.0.get_downvalues.30}}</td> <td>{{beams.0.get_downvalues.31}}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+    <tr>
+    <td> <b>West Quarter</b>
+      <table class="west ">
+        <tr>
+          <td>{{beams.0.get_upvalues.32}}</td> <td>{{beams.0.get_upvalues.33}}</td> <td>{{beams.0.get_upvalues.34}}</td> <td>{{beams.0.get_upvalues.35}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.32}}</td> <td>{{beams.0.get_downvalues.33}}</td> <td>{{beams.0.get_downvalues.34}}</td> <td>{{beams.0.get_downvalues.35}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_upvalues.40}}</td> <td>{{beams.0.get_upvalues.41}}</td> <td>{{beams.0.get_upvalues.42}}</td> <td>{{beams.0.get_upvalues.43}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.40}}</td> <td>{{beams.0.get_downvalues.41}}</td> <td>{{beams.0.get_downvalues.42}}</td> <td>{{beams.0.get_downvalues.43}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_upvalues.48}}</td> <td>{{beams.0.get_upvalues.49}}</td> <td>{{beams.0.get_upvalues.50}}</td> <td>{{beams.0.get_upvalues.51}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.48}}</td> <td>{{beams.0.get_downvalues.49}}</td> <td>{{beams.0.get_downvalues.50}}</td> <td>{{beams.0.get_downvalues.51}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_upvalues.56}}</td> <td>{{beams.0.get_upvalues.57}}</td> <td>{{beams.0.get_upvalues.58}}</td> <td>{{beams.0.get_upvalues.59}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.56}}</td> <td>{{beams.0.get_downvalues.57}}</td> <td>{{beams.0.get_downvalues.58}}</td> <td>{{beams.0.get_downvalues.59}}</td>
+        </tr>
+      </table>
+    </td>
+    <td> <b>South Quarter</b>
+      <table class="south ">
+        <tr>
+          <td>{{beams.0.get_upvalues.36}}</td> <td>{{beams.0.get_upvalues.37}}</td> <td>{{beams.0.get_upvalues.38}}</td> <td>{{beams.0.get_upvalues.39}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.36}}</td> <td>{{beams.0.get_downvalues.37}}</td> <td>{{beams.0.get_downvalues.38}}</td> <td>{{beams.0.get_downvalues.39}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_upvalues.44}}</td> <td>{{beams.0.get_upvalues.45}}</td> <td>{{beams.0.get_upvalues.46}}</td> <td>{{beams.0.get_upvalues.47}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.44}}</td> <td>{{beams.0.get_downvalues.45}}</td> <td>{{beams.0.get_downvalues.46}}</td> <td>{{beams.0.get_downvalues.47}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_upvalues.52}}</td> <td>{{beams.0.get_upvalues.53}}</td> <td>{{beams.0.get_upvalues.54}}</td> <td>{{beams.0.get_upvalues.55}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.52}}</td> <td>{{beams.0.get_downvalues.53}}</td> <td>{{beams.0.get_downvalues.54}}</td> <td>{{beams.0.get_downvalues.55}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_upvalues.60}}</td> <td>{{beams.0.get_upvalues.61}}</td> <td>{{beams.0.get_upvalues.62}}</td> <td>{{beams.0.get_upvalues.63}}</td>
+        </tr>
+        <tr>
+          <td>{{beams.0.get_downvalues.60}}</td> <td>{{beams.0.get_downvalues.61}}</td> <td>{{beams.0.get_downvalues.62}}</td> <td>{{beams.0.get_downvalues.63}}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<table class="legend">
+  <tr>
+    <th colspan="2">Legend</th>
+  </tr>
+  <tr>
+    <td style="color:#ff0000;"><i>RED</i></td><td>Disconnected</td>
+  </tr>
+  <tr>
+    <td style="color:#ee902c;"><i>ORANGE</i></td><td>Connected</td>
+  </tr>
+  <tr>
+    <td style="color:#00cc00;"><i>GREEN</i></td><td>Running</td>
+  </tr>
+</table>
+
+{% else %}
+  <p style="color:#b4bcc2; margin-left: 5%;"><i>No Beams...</i></p>
+{% endif %}
+
+
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "dev_conf.html" %}
+{% load static %}
+{% load bootstrap3 %}
+{% load main_tags %}
+
+{% block content %}
+<style>
+
+</style>
+
+{% if abs_beams %}
+  <div>
+    <h4>Beams:</h4>
+
+    <div class="container">
+      <ul class="nav nav-pills">
+
+      {% for beam in abs_beams %}
+      <li {% if forloop.counter == 1 %} class="active" {% endif %}>
+        <a  data-toggle="pill" id="button-{{ forloop.counter }}" href="#">{{ forloop.counter }}</a>
+      </li>
+      {% endfor %}
+
+      </ul>
+    </div>
+
+  </div>
+
+  <br>
+  {% include "abs_pattern.html" %}
+  <br>
+
+{% else %}
+  <div>
+    <h4>Beams:</h4>
+    <p style="color:#b4bcc2; margin-left: 5%;"><i>No Beams...</i></p>
+  </div>
+{% endif %}
+
+{% endblock %}
+
+<script>
+function ChangeColor() {
+    document.getElementById("button_1").style.backgroundColor = "#2c3e50";
+    document.getElementById("button_1").style.color = "#ecf0f1";
+}
+</script>

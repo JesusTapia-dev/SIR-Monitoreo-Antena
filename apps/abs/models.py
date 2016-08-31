@@ -619,7 +619,7 @@ class ABSBeam(models.Model):
         self.save()
 
         return parameters
-        
+
 
     def change_beam(self, beam_pos=0):
 
@@ -869,6 +869,38 @@ class ABSBeam(models.Model):
         return data
 
     @property
+    def get_uptx(self):
+        """
+        This function shows the up-tx-values of one beam
+        """
+        data = json.loads(self.tx)
+        up_data = data['up']
+
+        up_values = []
+        for data in up_data:
+            for i in range(0,8):
+                up_values.append(data[i])
+
+        return up_values
+
+    @property
+    def get_downtx(self):
+        """
+        This function shows the down-tx-values of one beam
+        """
+        data = json.loads(self.tx)
+        down_data = data['down']
+
+        down_values = []
+        for data in down_data:
+            for i in range(0,8):
+                down_values.append(data[i])
+
+        return down_values
+
+
+
+    @property
     def get_rx(self):
         """
         This function shows the rx-values of one beam
@@ -876,3 +908,33 @@ class ABSBeam(models.Model):
         data = json.loads(self.rx)
 
         return data
+
+    @property
+    def get_uprx(self):
+        """
+        This function shows the up-rx-values of one beam
+        """
+        data = json.loads(self.rx)
+        up_data = data['up']
+
+        up_values = []
+        for data in up_data:
+            for i in range(0,8):
+                up_values.append(data[i])
+
+        return up_values
+
+    @property
+    def get_downrx(self):
+        """
+        This function shows the down-rx-values of one beam
+        """
+        data = json.loads(self.rx)
+        down_data = data['down']
+
+        down_values = []
+        for data in down_data:
+            for i in range(0,8):
+                down_values.append(data[i])
+
+        return down_values
