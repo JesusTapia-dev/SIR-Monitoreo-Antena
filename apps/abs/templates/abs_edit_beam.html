@@ -1,0 +1,19 @@
+{% extends "dev_conf_edit.html" %}
+
+{% load bootstrap3 %}
+{% load static %}
+{% load main_tags %}
+
+{% block content %}
+<form class="form" method="post">
+  {% csrf_token %}
+  {#% bootstrap_form form layout='horizontal' size='medium' %#}
+  {{form}}
+  <div style="clear: both;"></div>
+  <br>
+  <div class="pull-right">
+  <button type="button" class="btn btn-primary" onclick="{% if previous %}window.location.replace('{{ previous }}');{% else %}history.go(-1);{% endif %}">Cancel</button>
+  <button type="submit" class="btn btn-primary">{{button}}</button>
+  </div>
+</form>
+{% endblock %}
