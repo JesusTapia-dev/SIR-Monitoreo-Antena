@@ -296,7 +296,7 @@ def edit_beam(request, id_conf, id_beam):
     #kwargs['previous'] = conf.get_absolute_url_edit()
     kwargs['edit'] = True
 
-    return render(request, 'abs_add_beam.html', kwargs)
+    return render(request, 'abs_edit_beam.html', kwargs)
 
 
 
