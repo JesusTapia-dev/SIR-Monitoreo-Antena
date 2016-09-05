@@ -1,5 +1,5 @@
 {% load bootstrap3 %}
-<div class="pull-right"><button id="bt_toggle" type="button" class="btn btn-default btn-sm" >
+<div class="pull-right"><button id="bt_toggle" type="button" class="btn btn-default btn-xs" >
 Expand/Collapse
 </button></div><br><br>
 {% for line in rc_lines %}
@@ -9,15 +9,15 @@ Expand/Collapse
         <a role="button" data-toggle="collapse" data-parent="#div_lines" href="#collapse{{line.id}}" aria-expanded="true" aria-controls="collapse{{line.id}}">
           CH{{line.channel}} - {{line.get_name}}
         </a>
-      {% if edit %}  
-      <button type="button" class="btn-xs btn-default pull-right" name="bt_remove_line" value="{{line.pk}}"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>      
+      {% if edit %}
+      <button type="button" class="btn-xs btn-default pull-right" name="bt_remove_line" value="{{line.pk}}"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
       {% endif %}
-      </h4>      
+      </h4>
     </div>
     <div id="collapse{{line.id}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{line.id}}">
       <div class="panel-body">
         {% bootstrap_form line.form layout='horizontal' size='small' %}
-        <br><br>        
+        <br><br>
         {% for f in line.subforms %}
           <div class="form-group form-group-sm">
           <label class="col-md-3 control-label">{{line.line_type.name}}-{{ forloop.counter }}</label>
@@ -26,17 +26,17 @@ Expand/Collapse
           {% bootstrap_form f layout='horizontal' size='small' %}
           <div class="clearfix"></div>
         {% endfor %}
-          
+
         {% if edit and line.subform %}
           <br>
           <button type="button" class="btn btn-sm btn-default" style="margin-left: 10px" name="bt_add_subline" value="{{line.pk}}">Add {{line.line_type.name}}</button>
         {% endif %}
-        
+
         {% if edit and line.line_type.name == 'codes' %}
           <br>
           <button type="button" class="btn btn-sm btn-default" style="margin-left: 10px" name="bt_edit_codes" value="{{line.pk}}">Edit</button>
         {% endif %}
-        
+
       </div>
     </div>
   </div>

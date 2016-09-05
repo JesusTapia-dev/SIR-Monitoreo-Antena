@@ -1,2 +1,2 @@
-[{"fields": {"name": "49_920MHz_clock60MHz_F0MHz_12_25_2", "clock": "60", "mult": 5, "fch": 49.92, "fch_decimal": 721554505, "filter_fir": 6, "filter_2": 10, "filter_5": 1, "speed": 0}, "model": "jars.jarsfilter", "pk": 1}, 
+[{"fields": {"name": "49_920MHz_clock60MHz_F0MHz_12_25_2", "clock": "60", "mult": 5, "fch": 49.92, "fch_decimal": 721554505, "filter_fir": 6, "filter_2": 10, "filter_5": 1, "speed": 0}, "model": "jars.jarsfilter", "pk": 1} 
  ]

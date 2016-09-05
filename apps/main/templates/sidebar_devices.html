@@ -1,34 +1,34 @@
-	
+
 	{% if campaign %}
     	<div class="panel panel-default">
     	  <div class="panel-heading">
     	    <h4>Campaign</h4>
     	  </div>
-    	  <div class="list-group"> 
+    	  <div class="list-group">
     	  	<a href="{% url 'url_campaign' campaign.id %}" class="list-group-item active" >{{ campaign.name }}</a>
     	  </div>
     	</div>
 	{% endif %}
-	
+
 	{% if experiment %}
 		<div class="panel panel-default">
 		  <div class="panel-heading">
 		    <h4>Experiments</h4>
 		  </div>
-		  <div class="list-group"> 
+		  <div class="list-group">
 		  {% for item in side_experiments %}
-		    <a href="{% url 'url_experiment' item.id %}" class="list-group-item {%if item.id == experiment.id%}active{%endif%}">{{item.name}}</a>      
+		    <a href="{% url 'url_experiment' item.id %}" class="list-group-item {%if item.id == experiment.id%}active{%endif%}">{{item.name}}</a>
 		  {% endfor %}
 		  </div>
 		</div>
 	{% endif %}
-	
+
 	{% if dev_conf %}
 		<div class="panel panel-default">
 		  <div class="panel-heading">
 		    <h4>Device Configurations</h4>
 		  </div>
-		  <div class="list-group"> 
+		  <div class="list-group">
 		  {% for item in side_configurations %}
 		    <a href="{{item.get_absolute_url}}" class="list-group-item {%if item.id == dev_conf.id%}active{%endif%}">{{item}}</a>      
 		  {% endfor %}

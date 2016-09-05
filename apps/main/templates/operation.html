@@ -6,50 +6,33 @@
 <link href="{% static 'css/bootstrap-datetimepicker.min.css' %}" media="screen" rel="stylesheet">
 {% endblock %}
 
-{% block camp-active %}active{% endblock %}
+{% block operation-active %}active{% endblock %}
 
-{% block content-title %}{{title}}{% endblock %}
-{% block content-suptitle %}{{suptitle}}{% endblock %}
 
 {% block content %}
 
-<!-- Not Empty-->
-{% if details %}
+{% bootstrap_form form layout='horizontal' size='medium' %}
+<div style="clear: both;"></div>
 
-<form class="form" method="post" action="">
-  {% csrf_token %}
+{% if campaign %}
 
-  {% bootstrap_form form layout='horizontal' size='medium' %}
-  <div style="clear: both;"></div>
-  <br>
-  <!-- For deep search -->
-  {% if search_button == True %}
-  <button id="button-1" type="button" class="btn btn-primary pull-right">{{button}}</button>
-  {% endif %}
-  <br>
-  <br>
-</form>
-<br>
-<br>
-
-{% endif %}
 <div class="clearfix"></div>
 <h2>Radar Systems</h2>
 <br>
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true" >
-      
+
 	  {% for location in locations %}
-	  
+
 	  <div class="panel panel-default">
 	    <div class="panel-heading" role="tab" id="headingTwo">
 	      <h4 class="panel-title">
-	        
+
 	        <a class="collapsed" role="button" data-toggle="collapse"  href="#collapseTwo-{{ location.id }}" aria-expanded="false" aria-controls="collapseTwo">
-	          {{location.name}}: Experiments
+	          {{location.name}}
 	          <span>
 	          </span>
 	        </a>
-	        
+
 	        <button type="button" name="bt_play" class="btn btn-primary pull-right btn-xs" data-url="{% url 'url_radar_play' campaign.id location.id %}" style="margin-left: 10px">
                 <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
             </button>
@@ -61,7 +44,7 @@
             </button>
 	      </h4>
 	    </div>
-	    
+
 	    <div id="collapseTwo-{{ location.id }}" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
 	      <div class="panel-body">
 	      <table class="table table-hover">
@@ -71,10 +54,10 @@
 			  <th>{{ header|title }}</th>
 			  {% endfor%}
 			</tr>
-			    
-			{% for item in experiments %}
+
+			{% for item in location.experiments %}
 			    {% if location.name in item.location.name  %}
-				
+
 					<tr class="clickable-row" data-href="{% url 'url_experiment' item.id %}" >
 						<td>{{ forloop.counter }}</td>
 			        	{% for key in experiment_keys %}
@@ -87,14 +70,14 @@
 					</tr>
 			     {% endif %}
 			{% endfor %}
-		  </table>  
+		  </table>
 	      </div>
 	    </div>
 	  </div>
 	  {% endfor %}
 </div>
 
-
+{% endif %}
 
 {% endblock %}
 
@@ -102,28 +85,28 @@
 
 {% block extra-js%}
 <script type="text/javascript">
-    
-  //--------For PLAY Button-------  
+
+  //--------For PLAY Button-------
     $("#accordion").on("click", "button[name=bt_play]", function(){
     	//alert($(this).data('url'));
     	document.location = $(this).data('url');
     });
-  
-  //--------For STOP Button-------  
+
+  //--------For STOP Button-------
     $("#accordion").on("click", "button[name=bt_stop]", function(){
     	//alert($(this).data('url'));
     	document.location = $(this).data('url');
     });
-  
-  //--------For REFRESH Button-------  
+
+  //--------For REFRESH Button-------
     $("#accordion").on("click", "button[name=bt_refresh]", function(){
     	document.location = $(this).data('url');
     });
- 
+
   $(".clickable-row").click(function() {
       document.location = $(this).data("href");
   });
-  
+
   {% if search_button == True %}
   $(document).ready(function() {
 	    $("#id_campaign").change(function() {
@@ -134,18 +117,12 @@
   });
   {% else %}
   $(document).ready(function() {
-	    $("#id_campaign").change(function() {
-	    	var id_camp = document.getElementById("id_campaign").value;
-	    	//alert(id_camp);
-			document.location = "{% url 'url_operation_search'%}"+String(id_camp);
+	    $("#id_campaign").change(function() {	      
+			document.location = "{% url 'url_operation'%}"+$(this).val();		  
 		});
   });
   {% endif %}
-  
-  $("#button-1").click(function() {
-      document.location = "{% url 'url_operation_search' %}";
-  });
-  
-  
+
+
 </script>
 {% endblock %}

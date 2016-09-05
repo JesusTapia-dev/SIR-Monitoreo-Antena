@@ -42,10 +42,10 @@ INSTALLED_APPS = (
     'apps.misc',
     'apps.rc',
     'apps.dds',
-    'apps.cgs',
     'apps.jars',
     'apps.usrp',
     'apps.abs',
+    'apps.cgs',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -89,6 +89,9 @@ DATABASES = {
         'NAME': 'radarsys',
         'USER': 'developer',
         'PASSWORD': 'idi2015',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            }
     }
 }
 

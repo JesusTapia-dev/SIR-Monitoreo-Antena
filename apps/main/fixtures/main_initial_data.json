@@ -1,10 +1,11 @@
 [
-{"fields": {"name": "JRO Imaging", "description": ""}, "model": "main.location", "pk": 1}, 
+{"fields": {"name": "JRO", "description": ""}, "model": "main.location", "pk": 1},
 {"fields": {"name": "JASMET", "description": ""}, "model": "main.location", "pk": 2},
 {"fields": {"name": "SOUSY", "description": ""}, "model": "main.location", "pk": 3},
 {"fields": {"name": "JULIA", "description": ""}, "model": "main.location", "pk": 4},
-{"fields": {"name": "rc", "description": ""}, "model": "main.devicetype", "pk": 1}, 
-{"fields": {"name": "dds", "description": ""}, "model": "main.devicetype", "pk": 2}, 
-{"fields": {"name": "cgs", "description": ""}, "model": "main.devicetype", "pk": 3}, 
-{"fields": {"name": "jars", "description": ""}, "model": "main.devicetype", "pk": 4}
+{"fields": {"name": "rc", "description": ""}, "model": "main.devicetype", "pk": 1},
+{"fields": {"name": "dds", "description": ""}, "model": "main.devicetype", "pk": 2},
+{"fields": {"name": "cgs", "description": ""}, "model": "main.devicetype", "pk": 3},
+{"fields": {"name": "jars", "description": ""}, "model": "main.devicetype", "pk": 4},
+{"fields": {"name": "abs", "description": ""}, "model": "main.devicetype", "pk": 5}
 ]

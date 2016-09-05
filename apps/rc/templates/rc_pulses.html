@@ -4,7 +4,7 @@
 {% load main_tags %}
 
 {% block extra-head %}
-<link href="http://cdn.pydata.org/bokeh/release/bokeh-0.11.1.min.css" rel="stylesheet" type="text/css">
+<link href="http://cdn.pydata.org/bokeh/release/bokeh-0.12.1.min.css" rel="stylesheet" type="text/css">
 {% endblock %}
 
 {% block content %}
@@ -22,7 +22,7 @@
         <option value=1 selected>Km</option>
         {%else%}
         <option value=1>Km</option>
-        {%endif%}  
+        {%endif%}
       </select>
     </div>
   </div>
@@ -44,19 +44,19 @@
 
 {% block extra-js%}
 
-<script src="{% static 'js/bokeh-0.11.1.min.js' %}"></script>
+<script src="{% static 'js/bokeh-0.12.1.min.js' %}"></script>
 
 <script type="text/javascript">
 
   $("#id_axis").change(function() {
-    if($(this).val()=='0'){    
+    if($(this).val()=='0'){
       document.location = '?unit';
     }else{
       document.location = '?km'
     }
   });
 
-</script> 
+</script>
 {{script}}
 
 {% endblock %}

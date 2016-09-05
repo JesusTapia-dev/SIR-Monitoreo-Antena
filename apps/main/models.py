@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from datetime import datetime
 
 from django.db import models
-from polymorphic import PolymorphicModel
+from polymorphic.models import PolymorphicModel
 
 from django.core.urlresolvers import reverse
 
@@ -71,7 +71,7 @@ class Location(models.Model):
     class Meta:
         db_table = 'db_location'
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s' % self.name
 
     def get_absolute_url(self):
@@ -86,7 +86,7 @@ class DeviceType(models.Model):
     class Meta:
         db_table = 'db_device_types'
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s' % self.get_name_display()
 
 class Device(models.Model):
@@ -103,7 +103,7 @@ class Device(models.Model):
     class Meta:
         db_table = 'db_devices'
 
-    def __unicode__(self):
+    def __str__(self):
         return u'[{}]: {}'.format(self.device_type.name.upper(),
                                     self.name)
 
@@ -142,12 +142,11 @@ class Campaign(models.Model):
         db_table = 'db_campaigns'
         ordering = ('name',)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.template:
             return u'{} (template)'.format(self.name)
         else:
             return u'{}'.format(self.name)
-
 
     def parms_to_dict(self):
 
@@ -166,7 +165,7 @@ class Campaign(models.Model):
         parameters['experiments'] = exp_parameters
         parameters['end_date']    = self.end_date.strftime("%Y-%m-%d")
         parameters['start_date']  = self.start_date.strftime("%Y-%m-%d")
-        parameters['campaign']    = self.__unicode__()
+        parameters['campaign']    = self.__str__()
         parameters['tags']        =self.tags
 
         parameters = json.dumps(parameters, indent=2, sort_keys=False)
@@ -182,7 +181,7 @@ class Campaign(models.Model):
         path, ext = os.path.splitext(fp.name)
 
         if ext == '.json':
-            parms = json.load(fp)
+            parms = json.loads(fp.read())
 
         return parms
 
@@ -220,6 +219,19 @@ class Campaign(models.Model):
 
         return self
 
+    def get_experiments_by_location(self):
+
+        ret = []
+        locations = set([e.location for e in self.experiments.all()])
+        for loc in locations:
+            dum = {}
+            dum['name'] = loc.name
+            dum['id'] = loc.pk
+            dum['experiments'] = [e for e in self.experiments.all() if e.location==loc]
+            ret.append(dum)
+
+        return ret
+
     def get_absolute_url(self):
         return reverse('url_campaign', args=[str(self.id)])
 
@@ -253,7 +265,7 @@ class Experiment(models.Model):
         db_table = 'db_experiments'
         ordering = ('template', 'name')
 
-    def __unicode__(self):
+    def __str__(self):
         if self.template:
             return u'%s (template)' % (self.name)
         else:
@@ -282,7 +294,6 @@ class Experiment(models.Model):
         configurations =  Configuration.objects.filter(experiment=self)
         exp_status=[]
         for conf in configurations:
-            print conf.status_device()
             exp_status.append(conf.status_device())
 
         if not exp_status: #No Configuration
@@ -360,7 +371,7 @@ class Experiment(models.Model):
         path, ext = os.path.splitext(fp.name)
 
         if ext == '.json':
-            parms = json.load(fp)
+            parms = json.loads(fp.read().decode('utf-8'))
 
         return parms
 
@@ -460,11 +471,11 @@ class Configuration(PolymorphicModel):
     class Meta:
         db_table = 'db_configurations'
 
-    def __unicode__(self):
+    def __str__(self):
 
         device = '{}:'.format(self.device.device_type.name.upper())
 
-        if 'mix' in self._meta.get_all_field_names():
+        if 'mix' in [f.name for f in self._meta.get_fields()]:
             if self.mix:
                 device = '{} MIXED:'.format(self.device.device_type.name.upper())
 
@@ -495,15 +506,13 @@ class Configuration(PolymorphicModel):
 
     def parms_to_text(self):
 
-        raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
+        raise NotImplementedError("This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper())
 
-        return ''
 
     def parms_to_binary(self):
 
-        raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
+        raise NotImplementedError("This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper())
 
-        return ''
 
     def dict_to_parms(self, parameters):
 
@@ -556,33 +565,28 @@ class Configuration(PolymorphicModel):
 
     def status_device(self):
 
-        raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
+        raise NotImplementedError("This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper())
 
-        return None
 
     def stop_device(self):
 
-        raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
+        raise NotImplementedError("This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper())
 
-        return None
 
     def start_device(self):
 
-        raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
+        raise NotImplementedError("This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper())
 
-        return None
 
     def write_device(self, parms):
 
-        raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
+        raise NotImplementedError("This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper())
 
-        return None
 
     def read_device(self):
 
-        raise NotImplementedError, "This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper()
+        raise NotImplementedError("This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper())
 
-        return None
 
     def get_absolute_url(self):
         return reverse('url_%s_conf' % self.device.device_type.name, args=[str(self.id)])
