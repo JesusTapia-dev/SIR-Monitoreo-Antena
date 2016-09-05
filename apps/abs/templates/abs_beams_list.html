@@ -14,7 +14,7 @@
       <div class="panel-heading" role="tab" id="heading{{beam.id}}">
         <h4 class="panel-title">
           <a role="button" onclick="beam_values(beam.id)" data-toggle="collapse" data-parent="#div_lines" href="#collapse{{beam.id}}" aria-expanded="true" aria-controls="collapse{{beam.id}}">
-            #{{forloop.counter}} Name:  {{beam.name}}
+            #{{forloop.counter}}:  {{beam.name}}
           </a>
           {% if edit %}
             <button id="bt_remove_beam-{{ beam.id }}" type="button" class="btn-xs btn-default pull-right" name="bt_remove_beam" value="{{beam.pk}}"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
