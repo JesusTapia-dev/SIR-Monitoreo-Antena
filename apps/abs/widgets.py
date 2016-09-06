@@ -4,7 +4,6 @@ from itertools import chain
 
 from django import forms
 from django.utils.safestring import mark_safe
-from django.utils.encoding import force_unicode
 from django.utils.html import conditional_escape
 
 style = """<style>

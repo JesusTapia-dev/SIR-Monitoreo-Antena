@@ -1401,8 +1401,8 @@ def operation(request, id_camp=None):
     kwargs = {}
     campaigns = Campaign.objects.filter(start_date__lte=datetime.now(),
                                         end_date__gte=datetime.now()).order_by('-start_date')
-    
-    
+
+
     if id_camp:
         campaign = get_object_or_404(Campaign, pk = id_camp)
         form = OperationForm(initial={'campaign': campaign.id}, campaigns=campaigns)
@@ -1412,19 +1412,18 @@ def operation(request, id_camp=None):
         kwargs['form'] = form
         return render(request, 'operation.html', kwargs)
 
-        
-   
+
+
     #---Experiment
     keys = ['id', 'name', 'start_time', 'end_time', 'status']
     kwargs['experiment_keys'] = keys[1:]
     kwargs['experiments'] = experiments
     #---Radar
     kwargs['locations'] = campaign.get_experiments_by_location()
-    print kwargs['locations']
     #---Else
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = campaign.name
-    kwargs['form'] = form    
+    kwargs['form'] = form
 
     return render(request, 'operation.html', kwargs)
 
@@ -1586,4 +1585,3 @@ def radar_refresh(request, id_camp, id_radar):
         return HttpResponseRedirect(reverse('url_operation_search', args=[id_camp]))
     else:
         return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
-

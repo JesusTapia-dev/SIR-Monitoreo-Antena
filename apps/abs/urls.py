@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-import views
+from apps.abs import views
 
 urlpatterns = (
     url(r'^(?P<id_conf>-?\d+)/$', views.abs_conf, name='url_abs_conf'),

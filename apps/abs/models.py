@@ -283,7 +283,7 @@ class ABSConfiguration(Configuration):
         module_port = self.device.port_address
         read_route = 'http://'+module_ip+':'+str(module_port)+'/read'
 
-        print read_route
+        print(read_route)
 
         answer = ''
         module_bits = ''
@@ -410,10 +410,10 @@ class ABSConfiguration(Configuration):
             sock.connect(module_address)
             sock.send(message_tx)
             sock.close()
-            print "Writing abs module:"+module_address[0]+"..."
+            print("Writing abs module:"+module_address[0]+"...")
         except:
             sock = None
-            print "Problem writing abs module:"+module_address[0]
+            print("Problem writing abs module:"+module_address[0])
             return 0
 
         return 1
@@ -427,7 +427,7 @@ class ABSConfiguration(Configuration):
             try:
                 self.beam_selector(i,beam_pos)
             except:
-                print "Problem with module: 192.168.1."+str(i)
+                print("Problem with module: 192.168.1."+str(i))
                 self.message = "Problem with module: 192.168.1."+str(i)
                 #return 0
         return 1
@@ -554,7 +554,7 @@ class ABSConfiguration(Configuration):
         for j in jobs:
                 j.join()
 
-        print "List processing complete."
+        print("List processing complete.")
         return 1
 
 
