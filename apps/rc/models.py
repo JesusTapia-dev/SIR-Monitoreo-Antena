@@ -1,7 +1,9 @@
 
 import ast
 import json
+import requests
 import numpy as np
+from base64 import b64encode
 
 from django.db import models
 from django.core.urlresolvers import reverse
@@ -258,60 +260,60 @@ class RCConfiguration(Configuration):
     def add_data(self, value):
 
         return (254, value-1)
-
-    def parms_to_binary(self):
+    
+    def parms_to_binary(self, dat=True):
         '''
         Create "dat" stream to be send to CR
         '''
 
-        data = []
+        data = bytearray()
         # create header
-        data.append(self.add_cmd('DISABLE'))
-        data.append(self.add_cmd('CONTINUE'))
-        data.append(self.add_cmd('RESTART'))
+        data.extend(self.add_cmd('DISABLE'))
+        data.extend(self.add_cmd('CONTINUE'))
+        data.extend(self.add_cmd('RESTART'))
 
         if self.control_sw:
-            data.append(self.add_cmd('SW_ONE'))
+            data.extend(self.add_cmd('SW_ONE'))
         else:
-            data.append(self.add_cmd('SW_ZERO'))
+            data.extend(self.add_cmd('SW_ZERO'))
 
         if self.control_tx:
-            data.append(self.add_cmd('TX_ONE'))
+            data.extend(self.add_cmd('TX_ONE'))
         else:
-            data.append(self.add_cmd('TX_ZERO'))
+            data.extend(self.add_cmd('TX_ZERO'))
 
         # write divider
-        data.append(self.add_cmd('CLOCK_DIVIDER'))
-        data.append(self.add_data(self.clock_divider))
+        data.extend(self.add_cmd('CLOCK_DIVIDER'))
+        data.extend(self.add_data(self.clock_divider))
 
         # write delays
-        data.append(self.add_cmd('DELAY_START'))
+        data.extend(self.add_cmd('DELAY_START'))
         # first delay is always zero
-        data.append(self.add_data(1))
+        data.extend(self.add_data(1))
 
         delays = self.get_delays()
 
         for delay in delays:
             while delay>252:
-                data.append(self.add_data(253))
+                data.extend(self.add_data(253))
                 delay -= 253
-            data.append(self.add_data(delay))
+            data.extend(self.add_data(int(delay)))
 
         # write flips
-        data.append(self.add_cmd('FLIP_START'))
+        data.extend(self.add_cmd('FLIP_START'))
 
         states = self.get_pulses(binary=False)
 
         for flips, delay in zip(states, delays):
             flips.reverse()
             flip = int(''.join([str(x) for x in flips]), 2)
-            data.append(self.add_data(flip+1))
+            data.extend(self.add_data(flip+1))
             while delay>252:
-                data.append(self.add_data(1))
+                data.extend(self.add_data(1))
                 delay -= 253
 
         # write sampling period
-        data.append(self.add_cmd('SAMPLING_PERIOD'))
+        data.extend(self.add_cmd('SAMPLING_PERIOD'))
         wins = self.get_lines(line_type__name='windows')
         if wins:
             win_params = json.loads(wins[0].params)['params']
@@ -321,12 +323,16 @@ class RCConfiguration(Configuration):
                 dh = 1
         else:
             dh = 1
-        data.append(self.add_data(dh))
+        data.extend(self.add_data(dh))
 
         # write enable
-        data.append(self.add_cmd('ENABLE'))
+        data.extend(self.add_cmd('ENABLE'))        
 
-        return '\n'.join(['{}'.format(x) for tup in data for x in tup])
+        if not dat:
+            return data
+
+        return '\n'.join(['{}'.format(x) for x in data])
+
 
     def update_from_file(self, filename):
         '''
@@ -342,7 +348,7 @@ class RCConfiguration(Configuration):
         for line in self.get_lines():
             line.update_pulses()
 
-    def plot_pulses(self, km=False):
+    def plot_pulses2(self, km=False):
 
         import matplotlib.pyplot as plt
         from bokeh.resources import CDN
@@ -354,7 +360,7 @@ class RCConfiguration(Configuration):
 
         N = len(lines)
         npoints = self.total_units/self.km2unit if km else self.total_units
-        fig = plt.figure(figsize=(10, 2+N*0.5))
+        fig = plt.figure(figsize=(12, 2+N*0.5))
         ax = fig.add_subplot(111)
         labels = ['IPP']
 
@@ -377,51 +383,137 @@ class RCConfiguration(Configuration):
         ax.set_yticks(range(len(labels)))
         ax.set_yticklabels(labels)
         ax.set_xlabel = 'Units'
-        plot = to_bokeh(fig, use_pandas=False)
+        plot = to_bokeh(fig, use_pandas=False)        
         plot.tools = [PanTool(dimensions=['width']), WheelZoomTool(dimensions=['width']), ResetTool(), SaveTool()]
         plot.toolbar_location="above"
 
         return components(plot, CDN)
 
+    def plot_pulses(self, km=False):
+
+        from bokeh.plotting import figure
+        from bokeh.resources import CDN
+        from bokeh.embed import components
+        from bokeh.models import FixedTicker, PrintfTickFormatter
+        from bokeh.models.tools import WheelZoomTool, ResetTool, PanTool, HoverTool, SaveTool
+        from bokeh.models.sources import ColumnDataSource
+
+        lines = self.get_lines().reverse()
+        
+        N = len(lines)
+        npoints = self.total_units/self.km2unit if km else self.total_units
+        ipp = self.ipp if km else self.ipp*self.km2unit
+        
+        hover = HoverTool(tooltips=[("Line", "@name"),
+                                    ("IPP", "@ipp"),
+                                    ("X", "@left")])
+        
+        tools = [PanTool(dimensions=['width']), 
+                 WheelZoomTool(dimensions=['width']), 
+                 hover, SaveTool()]
+        
+        plot = figure(width=1000, 
+                      height=40+N*50, 
+                      y_range = (0, N),
+                      tools=tools, 
+                      toolbar_location='above',
+                      toolbar_sticky=False,)            
+                
+        plot.xaxis.axis_label = 'Km' if km else 'Units'
+        plot.xaxis[0].formatter = PrintfTickFormatter(format='%d')
+        plot.yaxis.axis_label = 'Pulses'        
+        plot.yaxis[0].ticker=FixedTicker(ticks=list(range(N)))
+        plot.yaxis[0].formatter = PrintfTickFormatter(format='Line %d')
+
+        for i, line in enumerate(lines):            
+            
+            points = [tup for tup in line.pulses_as_points(km=km) if tup!=(0,0)]
+            
+            source = ColumnDataSource(data = dict(
+                                                  bottom = [i for tup in points],
+                                                  top = [i+0.5 for tup in points],
+                                                  left = [tup[0] for tup in points],
+                                                  right = [tup[1] for tup in points],
+                                                  ipp = [int(tup[0]/ipp) for tup in points],
+                                                  name = [line.get_name() for tup in points]
+                                                  ))
+            
+            plot.quad(
+                     bottom = 'bottom',
+                     top = 'top',
+                     left = 'left',
+                     right = 'right',
+                     source = source,
+                     fill_alpha = 0,
+                     #line_color = 'blue',
+                     )
+            
+            plot.line([0, npoints], [i, i])#, color='blue')
+
+        return components(plot, CDN)
+
     def status_device(self):
 
-        return 0
+        try:
+            req = requests.get(self.device.url)
+            payload = req.json()
+            if payload['status']=='ok':
+                self.device.status = 3
+            else:
+                self.device.status = 1
+        except:
+            self.device.status = 0
+            
+        self.device.save()
+        
+        return self.device.status 
+            
 
+    def reset_device(self):
+                
+        payload = bytearray()
+        payload.extend(self.add_cmd('RESTART'))
+        data = b64encode(payload)
+        req = requests.put(self.device.url, data)
+        
+        if data==req.text.encode('utf8'):
+            return 1
+        else:
+            return 0
+    
     def stop_device(self):
 
-        answer = api.disable(ip = self.device.ip_address,
-                             port = self.device.port_address)
-
-        if answer[0] != "1":
-            self.message = answer[0:]
+        payload = bytearray()
+        payload.extend(self.add_cmd('DISABLE'))
+        data = b64encode(payload)
+        req = requests.put(self.device.url, data)
+       
+        if data==req.text.encode('utf8'):
+            return 1
+        else:
             return 0
-
-        self.message = answer[2:]
-        return 1
 
     def start_device(self):
 
-        answer = api.enable(ip = self.device.ip_address,
-                            port = self.device.port_address)
-
-        if answer[0] != "1":
-            self.message = answer[0:]
+        payload = bytearray()
+        payload.extend(self.add_cmd('ENABLE'))
+        data = b64encode(payload)
+        req = requests.put(self.device.url, data)
+        
+        if data==req.text.encode('utf8'):
+            return 1
+        else:
             return 0
-
-        self.message = answer[2:]
-        return 1
 
     def write_device(self):
-        answer = api.write_config(ip = self.device.ip_address,
-                                 port = self.device.port_address,
-                                 parms = self.parms_to_dict())
-
-        if answer[0] != "1":
-            self.message = answer[0:]
+        
+        data = b64encode(self.parms_to_binary(dat=False))
+        req = requests.put(self.device.url, data)
+        print(req.text)
+        if data==req.text.encode('utf8'):
+            return 1
+        else:
             return 0
-
-        self.message = answer[2:]
-        return 1
 
 
 class RCLineCode(models.Model):
@@ -550,7 +642,7 @@ class RCLine(models.Model):
         km2unit = self.rc_configuration.km2unit
         us2unit = self.rc_configuration.us2unit
         ipp = self.rc_configuration.ipp
-        ntx = self.rc_configuration.ntx
+        ntx = int(self.rc_configuration.ntx)
         ipp_u = int(ipp*km2unit)
         total = ipp_u*ntx if self.rc_configuration.total_units==0 else self.rc_configuration.total_units
         y = []

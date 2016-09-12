@@ -57,11 +57,12 @@
 
 			{% for item in location.experiments %}
 			    {% if location.name in item.location.name  %}
-
 					<tr class="clickable-row" data-href="{% url 'url_experiment' item.id %}" >
 						<td>{{ forloop.counter }}</td>
 			        	{% for key in experiment_keys %}
-			        	    {% if 'status' in key %}
+			        	    {% if 'name' in key %}
+                                <td class="col-md-5">{{ item|value:key }}</td>
+			        	    {% elif 'status' in key %}
 			        	        <td class="text-{{item.status_color}}">{{ item|value:key }}</td>
 			        	    {% else %}
 			        	        <td>{{ item|value:key }}</td>

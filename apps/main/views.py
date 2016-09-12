@@ -1399,6 +1399,7 @@ def get_paginator(model, page, order, filters={}, n=10):
 def operation(request, id_camp=None):
 
     kwargs = {}
+    kwargs['no_sidebar'] = True
     campaigns = Campaign.objects.filter(start_date__lte=datetime.now(),
                                         end_date__gte=datetime.now()).order_by('-start_date')
 
@@ -1412,8 +1413,6 @@ def operation(request, id_camp=None):
         kwargs['form'] = form
         return render(request, 'operation.html', kwargs)
 
-
-
     #---Experiment
     keys = ['id', 'name', 'start_time', 'end_time', 'status']
     kwargs['experiment_keys'] = keys[1:]
@@ -1423,7 +1422,7 @@ def operation(request, id_camp=None):
     #---Else
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = campaign.name
-    kwargs['form'] = form
+    kwargs['form'] = form    
 
     return render(request, 'operation.html', kwargs)
 

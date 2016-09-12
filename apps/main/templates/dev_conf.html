@@ -37,7 +37,7 @@
 <table class="table table-bordered">
 	<tr>
 		<th>Status</th>
-		<td>{%if status != "No connected" %} <span class="glyphicon glyphicon-ok-circle text-success" aria-hidden="true"></span> {{status}}  {% else %} <span class="glyphicon glyphicon-remove-circle text-danger" aria-hidden="true"></span> {{status}} {% endif %}</td>
+		<td class="text-{{dev_conf.device.status_color}}"> {{dev_conf.device.get_status_display}} </td>
 	</tr>
 	
 	{% for key in dev_conf_keys %}

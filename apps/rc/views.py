@@ -360,7 +360,31 @@ def plot_pulses(request, conf_id):
     script, div = conf.plot_pulses(km=km)
 
     kwargs = {}
+    kwargs['no_sidebar'] = True
+    kwargs['title'] = 'RC Pulses'
+    kwargs['suptitle'] = conf.name
+    kwargs['div'] = mark_safe(div)
+    kwargs['script'] = mark_safe(script)
+    kwargs['units'] = conf.km2unit
+    kwargs['kms'] = 1/conf.km2unit
 
+    if km:
+        kwargs['km_selected'] = True
+
+    if 'json' in request.GET:
+        return HttpResponse(json.dumps({'div':mark_safe(div), 'script':mark_safe(script)}), content_type="application/json")
+    else:
+        return render(request, 'rc_pulses.html', kwargs)
+
+def plot_pulses2(request, conf_id):
+
+    conf = get_object_or_404(RCConfiguration, pk=conf_id)
+    km = True if 'km' in request.GET else False
+
+    script, div = conf.plot_pulses2(km=km)
+
+    kwargs = {}
+    kwargs['no_sidebar'] = True
     kwargs['title'] = 'RC Pulses'
     kwargs['suptitle'] = conf.name
     kwargs['div'] = mark_safe(div)

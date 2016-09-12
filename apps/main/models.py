@@ -124,6 +124,11 @@ class Device(models.Model):
 
         return color
 
+    @property
+    def url(self):
+        
+        return 'http://{}:{}/'.format(self.ip_address, self.port_address)
+
     def get_absolute_url(self):
         return reverse('url_device', args=[str(self.id)])
 
