@@ -1,0 +1,25 @@
+{% load static %}
+{% load bootstrap3 %}
+{% load main_tags %}
+
+{% block content %}
+<style>
+</style>
+
+<div id="PictureOverJRODown" style="float: right">
+  <img id="imgMainDown" src="{% url 'url_plot_down_beam' beam.abs_conf.id beam.id %}" alt="Error in Parameters" style="width:360px;height:270px;">
+  <img id="imgLoaderDown" src="{% static 'images/loading_loading.gif' %}" alt="Error in Parameters" width="50" height="50" align="left">
+
+</div>
+
+<script>
+
+$('#imgMainDown').hide();
+	$('#imgLoaderDown').show();
+	    $('#imgMainDown').load(function(){
+	      $('#imgLoaderDown').hide();
+        $('#imgMainDown').show();
+});
+//window.onload = function () { alert("It's loaded!") }
+</script>
+{% endblock %}

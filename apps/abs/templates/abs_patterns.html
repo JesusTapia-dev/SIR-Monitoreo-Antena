@@ -8,27 +8,28 @@
 
 </style>
 
+
+
 {% if abs_beams %}
   <div>
     <h4>Beams:</h4>
 
     <div class="container">
-      <ul class="nav nav-pills">
-
-      {% for beam in abs_beams %}
-      <li {% if forloop.counter == 1 %} class="active" {% endif %}>
-        <a  data-toggle="pill" id="button-{{ forloop.counter }}" href="#">{{ forloop.counter }}</a>
-      </li>
-      {% endfor %}
-
-      </ul>
+      <div class="btn-group">
+        {% for abs_beam in abs_beams %}
+          <button id="bt_beam{{ forloop.counter }}" type="button"  class="btn btn-default">{{ forloop.counter }}</button>
+        {% endfor %}
+      </div>
     </div>
 
-  </div>
 
+  </div>
   <br>
-  {% include "abs_pattern.html" %}
-  <br>
+
+  {% if beam %}
+    {% include "abs_pattern.html" %}
+  {% endif %}
+
 
 {% else %}
   <div>
@@ -37,11 +38,17 @@
   </div>
 {% endif %}
 
-{% endblock %}
 
 <script>
-function ChangeColor() {
-    document.getElementById("button_1").style.backgroundColor = "#2c3e50";
-    document.getElementById("button_1").style.color = "#ecf0f1";
-}
+{% for abs_beam in abs_beams %}
+  $("#bt_beam{{ forloop.counter }}").click(function() {
+    document.location = "{% url 'url_plot_abs_pattern' abs_beam.abs_conf.id abs_beam.id %}";
+  });
+{% endfor %}
+//function ChangeColor() {
+//    document.getElementById("button_1").style.backgroundColor = "#2c3e50";
+//    document.getElementById("button_1").style.color = "#ecf0f1";
+//}
 </script>
+
+{% endblock %}
