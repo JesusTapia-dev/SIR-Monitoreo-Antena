@@ -3,23 +3,9 @@
 {% load main_tags %}
 
 {% block content %}
-<style>
-</style>
 
 <div id="PictureOverJROUp" style="float: right">
-  <img id="imgMain" src="{% url 'url_plot_up_beam' beam.abs_conf.id beam.id %}" alt="Error in Parameters" style="width:360px;height:270px;">
-  <img id="imgLoader" src="{% static 'images/loading_loading.gif' %}" alt="Error in Parameters" width="50" height="50">
-
+  <img id="imgMain" src="{% url 'url_plot_beam' beam.abs_conf.id beam.id 'up' %}" alt="Error ploting..." style="width:360px;height:360px; background-image: url({% static 'images/loader.gif' %});background-repeat: no-repeat;background-position: 50% 50%;">  
 </div>
 
-<script>
-
-$('#imgMain').hide();
-	$('#imgLoader').show();
-	    $('#imgMain').load(function(){
-	      $('#imgLoader').hide();
-        $('#imgMain').show();
-});
-
-</script>
 {% endblock %}

@@ -18,13 +18,15 @@ class ColorTable:
         self.table = table
         #set to path for data folder, file: col_koki.dat
         if filepath==None:
-            filepath= './data/'
+            filepath= './apps/abs/utils/data/'
         self.filepath = filepath
 
     def readTable(self):
         if self.table>0:
             if self.table==1:
-                f = open(os.path.join(self.filepath,'col_koki.dat'),'rb')
+                
+                f = open(os.path.join(self.filepath, './col_koki.dat') ,'rb')
+                
 
                 #f = open('./col_koki.dat','rb')
 

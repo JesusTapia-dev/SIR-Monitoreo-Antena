@@ -10,6 +10,7 @@ import numpy
 import numpy.fft
 import scipy.linalg
 import scipy.special
+from StringIO import StringIO
 #import Numeric
 
 import Misc_Routines
@@ -20,7 +21,7 @@ import Astro_Coords
 
 class JroPattern():
     def __init__(self,pattern=0,path=None,filename=None,nptsx=101,nptsy=101,maxphi=5,fftopt=0, \
-        getcut=0,dcosx=None,dcosy=None,eomwl=6,airwl=4):
+        getcut=0,dcosx=None,dcosy=None,eomwl=6,airwl=4, **kwargs):
         """
         JroPattern class creates an object to represent the useful parameters for beam mode-
         lling of the Jicamarca VHF radar.
@@ -60,16 +61,26 @@ class JroPattern():
 
 
         # Getting antenna configuration.
-        setup = JroAntSetup.ReturnSetup(path=path,filename=filename,pattern=pattern)
-
-        ues = setup["ues"]
-        phase = setup["phase"]
-        gaintx = setup["gaintx"]
-        gainrx = setup["gainrx"]
-        justrx = setup["justrx"]
+        if filename:
+            setup = JroAntSetup.ReturnSetup(path=path,filename=filename,pattern=pattern)
+    
+            ues = setup["ues"]
+            phase = setup["phase"]
+            gaintx = setup["gaintx"]
+            gainrx = setup["gainrx"]
+            justrx = setup["justrx"]
+            self.title = setup["title"]
+        else:
+            ues = kwargs["ues"]
+            phase = kwargs["phases"]
+            gaintx = kwargs["gain_tx"]
+            gainrx = kwargs["gain_rx"]
+            justrx = kwargs["just_rx"]
+            self.title = kwargs.get("title", "JRO Pattern")
 
         # Defining attributes for JroPattern class.
         # Antenna configuration
+        
         self.uestx = ues
         self.phasetx = phase
         self.gaintx = gaintx
@@ -105,13 +116,13 @@ class JroPattern():
         self.norpattern = None
         self.maxpattern = None
 
-        self.title = setup["title"]
+        
 
         self.getPattern()
 
     def getPattern(self):
         """
-        getpattern method returns the modelled total antenna pattern and its mean position.
+        getpattern method returns the modeled total antenna pattern and its mean position.
 
         Return
         ------
@@ -342,12 +353,18 @@ class JroPattern():
                 yindex = iy*(self.getcut==0) + ix*(self.getcut==1)
 
                 argx = ar[0,0]*self.dcosx[ix] - lr[0,0]
-                junkx = numpy.sin(0.5*self.kk*nr[0,0]*argx)/numpy.sin(0.5*self.kk*argx)
-                if argx == 0.0:    junkx = nr[0,0]
+                if argx == 0.0:    
+                    junkx = nr[0,0]
+                else:
+                    junkx = numpy.sin(0.5*self.kk*nr[0,0]*argx)/numpy.sin(0.5*self.kk*argx)
+                
 
                 argy = ar[1,0]*self.dcosy[yindex] - lr[1,0]
-                junky = numpy.sin(0.5*self.kk*nr[1,0]*argy)/numpy.sin(0.5*self.kk*argy)
-                if argy == 0.0: junky = nr[1,0]
+                if argy == 0.0: 
+                    junky = nr[1,0]
+                else:
+                    junky = numpy.sin(0.5*self.kk*nr[1,0]*argy)/numpy.sin(0.5*self.kk*argy)
+                
 
                 dipole[ix,iy] = junkx*junky
 
@@ -502,7 +519,7 @@ class BField():
         x_ant = numpy.array([1,0,0])
         y_ant = numpy.array([0,1,0])
         z_ant = numpy.array([0,0,1])
-
+        
         if self.site==0:
             title_site = "Magnetic equator"
             coord_site = numpy.array([-76+52./60.,-11+57/60.,0.5])
@@ -530,8 +547,8 @@ class BField():
         nfields = 1
 
         grid_res = 0.5
-        nlon = numpy.int(maglimits[2] - maglimits[0])/grid_res + 1
-        nlat = numpy.int(maglimits[3] - maglimits[1])/grid_res + 1
+        nlon = int(numpy.int(maglimits[2] - maglimits[0])/grid_res + 1)
+        nlat = int(numpy.int(maglimits[3] - maglimits[1])/grid_res + 1)
 
         location = numpy.zeros((nlon,nlat,2))
         mlon = numpy.atleast_2d(numpy.arange(nlon)*grid_res + maglimits[0])
@@ -941,10 +958,10 @@ class overJroShow:
 #    __tmpDir = 'overJro/tempReports'
 #     __serverdocspath = '/Users/dsuarez/Pictures'
 #     __tmpDir = 'overjro'
-    __serverdocspath = None
-    __tmpDir = None
+    __serverdocspath = ''
+    __tmpDir = ''
 
-    def __init__(self):
+    def __init__(self, title=''):
         self.year = None
         self.month = None
         self.dom = None
@@ -971,12 +988,18 @@ class overJroShow:
         self.time_mag = None
         self.main_dec = None
         self.ObjC = None
-        self.ptitle = ''
+        self.ptitle = title
         self.path4plotname = None
         self.plotname0 = None
         self.plotname1 = None
         self.plotname2 = None
         self.scriptHeaders = 0
+        self.glat = -11.95
+        self.glon = -76.8667
+        self.UT = 5 #timezone
+
+        self.glat = -11.951481
+        self.glon = -76.874383
 #       self.outputHead('Show Plot')
 #        self.printBody()
 
@@ -1180,8 +1203,6 @@ class overJroShow:
 
         # Defining plot filenames
         self.path4plotname = os.path.join(self.__serverdocspath,self.__tmpDir)
-        print "PATH4"
-        print os.path.join(self.__serverdocspath,self.__tmpDir)
         self.plotname0 = 'over_jro_0_%i.png'% (time.time()) #plot pattern & objects
         self.plotname1 = 'over_jro_1_%i.png'% (time.time()) #plot antenna cuts
         self.plotname2 = 'over_jro_2_%i.png'% (time.time()) #plot sky noise
@@ -1204,7 +1225,71 @@ class overJroShow:
 
         self.xg = numpy.dot(self.MT3.transpose(),numpy.array([1,0,0]))
         self.yg = numpy.dot(self.MT3.transpose(),numpy.array([0,1,0]))
-        self.zg = numpy.dot(self.MT3.transpose(),numpy.array([0,0,1]))
+        self.zg = numpy.dot(self.MT3.transpose(),numpy.array([0,0,1]))    
+
+    def plotPattern2(self, date, phases, gain_tx, gain_rx, ues, just_rx):
+        # Plotting Antenna patterns.
+        
+        self.initParameters()
+        self.doy = datetime.datetime(date.year,date.month,date.day).timetuple().tm_yday
+        self.junkjd = TimeTools.Time(self.year,self.month,self.dom).change2julday()
+        self.junklst = TimeTools.Julian(self.junkjd).change2lst(longitude=self.glon)
+        self.ra_obs = self.junklst*Misc_Routines.CoFactors.h2d
+        
+        date = TimeTools.Time(date.year,date.month,date.day).change2strdate(mode=2)
+
+        mesg = 'Over Jicamarca: ' + date[0]
+        
+        ObjAnt = JroPattern(pattern=0,
+                            filename=None,
+                            path=None,
+                            nptsx=self.nptsx,
+                            nptsy=self.nptsy,
+                            #maxphi=self.maxphi,
+                            fftopt=self.fftopt,
+                            phases=numpy.array(phases),
+                            gain_tx=numpy.array(gain_tx),
+                            gain_rx=numpy.array(gain_rx),
+                            ues=numpy.array(ues),
+                            just_rx=just_rx
+                            )        
+        
+        dum = Graphics_OverJro.AntPatternPlot()
+        
+        dum.contPattern(iplot=0,
+                        gpath=self.path4plotname,
+                        filename=self.plotname0,
+                        mesg=mesg,
+                        amp=ObjAnt.norpattern,
+                        x=ObjAnt.dcosx,
+                        y=ObjAnt.dcosy,
+                        getCut=ObjAnt.getcut,
+                        title=self.ptitle,
+                        save=False)
+
+        
+        dum.plotRaDec(gpath=self.path4plotname,
+                      filename=self.plotname0,
+                      jd=self.junkjd, 
+                      ra_obs=self.ra_obs, 
+                      xg=self.xg, 
+                      yg=self.yg, 
+                      x=ObjAnt.dcosx, 
+                      y=ObjAnt.dcosy,
+                      save=False)
+
+        ObjB = BField(self.year,self.doy,1,self.heights)
+        [dcos, alpha, nlon, nlat] = ObjB.getBField()
+        
+        dum.plotBField('', '',dcos,alpha,nlon,nlat,
+                       self.dcosxrange,
+                       self.dcosyrange,
+                       ObjB.heights,
+                       ObjB.alpha_i, 
+                       save=False)
+        
+        return dum.fig
+
 
     def plotPattern(self):
         # Plotting Antenna patterns.
@@ -1230,10 +1315,8 @@ class overJroShow:
 
             title += ObjAnt.title
             # Plotting Contour Map
-            print "Antes de la creacion"
-            self.path4plotname = '/home/fquino/workspace/radarsys/webapp/apps/abs/static/images'
-            print self.path4plotname
-            print self.plotname0
+            
+            self.path4plotname = '/home/jespinoza/workspace/radarsys/trunk/webapp/apps/abs/static/images'            
             dum = Graphics_OverJro.AntPatternPlot()
             dum.contPattern(iplot=ii,
                                                         gpath=self.path4plotname,
@@ -1246,8 +1329,6 @@ class overJroShow:
                                                         title=title)
 #                                                         title=ObjAnt.title)
 #             self.ptitle = ObjAnt.title
-            if ii==0:
-                self.figure = dum.figure
 
             if ii != (npatterns-1):
                 title += '+'
@@ -1267,7 +1348,14 @@ class overJroShow:
 
         self.ptitle = title
 
-        Graphics_OverJro.AntPatternPlot().plotRaDec(gpath=self.path4plotname,filename=self.plotname0,jd=self.junkjd, ra_obs=self.ra_obs, xg=self.xg, yg=self.yg, x=ObjAnt.dcosx, y=ObjAnt.dcosy)
+        Graphics_OverJro.AntPatternPlot().plotRaDec(gpath=self.path4plotname,
+                                                    filename=self.plotname0,
+                                                    jd=self.junkjd, 
+                                                    ra_obs=self.ra_obs, 
+                                                    xg=self.xg, 
+                                                    yg=self.yg, 
+                                                    x=ObjAnt.dcosx, 
+                                                    y=ObjAnt.dcosy)
 
         self.dcosx = ObjAnt.dcosx
 
@@ -1616,8 +1704,7 @@ class overJroShow:
             self.plotSkyNoise()
 
     def getPlot(self):
-        print "GETPLot"
-        print os.path.join(self.__serverdocspath,self.__tmpDir,self.plotname0)
+        
         return os.path.join(self.__serverdocspath,self.__tmpDir,self.plotname0)
 
 
@@ -1626,7 +1713,42 @@ if __name__ == '__main__':
     # Script overJroShow.py
     # This script only calls the init function of the class overJroShow()
     # All work is done by the init function
+    
+    phases = numpy.array([[2.0,0.0,1.5,1.5,1.0,1.0,1.0,0.5],
+            [2.0,2.5,2.5,3.5,0.5,1.0,1.0,1.0],
+            [2.5,2.5,1.0,1.0,0.5,0.5,0.5,0.5],
+            [1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0],
+            [0.5,0.5,0.5,0.5,0.5,0.0,0.0,0.0],
+            [0.5,0.5,1.0,0.5,0.0,0.0,0.0,0.0],
+            [0.5,0.5,0.5,1.0,0.0,0.0,0.0,0.0],
+            [0.5,0.5,0.5,0.5,0.0,0.0,0.0,0.0]])
 
-    newOverJro = overJroShow()
-    newOverJro.initParametersCGI()
-    newOverJro.execute()
+    gain_tx = numpy.array([[0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0],
+            [0,0,0,0,1,1,1,1],
+            [0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0]])
+
+    gain_rx = numpy.array([[0,0,0,0,0,0,0,0],
+            [0,0,1,0,0,0,0,0],
+            [0,0,1,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0]])
+    
+    jro = overJroShow()
+        
+    fig = jro.plotPattern2(datetime.datetime.today(),
+                           phases=phases, 
+                           gain_tx=gain_tx, 
+                           gain_rx=gain_rx, 
+                           ues=numpy.array([0.0,0.0,0.0,0.0]), 
+                           just_rx=0)
+    
+    fig.savefig('./pat.png')
+    

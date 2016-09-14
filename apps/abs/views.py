@@ -315,19 +315,18 @@ def remove_beam(request, id_conf, id_beam):
 
 
 
-def plot_patterns(request, id_conf):
+def plot_patterns(request, id_conf, id_beam=None):
 
-    conf     = get_object_or_404(ABSConfiguration, pk=id_conf)
-    beams_list = ast.literal_eval(conf.beams)
-    i = 1
-    beams = []
-    for b in beams_list:
-        beam = ABSBeam.objects.get(pk=beams_list['beam'+str(i)])
-        beams.append(beam)
-        i=i+1
-
-    ###### SIDEBAR ######
     kwargs = {}
+    conf = get_object_or_404(ABSConfiguration, pk=id_conf)
+    beams = ABSBeam.objects.filter(abs_conf=conf)
+    
+    if id_beam:
+        beam  = get_object_or_404(ABSBeam, pk=id_beam)
+        kwargs['beam']       = beam
+        
+
+    ###### SIDEBAR ######    
 
     kwargs['dev_conf']   = conf.device
     kwargs['id_dev']     = conf.device
@@ -340,143 +339,27 @@ def plot_patterns(request, id_conf):
     return render(request, 'abs_patterns.html', kwargs)
 
 
-def plot_pattern(request, id_conf, id_beam):
+def plot_pattern(request, id_conf, id_beam, antenna):
+    
+    if antenna=='down':
+        sleep(3)
+    
+    conf = get_object_or_404(ABSConfiguration, pk=id_conf)
+    beam = get_object_or_404(ABSBeam, pk=id_beam)
 
-    conf     = get_object_or_404(ABSConfiguration, pk=id_conf)
-    beam     = get_object_or_404(ABSBeam, pk=id_beam)
+    name = conf.experiment.name    
 
-    #Lista de Beams de la configuracion con su respectivo ID
-    beams_list = ast.literal_eval(conf.beams)
-    i = 1
-    #Lista de Objetos ABSBeams en el 0rden de su respectiva configuracion
-    beams = []
-    for b in beams_list:
-        beam = ABSBeam.objects.get(pk=beams_list['beam'+str(i)])
-        beams.append(beam)
-        i=i+1
+    just_rx = 1 if json.loads(beam.only_rx)[antenna] else 0        
+    phases = json.loads(beam.antenna)['antenna_{}'.format(antenna)]
+    gain_tx = json.loads(beam.tx)[antenna]
+    gain_rx = json.loads(beam.rx)[antenna]
+    ues = json.loads(beam.ues)[antenna]
 
-    ###### SIDEBAR ######
-    beam   = get_object_or_404(ABSBeam, pk=id_beam)
-    kwargs = {}
-
-    kwargs['dev_conf']   = conf.device
-    kwargs['id_dev']     = conf.device
-    kwargs['id_conf']    = conf.id
-    kwargs['abs_beams']  = beams
-    kwargs['beam']       = beam
-    kwargs['title']      = 'ABS Patterns'
-    kwargs['suptitle']   = conf.name
-    kwargs['no_sidebar'] = True
-
-    return render(request, 'abs_patterns.html', kwargs)
-
-
-
-def plot_uppattern(request, id_conf, id_beam):
-
-    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-
-    conf     = get_object_or_404(ABSConfiguration, pk=id_conf)
-    beam     = get_object_or_404(ABSBeam, pk=id_beam)
-
-    exp_name = conf.experiment.name
-
-    just_rx = 0
-
-    only_rx  = json.loads(beam.only_rx)
-    if only_rx['up'] == True:
-        just_rx = 1
-
-    antenna  = ast.literal_eval(beam.antenna)
-    objAntenna = json.dumps(antenna['antenna_up'])
-    antenna_up = ''.join(str(i) for i in objAntenna)
-    phase_tx = antenna_up.replace(' ','')
-
-    tx       = ast.literal_eval(beam.tx)
-    tx  = json.dumps(tx['up'])
-    tx = ''.join(str(i) for i in tx)
-    gain_tx = tx.replace(' ','')
-
-    rx       = ast.literal_eval(beam.rx)
-    rx  = json.dumps(rx['up'])
-    rx = ''.join(str(i) for i in rx)
-    gain_rx = rx.replace(' ','')
-
-    ues = json.dumps(beam.get_up_ues)
-    ues = ''.join(str(i) for i in ues)
-    ues_tx = ues.replace(' ','')
-
-    #sleep(1)
-
-    overjro = OverJRO()
-    overjro.setParameters(settings.MEDIA_ROOT, exp_name, phase_tx, gain_tx, gain_rx, ues_tx, just_rx)
-    contentFile = overjro.setTextContent()
-    finalpath = overjro.saveFile(contentFile)
-
-    currentdate = datetime.today()
-    newOverJro = overJroShow()
-    newOverJro.setInputParameters(settings.MEDIA_ROOT, currentdate, finalpath)
-    newOverJro.setupParameters()
-    newOverJro.execute()
-    path = newOverJro.getPlot()
-    path= "apps/abs/media/"+path
-
-
-    canvas=FigureCanvas(newOverJro.figure)
-    response=HttpResponse(content_type='image/png')
-    canvas.print_png(response)
-    return response
-
-def plot_downpattern(request, id_conf, id_beam):
-
-    sleep(4)
-    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-
-    conf     = get_object_or_404(ABSConfiguration, pk=id_conf)
-    beam     = get_object_or_404(ABSBeam, pk=id_beam)
-
-    exp_name = conf.experiment.name
-
-    just_rx = 0
-
-    only_rx  = json.loads(beam.only_rx)
-    if only_rx['down'] == True:
-        just_rx = 1
-
-    antenna  = ast.literal_eval(beam.antenna)
-    objAntenna = json.dumps(antenna['antenna_down'])
-    antenna_down = ''.join(str(i) for i in objAntenna)
-    phase_tx = antenna_down.replace(' ','')
-
-    tx       = ast.literal_eval(beam.tx)
-    tx  = json.dumps(tx['down'])
-    tx = ''.join(str(i) for i in tx)
-    gain_tx = tx.replace(' ','')
-
-    rx       = ast.literal_eval(beam.rx)
-    rx  = json.dumps(rx['down'])
-    rx = ''.join(str(i) for i in rx)
-    gain_rx = rx.replace(' ','')
-
-    ues = json.dumps(beam.get_down_ues)
-    ues = ''.join(str(i) for i in ues)
-    ues_tx = ues.replace(' ','')
-
-    overjro = OverJRO()
-    overjro.setParameters(settings.MEDIA_ROOT, exp_name, phase_tx, gain_tx, gain_rx, ues_tx, just_rx)
-    contentFile = overjro.setTextContent()
-    finalpath = overjro.saveFile(contentFile)
-
-    currentdate = datetime.today()
-    newOverJro = overJroShow()
-    newOverJro.setInputParameters(settings.MEDIA_ROOT, currentdate, finalpath)
-    newOverJro.setupParameters()
-    newOverJro.execute()
-    path = newOverJro.getPlot()
-    path= "apps/abs/media/"+path
-
-
-    canvas=FigureCanvas(newOverJro.figure)
-    response=HttpResponse(content_type='image/png')
-    canvas.print_png(response)
+    newOverJro = overJroShow(name)
+    fig = newOverJro.plotPattern2(datetime.today(), phases, gain_tx, gain_rx, ues, just_rx)    
+        
+    response=HttpResponse(content_type='image/png')    
+    
+    fig.canvas.print_png(response)
+    
     return response

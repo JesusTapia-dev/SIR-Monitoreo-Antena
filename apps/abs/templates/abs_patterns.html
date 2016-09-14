@@ -42,7 +42,7 @@
 <script>
 {% for abs_beam in abs_beams %}
   $("#bt_beam{{ forloop.counter }}").click(function() {
-    document.location = "{% url 'url_plot_abs_pattern' abs_beam.abs_conf.id abs_beam.id %}";
+    document.location = "{% url 'url_plot_abs_patterns' abs_beam.abs_conf.id abs_beam.id %}";
   });
 {% endfor %}
 //function ChangeColor() {

@@ -47,10 +47,11 @@ class AntPatternPlot:
         --------------------
         Created by Freddy Galindo, ROJ, 06 October 2009.
         """
-        self.figure = None
-        pass
+        
+        self.fig = matplotlib.pyplot.figure(figsize=(8,8), facecolor='white')
+        self.ax = self.fig.add_subplot(111)        
 
-    def contPattern(self,iplot=0,gpath='',filename='',mesg='',amp=None ,x=None ,y=None ,getCut=None,title=''):
+    def contPattern(self,iplot=0,gpath='',filename='',mesg='',amp=None ,x=None ,y=None ,getCut=None,title='', save=True):
         """
         contPattern plots a contour map of the antenna pattern.
 
@@ -81,34 +82,34 @@ class AntPatternPlot:
         labels = range(5)
         for i in numpy.arange(5):labels[i] = str(numpy.int(tmp[i]))
 
-        if iplot==0:
-            xsize = 8.0
-            if matplotlib.get_backend()=='QT4Agg':xsize = 6.0
-            ysize = 8.0
-            self.figure = matplotlib.pyplot.figure(num=2,figsize=(xsize,ysize))
-            matplotlib.pyplot.clf()
 
         colors = ((0,0,1.),(0,170/255.,0),(127/255.,1.,0),(1.,109/255.,0),(128/255.,0,0))
-        CS = matplotlib.pyplot.contour(x,y,amp.transpose(),levels,colors=colors)
+        CS = self.ax.contour(x,y,amp.transpose(),levels,colors=colors)
         fmt = {}
-        for l,s in zip(CS.levels,labels):fmt[l] = s
+        for l,s in zip(CS.levels,labels):
+            fmt[l] = s
 
-        matplotlib.pyplot.annotate('Ng',xy=(-0.05,1.04),xytext=(0.01,0.962),xycoords='axes fraction',arrowprops=dict(facecolor='black', width=1.,shrink=0.2),fontsize=15.)
-        matplotlib.pyplot.annotate(mesg,xy=(0,0),xytext=(0.01,0.01),xycoords='figure fraction')
-        matplotlib.pyplot.clabel(CS,CS.levels,inline=True,fmt=fmt,fontsize=10)
-        matplotlib.pyplot.xlim(xmin,xmax)
-        matplotlib.pyplot.ylim(ymin,ymax)
-        matplotlib.pyplot.title("Total Pattern" + title)
-        matplotlib.pyplot.xlabel("West to South")
-        matplotlib.pyplot.ylabel("West to North")
-        matplotlib.pyplot.grid(True)
-        print "SAVE_FIG"
-        print gpath
-        print filename
-        save_fig = os.path.join(gpath,filename)
-        matplotlib.pyplot.savefig(save_fig,format='png')
+        self.ax.annotate('Ng',xy=(-0.05,1.04),xytext=(0.01,0.962),xycoords='axes fraction',arrowprops=dict(facecolor='black', width=1.,shrink=0.2),fontsize=15.)
+        self.ax.annotate(mesg,xy=(0,0),xytext=(0.01,0.01),xycoords='figure fraction')
+        self.ax.clabel(CS,CS.levels,inline=True,fmt=fmt,fontsize=10)
+        self.ax.set_xlim(xmin,xmax)
+        self.ax.set_ylim(ymin,ymax)
+        self.ax.set_title("Total Pattern: " + title)
+        self.ax.set_xlabel("West to South")
+        self.ax.set_ylabel("West to North")
+        self.ax.grid(True)      
+        
+        if save:
+            save_fig = os.path.join(gpath,filename)
+            self.fig.savefig(save_fig,format='png')
 
-    def plotRaDec(self,gpath=None,filename=None,jd=2452640.5,ra_obs=None,xg=None,yg=None,x=None,y=None):
+        
+
+    def close(self):
+        
+        matplotlib.pyplot.close(self.fig)
+
+    def plotRaDec(self,gpath=None,filename=None,jd=2452640.5,ra_obs=None,xg=None,yg=None,x=None,y=None, save=True):
         """
         plotRaDec draws right ascension and declination lines on a JRO plane. This function
         must call after conPattern.
@@ -131,9 +132,9 @@ class AntPatternPlot:
         """
 
         # Finding RA of observatory for a specific date
-        if ra_obs==None:ra_obs = numpy.array([23.37060849])
-        if xg==None:xg = numpy.array([0.62918474,-0.77725579,0.])
-        if yg==None:yg = numpy.array([0.77700346,0.62898048,0.02547905])
+        if ra_obs is None:ra_obs = numpy.array([23.37060849])
+        if xg is None:xg = numpy.array([0.62918474,-0.77725579,0.])
+        if yg is None:yg = numpy.array([0.77700346,0.62898048,0.02547905])
 
         # Getting HA and DEC axes
         mindec = -28; maxdec = 4; incdec = 2.
@@ -142,8 +143,8 @@ class AntPatternPlot:
         minha = -20; maxha = 20; incha = 2.
         nha = numpy.int((maxha - minha)/incha) + 1
 
-        mcosx = numpy.zeros((nha,ndec))
-        mcosy = numpy.zeros((nha,ndec))
+        #mcosx = numpy.zeros((nha,ndec))
+        #mcosy = numpy.zeros((nha,ndec))
 
         ha_axes = numpy.reshape(numpy.arange(nha)*incha + minha,(nha,1))
         ones_dec = numpy.reshape(numpy.zeros(ndec) + 1,(ndec,1))
@@ -188,14 +189,14 @@ class AntPatternPlot:
         idec0 = numpy.int((-14 - mindec)/incdec)
 
         colorgrid = (1.,109/255.,0)
-        matplotlib.pyplot.plot(mcosx.transpose(),mcosy.transpose(),color=colorgrid,linestyle='--')
+        self.ax.plot(mcosx.transpose(),mcosy.transpose(),color=colorgrid,linestyle='--')
         for idec in numpy.arange(ndec):
             if idec != idec0:
                 valx = (mcosx[idec,iha0]<=xmax) & (mcosx[idec,iha0]>=xmin)
                 valy = (mcosy[idec,iha0]<=ymax) & (mcosy[idec,iha0]>=ymin)
                 if valx & valy:
                     text = str(numpy.int(mindec + incdec*idec))+'$^o$'
-                    matplotlib.pyplot.text(mcosx[idec,iha0],mcosy[idec,iha0],text)
+                    self.ax.text(mcosx[idec,iha0],mcosy[idec,iha0],text)
 
         matplotlib.pyplot.plot(mcosx,mcosy,color=colorgrid,linestyle='--')
         for iha in numpy.arange(nha):
@@ -204,13 +205,70 @@ class AntPatternPlot:
                 valy = (mcosy[idec0,iha]<=ymax) & (mcosy[idec0,iha]>=ymin)
                 if valx & valy:
                     text = str(4*numpy.int(minha + incha*iha))+"'"
-                    matplotlib.pyplot.text(mcosx[idec0,iha],mcosy[idec0,iha],text)
+                    self.ax.text(mcosx[idec0,iha],mcosy[idec0,iha],text)
+        
+        if save:
+            save_fig = os.path.join(gpath,filename)
+            matplotlib.pyplot.savefig(save_fig,format='png')
 
-        matplotlib.pyplot.xlim(xmin,xmax)
-        matplotlib.pyplot.ylim(ymin,ymax)
 
-        save_fig = os.path.join(gpath,filename)
-        matplotlib.pyplot.savefig(save_fig,format='png')
+    def plotBField(self,gpath,filename,dcos,alpha, nlon, nlat, dcosxrange, dcosyrange, heights, alpha_i, save=True):
+        """
+        plotBField draws the magnetic field in a directional cosines plot.
+
+        Parameters
+        ----------
+        dcos = An 4-dimensional array giving the directional cosines of the magnetic field
+          over the desired place.
+        alpha = An 3-dimensional array giving the angle of the magnetic field over the desi-
+          red place.
+        nlon = An integer to specify the number of elements per longitude.
+        nlat = An integer to specify the number of elements per latitude.
+        dcosxrange = A 2-element array giving the range of the  directional cosines  in the
+          "x" axis.
+        dcosyrange = A 2-element array giving the range of the  directional cosines  in the
+          "y" axis.
+        heights = An array giving the heights (km) where the magnetic field will be modeled               By default the magnetic field will be computed at 100, 500 and 1000km.
+        alpha_i = Angle to interpolate the magnetic field.
+        Modification History
+        --------------------
+        Converted to Python by Freddy R. Galindo, ROJ, 07 October 2009.
+        """
+
+        handles = []
+        objects = []
+        colors = ['k','m','c','b','g','r','y']
+        marker = ['-+','-*','-D','-x','-s','->','-o','-^']
+
+        alpha_location = numpy.zeros((nlon,2,heights.size))
+
+        for ih in numpy.arange(heights.size):
+            alpha_location[:,0,ih] = dcos[:,0,ih,0]
+            for ilon in numpy.arange(nlon):
+                myx = (alpha[ilon,:,ih])[::-1]
+                myy = (dcos[ilon,:,ih,0])[::-1]
+                tck = scipy.interpolate.splrep(myx,myy,s=0)
+                mydcosx = scipy.interpolate.splev(alpha_i,tck,der=0)
+
+                myx = (alpha[ilon,:,ih])[::-1]
+                myy = (dcos[ilon,:,ih,1])[::-1]
+                tck = scipy.interpolate.splrep(myx,myy,s=0)
+                mydcosy = scipy.interpolate.splev(alpha_i,tck,der=0)
+                alpha_location[ilon,:,ih] = numpy.array([mydcosx, mydcosy])
+
+
+            ObjFig, = self.ax.plot(alpha_location[:,0,ih],alpha_location[:,1,ih],
+                marker[ih % 8],color=colors[numpy.int(ih/8)],ms=4.5,lw=0.5)
+            handles.append(ObjFig)
+            objects.append(numpy.str(heights[ih]) + ' km')        
+
+        self.ax.legend(handles,objects,loc="lower right", numpoints=1, handlelength=0.3,
+                       handletextpad=0.02, borderpad=0.3, labelspacing=0.1)                
+
+        if save:
+            save_fig = os.path.join(gpath,filename)
+            matplotlib.pyplot.savefig(save_fig,format='png')
+        
 
 
 class BFieldPlot:
