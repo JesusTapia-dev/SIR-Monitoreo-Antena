@@ -2,7 +2,7 @@
 
 {% block extra-menu-actions %}
 <li><a href="{{ dev_conf.get_absolute_url_plot }}" target="_blank"><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> View Patterns </a></li>
-<li><a href="{{ dev_conf.get_absolute_url_write }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Write</a></li>
+<!--<li><a href="{{ dev_conf.get_absolute_url_write }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Write</a></li>-->
 {% endblock %}
 
 {% block extra-content %}
@@ -193,7 +193,7 @@
 </style>
 
 <h4>Beams:</h4>
-{% if beams_id %}
+{% if beams %}
 
 <div class="container">
   <ul class="nav nav-pills">

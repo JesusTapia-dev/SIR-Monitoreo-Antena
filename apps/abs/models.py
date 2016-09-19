@@ -158,6 +158,23 @@ def ip2position(module_number):
     return pos
 
 
+def fromBinary2Char(binary_string):
+    number = int(binary_string, 2)
+    #Plus 33 to avoid more than 1 characters values such as: '\x01'-'\x1f'
+    number = number + 33
+    char = chr(number)
+    return char
+
+def fromChar2Binary(char):
+    number = ord(char) - 33
+    #Minus 33 to get the real value
+    bits = bin(number)[2:]
+    #To ensure we have a string with 6bits
+    if len(bits) < 6:
+        bits = bits.zfill(6)
+    return bits
+
+
 def change_beam_for_multiprocessing(module):
 
 	for i in range (1,50):
@@ -226,6 +243,26 @@ class ABSConfiguration(Configuration):
 
         return parameters
 
+    def get_beams(self, **kwargs):
+        '''
+        This function returns ABS Configuration beams 
+        '''
+        return ABSBeam.objects.filter(abs_conf=self.pk, **kwargs)
+
+    def clone(self, **kwargs):
+
+        beams = self.get_beams()
+        self.pk = None
+        self.id = None
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
+        self.save()
+
+        for beam in beams:
+            beam.clone(abs_conf=self)
+
+        return self
+
 
     def module_conf(self, module_num, beams):
         """
@@ -241,12 +278,13 @@ class ABSConfiguration(Configuration):
 
         header = 'JROABSCeCnModCnMod01000108SNDFexperimento1.ab1'
         module = 'ABS_'+str(module_num)
-        bs  = {}
+        bs  = '' #{}
         i=1
         #beams  = {1: '001000', 2: '010001', 3: '010010', 4: '000011', 5: '101100', 6: '101101',
         #       7: '110110', 8: '111111', 9: '000000', 10: '001001', 11: '010010', 12: '011011'}
         for beam in beams:
-            bs[i] = beam.module_6bits(module_num)
+            #bs[i] = fromBinary2Char(beam.module_6bits(module_num))
+            bs = bs + fromBinary2Char(beam.module_6bits(module_num))
             i=i+1
 
         beams = bs
@@ -254,8 +292,8 @@ class ABSConfiguration(Configuration):
         parameters = {}
         parameters['header'] = header
         parameters['module'] = module
-        parameters['beams']  = json.dumps(beams)
-
+        parameters['beams']  = beams #json.dumps(beams)
+        print parameters['beams']
         answer = ''
 
         try:
@@ -266,7 +304,6 @@ class ABSConfiguration(Configuration):
             self.message = "Could not write ABS parameters"
             return 0
         return 1
-
 
     def read_module(self, module):
 
@@ -291,10 +328,10 @@ class ABSConfiguration(Configuration):
         try:
             r_write = requests.get(read_route, timeout=0.7)
             answer  = r_write.json()
-            message = answer['message']
+            self.message = answer['message']
             module_bits    = answer['allbits']
         except:
-            message = "Could not read ABS parameters"
+            #message = "Could not read ABS parameters"
             return 0
 
         return module_bits
@@ -303,33 +340,46 @@ class ABSConfiguration(Configuration):
     def write_device(self):
         """
         This function sends the beams list to every abs module.
+        It needs 'module_conf' function
         """
 
-        beams_list    = ast.literal_eval(self.beams)
-        beams = []
-
-        for bl in range(1,len(beams_list)+1):
-            b = ABSBeam.objects.get(pk=beams_list['beam'+str(bl)])
-            beams.append(b)
+        ###beams_list    = ast.literal_eval(self.beams)
+        ###beams = []
+        beams = ABSBeam.objects.filter(abs_conf=self)
+        ###for bl in range(1,len(beams_list)+1):
+        ###    b = ABSBeam.objects.get(pk=beams_list['beam'+str(bl)])
+        ###    beams.append(b)
 
         #---Write each abs module---
-        beams_status = ast.literal_eval(self.module_status)
-        for i in range(62,65):
-            try:
-                self.module_conf(i, beams)
-                beams_status[str(i)] = 1
-                self.module_status = json.dumps(beams_status)
-                self.save()
-            #self.module_conf(63,beams)
-            #beams_status[str(63)] = 1
-            #self.module_status = json.dumps(beams_status)
-            except:
-                beams_status[str(i)] = 0
-                self.module_status = json.dumps(beams_status)
-                self.save()
-                #return 0
+        if beams:
+            beams_status = ast.literal_eval(self.module_status)
+            for i in range(62,65): #(62,65)
+                try:
+                    answer = self.module_conf(i, beams)
+                    beams_status[str(i)] = 1
+                    self.module_status = json.dumps(beams_status)
+                    self.save()
+                #self.module_conf(63,beams)
+                #beams_status[str(63)] = 1
+                #self.module_status = json.dumps(beams_status)
+                except:
+                    beams_status[str(i)] = 0
+                    self.module_status = json.dumps(beams_status)
+                    self.save()
+                    answer = 0
+                    return 0
+        else:
+            self.message = "ABS Configuration does not have beams"
+            return 0
 
         #self.device.status = 1
+        ##
+        if answer==1:            
+            self.message = "ABS Beams List have been sent to ABS Modules"
+        else:
+            self.message = "Could not read ABS parameters"
+
+        ##
         self.save()
         return 1
 
@@ -481,18 +531,18 @@ class ABSConfiguration(Configuration):
     def test1(self):
         t1 = time.time()
         t2 = 0
-        while (t2-t1)<300:
+        while (t2-t1)<100:#300
             t2 = time.time()
-            self.send_beam_num(1)
-            time.sleep(0.04)
             self.send_beam_num(2)
+            time.sleep(0.04)
+            self.send_beam_num(1)
             time.sleep(0.04)
         return
 
     def change_procs_test1(self, module):
 
-    	for i in range (1,300):
-    	    beam_pos = 0
+    	for i in range (1,300):#300
+    	    beam_pos = 1
     	    module_address = ('192.168.1.'+str(module), 5500)
     	    header   = 'JROABSCeCnModCnMod0100000'
     	    numbers  = len(str(beam_pos))
@@ -510,10 +560,10 @@ class ABSConfiguration(Configuration):
     	    sock = None
 
 
-    	    time.sleep(0.2)
+    	    time.sleep(0.04)
 
 
-    	    beam_pos = 1
+    	    beam_pos = 0
     	    numbers  = len(str(beam_pos))
 
     	    message_tx = header+str(numbers)+function+str(beam_pos)+'0'
@@ -525,20 +575,24 @@ class ABSConfiguration(Configuration):
     	    sock.close()
     	    sock = None
 
-    	    time.sleep(0.2)
+    	    time.sleep(0.04)
 
 
     def multi_procs_test1(self):
 
+        """
+        This function sends the beam number to all abs modules using multiprocessing.
+        """
+
         #if __name__ == "__main__":
         size = 10000000   # Number of random numbers to add
-        procs =  65 # (Number-1) of processes to create
+        procs =  65 # (Number-1) of processes to create (absmodule)
 
         # Create a list of jobs and then iterate through
         # the number of processes appending each process to
         # the job list
         jobs = []
-        for i in range(62, procs):
+        for i in range(1, procs):
 
             process = multiprocessing.Process(target=self.change_procs_test1,args=(i,))
             jobs.append(process)
@@ -555,6 +609,78 @@ class ABSConfiguration(Configuration):
                 j.join()
 
         print("List processing complete.")
+        return 1
+
+
+
+    def multi_procs_test2(self):
+        """
+        This function use multiprocessing python library. Importing Pool we can select
+        the number of cores we want to use
+        After 'nproc' linux command, we know how many cores computer has.
+        NOT WORKING
+        """
+        import multiprocessing
+        pool = multiprocessing.Pool(3) # cores
+
+        tasks = []
+        procs = 65
+        for i in range(62, procs):
+            tasks.append( (i,))
+        #print tasks
+        #pool.apply_async(self.change_procs_test1, 62)
+        results = [pool.apply( self.change_procs_test1, t ) for t in tasks]
+        #for result in results:
+            #result.get()
+            #(plotNum, plotFilename) = result.get()
+            #print("Result: plot %d written to %s" % (plotNum, plotFilename) )
+
+        return 1
+
+
+    def multi_procs_test3(self):
+        """
+        This function use multiprocessing python library. Importing Pool we can select
+        the number of cores we want to use
+        After 'nproc' linux command, we know how many cores computer has.
+        """
+        from multiprocessing import Pool
+        import time
+
+        def f(x):
+            return x*x
+
+        tasks = []
+        procs = 65
+        pool = Pool(processes=4)
+
+        #for i in range(62, procs):
+        #result = pool.map(f, range(62,65))
+        it = pool.imap(self.change_procs_test1, range(62,65))
+        #result.get(timeout=5)
+
+        return 1
+
+
+    def f(x):
+        print x
+        return
+
+    def multi_procs_test4(self):
+        import multiprocessing as mp
+
+
+        num_workers = mp.cpu_count()
+
+        pool = mp.Pool(num_workers)
+        procs = 65
+        for i in range(62, procs):
+        #for task in tasks:
+            pool.apply_async(self.f, args = (i,))
+
+        pool.close()
+        pool.join()
+
         return 1
 
 
@@ -619,6 +745,17 @@ class ABSBeam(models.Model):
         self.save()
 
         return parameters
+
+    def clone(self, **kwargs):
+
+        self.pk = None
+        self.id = None
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
+
+        self.save()
+
+        return self
 
 
     def change_beam(self, beam_pos=0):

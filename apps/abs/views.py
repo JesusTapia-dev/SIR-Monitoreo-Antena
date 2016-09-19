@@ -122,14 +122,14 @@ def get_values_from_form(form_data):
 def abs_conf(request, id_conf):
 
     conf     = get_object_or_404(ABSConfiguration, pk=id_conf)
+    beams = ABSBeam.objects.filter(abs_conf=conf)
+    #beams_dict = ast.literal_eval(conf.beams)
+    #beams = []
+    #for beam_id in range(1,len(beams_dict)+1):
+    #    beam = ABSBeam.objects.get(pk=beams_dict['beam'+str(beam_id)])
+    #    beams.append(beam)
 
-    beams_dict = ast.literal_eval(conf.beams)
-    beams = []
-    for beam_id in range(1,len(beams_dict)+1):
-        beam = ABSBeam.objects.get(pk=beams_dict['beam'+str(beam_id)])
-        beams.append(beam)
-
-    beams_id    = ast.literal_eval(conf.beams)
+    #beams_id    = ast.literal_eval(conf.beams)
 
     ip=conf.device.ip_address
     port=conf.device.port_address
@@ -148,7 +148,7 @@ def abs_conf(request, id_conf):
     kwargs['button'] = 'Edit Configuration'
 
     #kwargs['no_play'] = True
-    kwargs['beams_id'] = beams_id
+    #kwargs['beams_id'] = beams_id
     kwargs['beams']    = beams
     kwargs['beam_selector'] = 0
     #kwargs['my_data'] =  simplejson.dumps(beams)
@@ -163,13 +163,16 @@ def abs_conf(request, id_conf):
 def abs_conf_edit(request, id_conf):
 
     conf     = get_object_or_404(ABSConfiguration, pk=id_conf)
-    beams_list = ast.literal_eval(conf.beams)
-    i = 1
-    beams = []
-    for b in beams_list:
-        beam = ABSBeam.objects.get(pk=beams_list['beam'+str(i)])
-        beams.append(beam)
-        i=i+1
+    #beams_list = ast.literal_eval(conf.beams)
+    #i = 1
+    #beams = []
+    #for b in beams_list:
+    #    beam = ABSBeam.objects.get(pk=beams_list['beam'+str(i)])
+    #    beams.append(beam)
+    #    i=i+1
+
+    beams = ABSBeam.objects.filter(abs_conf=conf)
+    print beams
 
     if request.method=='GET':
         form = ABSConfigurationForm(instance=conf)
