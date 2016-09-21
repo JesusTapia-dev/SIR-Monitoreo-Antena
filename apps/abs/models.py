@@ -175,48 +175,8 @@ def fromChar2Binary(char):
     return bits
 
 
-def change_beam_for_multiprocessing(module):
-
-	for i in range (1,50):
-	    beam_pos = 0
-	    module_address = ('192.168.1.'+str(module), 5500)
-	    header   = 'JROABSCeCnModCnMod0100000'
-	    numbers  = len(str(beam_pos))
-	    function = 'CHGB'
-
-	    message_tx = header+str(numbers)+function+str(beam_pos)+'0'
-
-	    # Create the datagram socket
-	    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	    sock.connect(module_address)
-
-	    sock.send(message_tx)
-	    #t = sock.recv(1024)
-	    sock.close()
-	    sock = None
-
-
-	    time.sleep(0.2)
-
-
-	    beam_pos = 1
-	    numbers  = len(str(beam_pos))
-
-	    message_tx = header+str(numbers)+function+str(beam_pos)+'0'
-
-	    # Create the datagram socket
-	    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	    sock.connect(module_address)
-	    sock.send(message_tx)
-	    sock.close()
-	    sock = None
-
-	    time.sleep(0.2)
-
-
-
 class ABSConfiguration(Configuration):
-    beams         = models.CharField(verbose_name='Beams', max_length=20000, default="{}")
+    active_beam         = models.CharField(verbose_name='Active Beam', max_length=20000, default="{}")
     module_status = models.CharField(verbose_name='Module Status', max_length=10000, default=json.dumps(status_default))
 
     class Meta:
@@ -234,11 +194,11 @@ class ABSConfiguration(Configuration):
         parameters['name']      = self.name
         parameters['beams']     = {}
 
-        beams = ast.literal_eval(self.beams)
+        beams = ABSBeam.objects.get(pk=self.id)
         b=1
         for beam in beams:
-            absbeam = ABSBeam.objects.get(pk=beams[beam])
-            parameters['beams']['beam'+str(b)] = absbeam.parms_to_dict()
+            #absbeam = ABSBeam.objects.get(pk=beams[beam])
+            parameters['beams']['beam'+str(b)] = beam.parms_to_dict()#absbeam.parms_to_dict()
             b+=1
 
         return parameters
@@ -335,6 +295,38 @@ class ABSConfiguration(Configuration):
             return 0
 
         return module_bits
+
+    def status_device(self):
+        """
+        This function gets the status of each abs module. It sends GET method to Web Application
+        in Python Bottle.
+        """
+        ip_address  = self.device.ip_address
+        ip_address  = ip_address.split('.')
+        module_seq  = (ip_address[0],ip_address[1],ip_address[2])
+        dot         = '.'
+        module_port = self.device.port_address
+
+        modules_status = json.loads(self.module_status)
+        
+        for i in range(1,65): 
+            module_ip   = dot.join(module_seq)+'.'+str(i)
+            print module_ip
+        
+            route = 'http://'+module_ip+':'+str(module_port)+'/hello'
+
+            try:
+                r = requests.get(route, timeout=0.7)
+                modules_status[str(i)] = 1
+            except:
+                modules_status[str(i)] = 0
+                pass 
+
+        self.message = 'ABS modules Status have been updated.'    
+        self.module_status=json.dumps(modules_status)
+        self.save()
+
+        return
 
 
     def write_device(self):
@@ -438,7 +430,7 @@ class ABSConfiguration(Configuration):
 
         #El indice del apunte debe ser menor que el numero total de apuntes
         #El servidor tcp en el embebido comienza a contar desde 0
-        beams_list    = ast.literal_eval(self.beams)
+        beams_list    = ABSBeam.objects.filter(abs_conf=self)
         if len(beams_list) < beam_pos:
             return 0
 
@@ -496,7 +488,7 @@ class ABSConfiguration(Configuration):
 
         #El indice del apunte debe ser menor que el numero total de apuntes
         #El servidor tcp en el embebido comienza a contar desde 0
-        beams_list    = ast.literal_eval(self.beams)
+        beams_list    = ABSBeam.objects.filter(abs_conf=self)
         if len(beams_list) < beam_pos:
             return 0
 
@@ -684,10 +676,6 @@ class ABSConfiguration(Configuration):
         return 1
 
 
-    def status_device(self):
-
-        return 1
-
 
 
 class ABSBeam(models.Model):
@@ -758,74 +746,7 @@ class ABSBeam(models.Model):
         return self
 
 
-    def change_beam(self, beam_pos=0):
-
-        module_63 = ('192.168.1.63', 5500)
-        header   = 'JROABSCeCnModCnMod0100000'
-        numbers  = len(str(beam_pos))
-        function = 'CHGB'
-
-        message_tx = header+str(numbers)+function+str(beam_pos)+'0'
-
-        # Create the datagram socket
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect(module_63)
-        sock.send(message_tx)
-        sock.close()
-        return message_tx
-
-    def change_module_beam(self, module=61,beam_pos=0):
-
-        module_address = ('192.168.1.'+str(module), 5500)
-        header   = 'JROABSCeCnModCnMod0100000'
-        numbers  = len(str(beam_pos))
-        function = 'CHGB'
-
-        message_tx = header+str(numbers)+function+str(beam_pos)+'0'
-
-        # Create the datagram socket
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect(module_address)
-            sock.send(message_tx)
-            sock.close()
-        except:
-            return 0
-        return message_tx
-
-    def write_device(self):
-
-        parameters = {}
-
-        module_ip   = '192.168.1.63'
-        write_route = 'http://192.168.1.63:8080/configure'
-
-        header = 'JROABSCeCnModCnMod01000108SNDFexperimento1.ab1'
-        module = 'ABS_63'
-        beams  = {1: '001000', 2: '010001', 3: '010010', 4: '000011', 5: '101100', 6: '101101',
-                  7: '110110', 8: '111111', 9: '000000', 10: '001001', 11: '010010', 12: '011011'}
-
-        parameters['header'] = header
-        parameters['module'] = module
-        parameters['beams']  = json.dumps(beams)
-
-        answer = ''
-
-        try:
-            r_write = requests.post(write_route, parameters, timeout=0.5)
-            answer  = r_write.json()
-            self.message = answer['message']
-        except:
-            self.message = "Could not write ABS parameters"
-            return 0
-
-
-        #self.device.status = int(answer['status'])
-
-        return 1
-
-
-
+       
     def module_6bits(self, module):
         """
         This function reads antenna pattern and choose 6bits (upbits-downbits) for one abs module
@@ -862,44 +783,13 @@ class ABSBeam(models.Model):
 
         return self.modules_conf
 
-    def add_beam2list(self):
+    
+    def active_beam(self):
         """
-        This function adds a beam to the beams list of ABS Configuration.
+        This function set this beam as the active beam of its ABS Configuration.
         """
-        beams = ast.literal_eval(self.abs_conf.beams)
-        if any(beams):
-            for beam in beams:
-                if beams[beam] == self.id:
-                    return
-            i = len(beams)+1
-            beams['beam'+str(i)] = self.id
-        else:
-            beams['beam1'] = self.id
-
-        self.abs_conf.beams = json.dumps(beams)
+        self.abs_conf.active_beam = json.dumps({'active_beam': self.id})
         self.abs_conf.save()
-
-        return
-
-    def remove_beamfromlist(self):
-        """
-        This function removes current beam from the beams list of ABS Configuration.
-        """
-        beams = ast.literal_eval(self.abs_conf.beams)
-        dict_position = ''
-
-        if any(beams):
-            for beam in beams:
-                if beams[beam] == self.id:
-                    dict_position = beam
-            if dict_position != '':
-                beams.pop(str(dict_position),None)
-        else:
-            return
-
-        self.abs_conf.beams = json.dumps(beams)
-        self.abs_conf.save()
-
         return
 
     @property

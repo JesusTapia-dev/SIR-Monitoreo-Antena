@@ -121,18 +121,22 @@ def get_values_from_form(form_data):
 
 def abs_conf(request, id_conf):
 
-    conf     = get_object_or_404(ABSConfiguration, pk=id_conf)
-    beams = ABSBeam.objects.filter(abs_conf=conf)
-    #beams_dict = ast.literal_eval(conf.beams)
-    #beams = []
-    #for beam_id in range(1,len(beams_dict)+1):
-    #    beam = ABSBeam.objects.get(pk=beams_dict['beam'+str(beam_id)])
-    #    beams.append(beam)
+    conf           = get_object_or_404(ABSConfiguration, pk=id_conf)
+    beams          = ABSBeam.objects.filter(abs_conf=conf)
+    active_beam_id = json.loads(conf.active_beam)
 
-    #beams_id    = ast.literal_eval(conf.beams)
+    #------------Colors for Active Beam:-------------
+    modules_status = json.loads(conf.module_status)
 
-    ip=conf.device.ip_address
-    port=conf.device.port_address
+    color_status   = {}
+    for status in modules_status:
+        if modules_status[status] == 2:    #Running background-color: #ff0000;
+            color_status[status] = 'bgcolor=#00cc00'
+        elif modules_status[status] == 1:  #Connected background-color: #ee902c;
+            color_status[status] = 'bgcolor=#ee902c'
+        else:                              #Disconnected background-color: #00cc00;  
+            color_status[status] = 'bgcolor=#FF0000'
+    #------------------------------------------------
 
     kwargs = {}
     kwargs['status'] = conf.device.get_status_display()
@@ -146,12 +150,20 @@ def abs_conf(request, id_conf):
     kwargs['no_play'] = True
 
     kwargs['button'] = 'Edit Configuration'
-
-    #kwargs['no_play'] = True
-    #kwargs['beams_id'] = beams_id
+    #------------------Active Beam-----------------------
+    try:
+        active_beam_id = active_beam_id['active_beam']
+        active_beam = ABSBeam.objects.get(pk=active_beam_id)
+        kwargs['active_beam'] = active_beam
+        for beam in beams:
+            if beam.id == active_beam.id:
+                beam.color_status=color_status
+    except:
+        active_beam = ''
+    #----------------------------------------------------
     kwargs['beams']    = beams
-    kwargs['beam_selector'] = 0
-    #kwargs['my_data'] =  simplejson.dumps(beams)
+    kwargs['modules_status'] = modules_status
+    kwargs['color_status']   = color_status
 
     kwargs['only_stop'] = True
 
@@ -163,14 +175,7 @@ def abs_conf(request, id_conf):
 def abs_conf_edit(request, id_conf):
 
     conf     = get_object_or_404(ABSConfiguration, pk=id_conf)
-    #beams_list = ast.literal_eval(conf.beams)
-    #i = 1
-    #beams = []
-    #for b in beams_list:
-    #    beam = ABSBeam.objects.get(pk=beams_list['beam'+str(i)])
-    #    beams.append(beam)
-    #    i=i+1
-
+    
     beams = ABSBeam.objects.filter(abs_conf=conf)
     print beams
 
@@ -230,7 +235,7 @@ def add_beam(request, id_conf):
         new_beam.save()
         #---Update 6bits configuration and add beam to abs configuration beams list.
         new_beam.modules_6bits()
-        new_beam.add_beam2list()
+        #new_beam.add_beam2list()
         messages.success(request, 'Beam: "%s" has been added.'  % new_beam.name)
 
         return redirect('url_edit_abs_conf', conf.id)
