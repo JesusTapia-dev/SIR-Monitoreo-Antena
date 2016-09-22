@@ -8,6 +8,7 @@ urlpatterns = (
     #url(r'^(?P<id_conf>-?\d+)/read/$', views.dev_conf_read, name='url_read_abs_conf'),
     #url(r'^(?P<id_conf>-?\d+)/import/$', views.dev_conf_import, name='url_import_abs_conf'),
     #url(r'^(?P<id_conf>-?\d+)/export/$', views.dev_conf_export, name='url_export_abs_conf'),
+    url(r'^(?P<id_conf>-?\d+)/change_beam/(?P<id_beam>-?\d+)/$', views.send_beam, name='url_send_beam'),
     url(r'^(?P<id_conf>-?\d+)/plot/$', views.plot_patterns, name='url_plot_abs_patterns'),
     url(r'^(?P<id_conf>-?\d+)/plot/(?P<id_beam>-?\d+)/$', views.plot_patterns, name='url_plot_abs_patterns'),
     url(r'^(?P<id_conf>-?\d+)/plot/(?P<id_beam>-?\d+)/(?P<antenna>[\w\-]+)/pattern.png$', views.plot_pattern, name='url_plot_beam'),    

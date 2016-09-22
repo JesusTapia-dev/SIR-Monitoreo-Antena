@@ -469,7 +469,7 @@
 
           {% if active_beam.id != beam.id %}
           <div style="vertical-align: top; display:inline-block;">
-            <button style="" id="sendbeam" type="button" class="btn btn-default">
+            <button style="" id="send_beam{{forloop.counter}}" type="button" class="btn btn-default">
                <span class="glyphicon glyphicon-export" aria-hidden="true"></span>
             Change Beam</button>
           </div>
@@ -516,6 +516,11 @@
 <script>
 $(document).ready(function() {
 
+{% for beam in beams %}
+  $("#send_beam{{forloop.counter}}").click(function() {
+      document.location = "{% url 'url_send_beam' dev_conf.id beam.id %}";
+  });  
+{%endfor%}
   
 });
 </script>

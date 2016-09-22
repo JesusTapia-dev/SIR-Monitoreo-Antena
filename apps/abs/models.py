@@ -745,6 +745,18 @@ class ABSBeam(models.Model):
 
         return self
 
+    def set_activebeam(self):
+        """
+        This function change de active beam of ABS Configuration
+        """
+        conf = self.abs_conf
+        active_beam = {}
+        active_beam['active_beam'] = self.id
+        conf.active_beam = json.dumps(active_beam)
+        conf.save()
+
+        return
+
 
        
     def module_6bits(self, module):

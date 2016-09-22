@@ -4,6 +4,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
 from django.conf import settings
 from django.http import HttpResponse
+from django.core.urlresolvers import reverse
 
 from datetime import datetime
 from time import sleep
@@ -207,6 +208,25 @@ def abs_conf_edit(request, id_conf):
     return render(request, 'abs_conf_edit.html', kwargs)
 
 
+def send_beam(request, id_conf, id_beam):
+
+    conf = get_object_or_404(ABSConfiguration, pk=id_conf)
+    beam = get_object_or_404(ABSBeam, pk=id_beam)
+    beams_list    = ABSBeam.objects.filter(abs_conf=conf)
+    #To set this beam as an Active Beam
+    beam.set_activebeam()
+    #To send beam position to abs-modules
+    i = 0
+    for b in beams_list:
+        if b.id == int(id_beam):
+            break
+        else:
+            i += 1
+    beam_pos = i + 1 #Estandarizar
+    print 'Position: ',beam_pos
+    conf.send_beam_num(beam_pos)
+
+    return redirect('url_abs_conf', conf.id)
 
 
 def add_beam(request, id_conf):
