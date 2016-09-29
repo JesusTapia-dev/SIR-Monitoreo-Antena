@@ -1358,20 +1358,24 @@ def get_paginator(model, page, order, filters={}, n=10):
     [filters.pop(key) for key in filters.keys() if filters[key] in ('', ' ')]
     filters.pop('page', None)
 
+    if 'template' in filters:
+        filters['template'] = True
     if 'start_date' in filters:
         filters['start_date__gte'] = filters.pop('start_date')
     if 'end_date' in filters:
         filters['start_date__lte'] = filters.pop('end_date')
     if 'tags' in filters:
         tags = filters.pop('tags')
-        if 'tags' in model._meta.get_all_field_names():
+        fields = [f.name for f in model._meta.get_fields()]
+        
+        if 'tags' in fields:
             query = query | Q(tags__icontains=tags)
-        if 'name' in model._meta.get_all_field_names():
+        if 'name' in fields:
             query = query | Q(name__icontains=tags)
-        if 'location' in model._meta.get_all_field_names():
+        if 'location' in fields:
             query = query | Q(location__name__icontains=tags)
-        if 'device' in model._meta.get_all_field_names():
-            query = query | Q(device__name__icontains=tags)
+        if 'device' in fields:
+            query = query | Q(device__device_type__name__icontains=tags)
 
     object_list = model.objects.filter(query, **filters).order_by(*order)
     paginator = Paginator(object_list, n)
