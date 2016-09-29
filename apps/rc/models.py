@@ -4,6 +4,7 @@ import json
 import requests
 import numpy as np
 from base64 import b64encode
+from struct import pack
 
 from django.db import models
 from django.core.urlresolvers import reverse
@@ -454,66 +455,114 @@ class RCConfiguration(Configuration):
 
     def status_device(self):
 
-        try:
-            req = requests.get(self.device.url)
+        try:        
+            req = requests.get(self.device.url('status'))
             payload = req.json()
             if payload['status']=='ok':
-                self.device.status = 3
-            else:
                 self.device.status = 1
-        except:
+            else:
+                self.device.status = 0
+        except Exception as e:
             self.device.status = 0
+            self.message = str(e)
+            return False
             
-        self.device.save()
-        
-        return self.device.status 
+        self.device.save()        
+        return True 
             
 
     def reset_device(self):
                 
-        payload = bytearray()
-        payload.extend(self.add_cmd('RESTART'))
-        data = b64encode(payload)
-        req = requests.put(self.device.url, data)
+        try:
+            req = requests.post(self.device.url('reset'))            
+            if 'ok' in req.text:
+                self.message = 'RC restarted'
+            else:
+                self.message = 'RC restart not ok'                
+                self.device.status = 4
+                self.device.save()
+        except Exception as e:
+            self.message = str(e)
+            return False
+            
+        return True
         
-        if data==req.text.encode('utf8'):
-            return 1
-        else:
-            return 0
-    
     def stop_device(self):
 
-        payload = bytearray()
-        payload.extend(self.add_cmd('DISABLE'))
-        data = b64encode(payload)
-        req = requests.put(self.device.url, data)
-       
-        if data==req.text.encode('utf8'):
-            return 1
-        else:
-            return 0
+        try:
+            req = requests.post(self.device.url('stop'))            
+            if 'ok' in req.text:
+                self.device.status = 2
+                self.device.save()
+                self.message = 'RC stopped'
+            else:
+                self.message = 'RC stop not ok'
+                self.device.status = 4
+                self.device.save()
+                return False
+        except Exception as e:
+            self.message = str(e)
+            return False            
+        
+        return True
 
     def start_device(self):
 
-        payload = bytearray()
-        payload.extend(self.add_cmd('ENABLE'))
-        data = b64encode(payload)
-        req = requests.put(self.device.url, data)
-        
-        if data==req.text.encode('utf8'):
-            return 1
-        else:
-            return 0
+        try:
+            req = requests.post(self.device.url('start'))            
+            if 'ok' in req.text:
+                self.device.status = 3
+                self.device.save()
+                self.message = 'RC running'
+            else:
+                self.message = 'RC start not ok'
+                return False
+        except Exception as e:
+            self.message = str(e)
+            return False
+                    
+        return True
 
     def write_device(self):
         
-        data = b64encode(self.parms_to_binary(dat=False))
-        req = requests.put(self.device.url, data)
-        print(req.text)
-        if data==req.text.encode('utf8'):
-            return 1
-        else:
-            return 0
+        values = zip(self.get_pulses(), 
+                     [x-1 for x in self.get_delays()])
+        payload = ''
+        
+        for tup in values:
+            vals = pack('<HH', *tup)
+            payload += '\x05'+vals[0]+'\x04'+vals[1]+'\x05'+vals[2]+'\x05'+vals[3]        
+        
+        try:
+            ## reset                        
+            if not self.reset_device():
+                return False
+            ## stop
+            if not self.stop_device():
+                return False
+            ## write clock divider
+            req = requests.post(self.device.url('divisor'), 
+                                {'divisor': '{:d}'.format(self.clock_divider-1)})
+            if 'ok' not in req.text:
+                self.message = 'Error configuring RC clock divider'
+                return False
+            ## write pulses & delays
+            req = requests.post(self.device.url('write'), data=b64encode(payload))            
+            if 'ok' in req.text:
+                self.device.status = 2
+                self.device.save()
+                self.message = 'RC configured'
+            else:
+                self.device.status = 4
+                self.device.save()
+                self.message = 'RC write not ok'
+                return False
+        
+        except Exception as e:
+            self.message = str(e)
+            return False
+                    
+        return True
 
 
 class RCLineCode(models.Model):
@@ -873,6 +922,6 @@ class RCLine(models.Model):
 
         delays = len(delay)
 
-        Y = [(ipp*x+before+delay[x%delays], ipp*x+width+before+delay[x%delays]+after) for x in range(ntx)]
+        Y = [(int(ipp*x+before+delay[x%delays]+sync), int(ipp*x+width+before+delay[x%delays]+after+sync)) for x in range(ntx)]
 
         return Y

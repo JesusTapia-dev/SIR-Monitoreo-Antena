@@ -1141,7 +1141,7 @@ def dev_conf_start(request, id_conf):
     else:
         messages.error(request, conf.message)
 
-    conf.status_device()
+    #conf.status_device()
 
     return redirect(conf.get_absolute_url())
 
@@ -1155,7 +1155,7 @@ def dev_conf_stop(request, id_conf):
     else:
         messages.error(request, conf.message)
 
-    conf.status_device()
+    #conf.status_device()
 
     return redirect(conf.get_absolute_url())
 
@@ -1176,17 +1176,9 @@ def dev_conf_write(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
 
-    answer = conf.write_device()
-    conf.status_device()
-
-    if answer:
-        messages.success(request, conf.message)
-
-        #Creating a historical configuration
-        conf.clone(type=1, template=False)
-
-        #Original configuration
-        conf = DevConfModel.objects.get(pk=id_conf)
+    if conf.write_device():
+        messages.success(request, conf.message)        
+        conf.clone(type=1, template=False)                
     else:
         messages.error(request, conf.message)
 
@@ -1202,7 +1194,7 @@ def dev_conf_read(request, id_conf):
     if request.method=='GET':
 
         parms = conf.read_device()
-        conf.status_device()
+        #conf.status_device()
 
         if not parms:
             messages.error(request, conf.message)

@@ -1,11 +1,14 @@
-from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
+
 from datetime import datetime
 
+try:
+    from polymorphic.models import PolymorphicModel
+except:
+    from polymorphic import PolymorphicModel
+
 from django.db import models
-from polymorphic.models import PolymorphicModel
-
 from django.core.urlresolvers import reverse
-
+from django.shortcuts import get_object_or_404
 
 CONF_STATES = (
                  (0, 'Disconnected'),
@@ -26,11 +29,12 @@ CONF_TYPES = (
                  (1, 'Historical'),
              )
 
-DEV_STATES = (
+DEV_STATES = (                 
                  (0, 'No connected'),
                  (1, 'Connected'),
                  (2, 'Configured'),
                  (3, 'Running'),
+                 (4, 'Unknown'),
              )
 
 DEV_TYPES = (
@@ -123,13 +127,16 @@ class Device(models.Model):
             color = "success"
 
         return color
-
-    @property
-    def url(self):
+    
+    def url(self, path=None):
         
-        return 'http://{}:{}/'.format(self.ip_address, self.port_address)
-
+        if path:
+            return 'http://{}:{}/{}/'.format(self.ip_address, self.port_address, path)
+        else:
+            return 'http://{}:{}/'.format(self.ip_address, self.port_address)
+        
     def get_absolute_url(self):
+        
         return reverse('url_device', args=[str(self.id)])
 
 
@@ -570,27 +577,32 @@ class Configuration(PolymorphicModel):
 
     def status_device(self):
 
-        raise NotImplementedError("This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper())
+        self.message = 'Function not implemented'
+        return False
 
 
     def stop_device(self):
 
-        raise NotImplementedError("This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper())
+        self.message = 'Function not implemented'
+        return False
 
 
     def start_device(self):
 
-        raise NotImplementedError("This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper())
+        self.message = 'Function not implemented'
+        return False
 
 
     def write_device(self, parms):
 
-        raise NotImplementedError("This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper())
+        self.message = 'Function not implemented'
+        return False
 
 
     def read_device(self):
 
-        raise NotImplementedError("This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper())
+        self.message = 'Function not implemented'
+        return False
 
 
     def get_absolute_url(self):

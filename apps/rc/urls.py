@@ -7,7 +7,7 @@ urlpatterns = (
     url(r'^(?P<conf_id>-?\d+)/import/$', views.import_file, name='url_import_rc_conf'),
     url(r'^(?P<conf_id>-?\d+)/edit/$', views.conf_edit, name='url_edit_rc_conf'),
     url(r'^(?P<conf_id>-?\d+)/plot/$', views.plot_pulses, name='url_plot_rc_pulses'),
-    url(r'^(?P<conf_id>-?\d+)/plot2/$', views.plot_pulses2, name='url_plot_rc_pulses'),
+    url(r'^(?P<conf_id>-?\d+)/plot2/$', views.plot_pulses2, name='url_plot_rc_pulses2'),
     #url(r'^(?P<id_conf>-?\d+)/write/$', 'apps.main.views.dev_conf_write', name='url_write_rc_conf'),
     #url(r'^(?P<id_conf>-?\d+)/read/$', 'apps.main.views.dev_conf_read', name='url_read_rc_conf'),
 

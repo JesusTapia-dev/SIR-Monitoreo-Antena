@@ -1,134 +1,98 @@
 '''
-Created on Dec 2, 2014
+API to configure new Radar controller
 
-@author: Miguel Urco
 
-eth_device decorator is used to implement an api to ethernet devices.
-When eth_device decorator is used it adds two parameters to any function (ip and port)
-
-#Definition
-
-@eth_device
-def enable_rf()
-    cmd = "xxxxx"
-    payload = "xxxxxx"
-
-    return cmd, payload
-
-#How to call this function:
-answer = enable_rf(ip, port)
-
+@author: Juan C. Espinoza
 '''
 
-from devices.jro_device import eth_device, IdClass
+import os
+import json
+import requests
+from struct import pack
+from base64 import b64encode
 
-ID_CLASS = IdClass["rc"]
+class RCApi(object):
+    
+    def __init__(self, ip, port=80):
+        
+        self.url = 'http://{}:{}/'.format(ip, port)
+        self.params = None        
 
-CMD_RESET           =0X01
-CMD_ENABLE          =0X02
-CMD_CHANGEIP        =0X03
-CMD_STATUS          =0X04
-CMD_DISABLE         =0X02
-CMD_ECHO            =0XFE
+    def load(self, filename):
+        
+        self.params = json.load(open(filename))
+        print 'RC Configuration: {}'.format(self.params['name'])
+        
+    def status(self):
+        
+        url = os.path.join(self.url, 'status')
+        req = requests.get(url)
+        return req.json()
 
-RC_CMD_RESET        =0X10
-RC_CMD_WRITE        =0x50
-RC_CMD_READ         =0x8000
+    def read(self):
+        
+        url = os.path.join(self.url, 'read')
+        req = requests.get(url)
+        return req.json()
 
-@eth_device(ID_CLASS)
-def reset():
+    def stop(self):
+        
+        url = os.path.join(self.url, 'stop')
+        req = requests.post(url)
+        return req.json()
 
-    cmd = CMD_RESET
-    payload = ""
+    def reset(self):
+        
+        url = os.path.join(self.url, 'reset')
+        req = requests.post(url)
+        return req.json()
 
-    return cmd, payload
-
-@eth_device(ID_CLASS)
-def change_ip(ip, mask="255.255.255.0", gateway="0.0.0.0"):
-
-    cmd = CMD_CHANGEIP
-    payload = ip + '/' + mask + '/' + gateway
-
-    return cmd, payload
-
-@eth_device(ID_CLASS)
-def status():
-
-    cmd = CMD_STATUS
-    payload = ""
-
-    return cmd, payload
-
-@eth_device(ID_CLASS)
-def echo():
-
-    cmd = CMD_ECHO
-    payload = ""
-
-    return cmd, payload
-
-@eth_device(ID_CLASS)
-def read_all_device():
-
-    payload = ""
-
-    return CR_CMD_READ, payload
-
-@eth_device(ID_CLASS)
-def write_all_device(payload):
-
-    return CR_CMD_WRITE, payload
-
-def read_config(ip, port):
-    """
-    Output:
-        parms   : Dictionary with keys
-
-    """
-    payload = read_all_device(ip, port)
-
-    return data.rc_str_to_dict(payload)
-
-def write_config(ip, port, parms):
-    """
-    Input:
-        ip      :
-        port    :
-        parms   : Dictionary with keys
-
-    """
-
-    payload = data.dict_to_rc_str(parms)
-
-    answer = write_all_device(ip, port, payload)
-
-    return answer
-
-def __get_low_byte(valor):
-
-   return ord(valor & 0x00FF)
-
-def __get_high_byte(valor):
-
-   return ord((valor & 0xFF00) >> 8)
-
-@eth_device(ID_CLASS)
-def write_ram_memory(vector_valores, vector_tiempos):
-
-    l1 = len(vector_valores)
-    l2 = len(vector_tiempos)
-
-    cad = ""
-
-    for i in range(l1):
-      cad += ord(84) + __get_low_byte(vector_valores[i]) + ord(85) + __get_high_byte(vector_valores[i]) + \
-             ord(84) + __get_low_byte(vector_tiempos[i]) + ord(85) + __get_high_byte(vector_tiempos[i])
-
-    return RC_CMD_WRITE, cad
+    def start(self):
+        
+        url = os.path.join(self.url, 'start')
+        req = requests.post(url)
+        return req.json()
+    
+    def write(self):
+        
+        url_write = os.path.join(self.url, 'write')
+        url_divider = os.path.join(self.url, 'divisor')
+                
+        values = zip(self.params['pulses'], 
+                     [x-1 for x in self.params['delays']])
+        payload = ''
+        
+        for tup in values:
+            vals = pack('<HH', *tup)
+            payload += '\x05'+vals[0]+'\x04'+vals[1]+'\x05'+vals[2]+'\x04'+vals[3]
+        
+        req = requests.post(url_divider, 
+                            data={'divisor':int(self.params['clock_divider'])-1})
+        
+        if 'ok' not in req.text:
+            print 'Error sending divider'
+            return False
+        
+        req = requests.post(url_write, 
+                            data=b64encode(payload))
+        return req.json()
 
 if __name__ == '__main__':
-    ip = "10.10.20.150"
-    port = 2000
+    
+    ip = '10.10.10.100'    
+    filename = '/home/jespinoza/Downloads/rc_150EEJ.json'    
 
-    print(status(ip, port))
-    print(read_config(ip, port))
+    rc = RCApi(ip)
+    rc.load(filename)
+    
+    print rc.status()
+    print rc.reset()
+    print rc.stop()
+    print rc.write()
+    print rc.start()
+    
+    
+    
+
+
+
