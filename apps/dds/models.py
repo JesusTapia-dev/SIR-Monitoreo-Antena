@@ -155,21 +155,22 @@ class DDSConfiguration(Configuration):
 
         try:
             answer = api.status(ip = self.device.ip_address,
-                                port = self.device.port_address)
-            status = answer[0]
-            if status=='0':                
+                                port = self.device.port_address)            
+            if 'clock' in answer:                
                 self.device.status = 1
             else:
-                self.device.status = status
-            self.message = answer[2:]
-            self.device.save()
+                self.device.status = answer[0] 
+            self.message = answer[2:]            
         except Exception as e:
             self.message = str(e) 
             self.device.status = 0
-            self.device.save()
-            return False
         
-        return True
+        self.device.save()
+        
+        if self.device.status in (0, '0'):
+            return False
+        else:
+            return True
 
     def reset_device(self):
 
