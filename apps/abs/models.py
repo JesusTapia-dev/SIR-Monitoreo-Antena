@@ -194,7 +194,7 @@ class ABSConfiguration(Configuration):
         parameters['name']      = self.name
         parameters['beams']     = {}
 
-        beams = ABSBeam.objects.get(pk=self.id)
+        beams = ABSBeam.objects.filter(pk=self.id)
         b=1
         for beam in beams:
             #absbeam = ABSBeam.objects.get(pk=beams[beam])
@@ -205,7 +205,7 @@ class ABSConfiguration(Configuration):
 
     def get_beams(self, **kwargs):
         '''
-        This function returns ABS Configuration beams 
+        This function returns ABS Configuration beams
         '''
         return ABSBeam.objects.filter(abs_conf=self.pk, **kwargs)
 
@@ -308,11 +308,11 @@ class ABSConfiguration(Configuration):
         module_port = self.device.port_address
 
         modules_status = json.loads(self.module_status)
-        
-        for i in range(1,65): 
+
+        for i in range(1,65):
             module_ip   = dot.join(module_seq)+'.'+str(i)
             print module_ip
-        
+
             route = 'http://'+module_ip+':'+str(module_port)+'/hello'
 
             try:
@@ -320,9 +320,9 @@ class ABSConfiguration(Configuration):
                 modules_status[str(i)] = 1
             except:
                 modules_status[str(i)] = 0
-                pass 
+                pass
 
-        self.message = 'ABS modules Status have been updated.'    
+        self.message = 'ABS modules Status have been updated.'
         self.module_status=json.dumps(modules_status)
         self.save()
 
@@ -366,7 +366,7 @@ class ABSConfiguration(Configuration):
 
         #self.device.status = 1
         ##
-        if answer==1:            
+        if answer==1:
             self.message = "ABS Beams List have been sent to ABS Modules"
         else:
             self.message = "Could not read ABS parameters"
@@ -758,7 +758,7 @@ class ABSBeam(models.Model):
         return
 
 
-       
+
     def module_6bits(self, module):
         """
         This function reads antenna pattern and choose 6bits (upbits-downbits) for one abs module
@@ -795,7 +795,7 @@ class ABSBeam(models.Model):
 
         return self.modules_conf
 
-    
+
     def active_beam(self):
         """
         This function set this beam as the active beam of its ABS Configuration.
