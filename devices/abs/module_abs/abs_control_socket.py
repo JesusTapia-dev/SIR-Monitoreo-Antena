@@ -53,8 +53,8 @@ def readbits():
     else:
         return {"status": 0, "message": "There's a problem reading bits", "allbits" : ""}
 
-@route('/configure', method='POST')
-def configurebits():
+@route('/write', method='POST')
+def writebits():
     """
     This function sends configurations to the module tcp_
     """

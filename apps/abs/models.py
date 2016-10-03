@@ -295,7 +295,7 @@ class ABSConfiguration(Configuration):
         dot         = '.'
         module_ip   = dot.join(module_seq)+'.'+str(module_num)
         module_port = self.device.port_address
-        write_route = 'http://'+module_ip+':'+str(module_port)+'/configure'
+        write_route = 'http://'+module_ip+':'+str(module_port)+'/write'
 
         header = 'JROABSCeCnModCnMod01000108SNDFexperimento1.ab1'
         module = 'ABS_'+str(module_num)
@@ -450,7 +450,7 @@ class ABSConfiguration(Configuration):
         dot         = '.'
         module_ip   = dot.join(module_seq)+'.'+str(module)
         module_port = self.abs_conf.device.port_address
-        write_route = 'http://'+module_ip+':'+str(module_port)+'/configure'
+        write_route = 'http://'+module_ip+':'+str(module_port)+'/write'
 
         #print write_route
 
