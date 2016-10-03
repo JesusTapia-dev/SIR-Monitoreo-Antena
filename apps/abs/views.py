@@ -14,7 +14,7 @@ from apps.main.models import Device, Configuration
 from apps.main.views import sidebar
 
 from .models import ABSConfiguration, ABSBeam
-from .forms import ABSConfigurationForm, ABSBeamEditForm, ABSBeamAddForm
+from .forms import ABSConfigurationForm, ABSBeamEditForm, ABSBeamAddForm, ABSImportForm
 
 from .utils.overJroShow import overJroShow
 from .utils.OverJRO import OverJRO
@@ -135,7 +135,7 @@ def abs_conf(request, id_conf):
             color_status[status] = 'bgcolor=#00cc00'
         elif modules_status[status] == 1:  #Connected background-color: #ee902c;
             color_status[status] = 'bgcolor=#ee902c'
-        else:                              #Disconnected background-color: #00cc00;  
+        else:                              #Disconnected background-color: #00cc00;
             color_status[status] = 'bgcolor=#FF0000'
     #------------------------------------------------
 
@@ -176,7 +176,7 @@ def abs_conf(request, id_conf):
 def abs_conf_edit(request, id_conf):
 
     conf     = get_object_or_404(ABSConfiguration, pk=id_conf)
-    
+
     beams = ABSBeam.objects.filter(abs_conf=conf)
     print beams
 
@@ -206,6 +206,37 @@ def abs_conf_edit(request, id_conf):
     kwargs['edit'] = True
 
     return render(request, 'abs_conf_edit.html', kwargs)
+
+
+def import_file(request, id_conf):
+
+    conf = get_object_or_404(ABSConfiguration, pk=id_conf)
+    if request.method=='POST':
+        form = ABSImportForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                parms = conf.import_from_file(request.FILES['file_name'])
+
+                if parms:
+                    conf.update_from_file(parms)
+                    messages.success(request, 'Configuration "%s" loaded succesfully' % request.FILES['file_name'])
+                    return redirect(conf.get_absolute_url_edit())
+
+            except Exception as e:
+                messages.error(request, 'Error parsing file: "%s" - %s' % (request.FILES['file_name'], e))
+
+    else:
+        messages.warning(request, 'Your current configuration will be replaced')
+        form = ABSImportForm()
+
+    kwargs = {}
+    kwargs['form'] = form
+    kwargs['title'] = 'ABS Configuration'
+    kwargs['suptitle'] = 'Import file'
+    kwargs['button'] = 'Upload'
+    kwargs['previous'] = conf.get_absolute_url()
+
+    return render(request, 'abs_import.html', kwargs)
 
 
 def send_beam(request, id_conf, id_beam):
@@ -348,13 +379,13 @@ def plot_patterns(request, id_conf, id_beam=None):
     kwargs = {}
     conf = get_object_or_404(ABSConfiguration, pk=id_conf)
     beams = ABSBeam.objects.filter(abs_conf=conf)
-    
+
     if id_beam:
         beam  = get_object_or_404(ABSBeam, pk=id_beam)
         kwargs['beam']       = beam
-        
 
-    ###### SIDEBAR ######    
+
+    ###### SIDEBAR ######
 
     kwargs['dev_conf']   = conf.device
     kwargs['id_dev']     = conf.device
@@ -368,26 +399,26 @@ def plot_patterns(request, id_conf, id_beam=None):
 
 
 def plot_pattern(request, id_conf, id_beam, antenna):
-    
+
     if antenna=='down':
         sleep(3)
-    
+
     conf = get_object_or_404(ABSConfiguration, pk=id_conf)
     beam = get_object_or_404(ABSBeam, pk=id_beam)
 
-    name = conf.experiment.name    
+    name = conf.experiment.name
 
-    just_rx = 1 if json.loads(beam.only_rx)[antenna] else 0        
+    just_rx = 1 if json.loads(beam.only_rx)[antenna] else 0
     phases = json.loads(beam.antenna)['antenna_{}'.format(antenna)]
     gain_tx = json.loads(beam.tx)[antenna]
     gain_rx = json.loads(beam.rx)[antenna]
     ues = json.loads(beam.ues)[antenna]
 
     newOverJro = overJroShow(name)
-    fig = newOverJro.plotPattern2(datetime.today(), phases, gain_tx, gain_rx, ues, just_rx)    
-        
-    response=HttpResponse(content_type='image/png')    
-    
+    fig = newOverJro.plotPattern2(datetime.today(), phases, gain_tx, gain_rx, ues, just_rx)
+
+    response=HttpResponse(content_type='image/png')
+
     fig.canvas.print_png(response)
-    
+
     return response

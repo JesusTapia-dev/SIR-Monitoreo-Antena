@@ -2,47 +2,29 @@ from django import forms
 from .models import ABSConfiguration, ABSBeam
 from .widgets import UpDataWidget, DownDataWidget, EditUpDataWidget, EditDownDataWidget
 from apps.main.models import Configuration
+import os
 
 class ABSConfigurationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ABSConfigurationForm, self).__init__(*args, **kwargs)
-        #instance = getattr(self, 'instance', None)
-
-        #if instance and instance.pk:
-        #    devices = Device.objects.filter(device_type__name='abs')
-
-        #if instance.experiment:
-        #        experiments = Experiment.objects.filter(pk=instance.experiment.id)
-        #        self.fields['experiment'].widget.choices = [(experiment.id, experiment) for experiment in experiments]
 
     class Meta:
         model = ABSConfiguration
         exclude = ('type', 'status', 'parameters', 'active_beam', 'module_status')
 
+
 class ABSBeamAddForm(forms.Form):
 
-    #abs_conf = forms.CharField(widget=forms.HiddenInput)
-    #name = forms.CharField(max_length=60)
     up_data = forms.CharField(widget=UpDataWidget, label='')
     down_data = forms.CharField(widget=DownDataWidget, label='')
 
     def __init__(self, *args, **kwargs):
         super(ABSBeamAddForm, self).__init__(*args, **kwargs)
-        #if 'abs_conf' in self.initial:
-        #    self.fields['abs_conf'].initial = self.initial['abs_conf']
-            #self.fields['name'].initial = 'Beam'
-        #    self.fields['up_data'].initial  = self.initial['abs_conf']
-        #    self.fields['down_data'].initial  = self.initial['abs_conf']
-        #self.fields['abs_conf'].initial = self.initial['abs_conf']
-        #self.fields['name'].initial = 'Beam'
-        #self.fields['up_data'].initial  = self.initial['abs_conf']
-        #self.fields['down_data'].initial  = self.initial['abs_conf']
 
 
 
 class ABSBeamEditForm(forms.Form):
 
-    #abs_conf = forms.CharField(widget=forms.HiddenInput)
     up_data = forms.CharField(widget=EditUpDataWidget, label='')
     down_data = forms.CharField(widget=EditDownDataWidget, label='')
 
@@ -51,6 +33,41 @@ class ABSBeamEditForm(forms.Form):
 
         if 'initial' in kwargs:
             if 'beam' in self.initial:
-                #self.fields['abs_conf'].initial = self.initial['beam'].abs_conf
                 self.fields['up_data'].initial  = self.initial['beam']
                 self.fields['down_data'].initial  = self.initial['beam']
+
+
+class ExtFileField(forms.FileField):
+    """
+    Same as forms.FileField, but you can specify a file extension whitelist.
+
+    >>> from django.core.files.uploadedfile import SimpleUploadedFile
+    >>>
+    >>> t = ExtFileField(ext_whitelist=(".pdf", ".txt"))
+    >>>
+    >>> t.clean(SimpleUploadedFile('filename.pdf', 'Some File Content'))
+    >>> t.clean(SimpleUploadedFile('filename.txt', 'Some File Content'))
+    >>>
+    >>> t.clean(SimpleUploadedFile('filename.exe', 'Some File Content'))
+    Traceback (most recent call last):
+    ...
+    ValidationError: [u'Not allowed filetype!']
+    """
+    def __init__(self, *args, **kwargs):
+        extensions = kwargs.pop("extensions")
+        self.extensions = [i.lower() for i in extensions]
+
+        super(ExtFileField, self).__init__(*args, **kwargs)
+
+    def clean(self, *args, **kwargs):
+        data = super(ExtFileField, self).clean(*args, **kwargs)
+        filename = data.name
+        ext = os.path.splitext(filename)[1]
+        ext = ext.lower()
+        if ext not in self.extensions:
+            raise forms.ValidationError('Not allowed file type: %s' % ext)
+
+
+class ABSImportForm(forms.Form):
+
+    file_name = ExtFileField(extensions=['.json'])

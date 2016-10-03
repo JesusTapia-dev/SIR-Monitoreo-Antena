@@ -194,7 +194,7 @@ class ABSConfiguration(Configuration):
         parameters['name']      = self.name
         parameters['beams']     = {}
 
-        beams = ABSBeam.objects.filter(pk=self.id)
+        beams = ABSBeam.objects.filter(abs_conf=self)
         b=1
         for beam in beams:
             #absbeam = ABSBeam.objects.get(pk=beams[beam])
@@ -202,6 +202,67 @@ class ABSConfiguration(Configuration):
             b+=1
 
         return parameters
+
+    def dict_to_parms(self, parameters):
+
+        self.name = parameters['name']
+
+        absbeams  = ABSBeam.objects.filter(abs_conf=self)
+        beams     = parameters['beams']
+
+        if absbeams:
+            beams_number    = len(beams)
+            absbeams_number = len(absbeams)
+            if beams_number==absbeams_number:
+                i = 1
+                for absbeam in absbeams:
+                    absbeam.dict_to_parms(beams['beam'+str(i)])
+                    i = i+1
+            elif beams_number > absbeams_number:
+                i = 1
+                for absbeam in absbeams:
+                    absbeam.dict_to_parms(beams['beam'+str(i)])
+                    i=i+1
+                for x in range(i,beams_number+1):
+                    new_beam = ABSBeam(
+                               name     =beams['beam'+str(i)]['name'],
+                               antenna  =json.dumps(beams['beam'+str(i)]['antenna']),
+                               abs_conf = self,
+                               tx       =json.dumps(beams['beam'+str(i)]['tx']),
+                               rx       =json.dumps(beams['beam'+str(i)]['rx']),
+                               ues      =json.dumps(beams['beam'+str(i)]['ues']),
+                               only_rx  =json.dumps(beams['beam'+str(i)]['only_rx'])
+                               )
+                    new_beam.save()
+                    i=i+1
+            else: #beams_number < absbeams_number:
+                i = 1
+                for absbeam in absbeams:
+                    if i <= beams_number:
+                        absbeam.dict_to_parms(beams['beam'+str(i)])
+                        i=i+1
+                    else:
+                        absbeam.delete()
+        else:
+            for beam in beams:
+                new_beam = ABSBeam(
+                           name     =beams[beam]['name'],
+                           antenna  =json.dumps(beams[beam]['antenna']),
+                           abs_conf = self,
+                           tx       =json.dumps(beams[beam]['tx']),
+                           rx       =json.dumps(beams[beam]['rx']),
+                           ues      =json.dumps(beams[beam]['ues']),
+                           only_rx  =json.dumps(beams[beam]['only_rx'])
+                           )
+                new_beam.save()
+
+
+
+    def update_from_file(self, parameters):
+
+        self.dict_to_parms(parameters)
+        self.save()
+
 
     def get_beams(self, **kwargs):
         '''
@@ -676,6 +737,10 @@ class ABSConfiguration(Configuration):
         return 1
 
 
+    def get_absolute_url_import(self):
+        return reverse('url_import_abs_conf', args=[str(self.id)])
+
+
 
 
 class ABSBeam(models.Model):
@@ -724,15 +789,14 @@ class ABSBeam(models.Model):
         #self.abs_conf = parameters['abs_conf']
         self.tx       = json.dumps(parameters['tx'])
         self.rx       = json.dumps(parameters['rx'])
-        #parameters['s_time']
-        #parameters['e_time']
+        #self.s_time = parameters['s_time']
+        #self.e_time = parameters['e_time']
         self.ues      = json.dumps(parameters['ues'])
         self.only_rx     = json.dumps(parameters['only_rx'])
 
         self.modules_6bits()
         self.save()
 
-        return parameters
 
     def clone(self, **kwargs):
 
