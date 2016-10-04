@@ -174,10 +174,17 @@ def fromChar2Binary(char):
         bits = bits.zfill(6)
     return bits
 
+OPERATION_MODES = (
+                 (0, 'Manual'),
+                 (1, 'Automatic'),
+             )
+
 
 class ABSConfiguration(Configuration):
-    active_beam         = models.CharField(verbose_name='Active Beam', max_length=20000, default="{}")
-    module_status = models.CharField(verbose_name='Module Status', max_length=10000, default=json.dumps(status_default))
+    active_beam     = models.CharField(verbose_name='Active Beam', max_length=20000, default="{}")
+    module_status   = models.CharField(verbose_name='Module Status', max_length=10000, default=json.dumps(status_default))
+    operation_mode  = models.CharField(verbose_name='Operation Mode', max_length = 20, choices=OPERATION_MODES, default = 0)
+    operation_value = models.CharField(verbose_name='Periodic (seconds)', max_length=20000, default="10", null=True, blank=True)
 
     class Meta:
         db_table = 'abs_configurations'
@@ -357,6 +364,11 @@ class ABSConfiguration(Configuration):
 
         return module_bits
 
+
+    def read_module(self, module):
+
+        return True
+
     def status_device(self):
         """
         This function gets the status of each abs module. It sends GET method to Web Application
@@ -396,14 +408,9 @@ class ABSConfiguration(Configuration):
         It needs 'module_conf' function
         """
 
-        ###beams_list    = ast.literal_eval(self.beams)
-        ###beams = []
         beams = ABSBeam.objects.filter(abs_conf=self)
-        ###for bl in range(1,len(beams_list)+1):
-        ###    b = ABSBeam.objects.get(pk=beams_list['beam'+str(bl)])
-        ###    beams.append(b)
 
-        #---Write each abs module---
+        #-------------Write each abs module-----------
         if beams:
             beams_status = ast.literal_eval(self.module_status)
             for i in range(62,65): #(62,65)
@@ -412,9 +419,7 @@ class ABSConfiguration(Configuration):
                     beams_status[str(i)] = 1
                     self.module_status = json.dumps(beams_status)
                     self.save()
-                #self.module_conf(63,beams)
-                #beams_status[str(63)] = 1
-                #self.module_status = json.dumps(beams_status)
+
                 except:
                     beams_status[str(i)] = 0
                     self.module_status = json.dumps(beams_status)
@@ -429,9 +434,9 @@ class ABSConfiguration(Configuration):
         ##
         if answer==1:
             self.message = "ABS Beams List have been sent to ABS Modules"
+            beams[0].set_as_activebeam()
         else:
             self.message = "Could not read ABS parameters"
-
         ##
         self.save()
         return 1
@@ -809,18 +814,6 @@ class ABSBeam(models.Model):
 
         return self
 
-    def set_activebeam(self):
-        """
-        This function change de active beam of ABS Configuration
-        """
-        conf = self.abs_conf
-        active_beam = {}
-        active_beam['active_beam'] = self.id
-        conf.active_beam = json.dumps(active_beam)
-        conf.save()
-
-        return
-
 
 
     def module_6bits(self, module):
@@ -860,13 +853,15 @@ class ABSBeam(models.Model):
         return self.modules_conf
 
 
-    def active_beam(self):
+    def set_as_activebeam(self):
         """
         This function set this beam as the active beam of its ABS Configuration.
         """
         self.abs_conf.active_beam = json.dumps({'active_beam': self.id})
         self.abs_conf.save()
+
         return
+
 
     @property
     def get_upvalues(self):
