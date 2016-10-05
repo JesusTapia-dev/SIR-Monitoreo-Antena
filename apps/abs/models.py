@@ -183,8 +183,8 @@ OPERATION_MODES = (
 class ABSConfiguration(Configuration):
     active_beam     = models.CharField(verbose_name='Active Beam', max_length=20000, default="{}")
     module_status   = models.CharField(verbose_name='Module Status', max_length=10000, default=json.dumps(status_default))
-    operation_mode  = models.CharField(verbose_name='Operation Mode', max_length = 20, choices=OPERATION_MODES, default = 0)
-    operation_value = models.CharField(verbose_name='Periodic (seconds)', max_length=20000, default="10", null=True, blank=True)
+    operation_mode  = models.PositiveSmallIntegerField(verbose_name='Operation Mode', choices=OPERATION_MODES, default = 0)
+    operation_value = models.FloatField(verbose_name='Periodic (seconds)', default="10", null=True, blank=True)
 
     class Meta:
         db_table = 'abs_configurations'
@@ -413,7 +413,7 @@ class ABSConfiguration(Configuration):
         #-------------Write each abs module-----------
         if beams:
             beams_status = ast.literal_eval(self.module_status)
-            for i in range(62,65): #(62,65)
+            for i in range(61,64): #(62,65)
                 try:
                     answer = self.module_conf(i, beams)
                     beams_status[str(i)] = 1

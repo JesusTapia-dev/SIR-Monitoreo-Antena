@@ -245,7 +245,7 @@ def send_beam(request, id_conf, id_beam):
     beam = get_object_or_404(ABSBeam, pk=id_beam)
     beams_list    = ABSBeam.objects.filter(abs_conf=conf)
     #To set this beam as an Active Beam
-    beam.set_activebeam()
+    beam.set_as_activebeam()
     #To send beam position to abs-modules
     i = 0
     for b in beams_list:
