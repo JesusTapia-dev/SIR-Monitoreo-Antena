@@ -36,11 +36,11 @@ class DateRangepickerWidget(forms.widgets.TextInput):
     def render(self, name, value, attrs=None):
         start = attrs['start_date']
         end = attrs['end_date']
-        html = '''<div class="col-md-5 input-group date" style="float:inherit">
+        html = '''<div class="col-md-6 input-group date" style="float:inherit">
         <input class="form-control" id="id_start_date" name="start_date" placeholder="Start" title="" type="text" value="{}">
         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
         </div>
-        <div class="col-md-5 col-md-offset-2 input-group date" style="float:inherit">
+        <div class="col-md-6 input-group date" style="float:inherit">
         <input class="form-control" id="id_end_date" name="end_date" placeholder="End" title="" type="text" value="{}">
         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
         </div>'''.format(start, end)
@@ -137,7 +137,8 @@ class OperationForm(forms.Form):
 
         campaigns = kwargs.pop('campaigns')
         super(OperationForm, self).__init__(*args, **kwargs)
-        self.fields['campaign'].choices=add_empty_choice(campaigns.values_list('id', 'name'))
+        self.fields['campaign'].label = 'Current Campaigns'
+        self.fields['campaign'].choices = add_empty_choice(campaigns.values_list('id', 'name'))
 
 
 class OperationSearchForm(forms.Form):

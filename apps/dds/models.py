@@ -160,7 +160,7 @@ class DDSConfiguration(Configuration):
                 self.device.status = 1
             else:
                 self.device.status = answer[0] 
-            self.message = answer[2:]            
+            self.message = 'DDS - {}'.format(answer[2:])            
         except Exception as e:
             self.message = str(e) 
             self.device.status = 0
@@ -178,10 +178,10 @@ class DDSConfiguration(Configuration):
                            port = self.device.port_address)
 
         if answer[0] != "1":
-            self.message = answer[0:]
+            self.message = 'DDS - {}'.format(answer[2:])
             return 0
 
-        self.message = answer[2:]
+        self.message = 'DDS - {}'.format(answer[2:])
         return 1
 
     def stop_device(self):
@@ -190,10 +190,10 @@ class DDSConfiguration(Configuration):
             answer = api.disable_rf(ip = self.device.ip_address,
                                     port = self.device.port_address)
             if answer[0] == '1':
-                self.message = answer[2:]
+                self.message = 'DDS - {}'.format(answer[2:])
                 self.device.status = 2                
             else:
-                self.message = self.message = answer[2:]
+                self.message = 'DDS - {}'.format(answer[2:])
                 self.device.status = 1
                 self.device.save()
                 return False
@@ -209,19 +209,17 @@ class DDSConfiguration(Configuration):
         try:
             answer = api.enable_rf(ip = self.device.ip_address,
                                     port = self.device.port_address)
-            if answer[0] == '1':
-                self.message = 'DDS - RF Enable'
-                self.device.status = 3                
-            else:
-                self.message = self.message = answer[2:]
-                self.device.status = 1
-                self.device.save()
-                return False
+            self.device.status = answer[0]
+            self.message = 'DDS - {}'.format(answer[2:])
         except Exception as e:
             self.message = str(e)
             return False
 
         self.device.save()
+        
+        if self.device.status=='0':
+            return False
+        
         return True
 
     def read_device(self):
@@ -242,19 +240,17 @@ class DDSConfiguration(Configuration):
             answer = api.write_config(ip = self.device.ip_address,
                                       port = self.device.port_address,
                                       parms = self.parms_to_dict())
-            if answer[0] == '1':
-                self.message = answer[2:]
-                self.device.status = 3
-            else:
-                self.message = answer[2:]            
-                self.device.status = 1
-                self.device.save()
-                return False
+            self.device.status = answer[0]
+            self.message = 'DDS - {}'.format(answer[2:])
         except Exception as e:
             self.message = str(e)
             return False
 
         self.device.save()
+        
+        if self.device.status=='0':
+            return False
+        
         return True
     
     class Meta:

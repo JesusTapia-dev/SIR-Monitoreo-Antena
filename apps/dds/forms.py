@@ -7,7 +7,7 @@ from .models import DDSConfiguration
 class DDSConfigurationForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
-        #request = kwargs.pop('request')
+        
         super(DDSConfigurationForm, self).__init__(*args, **kwargs)
         
         instance = getattr(self, 'instance', None)
@@ -16,8 +16,8 @@ class DDSConfigurationForm(forms.ModelForm):
             
             devices = Device.objects.filter(device_type__name='dds')
             
-            if instance.experiment:
-                self.fields['experiment'].widget.attrs['disabled'] = 'disabled'
+            #if instance.experiment:
+            #    self.fields['experiment'].widget.attrs['disabled'] = 'disabled'
             
             self.fields['device'].widget.choices = [(device.id, device) for device in devices]
     

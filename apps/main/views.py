@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.utils.safestring import mark_safe
 from django.http import HttpResponseRedirect
@@ -6,7 +8,6 @@ from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
 from django.http.request import QueryDict
-from datetime import datetime
 
 try:
     from urllib.parse import urlencode
@@ -15,6 +16,8 @@ except ImportError:
 
 from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm, UploadFileForm, DownloadFileForm, OperationForm, NewForm
 from .forms import OperationSearchForm, FilterForm
+
+from .tasks import task_start, task_stop
 
 from apps.rc.forms import RCConfigurationForm
 from apps.dds.forms import DDSConfigurationForm
@@ -30,10 +33,7 @@ from apps.usrp.models import USRPConfiguration
 from apps.abs.models import ABSConfiguration
 from apps.rc.models import RCConfiguration, RCLine, RCLineType
 from apps.dds.models import DDSConfiguration
-from django.http.request import QueryDict
-#from __builtin__ import False
 
-# Create your views here.
 
 CONF_FORMS = {
     'rc': RCConfigurationForm,
@@ -67,7 +67,7 @@ MIX_OPERATIONS = {
 
 
 def index(request):
-    kwargs = {}
+    kwargs = {'no_sidebar':True}
 
     return render(request, 'index.html', kwargs)
 
@@ -82,6 +82,7 @@ def locations(request):
     kwargs['keys'] = ['name', 'description']
     kwargs['title'] = 'Radar System'
     kwargs['suptitle'] = 'List'
+    kwargs['no_sidebar'] = True
 
     return render(request, 'base_list.html', kwargs)
 
@@ -177,6 +178,7 @@ def devices(request):
     kwargs['keys'] = ['name', 'ip_address', 'port_address', 'device_type']
     kwargs['title'] = 'Device'
     kwargs['suptitle'] = 'List'
+    kwargs['no_sidebar'] = True
 
     return render(request, 'base_list.html', kwargs)
 
@@ -275,6 +277,7 @@ def campaigns(request):
     kwargs['keys'] = ['name', 'start_date', 'end_date']
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = 'List'
+    kwargs['no_sidebar'] = True
     kwargs['form'] = form
     filters.pop('page', None)
     kwargs['q'] = urlencode(filters)
@@ -486,6 +489,7 @@ def experiments(request):
     kwargs['keys'] = ['name', 'radar_system', 'start_time', 'end_time']
     kwargs['title'] = 'Experiment'
     kwargs['suptitle'] = 'List'
+    kwargs['no_sidebar'] = True
     kwargs['form'] = form
     filters.pop('page', None)
     kwargs['q'] = urlencode(filters)
@@ -1017,6 +1021,7 @@ def dev_confs(request):
     kwargs['keys'] = ['name', 'experiment', 'type', 'programmed_date']
     kwargs['title'] = 'Configuration'
     kwargs['suptitle'] = 'List'
+    kwargs['no_sidebar'] = True
     kwargs['form'] = form
     filters.pop('page', None)
     kwargs['q'] = urlencode(filters)
@@ -1395,6 +1400,7 @@ def get_paginator(model, page, order, filters={}, n=10):
 def operation(request, id_camp=None):
 
     kwargs = {}
+    kwargs['title'] = 'Radars Operation'
     kwargs['no_sidebar'] = True
     campaigns = Campaign.objects.filter(start_date__lte=datetime.now(),
                                         end_date__gte=datetime.now()).order_by('-start_date')
@@ -1414,169 +1420,74 @@ def operation(request, id_camp=None):
     kwargs['experiment_keys'] = keys[1:]
     kwargs['experiments'] = experiments
     #---Radar
-    kwargs['locations'] = campaign.get_experiments_by_location()
-    #---Else
-    kwargs['title'] = 'Campaign'
-    kwargs['suptitle'] = campaign.name
+    kwargs['locations'] = campaign.get_experiments_by_radar()        
     kwargs['form'] = form    
 
     return render(request, 'operation.html', kwargs)
 
 
-def operation_search(request, id_camp=None):
+def radar_start(request, id_camp, id_radar):
+    
+    campaign = get_object_or_404(Campaign, pk = id_camp)            
+    experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
+    now = datetime.utcnow()
+    
+    for exp in experiments:
+        date = datetime.combine(datetime.now().date(), exp.start_time)
+        
+        if exp.status == 2:
+            messages.warning(request, 'Experiment {} already running'.format(exp))
+            continue
+        
+        if exp.status == 3:
+            messages.warning(request, 'Experiment {} already programmed'.format(exp))
+            continue
+        
+        if date>campaign.end_date or date<campaign.start_date:
+            messages.warning(request, 'Experiment {} out of date'.format(exp))
+            continue
+        
+        if now>=date:
+            task = task_start.delay(exp.pk)
+            exp.status = task.wait()
+            if exp.status==0:
+                messages.error(request, 'Experiment {} not start'.format(exp))
+            if exp.status==2:
+                messages.success(request, 'Experiment {} started'.format(exp))
+        else:
+            task = task_start.apply_async((exp.pk,), eta=date)
+            exp.status = 3
+            messages.success(request, 'Experiment {} programmed to start at {}'.format(exp, date))
+        
+        exp.save()
 
-
-    if not id_camp:
-        campaigns = Campaign.objects.all().order_by('-start_date')
-
-        if not campaigns:
-            return render(request, 'operation.html', {})
-
-        id_camp = campaigns[0].id
-    campaign = get_object_or_404(Campaign, pk = id_camp)
-
-    if request.method=='GET':
-        form = OperationSearchForm(initial={'campaign': campaign.id})
-
-    if request.method=='POST':
-        form = OperationSearchForm(request.POST, initial={'campaign':campaign.id})
-
-        if form.is_valid():
-            return redirect('url_operation', id_camp=campaign.id)
-
-    #locations = Location.objects.filter(experiment__campaign__pk = campaign.id).distinct()
-    experiments = Experiment.objects.filter(campaign__pk=campaign.id)
-    #for exs in experiments:
-    #    exs.get_status()
-    locations= Location.objects.filter(experiment=experiments).distinct()
-    form = OperationSearchForm(initial={'campaign': campaign.id})
-
-    kwargs = {}
-    #---Campaign
-    kwargs['campaign'] = campaign
-    kwargs['campaign_keys'] = ['name', 'start_date', 'end_date', 'tags', 'description']
-    #---Experiment
-    keys = ['id', 'name', 'start_time', 'end_time', 'status']
-    kwargs['experiment_keys'] = keys[1:]
-    kwargs['experiments'] = experiments
-    #---Radar
-    kwargs['locations'] = locations
-    #---Else
-    kwargs['title'] = 'Campaign'
-    kwargs['suptitle'] = campaign.name
-    kwargs['form'] = form
-    kwargs['button'] = 'Select'
-    kwargs['details'] = True
-    kwargs['search_button'] = False
-
-    return render(request, 'operation.html', kwargs)
-
-
-def radar_play(request, id_camp, id_radar):
-    campaign = get_object_or_404(Campaign, pk = id_camp)
-    radar = get_object_or_404(Location, pk = id_radar)
-    today = datetime.today()
-    now = today.time()
-
-    #--Clear Old Experiments From RunningExperiment Object
-    running_experiment = RunningExperiment.objects.filter(radar=radar)
-    if running_experiment:
-        running_experiment = running_experiment[0]
-        running_experiment.running_experiment.clear()
-        running_experiment.save()
-
-    #--If campaign datetime is ok:
-    if today >= campaign.start_date and today <= campaign.end_date:
-        experiments = Experiment.objects.filter(campaign=campaign).filter(location=radar)
-        for exp in experiments:
-            #--If experiment time is ok:
-            if now >= exp.start_time and now <= exp.end_time:
-                configurations =  Configuration.objects.filter(experiment = exp)
-                for conf in configurations:
-                    if 'cgs' in conf.device.device_type.name:
-                        conf.status_device()
-                    else:
-                        answer = conf.start_device()
-                        conf.status_device()
-                        #--Running Experiment
-                        old_running_experiment = RunningExperiment.objects.filter(radar=radar)
-                        #--If RunningExperiment element exists
-                        if old_running_experiment:
-                            old_running_experiment = old_running_experiment[0]
-                            old_running_experiment.running_experiment.add(exp)
-                            old_running_experiment.status = 3
-                            old_running_experiment.save()
-                        #--Create a new Running_Experiment Object
-                        else:
-                            new_running_experiment = RunningExperiment(
-                                                                   radar = radar,
-                                                                   status = 3,
-                                                                   )
-                            new_running_experiment.save()
-                            new_running_experiment.running_experiment.add(exp)
-                            new_running_experiment.save()
-
-                        if answer:
-                            messages.success(request, conf.message)
-                            exp.status=2
-                            exp.save()
-                        else:
-                            messages.error(request, conf.message)
-            else:
-                if exp.status == 1 or exp.status == 3:
-                    exp.status=3
-                    exp.save()
-
-
-    route = request.META['HTTP_REFERER']
-    route = str(route)
-    if 'search' in route:
-        return HttpResponseRedirect(reverse('url_operation_search', args=[id_camp]))
-    else:
-        return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
+    return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 
 
 def radar_stop(request, id_camp, id_radar):
-    campaign = get_object_or_404(Campaign, pk = id_camp)
-    radar = get_object_or_404(Location, pk = id_radar)
-    experiments = Experiment.objects.filter(campaign=campaign).filter(location=radar)
+    
+    campaign = get_object_or_404(Campaign, pk = id_camp)            
+    experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']    
+    
+    for exp in experiments:        
+        
+        if exp.status == 2:
+            task = task_stop.delay(exp.pk)
+            exp.status = task.wait()
+            messages.warning(request, 'Experiment {} stopped'.format(exp))                    
+            exp.save()
+        else:
+            messages.error(request, 'Experiment {} not running'.format(exp))
 
-    for exp in experiments:
-        configurations =  Configuration.objects.filter(experiment = exp)
-        for conf in configurations:
-            if 'cgs' in conf.device.device_type.name:
-                conf.status_device()
-            else:
-                answer = conf.stop_device()
-                conf.status_device()
-
-                if answer:
-                    messages.success(request, conf.message)
-                    exp.status=1
-                    exp.save()
-                else:
-                    messages.error(request, conf.message)
-
-
-    route = request.META['HTTP_REFERER']
-    route = str(route)
-    if 'search' in route:
-        return HttpResponseRedirect(reverse('url_operation_search', args=[id_camp]))
-    else:
-        return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
+    return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 
 
 def radar_refresh(request, id_camp, id_radar):
 
-    campaign = get_object_or_404(Campaign, pk = id_camp)
-    radar = get_object_or_404(Location, pk = id_radar)
-    experiments = Experiment.objects.filter(campaign=campaign).filter(location=radar)
-    for exs in experiments:
-        exs.get_status()
+    campaign = get_object_or_404(Campaign, pk = id_camp)            
+    experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']    
+    
+    for exp in experiments:        
+        exp.get_status()
 
-    route = request.META['HTTP_REFERER']
-    route = str(route)
-    if 'search' in route:
-        return HttpResponseRedirect(reverse('url_operation_search', args=[id_camp]))
-    else:
-        return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
+    return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))

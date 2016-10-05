@@ -10,11 +10,6 @@ from django.db import models
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
 
-CONF_STATES = (
-                 (0, 'Disconnected'),
-                 (1, 'Connected'),
-                 (2, 'Running'),
-             )
 
 EXP_STATES = (
                  (0,'Error'),                 #RED
@@ -39,8 +34,7 @@ DEV_STATES = (
 
 DEV_TYPES = (
                 ('', 'Select a device type'),
-                ('rc', 'Radar Controller'),
-                ('rc_mix', 'Radar Controller (Mix)'),
+                ('rc', 'Radar Controller'),                
                 ('dds', 'Direct Digital Synthesizer'),
                 ('jars', 'Jicamarca Radar Acquisition System'),
                 ('usrp', 'Universal Software Radio Peripheral'),
@@ -49,8 +43,7 @@ DEV_TYPES = (
             )
 
 DEV_PORTS = {
-                'rc'    : 2000,
-                'rc_mix': 2000,
+                'rc'    : 2000,                
                 'dds'   : 2000,
                 'jars'  : 2000,
                 'usrp'  : 2000,
@@ -85,6 +78,7 @@ class Location(models.Model):
 class DeviceType(models.Model):
 
     name = models.CharField(max_length = 10, choices = DEV_TYPES, default = 'rc')
+    sequence = models.PositiveSmallIntegerField(default=1000)
     description = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -101,7 +95,7 @@ class Device(models.Model):
     name = models.CharField(max_length=40, default='')
     ip_address = models.GenericIPAddressField(protocol='IPv4', default='0.0.0.0')
     port_address = models.PositiveSmallIntegerField(default=2000)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)    
     status = models.PositiveSmallIntegerField(default=0, choices=DEV_STATES)
 
     class Meta:
@@ -231,10 +225,14 @@ class Campaign(models.Model):
 
         return self
 
-    def get_experiments_by_location(self):
+    def get_experiments_by_radar(self, radar=None):
 
         ret = []
-        locations = set([e.location for e in self.experiments.all()])
+        if radar:
+            locations = Location.objects.filter(pk=radar)
+        else:
+            locations = set([e.location for e in self.experiments.all()])
+        
         for loc in locations:
             dum = {}
             dum['name'] = loc.name
@@ -271,7 +269,7 @@ class Experiment(models.Model):
     location = models.ForeignKey('Location', null=True, blank=True, on_delete=models.CASCADE)
     start_time = models.TimeField(default='00:00:00')
     end_time = models.TimeField(default='23:59:59')
-    status = models.PositiveSmallIntegerField(default=0, choices=EXP_STATES)
+    status = models.PositiveSmallIntegerField(default=4, choices=EXP_STATES)
 
     class Meta:
         db_table = 'db_experiments'
@@ -302,30 +300,57 @@ class Experiment(models.Model):
 
         return self
 
+    def start(self):
+        '''
+        Configure and start experiments's devices        
+        '''
+        
+        result = 2
+        
+        confs = Configuration.objects.filter(experiment=self).order_by('device__device_type__sequence')
+        for conf in confs:
+            if conf.write_device():
+                if conf.start_device():
+                    result &= 2
+                else:
+                    result &= 0
+            else:
+                result &= 0
+                
+        return result        
+
+    def stop(self):        
+        '''
+        Stop experiments's devices        
+        '''
+        
+        result = 1
+        
+        confs = Configuration.objects.filter(experiment=self).order_by('-device__device_type__sequence')
+        for conf in confs:
+            if conf.stop_device():
+                result &= 1                
+            else:
+                result &= 0
+                
+        return result   
+
     def get_status(self):
-        configurations =  Configuration.objects.filter(experiment=self)
-        exp_status=[]
-        for conf in configurations:
-            exp_status.append(conf.status_device())
+        
+        confs =  Configuration.objects.filter(experiment=self)
+        
+        total = confs.aggregate(Sum('device__status'))['device__status__sum']
 
-        if not exp_status: #No Configuration
-            self.status = 4
-            self.save()
-            return
-
-        total = 1
-        for e_s in exp_status:
-            total = total*e_s
-
-        if total == 0:                      #Error
-            status = 0
-        elif total == (3**len(exp_status)): #Running
+        if total==2*confs.count():
+            status = 1
+        elif total == 3*confs.count():
             status = 2
         else:
-            status = 1                      #Configurated
+            status = 0
 
-        self.status = status
-        self.save()
+        if self.status<>3:
+            self.status = status
+            self.save()
 
     def status_color(self):
         color = 'muted'
@@ -338,10 +363,7 @@ class Experiment(models.Model):
         elif self.status == 3:
             color = "warning"
 
-        return color
-
-    def get_absolute_url(self):
-        return reverse('url_experiment', args=[str(self.id)])
+        return color    
 
     def parms_to_dict(self):
 
@@ -451,6 +473,9 @@ class Experiment(models.Model):
         self.save()
 
         return self
+    
+    def get_absolute_url(self):
+        return reverse('url_experiment', args=[str(self.id)])
 
     def get_absolute_url_edit(self):
         return reverse('url_edit_experiment', args=[str(self.id)])

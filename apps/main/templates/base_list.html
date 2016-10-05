@@ -18,13 +18,14 @@
 <form class="form" method="get">
   {% bootstrap_form form layout='horizontal' size='medium' %}
   <div class="pull-right">
-  <button type="button" class="btn btn-primary" onclick="window.location.replace('?');"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
-  <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+  <button type="button" class="btn btn-primary btn-sm" onclick="window.location.replace('?');"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+  <button type="submit" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
   </div>
- </form>
+</form>
 {% endif %}
 {% endblock %}
-<br><br>
+<div style="clear: both;"></div>
+<br>
 <table class="table table-hover">
   <tr>
     <th>#</th>

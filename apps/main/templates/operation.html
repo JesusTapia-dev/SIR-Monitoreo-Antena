@@ -8,6 +8,7 @@
 
 {% block operation-active %}active{% endblock %}
 
+{% block content-title %}{{title}}{% endblock %}
 
 {% block content %}
 
@@ -17,7 +18,7 @@
 {% if campaign %}
 
 <div class="clearfix"></div>
-<h2>Radar Systems</h2>
+<h3>Systems</h3>
 <br>
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true" >
 
@@ -28,12 +29,12 @@
 	      <h4 class="panel-title">
 
 	        <a class="collapsed" role="button" data-toggle="collapse"  href="#collapseTwo-{{ location.id }}" aria-expanded="false" aria-controls="collapseTwo">
-	          {{location.name}}
+	          {{location.name}} [{{campaign.start_date|date:"Y/m/d"}} - {{campaign.end_date|date:"Y/m/d"}}]
 	          <span>
 	          </span>
 	        </a>
 
-	        <button type="button" name="bt_play" class="btn btn-primary pull-right btn-xs" data-url="{% url 'url_radar_play' campaign.id location.id %}" style="margin-left: 10px">
+	        <button type="button" name="bt_play" class="btn btn-primary pull-right btn-xs" data-url="{% url 'url_radar_start' campaign.id location.id %}" style="margin-left: 10px">
                 <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
             </button>
             <button type="button" name="bt_stop" class="btn btn-primary pull-right btn-xs" data-url="{% url 'url_radar_stop' campaign.id location.id %}" aria-label="Left Align" style="margin-left: 10px">

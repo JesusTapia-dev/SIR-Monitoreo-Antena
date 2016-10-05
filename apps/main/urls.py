@@ -52,10 +52,8 @@ urlpatterns = (
     url(r'^dev_conf/(?P<id_conf>-?\d+)/status/$', views.dev_conf_status, name='url_status_dev_conf'),
 
     url(r'^operation/$', views.operation, name='url_operation'),
-    url(r'^operation/(?P<id_camp>-?\d+)/$', views.operation, name='url_operation'),
-    url(r'^operation/search/$', views.operation_search, name='url_operation_search'),
-    url(r'^operation/search/(?P<id_camp>-?\d+)/$', views.operation_search, name='url_operation_search'),
-    url(r'^operation/(?P<id_camp>-?\d+)/radar/(?P<id_radar>-?\d+)/play/$', views.radar_play, name='url_radar_play'),
+    url(r'^operation/(?P<id_camp>-?\d+)/$', views.operation, name='url_operation'),    
+    url(r'^operation/(?P<id_camp>-?\d+)/radar/(?P<id_radar>-?\d+)/start/$', views.radar_start, name='url_radar_start'),
     url(r'^operation/(?P<id_camp>-?\d+)/radar/(?P<id_radar>-?\d+)/stop/$', views.radar_stop, name='url_radar_stop'),
     url(r'^operation/(?P<id_camp>-?\d+)/radar/(?P<id_radar>-?\d+)/refresh/$', views.radar_refresh, name='url_radar_refresh'),
 )
