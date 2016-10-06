@@ -524,12 +524,12 @@ class ABSConfiguration(Configuration):
 
         #print write_route
 
-        header = 'JROABSCeCnModCnMod01000108SNDFexperimento1.ab1'
-        module = 'ABS_'+str(module)
-        beams  = {1: '001000', 2: '010001', 3: '010010', 4: '000011', 5: '101100', 6: '101101',
-                  7: '110110', 8: '111111', 9: '000000', 10: '001001', 11: '010010', 12: '011011'}
+        #header = 'JROABSCeCnModCnMod01000108SNDFexperimento1.ab1'
+        #module = 'ABS_'+str(module)
+        beams  = '!`*3<ENW'#{1: '001000', 2: '010001', 3: '010010', 4: '000011', 5: '101100', 6: '101101',
+                 # 7: '110110', 8: '111111', 9: '000000', 10: '001001', 11: '010010', 12: '011011'}
 
-        parameters['header'] = header
+        #parameters['header'] = header
         parameters['module'] = module
         parameters['beams']  = json.dumps(beams)
 
