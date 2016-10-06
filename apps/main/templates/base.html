@@ -90,17 +90,19 @@
     <div id="page" class="row" style="min-height:600px">
 
     {% if no_sidebar %}
-    <div class="col-md-0 hidden-xs hidden-sm" role="complementary">
+    <div class="col-md-0 hidden-xs hidden-sm" role="complementary"></div>
 
     {% else %}
      <div class="col-md-3 hidden-xs hidden-sm" role="complementary">
+       <br><br>
+  	       <div id="sidebar">
+  	       {% block sidebar%}
+               {% include "sidebar_devices.html" %}
+          {% endblock %}
+  	       </div>
+  	   </div>
     {% endif %}
-	   <br><br>
-	       <div id="sidebar">
-	       {% block sidebar%}
-           {% endblock %}
-	       </div>
-	   </div>
+
 
     {% if no_sidebar %}
 	   <div class="col-md-12 col-xs-12" role="main">
