@@ -131,7 +131,7 @@ def abs_conf(request, id_conf):
 
     color_status   = {}
     for status in modules_status:
-        if modules_status[status] == 2:    #Running background-color: #00cc00;
+        if modules_status[status] == 3:    #Running background-color: #00cc00;
             color_status[status] = 'class=text-success'#'bgcolor=#00cc00'
         elif modules_status[status] == 1:  #Connected background-color: #ee902c;
             color_status[status] = 'class=text-warning'#'bgcolor=#ee902c'

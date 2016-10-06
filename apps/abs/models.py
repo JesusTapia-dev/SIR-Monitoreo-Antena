@@ -289,6 +289,14 @@ class ABSConfiguration(Configuration):
         for beam in beams:
             beam.clone(abs_conf=self)
 
+        #-----For Active Beam-----
+        active_beam = json.loads(self.active_beam)
+        new_beams = ABSBeam.objects.filter(abs_conf=self)
+        active_beam['active_beam'] = new_beams[0].id
+        self.active_beam = json.dumps(active_beam)
+        self.save()
+        #-----For Active Beam-----
+
         return self
 
 
@@ -304,8 +312,8 @@ class ABSConfiguration(Configuration):
         module_port = self.device.port_address
         write_route = 'http://'+module_ip+':'+str(module_port)+'/write'
 
-        header = 'JROABSCeCnModCnMod01000108SNDFexperimento1.ab1'
-        module = 'ABS_'+str(module_num)
+        #header = 'JROABSCeCnModCnMod01000108SNDFexperimento1.ab1'
+        #module = 'ABS_'+str(module_num)
         bs  = '' #{}
         i=1
 
@@ -317,11 +325,7 @@ class ABSConfiguration(Configuration):
         beams = bs
 
         parameters = {}
-        #parameters['header'] = header
-        #parameters['module'] = module
         parameters['beams']  = beams #json.dumps(beams)
-        #print beams
-        #print parameters['beams']
         print parameters
         answer = ''
 
@@ -329,11 +333,12 @@ class ABSConfiguration(Configuration):
             #r_write = requests.post(write_route, parameters, timeout=0.5)
             r_write = requests.post(write_route, json = parameters, timeout=0.5)
             answer  = r_write.json()
-            self.message = answer['message']
+            #self.message = answer['message']
         except:
-            self.message = "Could not write ABS parameters"
-            return 0
-        return 1
+            #self.message = "Could not write ABS parameters"
+            return False
+
+        return answer
 
 
 
@@ -348,33 +353,61 @@ class ABSConfiguration(Configuration):
         #-------------Write each abs module-----------
         if beams:
             beams_status = ast.literal_eval(self.module_status)
-            for i in range(61,64): #(62,65)
-                try:
-                    answer = self.module_conf(i, beams)
-                    beams_status[str(i)] = 1
-                    self.module_status = json.dumps(beams_status)
-                    self.save()
+            disconnected_modules = 0
+            for i in range(1,65): #(62,65)
+                #--------------JUEVES-------------
+                if beams_status[str(i)] != 0:
+                    try:
+                        answer = self.module_conf(i,beams)
+                        if answer:
+                            if answer['status']:
+                                beams_status[str(i)] = 3
 
-                except:
-                    beams_status[str(i)] = 0
-                    self.module_status = json.dumps(beams_status)
-                    self.save()
-                    answer = 0
-                    return 0
+                    except:
+                        beams_status[str(i)] = 1
+
+                        pass
+                else:
+                    disconnected_modules += 1
+                #--------------JUEVES-------------
+                #try:
+                #    answer = self.module_conf(i, beams)
+                #    beams_status[str(i)] = 1
+                #    self.module_status = json.dumps(beams_status)
+                #    self.save()
+
+                #except:
+                #    beams_status[str(i)] = 0
+                #    self.module_status = json.dumps(beams_status)
+                #    self.save()
+                #    answer = 0
+                #    return 0
         else:
             self.message = "ABS Configuration does not have beams"
-            return 0
+            return False
 
         #self.device.status = 1
         ##
-        if answer==1:
+        #-------------Jueves-------------
+        if disconnected_modules == 64:
+            self.message = "Could not write ABS Modules"
+            return False
+        else:
             self.message = "ABS Beams List have been sent to ABS Modules"
             beams[0].set_as_activebeam()
-        else:
-            self.message = "Could not read ABS parameters"
+
+        self.module_status = json.dumps(beams_status)
+        self.save()
+
+        #-------------Jueves-------------
+        #if answer==1:
+        #    self.message = "ABS Beams List have been sent to ABS Modules"
+        #    beams[0].set_as_activebeam()
+        #else:
+        #    self.message = "Could not read ABS parameters"
         ##
         self.save()
-        return 1
+        return True
 
 
 
@@ -453,7 +486,8 @@ class ABSConfiguration(Configuration):
         modules_status = json.loads(self.module_status)
         num = 0
         for status in modules_status:
-            num = num +modules_status[status]
+            if modules_status[status] != 0:
+                num += 1
 
         return num
 
