@@ -18,11 +18,57 @@ module_num = 'xx'
 module_port = 5500
 module_xx = ('192.168.1.xx',5500)
 
+#This function decode sent characters
+def fromChar2Binary(char):
+    #To get the real value (-33)
+    number = ord(char) - 33
+    bits = bin(number)[2:]
+    #To ensure we have a string with 6bits
+    if len(bits) < 6:
+        bits = bits.zfill(6)
+    return bits
+
 @route('/')
 @route('/hello')
 def hello():
     return "Hello World!"
 
+"""
+#---- Send Bits Function ----
+@route('/write', method='POST')
+def writebits():
+
+    #This funcion configure ABS sending bits.
+
+    try:
+        #------------Get Values-----------
+        #----------------UP---------------
+        ub2     = request.forms.get('ub2')
+        ub1     = request.forms.get('ub1')
+        ub0     = request.forms.get('ub0')
+        #--------------DOWN---------------
+        db2     = request.forms.get('db2')
+        db1     = request.forms.get('db1')
+        db0     = request.forms.get('db0')
+
+        #-----------Send Values-----------
+        #----------------UP---------------
+        ub2 = abs_write(126,ub2)
+        ub1 = abs_write(124,ub1)
+        ub0 = abs_write(122,ub0)
+        #--------------DOWN---------------
+        db2 = abs_write(120,db2)
+        db1 = abs_write(118,db1)
+        db0 = abs_write(116,db0)
+
+        if (ub2+ub1+ub0+db2+db1+db0) == 6:
+            return {"status": 1, "message": "Bits were successfully adjusted"}
+        else:
+            return {"status": 0, "message": "Couldn't configure ABS"}
+
+    except:
+        return {"status": 0, "message": "Couldn't configure ABS"}
+"""
 
 #---- Get Bits Function ----
 @route('/read', method='GET')
@@ -58,23 +104,31 @@ def writebits():
     """
     This function sends configurations to the module tcp_
     """
+    header_rx = 'JROABSCeCnModCnMod01000108SNDFexperimento1.ab1'
+    module_rx = 'ABS_'+module_num
     try:
-        header_rx = request.forms.get('header')
-        module_rx = request.forms.get('module')
-        beams_rx  = request.forms.get('beams')
-        beams_rx  = json.loads(beams_rx)
+        #header_rx = request.forms.get('header')
+        #module_rx = request.forms.get('module')
+        #beams_rx  = request.forms.get('beams')
+        #beams_rx  = json.loads(beams_rx)
+        beams_rx  = json.loads(request.body.readline())
+        beams_rx  = beams_rx['beams']
     except:
         return {"status":0, "message": "Could not accept configuration"}
-    #print header_rx, module_rx, beams_rx
+    #print beams_rx
     message_tx = header_rx+"\n"+module_rx+"\n"
-    for i in range(1,len(beams_rx)+1):
-        message_tx = message_tx+beams_rx[str(i)]+"\n"
+    for i in range(1,len(beams_rx)): #(1,len(beams_rx)+1)
+        try:
+            message_tx = message_tx+fromChar2Binary(beams_rx[i])+"\n"
+        except:
+            return {"status":0, "message": "Error in parameters from Beams List"
     message_tx = message_tx+"0"
+
 
     # Create the datagram socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     print >>sys.stderr, 'sending "%s"' % message_tx
-    sock.connect(module_63)
+    sock.connect(module)
     sock.send(message_tx)
     sock.close()
 
