@@ -51,7 +51,7 @@
 }
 .north tr{
     border: 1px solid #ffffff;
-    
+
 }
 .north td{
     border: 2px solid #e2e2e7;
@@ -177,12 +177,12 @@
       {% endfor %}
     </ul>
 
-    
+
     <div class="tab-content">
       <div id="home" class="tab-pane fade in active">
         <!---->
         {% if active_beam %}
-        <h3>Active Beam: {{active_beam.name}}</h3>       
+        <h3>Active Beam: {{active_beam.name}}</h3>
 
           <table id="abs_pattern" class="abs">
             <tr>
@@ -304,20 +304,19 @@
           </table>
 
 
-        
+
           <table class="legend">
             <tr>
               <th colspan="2">Legend</th>
             </tr>
             <tr>
-              <td style="color:#ff0000;"><i>RED</i></td><td>Disconnected</td>
+              <td class="text-danger"><i>RED</i></td><td>Disconnected</td>
             </tr>
             <tr>
-              <td style="color:#ee902c;"><i>ORANGE</i></td><td>Connected</td>
+              <td class="text-warning"><i>ORANGE</i></td><td>Connected</td>
             </tr>
             <tr>
-              <td style="color:#00cc00;"><i>GREEN</i></td><td>Running
-              </td>
+              <td class="text-success"><i>GREEN</i></td><td>Running   </td>
             </tr>
             <!--
             <tr>
@@ -329,8 +328,8 @@
             </tr>
             -->
           </table>
-        
-              
+
+
 
 
           {% else %}
@@ -341,8 +340,8 @@
 
 
       </div>
-      
-      
+
+
 
       {% for beam in beams %}
         <div id="menu{{forloop.counter}}" class="tab-pane fade">
@@ -474,9 +473,9 @@
             Change Beam</button>
           </div>
           {% endif %}
-                      
 
-          
+
+
 
             {% if active_beam %}
               {% if active_beam.id == beam.id %}
@@ -485,27 +484,27 @@
                       <th colspan="2">Legend</th>
                     </tr>
                     <tr>
-                      <td style="color:#ff0000;"><i>RED</i></td><td>Disconnected</td>
+                      <td class="text-danger"><i>RED</i></td><td>Disconnected</td>
                     </tr>
                     <tr>
-                      <td style="color:#ee902c;"><i>ORANGE</i></td><td>Connected</td>
+                      <td class="text-warning"><i>ORANGE</i></td><td>Connected</td>
                     </tr>
                     <tr>
-                      <td style="color:#00cc00;"><i>GREEN</i></td><td>Running
+                      <td class="text-success"><i>GREEN</i></td><td>Running
                       </td>
                     </tr>
                   </table>
-                    
+
                 {% endif %}
               {% endif %}
 
-        
+
         </div>
 
 
       {% endfor %}
 
-      
+
 
     </div>
   </div>
@@ -519,9 +518,9 @@ $(document).ready(function() {
 {% for beam in beams %}
   $("#send_beam{{forloop.counter}}").click(function() {
       document.location = "{% url 'url_send_beam' dev_conf.id beam.id %}";
-  });  
+  });
 {%endfor%}
-  
+
 });
 </script>
 

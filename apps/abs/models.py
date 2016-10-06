@@ -308,8 +308,7 @@ class ABSConfiguration(Configuration):
         module = 'ABS_'+str(module_num)
         bs  = '' #{}
         i=1
-        #beams  = {1: '001000', 2: '010001', 3: '010010', 4: '000011', 5: '101100', 6: '101101',
-        #       7: '110110', 8: '111111', 9: '000000', 10: '001001', 11: '010010', 12: '011011'}
+
         for beam in beams:
             #bs[i] = fromBinary2Char(beam.module_6bits(module_num))
             bs = bs + fromBinary2Char(beam.module_6bits(module_num))
@@ -318,14 +317,17 @@ class ABSConfiguration(Configuration):
         beams = bs
 
         parameters = {}
-        parameters['header'] = header
-        parameters['module'] = module
+        #parameters['header'] = header
+        #parameters['module'] = module
         parameters['beams']  = beams #json.dumps(beams)
-        print parameters['beams']
+        #print beams
+        #print parameters['beams']
+        print parameters
         answer = ''
 
         try:
-            r_write = requests.post(write_route, parameters, timeout=0.5)
+            #r_write = requests.post(write_route, parameters, timeout=0.5)
+            r_write = requests.post(write_route, json = parameters, timeout=0.5)
             answer  = r_write.json()
             self.message = answer['message']
         except:
@@ -333,73 +335,6 @@ class ABSConfiguration(Configuration):
             return 0
         return 1
 
-    def read_module(self, module):
-
-        """
-        Read out-bits (up-down) of 1 abs module NOT for Configuration
-        """
-
-        parameters = {}
-        ip_address  = self.device.ip_address
-        ip_address  = ip_address.split('.')
-        module_seq  = (ip_address[0],ip_address[1],ip_address[2])
-        dot         = '.'
-        module_ip   = dot.join(module_seq)+'.'+str(module)
-        module_port = self.device.port_address
-        read_route = 'http://'+module_ip+':'+str(module_port)+'/read'
-
-        print(read_route)
-
-        answer = ''
-        module_bits = ''
-
-        try:
-            r_write = requests.get(read_route, timeout=0.7)
-            answer  = r_write.json()
-            self.message = answer['message']
-            module_bits    = answer['allbits']
-        except:
-            #message = "Could not read ABS parameters"
-            return 0
-
-        return module_bits
-
-
-    def read_module(self, module):
-
-        return True
-
-    def status_device(self):
-        """
-        This function gets the status of each abs module. It sends GET method to Web Application
-        in Python Bottle.
-        """
-        ip_address  = self.device.ip_address
-        ip_address  = ip_address.split('.')
-        module_seq  = (ip_address[0],ip_address[1],ip_address[2])
-        dot         = '.'
-        module_port = self.device.port_address
-
-        modules_status = json.loads(self.module_status)
-
-        for i in range(1,65):
-            module_ip   = dot.join(module_seq)+'.'+str(i)
-            print module_ip
-
-            route = 'http://'+module_ip+':'+str(module_port)+'/hello'
-
-            try:
-                r = requests.get(route, timeout=0.7)
-                modules_status[str(i)] = 1
-            except:
-                modules_status[str(i)] = 0
-                pass
-
-        self.message = 'ABS modules Status have been updated.'
-        self.module_status=json.dumps(modules_status)
-        self.save()
-
-        return
 
 
     def write_device(self):
@@ -440,6 +375,102 @@ class ABSConfiguration(Configuration):
         ##
         self.save()
         return 1
+
+
+
+
+    def read_module(self, module):
+
+        """
+        Read out-bits (up-down) of 1 abs module NOT for Configuration
+        """
+
+        parameters = {}
+        ip_address  = self.device.ip_address
+        ip_address  = ip_address.split('.')
+        module_seq  = (ip_address[0],ip_address[1],ip_address[2])
+        dot         = '.'
+        module_ip   = dot.join(module_seq)+'.'+str(module)
+        module_port = self.device.port_address
+        read_route = 'http://'+module_ip+':'+str(module_port)+'/read'
+
+        print(read_route)
+
+        answer = ''
+        module_bits = ''
+
+        try:
+            r_write = requests.get(read_route, timeout=0.7)
+            answer  = r_write.json()
+            self.message = answer['message']
+            module_bits    = answer['allbits']
+        except:
+            #message = "Could not read ABS parameters"
+            answer  = r_write.json()
+            return 0
+
+        return module_bits
+
+
+    def absmodule_status(self):
+        """
+        This function gets the status of each abs module. It sends GET method to Web Application
+        in Python Bottle.
+        This function updates "module_status" field from ABSconfiguration.
+        """
+        ip_address  = self.device.ip_address
+        ip_address  = ip_address.split('.')
+        module_seq  = (ip_address[0],ip_address[1],ip_address[2])
+        dot         = '.'
+        module_port = self.device.port_address
+
+        modules_status = json.loads(self.module_status)
+
+        for i in range(1,65):
+            module_ip   = dot.join(module_seq)+'.'+str(i)
+            print module_ip
+
+            route = 'http://'+module_ip+':'+str(module_port)+'/hello'
+
+            try:
+                r = requests.get(route, timeout=0.7)
+                modules_status[str(i)] = 1
+            except:
+                modules_status[str(i)] = 0
+                pass
+
+
+        self.module_status=json.dumps(modules_status)
+        self.save()
+
+        return
+
+
+    def connected_modules(self):
+        """
+        This function returns the number of connected abs-modules without updating.
+        """
+        modules_status = json.loads(self.module_status)
+        num = 0
+        for status in modules_status:
+            num = num +modules_status[status]
+
+        return num
+
+
+    def status_device(self):
+        """
+        This function returns the status of all abs-modules as one.
+        If at least one module is connected, its answer is "1"
+        """
+        self.absmodule_status()
+        connected_modules = self.connected_modules()
+        if connected_modules>0:
+            self.message = 'ABS modules Status have been updated.'
+            return 1
+        self.message = 'No ABS module is connected.'
+        return 0
+
 
 
     def write_module(self, module):
