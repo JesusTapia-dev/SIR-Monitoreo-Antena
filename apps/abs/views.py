@@ -128,6 +128,7 @@ def abs_conf(request, id_conf):
 
     #------------Colors for Active Beam:-------------
     modules_status = json.loads(conf.module_status)
+    module_messages = json.loads(conf.module_messages)
 
     color_status   = {}
     for status in modules_status:
@@ -158,13 +159,15 @@ def abs_conf(request, id_conf):
         kwargs['active_beam'] = active_beam
         for beam in beams:
             if beam.id == active_beam.id:
-                beam.color_status=color_status
+                beam.color_status    = color_status
+                beam.module_messages = module_messages
     except:
         active_beam = ''
     #----------------------------------------------------
     kwargs['beams']    = beams
     kwargs['modules_status'] = modules_status
     kwargs['color_status']   = color_status
+    kwargs['module_messages'] = module_messages
 
     kwargs['only_stop'] = True
 

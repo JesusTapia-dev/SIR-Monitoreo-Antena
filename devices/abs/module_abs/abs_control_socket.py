@@ -16,7 +16,7 @@ import json
 module_ip  = '192.168.1.xx'
 module_num = 'xx'
 module_port = 5500
-module_xx = ('192.168.1.xx',5500)
+module = (module_ip,5500)
 
 #This function decode sent characters
 def fromChar2Binary(char):
@@ -70,6 +70,28 @@ def writebits():
         return {"status": 0, "message": "Couldn't configure ABS"}
 """
 
+#------ Get Status -------                                                    
+@route('/status', method='GET')                                               
+def module_status():                                                          
+    """                                                                       
+    This function returns:                                                    
+    0 : No Connected                                                          
+    1 : Connected                                                             
+                                                                              
+    """                                                                       
+    message_tx = 'JROABSClnt_01CeCnMod000001MNTR10'                           
+    #Create the datagram socket                                               
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)                  
+    try:                                                                      
+        sock.connect(module)                                                  
+        sock.send(message_tx)                                                 
+        sock.close()                                                          
+    except:                                                                   
+        sock = None                                                           
+        return {"status":0, "message": "TCP Control Module not detected."}    
+    return {"status": 1, "message": "Module "+module_num+" is running"} 
+
+
 #---- Get Bits Function ----
 @route('/read', method='GET')
 def readbits():
@@ -117,11 +139,11 @@ def writebits():
         return {"status":0, "message": "Could not accept configuration"}
     #print beams_rx
     message_tx = header_rx+"\n"+module_rx+"\n"
-    for i in range(1,len(beams_rx)): #(1,len(beams_rx)+1)
+    for i in range(0,len(beams_rx)): #(1,len(beams_rx)+1)
         try:
             message_tx = message_tx+fromChar2Binary(beams_rx[i])+"\n"
         except:
-            return {"status":0, "message": "Error in parameters from Beams List"
+            return {"status":0, "message": "Error in parameters from Beams List"}
     message_tx = message_tx+"0"
 
 

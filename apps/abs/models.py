@@ -77,9 +77,12 @@ rx_default = json.dumps({
 
 conf_default = {}
 status_default = {}
+default_messages = {}
 for i in range(1,65):
     conf_default[str(i)] = ""
     status_default[str(i)] = 0
+    default_messages[str(i)] = "Module "+str(i)
+
 
 ues_default = json.dumps({
                 "up": [0.533333,0.00000,1.06667,0.00000],
@@ -185,7 +188,8 @@ class ABSConfiguration(Configuration):
     module_status   = models.CharField(verbose_name='Module Status', max_length=10000, default=json.dumps(status_default))
     operation_mode  = models.PositiveSmallIntegerField(verbose_name='Operation Mode', choices=OPERATION_MODES, default = 0)
     operation_value = models.FloatField(verbose_name='Periodic (seconds)', default="10", null=True, blank=True)
-
+    module_messages = models.CharField(verbose_name='Modules Messages', max_length=10000, default=json.dumps(default_messages))
+    
     class Meta:
         db_table = 'abs_configurations'
 
@@ -343,12 +347,21 @@ class ABSConfiguration(Configuration):
 
 
     def write_device(self):
+        
         """
         This function sends the beams list to every abs module.
         It needs 'module_conf' function
         """
 
         beams = ABSBeam.objects.filter(abs_conf=self)
+        connected_modules = ast.literal_eval(self.module_status)
+        suma_connected_modules = 0
+        
+        for c in connected_modules:
+            suma_connected_modules = suma_connected_modules+connected_modules[c]
+        if not suma_connected_modules > 0 :
+            self.message = "No ABS Module detected."
+            return False
 
         #-------------Write each abs module-----------
         if beams:
@@ -369,19 +382,7 @@ class ABSConfiguration(Configuration):
                         pass
                 else:
                     disconnected_modules += 1
-                #--------------JUEVES-------------
-                #try:
-                #    answer = self.module_conf(i, beams)
-                #    beams_status[str(i)] = 1
-                #    self.module_status = json.dumps(beams_status)
-                #    self.save()
-
-                #except:
-                #    beams_status[str(i)] = 0
-                #    self.module_status = json.dumps(beams_status)
-                #    self.save()
-                #    answer = 0
-                #    return 0
+                
         else:
             self.message = "ABS Configuration does not have beams"
             return False
@@ -399,13 +400,7 @@ class ABSConfiguration(Configuration):
         self.module_status = json.dumps(beams_status)
         self.save()
 
-        #-------------Jueves-------------
-        #if answer==1:
-        #    self.message = "ABS Beams List have been sent to ABS Modules"
-        #    beams[0].set_as_activebeam()
-        #else:
-        #    self.message = "Could not read ABS parameters"
-        ##
+        
         self.save()
         return True
 
@@ -458,22 +453,26 @@ class ABSConfiguration(Configuration):
         module_port = self.device.port_address
 
         modules_status = json.loads(self.module_status)
+        module_messages = json.loads(self.module_messages)
 
         for i in range(1,65):
             module_ip   = dot.join(module_seq)+'.'+str(i)
             print module_ip
 
-            route = 'http://'+module_ip+':'+str(module_port)+'/hello'
+            route = 'http://'+module_ip+':'+str(module_port)+'/status'
 
             try:
-                r = requests.get(route, timeout=0.7)
-                modules_status[str(i)] = 1
+                r = requests.get(route, timeout=0.5)#, timeout=0.7)
+                answer = r.json()
+                modules_status[str(i)] = answer['status']
+                module_messages[str(i)] = answer['message']
             except:
                 modules_status[str(i)] = 0
                 pass
 
 
-        self.module_status=json.dumps(modules_status)
+        self.module_status   = json.dumps(modules_status)
+        self.module_messages = json.dumps(module_messages)
         self.save()
 
         return
