@@ -10,7 +10,7 @@ from datetime import datetime
 from time import sleep
 import os
 
-from apps.main.models import Device, Configuration
+from apps.main.models import Device, Configuration, Experiment
 from apps.main.views import sidebar
 
 from .models import ABSConfiguration, ABSBeam
@@ -149,7 +149,7 @@ def abs_conf(request, id_conf):
 
     kwargs['title'] = 'ABS Configuration'
     kwargs['suptitle'] = 'Details'
-    kwargs['no_play'] = True
+    #kwargs['no_play'] = True
 
     kwargs['button'] = 'Edit Configuration'
     #------------------Active Beam-----------------------
@@ -169,7 +169,7 @@ def abs_conf(request, id_conf):
     kwargs['color_status']   = color_status
     kwargs['module_messages'] = module_messages
 
-    kwargs['only_stop'] = True
+    #kwargs['only_stop'] = True
 
     ###### SIDEBAR ######
     kwargs.update(sidebar(conf=conf))

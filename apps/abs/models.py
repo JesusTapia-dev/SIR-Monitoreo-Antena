@@ -2,7 +2,8 @@ from django.db import models
 from apps.main.models import Configuration
 from django.core.urlresolvers import reverse
 # Create your models here.
-
+from celery.execute import send_task
+from datetime import datetime
 import ast
 import socket
 import json
@@ -189,7 +190,7 @@ class ABSConfiguration(Configuration):
     operation_mode  = models.PositiveSmallIntegerField(verbose_name='Operation Mode', choices=OPERATION_MODES, default = 0)
     operation_value = models.FloatField(verbose_name='Periodic (seconds)', default="10", null=True, blank=True)
     module_messages = models.CharField(verbose_name='Modules Messages', max_length=10000, default=json.dumps(default_messages))
-    
+
     class Meta:
         db_table = 'abs_configurations'
 
@@ -297,11 +298,46 @@ class ABSConfiguration(Configuration):
         active_beam = json.loads(self.active_beam)
         new_beams = ABSBeam.objects.filter(abs_conf=self)
         active_beam['active_beam'] = new_beams[0].id
+
         self.active_beam = json.dumps(active_beam)
         self.save()
         #-----For Active Beam-----
+        #-----For Device Status---
+        self.device.status = 3
+        self.device.save()
+        #-----For Device Status---
 
         return self
+
+
+    def start_device(self):
+
+        if self.device.status == 3:
+
+            try:
+                #self.write_device()
+                send_task('task_change_beam', [self.id],)
+                self.message = 'ABS running'
+
+            except Exception as e:
+                self.message = str(e)
+                return False
+
+            return True
+
+        else:
+            self.message = 'Please, select Write ABS Device first.'
+            return False
+
+
+    def stop_device(self):
+
+        self.device.status = 2
+        self.device.save()
+        self.message = 'ABS has been stopped.'
+        self.save()
+
+        return True
 
 
     def module_conf(self, module_num, beams):
@@ -347,7 +383,7 @@ class ABSConfiguration(Configuration):
 
 
     def write_device(self):
-        
+
         """
         This function sends the beams list to every abs module.
         It needs 'module_conf' function
@@ -356,7 +392,7 @@ class ABSConfiguration(Configuration):
         beams = ABSBeam.objects.filter(abs_conf=self)
         connected_modules = ast.literal_eval(self.module_status)
         suma_connected_modules = 0
-        
+
         for c in connected_modules:
             suma_connected_modules = suma_connected_modules+connected_modules[c]
         if not suma_connected_modules > 0 :
@@ -382,7 +418,7 @@ class ABSConfiguration(Configuration):
                         pass
                 else:
                     disconnected_modules += 1
-                
+
         else:
             self.message = "ABS Configuration does not have beams"
             return False
@@ -392,15 +428,17 @@ class ABSConfiguration(Configuration):
         #-------------Jueves-------------
         if disconnected_modules == 64:
             self.message = "Could not write ABS Modules"
+            self.device.status = 0
             return False
         else:
             self.message = "ABS Beams List have been sent to ABS Modules"
             beams[0].set_as_activebeam()
 
+        self.device.status = 3
         self.module_status = json.dumps(beams_status)
-        self.save()
 
-        
+
+
         self.save()
         return True
 

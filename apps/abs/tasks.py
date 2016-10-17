@@ -6,19 +6,7 @@ import json
 from datetime import timedelta, datetime
 from celery.task import task
 
-"""
-@task
-def beam_task(id_conf):
-
-    abs_conf  = Configuration.objects.get(pk=id_conf)
-
-    task_change_beam(abs_conf.pk)
-
-    return task_change_beam(abs_conf.pk)
-
-"""
-
-@task
+@task(name='task_change_beam')
 def task_change_beam(id_conf):
 
     abs_conf = Configuration.objects.get(pk=id_conf)
@@ -28,6 +16,9 @@ def task_change_beam(id_conf):
     run_every = timedelta(seconds=abs_conf.operation_value)
     now = datetime.utcnow()
     date = now + run_every
+
+    if abs_conf.device.status != 3:
+        return abs_conf.device.status
 
     if abs_conf.operation_mode == 0:  #Manual Mode
         return 1
@@ -51,7 +42,7 @@ def task_change_beam(id_conf):
             abs_conf.send_beam_num(1)
             beams_list[0].set_as_activebeam()
             task = task_change_beam.apply_async((abs_conf.pk,), eta=date)
-            print next_beam
+            print beams_list[0]
             i=0
 
     else:
