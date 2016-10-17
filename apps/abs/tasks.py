@@ -1,19 +1,63 @@
 from __future__ import absolute_import
-from celery import task
-from .models import Experiment
 
-#@task
-#def task_start(id_exp):
+from apps.main.models import Configuration
+from .models import ABSBeam
+import json
+from datetime import timedelta, datetime
+from celery.task import task
 
-#    exp = Experiment.objects.get(pk=id_exp)
+"""
+@task
+def beam_task(id_conf):
 
-#    return exp.start()
+    abs_conf  = Configuration.objects.get(pk=id_conf)
+
+    task_change_beam(abs_conf.pk)
+
+    return task_change_beam(abs_conf.pk)
+
+"""
+
+@task
+def task_change_beam(id_conf):
+
+    abs_conf = Configuration.objects.get(pk=id_conf)
+    beams_list = ABSBeam.objects.filter(abs_conf=abs_conf)
+    active_beam = json.loads(abs_conf.active_beam)
+
+    run_every = timedelta(seconds=abs_conf.operation_value)
+    now = datetime.utcnow()
+    date = now + run_every
+
+    if abs_conf.operation_mode == 0:  #Manual Mode
+        return 1
+
+    if active_beam:
+        current_beam = ABSBeam.objects.get(pk=active_beam['active_beam'])
+        i=0
+        for beam in beams_list:
+            if beam == current_beam:
+                i+=1
+                break
+            i+=1
+
+        if i < len(beams_list):
+            next_beam = beams_list[i]
+            abs_conf.send_beam_num(i+1)
+            next_beam.set_as_activebeam()
+            task = task_change_beam.apply_async((abs_conf.pk,), eta=date)
+            print next_beam
+        else:
+            abs_conf.send_beam_num(1)
+            beams_list[0].set_as_activebeam()
+            task = task_change_beam.apply_async((abs_conf.pk,), eta=date)
+            print next_beam
+            i=0
+
+    else:
+        abs_conf.send_beam_num(1)
+        beams_list[0].set_as_activebeam()
+        task = task_change_beam.apply_async((abs_conf.pk,), eta=date)
 
 
-
-#@task
-#def task_stop(id_exp):
-
-#    exp = Experiment.objects.get(pk=id_exp)
-
-#    return exp.stop()
+    return 2
