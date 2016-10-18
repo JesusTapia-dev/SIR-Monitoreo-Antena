@@ -1,8 +1,11 @@
 {% extends "dev_conf.html" %}
 
+{% load static %}
+{% load bootstrap3 %}
+{% load main_tags %}
+
 {% block extra-menu-actions %}
 <li><a href="{{ dev_conf.get_absolute_url_plot }}" target="_blank"><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> View Patterns </a></li>
-<!--<li><a href="{{ dev_conf.get_absolute_url_write }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Write</a></li>-->
 {% endblock %}
 
 {% block extra-content %}
@@ -171,7 +174,7 @@
   <div class="container">
     <ul class="nav nav-pills">
       {% for beam in beams %}
-        <li >
+        <li {% if active_beam.id == beam.id %} class="active" {% endif %} >
           <a data-toggle="pill" href="#menu{{forloop.counter}}">{{forloop.counter}}</a>
         </li>
       {% endfor %}
@@ -510,28 +513,30 @@
   </div>
 
 
+  {% else %}
+    <p style="color:#b4bcc2; margin-left: 5%;"><i>No Beams...</i></p>
+  {% endif %}
+
+{% endblock extra-content %}
 
 
+
+{% block extra-js%}
 <script>
 $(document).ready(function() {
 
 {% for beam in beams %}
-  $("#send_beam{{forloop.counter}}").click(function() {
-      document.location = "{% url 'url_send_beam' dev_conf.id beam.id %}";
-  });
-{%endfor%}
+
+  {% if dev_conf.operation_mode == 1 %}
+    $("#send_beam{{forloop.counter}}").prop('disabled', true)
+  {% else %}
+    $("#send_beam{{forloop.counter}}").click(function() {
+        document.location = "{% url 'url_send_beam' dev_conf.id beam.id %}";
+    });
+  {% endif %}
+
+{% endfor %}
 
 });
 </script>
-
-
-
-
-
-
-{% else %}
-  <p style="color:#b4bcc2; margin-left: 5%;"><i>No Beams...</i></p>
-{% endif %}
-
-
 {% endblock %}

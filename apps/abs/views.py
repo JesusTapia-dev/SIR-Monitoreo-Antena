@@ -145,7 +145,10 @@ def abs_conf(request, id_conf):
     kwargs['connected_modules'] = str(conf.connected_modules())+'/64'
 
     kwargs['dev_conf'] = conf
-    kwargs['dev_conf_keys'] = ['name',]
+    if conf.operation_mode == 0:
+        kwargs['dev_conf_keys'] = ['name', 'operation_mode']
+    else:
+        kwargs['dev_conf_keys'] = ['name', 'operation_mode', 'operation_value']
 
     kwargs['title'] = 'ABS Configuration'
     kwargs['suptitle'] = 'Details'
