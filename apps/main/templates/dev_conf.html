@@ -29,7 +29,9 @@
     <li><a href="{{ dev_conf.get_absolute_url_stop }}"><span class="glyphicon glyphicon-stop" aria-hidden="true"></span> Stop</a></li>
     {% endif %}
     <li><a href="{{ dev_conf.get_absolute_url_write }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Write</a></li>
+    {% if dev_conf.device.device_type.name != 'abs' %}
     <li><a href="{{ dev_conf.get_absolute_url_read }}"><span class="glyphicon glyphicon-upload" aria-hidden="true"></span> Read</a></li>
+    {% endif %}
   </ul>
 </span>
 {% endblock %}

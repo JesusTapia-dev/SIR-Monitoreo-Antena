@@ -149,6 +149,32 @@ def down_conv_bits(value):
 
     return bits
 
+def up_conv_value(bits):
+
+    if bits == "000": value=1.0
+    if bits == "001": value=2.0
+    if bits == "010": value=3.0
+    if bits == "011": value=0.0
+    if bits == "100": value=0.5
+    if bits == "101": value=1.5
+    if bits == "110": value=2.5
+    if bits == "111": value=3.5
+
+    return value
+
+def down_conv_value(bits):
+
+    if bits == "000": value=1.0
+    if bits == "001": value=2.0
+    if bits == "010": value=3.0
+    if bits == "011": value=0.0
+    if bits == "100": value=0.5
+    if bits == "101": value=1.5
+    if bits == "110": value=2.5
+    if bits == "111": value=3.5
+
+    return value
+
 def ip2position(module_number):
     j=0
     i=0
@@ -451,7 +477,6 @@ class ABSConfiguration(Configuration):
         Read out-bits (up-down) of 1 abs module NOT for Configuration
         """
 
-        parameters = {}
         ip_address  = self.device.ip_address
         ip_address  = ip_address.split('.')
         module_seq  = (ip_address[0],ip_address[1],ip_address[2])
@@ -460,22 +485,46 @@ class ABSConfiguration(Configuration):
         module_port = self.device.port_address
         read_route = 'http://'+module_ip+':'+str(module_port)+'/read'
 
+        module_status = json.loads(self.module_status)
         print(read_route)
 
-        answer = ''
         module_bits = ''
 
         try:
-            r_write = requests.get(read_route, timeout=0.7)
-            answer  = r_write.json()
-            self.message = answer['message']
-            module_bits    = answer['allbits']
+            r_read      = requests.get(read_route, timeout=0.5)
+            answer      = r_read.json()
+            module_bits = answer['allbits']
         except:
-            #message = "Could not read ABS parameters"
-            answer  = r_write.json()
-            return 0
+            return {}
 
         return module_bits
+
+    def read_device(self):
+
+        parms = {}
+        # Reads active modules.
+        module_status = json.loads(self.module_status)
+        total = 0
+        for status in module_status:
+            if module_status[status] != 0:
+                module_bits = self.read_module(int(status))
+                bits={}
+                if module_bits:
+                    bits = (str(module_bits['um2']) + str(module_bits['um1']) + str(module_bits['um0']) +
+                            str(module_bits['dm2']) + str(module_bits['dm1']) + str(module_bits['dm0']) )
+                    parms[str(status)] = bits
+
+                total +=1
+
+        if total==0:
+            self.message = "No ABS Module detected. Please select 'Status'."
+            return False
+
+
+
+        self.message = "ABS Modules have been read"
+        #monitoreo_tx = JROABSClnt_01CeCnMod000000MNTR10
+        return parms
 
 
     def absmodule_status(self):

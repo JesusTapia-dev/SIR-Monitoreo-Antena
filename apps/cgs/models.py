@@ -81,7 +81,8 @@ class CGSConfiguration(Configuration):
         except:
             self.device.status = 0
             self.device.save()
-            return self.device.status
+            self.message = 'Could not read CGS status'
+            return False
 
         response = str(r.text)
         response = response.split(";")
@@ -104,7 +105,7 @@ class CGSConfiguration(Configuration):
         self.device.save()
 
 
-        return self.device.status
+        return True
 
 
     def read_device(self):
@@ -157,7 +158,7 @@ class CGSConfiguration(Configuration):
             r = requests.post(route, post_data, timeout=0.5)
         except:
             self.message = "Could not write CGS parameters"
-            return None
+            return False
 
         text = r.text
         text = text.split(',')
@@ -167,12 +168,16 @@ class CGSConfiguration(Configuration):
             status = text[1]
             if title == "okay":
                 self.message = status
-                return 3
+                self.device.status =  3
+                self.device.save()
+                return True
             else:
                 self.message = title + ", " + status
-                return 1
+                self.device.status = 1
+                self.device.save()
+                return False
 
-        return 1
+        return False
 
 
     class Meta:
