@@ -3,6 +3,7 @@ from apps.main.models import Configuration
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from .files import read_json_file
+import requests
 # Create your models here. validators=[MinValueValidator(62.5e6), MaxValueValidator(450e6)]
 
 class CGSConfiguration(Configuration):
@@ -108,6 +109,84 @@ class CGSConfiguration(Configuration):
         return True
 
 
+    def start_device(self):
+
+        ip=self.device.ip_address
+        port=self.device.port_address
+
+        #---Frequencies from form
+        f0 = self.freq0
+        f1 = self.freq1
+        f2 = self.freq2
+        f3 = self.freq3
+        post_data = {"f0":f0, "f1":f1, "f2":f2, "f3":f3}
+        route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
+
+        try:
+            r = requests.post(route, post_data, timeout=0.7)
+        except:
+            self.message = "Could not start CGS device"
+            return False
+
+        text = r.text
+        text = text.split(',')
+
+        if len(text)>1:
+            title = text[0]
+            status = text[1]
+            if title == "okay":
+                self.message = status
+                self.device.status =  3
+                self.device.save()
+                return True
+            else:
+                self.message = title + ", " + status
+                self.device.status = 1
+                self.device.save()
+                return False
+
+        return False
+
+
+    def stop_device(self):
+
+        ip=self.device.ip_address
+        port=self.device.port_address
+
+        f0 = 0
+        f1 = 0
+        f2 = 0
+        f3 = 0
+        post_data = {"f0":f0, "f1":f1, "f2":f2, "f3":f3}
+        route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
+
+        try:
+            r = requests.post(route, post_data, timeout=0.7)
+        except:
+            self.message = "Could not stop CGS device"
+            return False
+
+        text = r.text
+        text = text.split(',')
+
+        if len(text)>1:
+            title = text[0]
+            status = text[1]
+            if title == "okay":
+                self.message = status
+                self.device.status = 1
+                self.device.save()
+                self.message = "CGS device has been stopped"
+                return True
+            else:
+                self.message = title + ", " + status
+                self.device.status = 0
+                self.device.save()
+                return False
+
+        return False
+
+
     def read_device(self):
 
         import requests
@@ -117,7 +196,7 @@ class CGSConfiguration(Configuration):
 
         route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
         try:
-            frequencies = requests.get(route,timeout=0.5)
+            frequencies = requests.get(route,timeout=0.7)
 
         except:
             self.message = "Could not read CGS parameters from this device"
@@ -141,8 +220,6 @@ class CGSConfiguration(Configuration):
 
     def write_device(self):
 
-        import requests
-
         ip=self.device.ip_address
         port=self.device.port_address
 
@@ -155,7 +232,7 @@ class CGSConfiguration(Configuration):
         route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
 
         try:
-            r = requests.post(route, post_data, timeout=0.5)
+            r = requests.post(route, post_data, timeout=0.7)
         except:
             self.message = "Could not write CGS parameters"
             return False

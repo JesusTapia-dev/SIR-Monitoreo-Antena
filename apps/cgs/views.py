@@ -63,7 +63,7 @@ def cgs_conf(request, id_conf):
 
     kwargs['button'] = 'Edit Configuration'
 
-    kwargs['no_play'] = True
+    #kwargs['no_play'] = True
 
     ###### SIDEBAR ######
     kwargs.update(sidebar(conf=conf))
