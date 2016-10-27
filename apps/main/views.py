@@ -34,6 +34,9 @@ from apps.abs.models import ABSConfiguration
 from apps.rc.models import RCConfiguration, RCLine, RCLineType
 from apps.dds.models import DDSConfiguration
 
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+
 
 CONF_FORMS = {
     'rc': RCConfigurationForm,
@@ -101,6 +104,7 @@ def location(request, id_loc):
     return render(request, 'location.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def location_new(request):
 
     if request.method == 'GET':
@@ -122,6 +126,7 @@ def location_new(request):
     return render(request, 'base_edit.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def location_edit(request, id_loc):
 
     location = get_object_or_404(Location, pk=id_loc)
@@ -145,6 +150,7 @@ def location_edit(request, id_loc):
     return render(request, 'base_edit.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def location_delete(request, id_loc):
 
     location = get_object_or_404(Location, pk=id_loc)
@@ -197,6 +203,7 @@ def device(request, id_dev):
     return render(request, 'device.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def device_new(request):
 
     if request.method == 'GET':
@@ -218,6 +225,7 @@ def device_new(request):
     return render(request, 'base_edit.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def device_edit(request, id_dev):
 
     device = get_object_or_404(Device, pk=id_dev)
@@ -241,6 +249,7 @@ def device_edit(request, id_dev):
     return render(request, 'base_edit.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def device_delete(request, id_dev):
 
     device = get_object_or_404(Device, pk=id_dev)
@@ -308,6 +317,7 @@ def campaign(request, id_camp):
     return render(request, 'campaign.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def campaign_new(request):
 
     kwargs = {}
@@ -360,6 +370,7 @@ def campaign_new(request):
     return render(request, 'campaign_edit.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def campaign_edit(request, id_camp):
 
     campaign = get_object_or_404(Campaign, pk=id_camp)
@@ -400,6 +411,7 @@ def campaign_edit(request, id_camp):
     return render(request, 'campaign_edit.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def campaign_delete(request, id_camp):
 
     campaign = get_object_or_404(Campaign, pk=id_camp)
@@ -428,6 +440,8 @@ def campaign_delete(request, id_camp):
 
     return render(request, 'confirm.html', kwargs)
 
+
+@staff_member_required(login_url='/accounts/login/')
 def campaign_export(request, id_camp):
 
     campaign = get_object_or_404(Campaign, pk=id_camp)
@@ -442,6 +456,7 @@ def campaign_export(request, id_camp):
     return response
 
 
+@staff_member_required(login_url='/accounts/login/')
 def campaign_import(request, id_camp):
 
     campaign = get_object_or_404(Campaign, pk=id_camp)
@@ -522,6 +537,7 @@ def experiment(request, id_exp):
     return render(request, 'experiment.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def experiment_new(request, id_camp=None):
 
     kwargs = {}
@@ -564,6 +580,7 @@ def experiment_new(request, id_camp=None):
     return render(request, 'experiment_edit.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def experiment_edit(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
@@ -587,6 +604,7 @@ def experiment_edit(request, id_exp):
     return render(request, 'experiment_edit.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def experiment_delete(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
@@ -612,6 +630,7 @@ def experiment_delete(request, id_exp):
     return render(request, 'confirm.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def experiment_export(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
@@ -625,6 +644,8 @@ def experiment_export(request, id_exp):
 
     return response
 
+
+@staff_member_required(login_url='/accounts/login/')
 def experiment_import(request, id_exp):
 
     experiment     = get_object_or_404(Experiment, pk=id_exp)
@@ -660,6 +681,8 @@ def experiment_import(request, id_exp):
 
     return render(request, 'experiment_import.html', kwargs)
 
+
+@staff_member_required(login_url='/accounts/login/')
 def experiment_mix(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
@@ -753,6 +776,7 @@ def experiment_mix(request, id_exp):
     return render(request, 'experiment_mix.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def experiment_mix_delete(request, id_exp):
 
     conf = RCConfiguration.objects.get(experiment=id_exp, mix=True)
@@ -867,6 +891,8 @@ def experiment_summary(request, id_exp):
 
     return render(request, 'experiment_summary.html', kwargs)
 
+
+@staff_member_required(login_url='/accounts/login/')
 def experiment_verify(request, id_exp):
 
     import json
@@ -1036,6 +1062,7 @@ def dev_conf(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
+@staff_member_required(login_url='/accounts/login/')
 def dev_conf_new(request, id_exp=0, id_dev=0):
 
     initial = {}
@@ -1109,6 +1136,7 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
     return render(request, 'dev_conf_edit.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def dev_conf_edit(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1137,6 +1165,7 @@ def dev_conf_edit(request, id_conf):
     return render(request, '%s_conf_edit.html' % conf.device.device_type.name, kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def dev_conf_start(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1151,6 +1180,7 @@ def dev_conf_start(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
+@staff_member_required(login_url='/accounts/login/')
 def dev_conf_stop(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1165,6 +1195,7 @@ def dev_conf_stop(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
+@staff_member_required(login_url='/accounts/login/')
 def dev_conf_status(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1177,19 +1208,21 @@ def dev_conf_status(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
+@staff_member_required(login_url='/accounts/login/')
 def dev_conf_write(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
 
     if conf.write_device():
-        messages.success(request, conf.message)        
-        conf.clone(type=1, template=False)                
+        messages.success(request, conf.message)
+        conf.clone(type=1, template=False)
     else:
         messages.error(request, conf.message)
 
     return redirect(conf.get_absolute_url())
 
 
+@staff_member_required(login_url='/accounts/login/')
 def dev_conf_read(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1229,6 +1262,7 @@ def dev_conf_read(request, id_conf):
     return render(request, '%s_conf_edit.html' %conf.device.device_type.name, kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def dev_conf_import(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1276,6 +1310,7 @@ def dev_conf_import(request, id_conf):
     return render(request, 'dev_conf_import.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def dev_conf_export(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1307,6 +1342,7 @@ def dev_conf_export(request, id_conf):
     return render(request, 'dev_conf_export.html', kwargs)
 
 
+@staff_member_required(login_url='/accounts/login/')
 def dev_conf_delete(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1372,7 +1408,7 @@ def get_paginator(model, page, order, filters={}, n=10):
     if 'tags' in filters:
         tags = filters.pop('tags')
         fields = [f.name for f in model._meta.get_fields()]
-        
+
         if 'tags' in fields:
             query = query | Q(tags__icontains=tags)
         if 'name' in fields:
@@ -1420,33 +1456,34 @@ def operation(request, id_camp=None):
     kwargs['experiment_keys'] = keys[1:]
     kwargs['experiments'] = experiments
     #---Radar
-    kwargs['locations'] = campaign.get_experiments_by_radar()        
-    kwargs['form'] = form    
+    kwargs['locations'] = campaign.get_experiments_by_radar()
+    kwargs['form'] = form
 
     return render(request, 'operation.html', kwargs)
 
 
+@login_required
 def radar_start(request, id_camp, id_radar):
-    
-    campaign = get_object_or_404(Campaign, pk = id_camp)            
+
+    campaign = get_object_or_404(Campaign, pk = id_camp)
     experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
     now = datetime.utcnow()
-    
+
     for exp in experiments:
         date = datetime.combine(datetime.now().date(), exp.start_time)
-        
+
         if exp.status == 2:
             messages.warning(request, 'Experiment {} already running'.format(exp))
             continue
-        
+
         if exp.status == 3:
             messages.warning(request, 'Experiment {} already programmed'.format(exp))
             continue
-        
+
         if date>campaign.end_date or date<campaign.start_date:
             messages.warning(request, 'Experiment {} out of date'.format(exp))
             continue
-        
+
         if now>=date:
             task = task_start.delay(exp.pk)
             exp.status = task.wait()
@@ -1458,23 +1495,24 @@ def radar_start(request, id_camp, id_radar):
             task = task_start.apply_async((exp.pk,), eta=date)
             exp.status = 3
             messages.success(request, 'Experiment {} programmed to start at {}'.format(exp, date))
-        
+
         exp.save()
 
     return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 
 
+@login_required
 def radar_stop(request, id_camp, id_radar):
-    
-    campaign = get_object_or_404(Campaign, pk = id_camp)            
-    experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']    
-    
-    for exp in experiments:        
-        
+
+    campaign = get_object_or_404(Campaign, pk = id_camp)
+    experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
+
+    for exp in experiments:
+
         if exp.status == 2:
             task = task_stop.delay(exp.pk)
             exp.status = task.wait()
-            messages.warning(request, 'Experiment {} stopped'.format(exp))                    
+            messages.warning(request, 'Experiment {} stopped'.format(exp))
             exp.save()
         else:
             messages.error(request, 'Experiment {} not running'.format(exp))
@@ -1482,12 +1520,13 @@ def radar_stop(request, id_camp, id_radar):
     return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 
 
+@login_required
 def radar_refresh(request, id_camp, id_radar):
 
-    campaign = get_object_or_404(Campaign, pk = id_camp)            
-    experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']    
-    
-    for exp in experiments:        
+    campaign = get_object_or_404(Campaign, pk = id_camp)
+    experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
+
+    for exp in experiments:
         exp.get_status()
 
     return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
