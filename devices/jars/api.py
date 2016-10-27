@@ -36,11 +36,20 @@ CMD_SET_EXEPATH = 0X12
 CMD_ECHO = 0XFE
 CMD_READ = 0X08
 CMD_STOP = 0X09
+CMD_START = 0x05
 
 @eth_device(ID_CLASS)
 def reset():
 
     cmd = CMD_RESET
+    payload = ''
+
+    return cmd, payload
+
+@eth_device(ID_CLASS)
+def start():
+
+    cmd = CMD_START
     payload = ''
 
     return cmd, payload
@@ -100,7 +109,7 @@ def set_exepath(path):
 #    data['configurations']['dds']=''
 #    data['configurations']['rc']['pulses']=''
 #    data['configurations']['rc']['delays']=''
-    
+
     #data = json.dumps(data)
 #-----------------------------------
 

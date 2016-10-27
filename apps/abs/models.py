@@ -365,6 +365,27 @@ class ABSConfiguration(Configuration):
 
         return True
 
+    def moni(self):
+
+        monitoreo_tx = 'JROABSClnt_01CeCnMod000000MNTR10'
+        beam_tx = 'JROABSCeCnModCnMod01000001CHGB10'
+
+        beam_pos = 1
+        module_address = ('192.168.1.63', 5500)
+
+        message_tx = monitoreo_tx
+        # Create the datagram socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect(module_address)
+
+        sock.send(message_tx)
+        t = sock.recv(1024)
+        print 'Respuesta: \n',t
+        sock.close()
+        sock = None
+
+        return True
+
 
     def module_conf(self, module_num, beams):
         """
