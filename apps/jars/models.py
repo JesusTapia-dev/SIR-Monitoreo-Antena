@@ -190,34 +190,57 @@ class JARSConfiguration(Configuration):
 
     def status_device(self):
 
-        answer = api.status(self.device.ip_address,self.device.port_address)
-        self.device.status = int(answer[0])
-        self.message = answer[2:]
-        self.device.save()
+        try:
+            answer = api.status(self.device.ip_address,self.device.port_address)
+            self.device.status = int(answer[0])
+            self.device.save()
+            self.message = answer[2:]
+            if self.device.status == 0:
+                return False
 
-        return self.device.status
+        except Exception as e:
+            self.device.status = 0
+            self.message = str(e)
+            self.device.save()
+            return False
+
+        return True
 
     def stop_device(self):
 
-        answer = api.stop(self.device.ip_address,self.device.port_address)
-        self.device.status = int(answer[0])
-        self.message = answer[2:]
-        self.device.save()
+        try:
+            answer = api.stop(self.device.ip_address,self.device.port_address)
+            self.device.status = int(answer[0])
+            self.message = answer[2:]
+            self.device.save()
+            if self.device.status == 0 or self.device.status == 1:
+                return False
 
-        return self.device.status
+        except Exception as e:
+            self.device.status = 0
+            self.message = str(e)
+            self.device.save()
+            return False
+
+        return True
 
     def read_device(self):
 
-        answer = api.read(self.device.ip_address,self.device.port_address)
-        self.device.status = int(answer[0])
         try:
+            answer = api.read(self.device.ip_address,self.device.port_address)
+            self.device.status = int(answer[0])
+            self.device.save()
+            self.message = answer[2:]
+            if self.device.status == 1:
+                return False
             data = json.loads(answer[2:])
             parms = data['configurations']['jars']
+
         except:
             self.device.status = 0
             self.device.save()
             self.message = 'Could not read JARS configuration.'
-            return ''
+            return False
 
         #self.dict_to_parms(parms)
         self.message = 'Current JARS configuration was read successfully.'
@@ -227,6 +250,10 @@ class JARSConfiguration(Configuration):
 
     def write_device(self):
 
+        if self.device.status == 3:
+            self.message = 'Could not configure device. Software Acquisition is running'
+            return False
+
         data = self.experiment.parms_to_dict()
         data = json.loads(data)
         data['configurations']['dds']         =''
@@ -235,19 +262,42 @@ class JARSConfiguration(Configuration):
         data['configurations']['rc']['delays']=''
         json_data = json.dumps(data)
 
-        answer = api.configure(self.device.ip_address,self.device.port_address,json_data)
-        #print answer
-        self.device.status = int(answer[0])
-        self.message = answer[2:]
+        try:
+            answer = api.configure(self.device.ip_address,self.device.port_address,json_data)
+            self.device.status = int(answer[0])
+            self.message = answer[2:]
+            self.device.save()
+            if self.device.status == 1:
+                return False
+            if self.device.status == 3:
+                return False
 
-        self.device.save()
+        except Exception as e:
+            self.device.status = 0
+            self.message = str(e)
+            self.device.save()
+            return False
 
-        return self.device.status
+        return True
 
 
     def start_device(self):
 
-        self.write_device()
+        try:
+            answer = api.start(self.device.ip_address,self.device.port_address)
+            self.device.status = int(answer[0])
+            self.message = answer[2:]
+            self.device.save()
+            if self.device.status == 1:
+                return False
+
+        except Exception as e:
+            self.device.status = 0
+            self.message = str(e)
+            self.device.save()
+            return False
+
+        return True
 
 
     def echo(self):
