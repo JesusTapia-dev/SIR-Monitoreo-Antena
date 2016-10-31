@@ -35,7 +35,9 @@ from apps.rc.models import RCConfiguration, RCLine, RCLineType
 from apps.dds.models import DDSConfiguration
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import user_passes_test
 from django.contrib.admin.views.decorators import staff_member_required
+
 
 
 CONF_FORMS = {
@@ -104,8 +106,7 @@ def location(request, id_loc):
     return render(request, 'location.html', kwargs)
 
 
-from django.contrib.auth.decorators import user_passes_test
-@user_passes_test(lambda u:u.is_staff, login_url='accounts:login')
+@user_passes_test(lambda u:u.is_staff)
 def location_new(request):
 
     if request.method == 'GET':
@@ -127,7 +128,7 @@ def location_new(request):
     return render(request, 'base_edit.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def location_edit(request, id_loc):
 
     location = get_object_or_404(Location, pk=id_loc)
@@ -151,7 +152,7 @@ def location_edit(request, id_loc):
     return render(request, 'base_edit.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def location_delete(request, id_loc):
 
     location = get_object_or_404(Location, pk=id_loc)
@@ -204,7 +205,7 @@ def device(request, id_dev):
     return render(request, 'device.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def device_new(request):
 
     if request.method == 'GET':
@@ -226,7 +227,7 @@ def device_new(request):
     return render(request, 'base_edit.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def device_edit(request, id_dev):
 
     device = get_object_or_404(Device, pk=id_dev)
@@ -250,7 +251,7 @@ def device_edit(request, id_dev):
     return render(request, 'base_edit.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def device_delete(request, id_dev):
 
     device = get_object_or_404(Device, pk=id_dev)
@@ -318,7 +319,7 @@ def campaign(request, id_camp):
     return render(request, 'campaign.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def campaign_new(request):
 
     kwargs = {}
@@ -371,7 +372,7 @@ def campaign_new(request):
     return render(request, 'campaign_edit.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def campaign_edit(request, id_camp):
 
     campaign = get_object_or_404(Campaign, pk=id_camp)
@@ -412,7 +413,7 @@ def campaign_edit(request, id_camp):
     return render(request, 'campaign_edit.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def campaign_delete(request, id_camp):
 
     campaign = get_object_or_404(Campaign, pk=id_camp)
@@ -442,7 +443,7 @@ def campaign_delete(request, id_camp):
     return render(request, 'confirm.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def campaign_export(request, id_camp):
 
     campaign = get_object_or_404(Campaign, pk=id_camp)
@@ -457,7 +458,7 @@ def campaign_export(request, id_camp):
     return response
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def campaign_import(request, id_camp):
 
     campaign = get_object_or_404(Campaign, pk=id_camp)
@@ -538,7 +539,7 @@ def experiment(request, id_exp):
     return render(request, 'experiment.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def experiment_new(request, id_camp=None):
 
     kwargs = {}
@@ -581,7 +582,7 @@ def experiment_new(request, id_camp=None):
     return render(request, 'experiment_edit.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def experiment_edit(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
@@ -605,7 +606,7 @@ def experiment_edit(request, id_exp):
     return render(request, 'experiment_edit.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def experiment_delete(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
@@ -631,7 +632,7 @@ def experiment_delete(request, id_exp):
     return render(request, 'confirm.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def experiment_export(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
@@ -646,7 +647,7 @@ def experiment_export(request, id_exp):
     return response
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def experiment_import(request, id_exp):
 
     experiment     = get_object_or_404(Experiment, pk=id_exp)
@@ -683,7 +684,7 @@ def experiment_import(request, id_exp):
     return render(request, 'experiment_import.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def experiment_mix(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
@@ -777,7 +778,7 @@ def experiment_mix(request, id_exp):
     return render(request, 'experiment_mix.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def experiment_mix_delete(request, id_exp):
 
     conf = RCConfiguration.objects.get(experiment=id_exp, mix=True)
@@ -786,6 +787,7 @@ def experiment_mix_delete(request, id_exp):
     conf.save()
 
     return redirect('url_mix_experiment', id_exp=id_exp)
+
 
 
 def experiment_summary(request, id_exp):
@@ -893,7 +895,7 @@ def experiment_summary(request, id_exp):
     return render(request, 'experiment_summary.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def experiment_verify(request, id_exp):
 
     import json
@@ -990,6 +992,7 @@ def experiment_verify(request, id_exp):
     return render(request, 'experiment_verify.html', kwargs)
 
 
+@user_passes_test(lambda u:u.is_staff)
 def parse_mix_result(s):
 
     values = s.split('-')
@@ -1063,7 +1066,7 @@ def dev_conf(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
-@staff_member_required(login_url='/accounts/login/')
+@user_passes_test(lambda u:u.is_staff)
 def dev_conf_new(request, id_exp=0, id_dev=0):
 
     initial = {}
@@ -1137,7 +1140,7 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
     return render(request, 'dev_conf_edit.html', kwargs)
 
 
-@staff_member_required
+@user_passes_test(lambda u:u.is_staff)
 def dev_conf_edit(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1166,7 +1169,7 @@ def dev_conf_edit(request, id_conf):
     return render(request, '%s_conf_edit.html' % conf.device.device_type.name, kwargs)
 
 
-@staff_member_required
+@user_passes_test(lambda u:u.is_staff)
 def dev_conf_start(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1181,7 +1184,7 @@ def dev_conf_start(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
-@staff_member_required
+@user_passes_test(lambda u:u.is_staff)
 def dev_conf_stop(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1196,7 +1199,7 @@ def dev_conf_stop(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
-@staff_member_required
+@user_passes_test(lambda u:u.is_staff)
 def dev_conf_status(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1209,7 +1212,7 @@ def dev_conf_status(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
-@staff_member_required
+@user_passes_test(lambda u:u.is_staff)
 def dev_conf_write(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1223,7 +1226,7 @@ def dev_conf_write(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
-@staff_member_required
+@user_passes_test(lambda u:u.is_staff)
 def dev_conf_read(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1263,7 +1266,7 @@ def dev_conf_read(request, id_conf):
     return render(request, '%s_conf_edit.html' %conf.device.device_type.name, kwargs)
 
 
-@staff_member_required
+@user_passes_test(lambda u:u.is_staff)
 def dev_conf_import(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1311,7 +1314,7 @@ def dev_conf_import(request, id_conf):
     return render(request, 'dev_conf_import.html', kwargs)
 
 
-@staff_member_required
+@user_passes_test(lambda u:u.is_staff)
 def dev_conf_export(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1343,7 +1346,7 @@ def dev_conf_export(request, id_conf):
     return render(request, 'dev_conf_export.html', kwargs)
 
 
-@staff_member_required
+@user_passes_test(lambda u:u.is_staff)
 def dev_conf_delete(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
