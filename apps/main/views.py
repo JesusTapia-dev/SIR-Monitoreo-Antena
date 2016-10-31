@@ -104,7 +104,8 @@ def location(request, id_loc):
     return render(request, 'location.html', kwargs)
 
 
-@staff_member_required(login_url='accounts:login')
+from django.contrib.auth.decorators import user_passes_test
+@user_passes_test(lambda u:u.is_staff, login_url='accounts:login')
 def location_new(request):
 
     if request.method == 'GET':
