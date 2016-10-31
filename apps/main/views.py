@@ -104,7 +104,7 @@ def location(request, id_loc):
     return render(request, 'location.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@staff_member_required(login_url='accounts:login')
 def location_new(request):
 
     if request.method == 'GET':
@@ -1136,7 +1136,7 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
     return render(request, 'dev_conf_edit.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@staff_member_required
 def dev_conf_edit(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1165,7 +1165,7 @@ def dev_conf_edit(request, id_conf):
     return render(request, '%s_conf_edit.html' % conf.device.device_type.name, kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@staff_member_required
 def dev_conf_start(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1180,7 +1180,7 @@ def dev_conf_start(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
-@staff_member_required(login_url='/accounts/login/')
+@staff_member_required
 def dev_conf_stop(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1195,7 +1195,7 @@ def dev_conf_stop(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
-@staff_member_required(login_url='/accounts/login/')
+@staff_member_required
 def dev_conf_status(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1208,7 +1208,7 @@ def dev_conf_status(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
-@staff_member_required(login_url='/accounts/login/')
+@staff_member_required
 def dev_conf_write(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1222,7 +1222,7 @@ def dev_conf_write(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
-@staff_member_required(login_url='/accounts/login/')
+@staff_member_required
 def dev_conf_read(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1262,7 +1262,7 @@ def dev_conf_read(request, id_conf):
     return render(request, '%s_conf_edit.html' %conf.device.device_type.name, kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@staff_member_required
 def dev_conf_import(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1310,7 +1310,7 @@ def dev_conf_import(request, id_conf):
     return render(request, 'dev_conf_import.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@staff_member_required
 def dev_conf_export(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1342,7 +1342,7 @@ def dev_conf_export(request, id_conf):
     return render(request, 'dev_conf_export.html', kwargs)
 
 
-@staff_member_required(login_url='/accounts/login/')
+@staff_member_required
 def dev_conf_delete(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
