@@ -79,10 +79,10 @@ class CGSConfiguration(Configuration):
         route = "http://" + str(ip) + ":" + str(port) + "/status/ad9548"
         try:
             r = requests.get(route,timeout=0.5)
-        except:
+        except Exception as e:
             self.device.status = 0
             self.device.save()
-            self.message = 'Could not read CGS status'
+            self.message = 'Could not read CGS status: ' + str(e)
             return False
 
         response = str(r.text)
@@ -93,10 +93,10 @@ class CGSConfiguration(Configuration):
         #print(icon, status)
         #"icon" could be: "alert" or "okay"
         if "alert" in icon:
-            if "Starting Up" in status: #No Esta conectado
-                self.device.status = 0
-            else:
-                self.device.status = 1
+            #if "Starting Up" in status: #No Esta conectado
+            #    self.device.status = 1
+            #else:
+            self.device.status = 1
         elif  "okay" in icon:
             self.device.status = 3
         else:
