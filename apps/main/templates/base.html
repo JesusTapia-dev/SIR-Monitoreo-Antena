@@ -8,7 +8,22 @@
     <meta name="author" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {# bootstrap_css #}
+    
     <link href="{% static 'css/bootstrap-spacelab.min.css' %}" media="all" rel="stylesheet">
+    <link href="{% static 'css/bootcards-desktop.min.css' %}" media="all" rel="stylesheet">
+    <link href="{% static 'css/font-awesome.min.css' %}" media="all" rel="stylesheet">
+    <!--link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet"-->
+    
+    <!-- Bootcards CSS for iOS: >
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootcards/1.0.0/css/bootcards-ios.min.css">
+
+    <!-- Bootcards CSS for Android: >
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootcards/1.0.0/css/bootcards-android.min.css"-->
+
+    <!-- Bootcards CSS for desktop: >
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootcards/1.0.0/css/bootcards-desktop.min.css"-->
+    
+    
     <style type="text/css">
       body {padding-top: 60px}
       .logo {padding-top: 5px; height: 50px}
@@ -30,7 +45,7 @@
 <body>
 
 {% block main_menu %}
-<nav class="navbar navbar-default navbar-fixed-top" role="banner">
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navigationbar">
@@ -148,6 +163,9 @@
 {# bootstrap_javascript jquery=True #}
 
 <script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/bootcards.min.js' %}"></script>
+<!-- Bootstrap and Bootcards JS >
+<script src="//cdnjs.cloudflare.com/ajax/libs/bootcards/1.0.0/js/bootcards.min.js"></script-->
 {% block extra-js %}
 {% endblock%}
 </body>

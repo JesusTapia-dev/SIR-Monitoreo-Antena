@@ -39,7 +39,7 @@
 <table class="table table-bordered">
 	<tr>
 		<th>Status</th>
-		<td class="text-{{dev_conf.device.status_color}}"> {% if dev_conf.device.device_type.name == 'abs' %} {{connected_modules}} {% else %} {{dev_conf.device.get_status_display}}{% endif %} </td>
+		<td class="text-{{dev_conf.device.status_color}}"><strong> {% if dev_conf.device.device_type.name == 'abs' %} {{connected_modules}} {% else %} {{dev_conf.device.get_status_display}}{% endif %}</strong></td>
 	</tr>
 
 	{% for key in dev_conf_keys %}

@@ -37,43 +37,42 @@
 <tr><th>{{key|title}}</th><td>{{experiment|attr:key}}</td></tr>
 {% endfor %}
 </table>
-<br></br>
-<br></br>
+<br>
 
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
 
-  <div class="panel panel-default">
-    <div class="panel-heading" role="tab" id="headingTwo">
-      <h4 class="panel-title">
-        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseThree">
-          Device Configurations
-        </a>
+  <div class="panel panel-default bootcards-summary">
+    <div class="panel-heading" role="tab">
+      <h4 class="panel-title">        
+          Devices        
       </h4>
     </div>
-    <div id="collapseTwo" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
       <div class="panel-body">
-      <table class="table table-hover">
-		<tr>
-		  <th>#</th>
-		  {% for key in configuration_keys %}
-		  <th>{{ key|title }}</th>
-		  {% endfor%}
-		</tr>
+      		
 		{% for item in configurations %}
-		<tr class="clickable-row" data-href="{{item.get_absolute_url}}">
-		  <td>{{ forloop.counter }}</td>
-		  {% for key in configuration_keys %}
-		  {% if key == 'device__status' %}
-		    <td class="text-{{item.device.status_color}}">{{ item|value:key }}</td>
-		  {% else %}  
-		    <td>{{ item|value:key }}</td>
-		  {% endif %}
-		  {% endfor %}
-		</tr>
+		<div class="col-xs-6 col-sm-4" >
+             <a class="bootcards-summary-item" href="{{item.get_absolute_url}}"><br>
+               {% if item.device.device_type.name == 'cgs' %}
+                <i class="fa fa-2x fa-clock-o"></i>
+               {% elif item.device.device_type.name == 'rc' %}
+                <i class="fa fa-2x fa-microchip"></i>
+               {% elif item.device.device_type.name == 'abs' %}
+                <i class="fa fa-2x fa-podcast"></i>
+               {% elif item.device.device_type.name == 'jars' %}
+                <i class="fa fa-2x fa-desktop"></i>
+               {% elif item.device.device_type.name == 'dds' %}
+                <i class="fa fa-2x fa-bar-chart"></i>
+               {% else %}
+                <i class="fa fa-3x fa-puzzle-piece"></i>
+               {%endif%}
+                   <h4>{{item}}<br><small>{{item.device.ip_address}}</small>
+                       <span class="label label-{{item.device.status_color}}">{{item.device.get_status_display}}</span>
+                   </h4>              
+             </a>
+        </div>
 		{% endfor %}
-	  </table>
-      </div>
-    </div>
+	  
+      </div>    
   </div>
 </div>
 {% endblock %}

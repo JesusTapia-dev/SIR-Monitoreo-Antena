@@ -243,7 +243,7 @@ class RCConfiguration(Configuration):
         points.sort()
 
         line_points = [line.pulses_as_points() for line in self.get_lines()]
-        line_points = [[(x, x+y) for x,y in tups] for tups in line_points]
+        #line_points = [[(x, x+y) for x,y in tups] for tups in line_points]
         line_points = [[t for x in tups for t in x] for tups in line_points]
         states = [[1 if x in tups else 0 for tups in line_points] for x in points]
 

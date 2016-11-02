@@ -15,7 +15,7 @@ EXP_STATES = (
                  (0,'Error'),                 #RED
                  (1,'Configured'),            #BLUE
                  (2,'Running'),               #GREEN
-                 (3,'Waiting'),               #YELLOW
+                 (3,'Scheduled'),             #YELLOW
                  (4,'Not Configured'),        #WHITE
              )
 
@@ -58,7 +58,7 @@ RADAR_STATES = (
                  (3, 'Running'),
                  (4, 'Scheduled'),
              )
-# Create your models here.
+
 
 class Location(models.Model):
 
@@ -339,7 +339,7 @@ class Experiment(models.Model):
         
         confs =  Configuration.objects.filter(experiment=self)
         
-        total = confs.aggregate(Sum('device__status'))['device__status__sum']
+        total = confs.aggregate(models.Sum('device__status'))['device__status__sum']
 
         if total==2*confs.count():
             status = 1
