@@ -1199,7 +1199,6 @@ def dev_conf_stop(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
-@user_passes_test(lambda u:u.is_staff)
 def dev_conf_status(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
