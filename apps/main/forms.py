@@ -2,6 +2,7 @@ from django import forms
 from django.utils.safestring import mark_safe
 from .models import Device, Experiment, Campaign, Location
 from apps.main.models import Configuration
+from django.template.defaultfilters import default
 
 FILE_FORMAT = (
                 ('json', 'json'),
@@ -181,3 +182,11 @@ class FilterForm(forms.Form):
                 self.fields['template'] = forms.BooleanField(required=False)
             else:
                 self.fields[field] = forms.CharField(required=False)
+
+class ChangeIpForm(forms.Form):
+    
+    ip_address = forms.GenericIPAddressField()
+    mask = forms.GenericIPAddressField(initial='255.255.255.0')
+    gateway = forms.GenericIPAddressField(initial='0.0.0.0')
+    
+    

@@ -15,7 +15,7 @@ except ImportError:
     from urllib import urlencode
 
 from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm, UploadFileForm, DownloadFileForm, OperationForm, NewForm
-from .forms import OperationSearchForm, FilterForm
+from .forms import OperationSearchForm, FilterForm, ChangeIpForm
 
 from .tasks import task_start, task_stop
 
@@ -271,6 +271,32 @@ def device_delete(request, id_dev):
               'object': device,
               'previous': device.get_absolute_url(),
               'delete': True
+              }
+
+    return render(request, 'confirm.html', kwargs)
+
+
+@user_passes_test(lambda u:u.is_staff)
+def device_change_ip(request, id_dev):
+
+    device = get_object_or_404(Device, pk=id_dev)
+
+    if request.method=='POST':
+
+        if request.user.is_staff:
+            device.change_ip(**request.POST.dict())
+            messages.success(request, device.message)
+        else:
+            messages.error(request, 'Not enough permission to delete this object')
+        return redirect(device.get_absolute_url())
+
+    kwargs = {
+              'title': 'Device',
+              'suptitle': 'Change IP',
+              'object': device,
+              'previous': device.get_absolute_url(),
+              'form': ChangeIpForm(initial={'ip_address':device.ip_address}),
+              'message' : ' ',
               }
 
     return render(request, 'confirm.html', kwargs)

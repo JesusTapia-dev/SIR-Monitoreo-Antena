@@ -14,7 +14,10 @@
 <tr><th>{{key|title}}</th><td>{{device|attr:key}}</td></tr>
 {% endfor %}
 </table>
-<button class="btn btn-primary pull-right" style="margin-left: 10px" id="bt_edit_device">Edit</button>
+<div class="btn-group pull-right" role="group">
+<button type="button" class="btn btn-primary" id="bt_edit_device">Edit</button>
+<button type="button" class="btn btn-primary" id="bt_change_ip_device">Change IP</button>
+</div>
 <br></br>
 <br></br>
 {% endblock %}
@@ -28,6 +31,10 @@
   
   $("#bt_edit_device").click(function() {
     document.location = "{% url 'url_edit_device' device.id%}";
+  });
+  
+  $("#bt_change_ip_device").click(function() {
+    document.location = "{% url 'url_change_ip_device' device.id%}";
   });
   
 </script>

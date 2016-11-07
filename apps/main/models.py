@@ -1,5 +1,6 @@
 
 from datetime import datetime
+from django.template.base import kwarg_re
 
 try:
     from polymorphic.models import PolymorphicModel
@@ -10,6 +11,7 @@ from django.db import models
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
 
+from devices.dds import api as dds_api
 
 EXP_STATES = (
                  (0,'Error'),                 #RED
@@ -132,6 +134,32 @@ class Device(models.Model):
     def get_absolute_url(self):
         
         return reverse('url_device', args=[str(self.id)])
+
+    def change_ip(self, ip_address, mask, gateway, **kwargs):
+        
+        if self.device_type.name=='dds':
+            try:
+            #if True:
+                answer = dds_api.change_ip(ip = self.ip_address,
+                                           port = self.port_address,
+                                           new_ip = ip_address,
+                                           mask = mask,
+                                           gateway = gateway)            
+                if answer[0]=='1': 
+                    self.message = 'DDS - {}'.format(answer)
+                    self.ip_address = ip_address
+                    self.save()                    
+                else:
+                    self.message = 'DDS - {}'.format(answer)
+                    return False
+            except Exception as e:
+                self.message = str(e) 
+                return False                        
+        else:
+            self.message = 'Not implemented'
+            return False
+        
+        return True
 
 
 class Campaign(models.Model):

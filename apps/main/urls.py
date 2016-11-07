@@ -15,6 +15,7 @@ urlpatterns = (
     url(r'^device/(?P<id_dev>-?\d+)/$', views.device, name='url_device'),
     url(r'^device/(?P<id_dev>-?\d+)/edit/$', views.device_edit, name='url_edit_device'),
     url(r'^device/(?P<id_dev>-?\d+)/delete/$', views.device_delete, name='url_delete_device'),
+    url(r'^device/(?P<id_dev>-?\d+)/change_ip/$', views.device_change_ip, name='url_change_ip_device'),
 
     url(r'^campaign/new/$', views.campaign_new, name='url_add_campaign'),
     url(r'^campaign/$', views.campaigns, name='url_campaigns'),
