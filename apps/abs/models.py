@@ -570,7 +570,7 @@ class ABSConfiguration(Configuration):
             route = 'http://'+module_ip+':'+str(module_port)+'/status'
 
             try:
-                r = requests.get(route, timeout=0.5)#, timeout=0.7)
+                r = requests.get(route, timeout=0.6)#, timeout=0.7)
                 answer = r.json()
                 modules_status[str(i)] = answer['status']
                 module_messages[str(i)] = answer['message']
