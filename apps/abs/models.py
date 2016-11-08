@@ -719,6 +719,15 @@ class ABSConfiguration(Configuration):
         to all abs modules.
         """
 
+        # Se manda a cero RC para poder realizar cambio de beam
+        confs = Configuration.objects.filter(experiment = self.experiment)
+        confrc=''
+        for conf in confs:
+            if conf.device.device_type.name == 'rc':
+                confrc = conf
+                confrc.stop_device()
+                break
+
         if beam_pos > 0:
             beam_pos = beam_pos - 1
         else:
@@ -752,11 +761,22 @@ class ABSConfiguration(Configuration):
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
         #print 'sending acknowledgement to all: \n' + message_tx
-        sock.sendto(message_tx, (multicast_group, 10000))
+        try:
+             sock.sendto(message_tx, (multicast_group, 10000))
+        except Exception as e:
+             self.message = str(e)
+             return False
         sock.close()
         sock = None
 
-        return 1
+        #Start RC
+        if confrc:
+            #print confrc
+            confrc.start_device()
+
+        self.message = "ABS Beam has been changed"
+
+        return True
 
     def test1(self):
         t1 = time.time()
