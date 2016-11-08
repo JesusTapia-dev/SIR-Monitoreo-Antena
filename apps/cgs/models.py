@@ -78,7 +78,7 @@ class CGSConfiguration(Configuration):
 
         route = "http://" + str(ip) + ":" + str(port) + "/status/ad9548"
         try:
-            r = requests.get(route,timeout=0.5)
+            r = requests.get(route,timeout=0.7)
         except Exception as e:
             self.device.status = 0
             self.device.save()
@@ -97,6 +97,7 @@ class CGSConfiguration(Configuration):
             #    self.device.status = 1
             #else:
             self.device.status = 1
+            return False
         elif  "okay" in icon:
             self.device.status = 3
         else:
