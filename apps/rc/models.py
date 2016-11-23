@@ -455,27 +455,33 @@ class RCConfiguration(Configuration):
 
     def status_device(self):
 
-        try:        
+        try:
+            self.device.status = 0
             req = requests.get(self.device.url('status'))
             payload = req.json()
             if payload['status']=='ok':
-                self.device.status = 1
+                self.device.status = 2
             else:
-                self.device.status = 0
+                self.device.status = 1                
+                self.device.save()
+                self.message = payload['status']
+                return False
         except Exception as e:
-            self.device.status = 0
+            if 'No route to host' not in str(e):
+                self.device.status = 4
+            self.device.save()
             self.message = str(e)
             return False
             
         self.device.save()        
-        return True 
-            
+        return True            
 
     def reset_device(self):
                 
         try:
-            req = requests.post(self.device.url('reset'))            
-            if 'ok' in req.text:
+            req = requests.post(self.device.url('reset'))
+            payload = req.json()       
+            if payload['reset']=='ok':
                 self.message = 'RC restarted'
             else:
                 self.message = 'RC restart not ok'                
@@ -490,8 +496,9 @@ class RCConfiguration(Configuration):
     def stop_device(self):
 
         try:
-            req = requests.post(self.device.url('stop'))            
-            if 'ok' in req.text:
+            req = requests.post(self.device.url('stop'))
+            payload = req.json()          
+            if payload['stop']=='ok':
                 self.device.status = 2
                 self.device.save()
                 self.message = 'RC stopped'
@@ -501,7 +508,12 @@ class RCConfiguration(Configuration):
                 self.device.save()
                 return False
         except Exception as e:
-            self.message = str(e)
+            if 'No route to host' not in str(e):
+                self.device.status = 4
+            else:
+                self.device.status = 0
+            self.message = str(e)            
+            self.device.save()
             return False            
         
         return True
@@ -509,8 +521,9 @@ class RCConfiguration(Configuration):
     def start_device(self):
 
         try:
-            req = requests.post(self.device.url('start'))            
-            if 'ok' in req.text:
+            req = requests.post(self.device.url('start'))
+            payload = req.json()
+            if payload['start']=='ok':
                 self.device.status = 3
                 self.device.save()
                 self.message = 'RC running'
@@ -518,7 +531,12 @@ class RCConfiguration(Configuration):
                 self.message = 'RC start not ok'
                 return False
         except Exception as e:
-            self.message = str(e)
+            if 'No route to host' not in str(e):
+                self.device.status = 4
+            else:
+                self.device.status = 0
+            self.message = str(e)            
+            self.device.save()
             return False
                     
         return True
@@ -543,12 +561,14 @@ class RCConfiguration(Configuration):
             ## write clock divider
             req = requests.post(self.device.url('divisor'), 
                                 {'divisor': '{:d}'.format(self.clock_divider-1)})
-            if 'ok' not in req.text:
+            payload = req.json()
+            if payload['divisor']=='ok':
                 self.message = 'Error configuring RC clock divider'
                 return False
             ## write pulses & delays
-            req = requests.post(self.device.url('write'), data=b64encode(payload))            
-            if 'ok' in req.text:
+            req = requests.post(self.device.url('write'), data=b64encode(payload))
+            payload = req.json()            
+            if payload['write']=='ok':
                 self.device.status = 2
                 self.device.save()
                 self.message = 'RC configured'
@@ -559,7 +579,12 @@ class RCConfiguration(Configuration):
                 return False
         
         except Exception as e:
-            self.message = str(e)
+            if 'No route to host' not in str(e):
+                self.device.status = 4
+            else:
+                self.device.status = 0
+            self.message = str(e)            
+            self.device.save()
             return False
                     
         return True
