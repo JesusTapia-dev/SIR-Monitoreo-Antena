@@ -26,7 +26,7 @@ CONF_TYPES = (
                  (1, 'Historical'),
              )
 
-DEV_STATES = (                 
+DEV_STATES = (
                  (0, 'No connected'),
                  (1, 'Connected'),
                  (2, 'Configured'),
@@ -36,7 +36,7 @@ DEV_STATES = (
 
 DEV_TYPES = (
                 ('', 'Select a device type'),
-                ('rc', 'Radar Controller'),                
+                ('rc', 'Radar Controller'),
                 ('dds', 'Direct Digital Synthesizer'),
                 ('jars', 'Jicamarca Radar Acquisition System'),
                 ('usrp', 'Universal Software Radio Peripheral'),
@@ -45,7 +45,7 @@ DEV_TYPES = (
             )
 
 DEV_PORTS = {
-                'rc'    : 2000,                
+                'rc'    : 2000,
                 'dds'   : 2000,
                 'jars'  : 2000,
                 'usrp'  : 2000,
@@ -97,7 +97,7 @@ class Device(models.Model):
     name = models.CharField(max_length=40, default='')
     ip_address = models.GenericIPAddressField(protocol='IPv4', default='0.0.0.0')
     port_address = models.PositiveSmallIntegerField(default=2000)
-    description = models.TextField(blank=True, null=True)    
+    description = models.TextField(blank=True, null=True)
     status = models.PositiveSmallIntegerField(default=0, choices=DEV_STATES)
 
     class Meta:
@@ -123,20 +123,20 @@ class Device(models.Model):
             color = "success"
 
         return color
-    
+
     def url(self, path=None):
-        
+
         if path:
             return 'http://{}:{}/{}/'.format(self.ip_address, self.port_address, path)
         else:
             return 'http://{}:{}/'.format(self.ip_address, self.port_address)
-        
+
     def get_absolute_url(self):
-        
+
         return reverse('url_device', args=[str(self.id)])
 
     def change_ip(self, ip_address, mask, gateway, **kwargs):
-        
+
         if self.device_type.name=='dds':
             try:
             #if True:
@@ -144,21 +144,21 @@ class Device(models.Model):
                                            port = self.port_address,
                                            new_ip = ip_address,
                                            mask = mask,
-                                           gateway = gateway)            
-                if answer[0]=='1': 
+                                           gateway = gateway)
+                if answer[0]=='1':
                     self.message = 'DDS - {}'.format(answer)
                     self.ip_address = ip_address
-                    self.save()                    
+                    self.save()
                 else:
                     self.message = 'DDS - {}'.format(answer)
                     return False
             except Exception as e:
-                self.message = str(e) 
-                return False                        
+                self.message = str(e)
+                return False
         else:
             self.message = 'Not implemented'
             return False
-        
+
         return True
 
 
@@ -260,7 +260,7 @@ class Campaign(models.Model):
             locations = Location.objects.filter(pk=radar)
         else:
             locations = set([e.location for e in self.experiments.all()])
-        
+
         for loc in locations:
             dum = {}
             dum['name'] = loc.name
@@ -330,43 +330,91 @@ class Experiment(models.Model):
 
     def start(self):
         '''
-        Configure and start experiments's devices        
+        Configure and start experiments's devices
         '''
-        
-        result = 2
-        
-        confs = Configuration.objects.filter(experiment=self).order_by('device__device_type__sequence')
-        for conf in confs:
-            if conf.write_device():
-                if conf.start_device():
-                    result &= 2
-                else:
-                    result &= 0
-            else:
-                result &= 0
-                
-        return result        
 
-    def stop(self):        
-        '''
-        Stop experiments's devices        
-        '''
-        
-        result = 1
-        
-        confs = Configuration.objects.filter(experiment=self).order_by('-device__device_type__sequence')
-        for conf in confs:
-            if conf.stop_device():
-                result &= 1                
+        result = 2
+
+        confs = Configuration.objects.filter(experiment=self).order_by('device__device_type__sequence')
+        for i in range(0,len(confs)): #ABS-CGS-DDS-RC-JARS
+            if i==0:
+                for conf in confs:
+                    if conf.device.device_type.name == 'abs':
+                        conf.start_device()
+                        break
+            if i==1:
+                for conf in confs:
+                    if conf.device.device_type.name == 'cgs':
+                        conf.start_device()
+                        break
+            if i==2:
+                for conf in confs:
+                    if conf.device.device_type.name == 'dds':
+                        conf.start_device()
+                        break
+            if i==3:
+                for conf in confs:
+                    if conf.device.device_type.name == 'rc':
+                        conf.start_device()
+                        break
+            if i==4:
+                for conf in confs:
+                    if conf.device.device_type.name == 'jars':
+                        conf.start_device()
+                        break
+                #if conf.start_device():
+                #    result &= 2
+                #else:
+                #    result &= 0
             else:
                 result &= 0
-                
-        return result   
+
+        return result
+
+    def stop(self):
+        '''
+        Stop experiments's devices
+        '''
+
+        result = 1
+
+        confs = Configuration.objects.filter(experiment=self).order_by('-device__device_type__sequence')
+        for i in range(0,len(confs)): 
+            if i==0:
+                for conf in confs:
+                    if conf.device.device_type.name == 'abs':
+                        conf.stop_device()
+                        break
+            if i==1:
+                for conf in confs:
+                    if conf.device.device_type.name == 'jars':
+                        conf.stop_device()
+                        break
+            if i==2:
+                for conf in confs:
+                    if conf.device.device_type.name == 'dds':
+                        conf.stop_device()
+                        break
+            if i==3:
+                for conf in confs:
+                    if conf.device.device_type.name == 'cgs':
+                        conf.stop_device()
+                        break
+            if i==4:
+                for conf in confs:
+                    if conf.device.device_type.name == 'rc':
+                        conf.stop_device()
+                        break
+                #result &= 1
+            else:
+                result &= 0
+
+        return result
 
     def get_status(self):
-        
+
         confs =  Configuration.objects.filter(experiment=self)
-        
+
         total = confs.aggregate(models.Sum('device__status'))['device__status__sum']
 
         if total==2*confs.count():
@@ -391,7 +439,7 @@ class Experiment(models.Model):
         elif self.status == 3:
             color = "warning"
 
-        return color    
+        return color
 
     def parms_to_dict(self):
 
@@ -501,7 +549,7 @@ class Experiment(models.Model):
         self.save()
 
         return self
-    
+
     def get_absolute_url(self):
         return reverse('url_experiment', args=[str(self.id)])
 
