@@ -8,9 +8,9 @@ import sys
 multicast_group = '224.3.29.71'
 server_address = ('',10000)
 
-mod = ('192.168.1.63', 5500) #This IP should be modificated according to its absmodule
+absmod = ('10.10.20.53', 5500) #This IP should be modificated according to its absmodule
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect(mod)
+s.connect(absmod)
 
 # Create the socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -32,20 +32,20 @@ while True:
     if data != '':
         message = data
         #try:
-        s.sendto(message,mod)
+        s.sendto(message,absmod)
         rx_text = s.recv(1024)
         s.close()
         s = None
         print >>sys.stderr, 'Respond from TCP server: %s' % rx_text
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(mod)
+            s.connect(absmod)
         except:
             print '\nProblem with creating socket repeater!!...\n'
             s.close()
             s = None
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(mod)
+            s.connect(absmod)
             break
 
     print >>sys.stderr, 'received %s bytes from %s' % (len(data), address)

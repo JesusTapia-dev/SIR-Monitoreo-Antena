@@ -79,6 +79,14 @@ rx_default = json.dumps({
 conf_default = {}
 status_default = {}
 default_messages = {}
+default_modulemode = {"1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0, "8": 0, "9": 0, "10": 0,
+                      "11": 0, "12": 0, "13": 0, "14": 0, "15": 0, "16": 0, "17": 0, "18": 0, "19": 0, "20": 0,
+                      "21": 0, "22": 0, "23": 0, "24": 0, "25": 0, "26": 0, "27": 0, "28": 0, "29": 0, "30": 0,
+                      "31": 0, "32": 0, "33": 0, "34": 0, "35": 0, "36": 0, "37": 0, "38": 0, "39": 0, "40": 0,
+                      "41": 0, "42": 0, "43": 0, "44": 0, "45": 0, "46": 0, "47": 0, "48": 0, "49": 0, "50": 0,
+                      "51": 0, "52": 0, "53": 0, "54": 0, "55": 0, "56": 0, "57": 0, "58": 0, "59": 0, "60": 0,
+                      "61": 0, "62": 0, "63": 0, "64": 0}  # 0 :  Socket  //  1: API Rest
+
 for i in range(1,65):
     conf_default[str(i)] = ""
     status_default[str(i)] = 0
@@ -216,6 +224,7 @@ class ABSConfiguration(Configuration):
     operation_mode  = models.PositiveSmallIntegerField(verbose_name='Operation Mode', choices=OPERATION_MODES, default = 0)
     operation_value = models.FloatField(verbose_name='Periodic (seconds)', default="10", null=True, blank=True)
     module_messages = models.CharField(verbose_name='Modules Messages', max_length=10000, default=json.dumps(default_messages))
+    module_mode     = models.CharField(verbose_name='Modules Mode', max_length=10000, default=json.dumps(default_modulemode))
 
     class Meta:
         db_table = 'abs_configurations'
@@ -365,7 +374,7 @@ class ABSConfiguration(Configuration):
 
         return True
 
-    def moni(self):
+    def monitoring_device(self):
 
         monitoreo_tx = 'JROABSClnt_01CeCnMod000000MNTR10'
         beam_tx = 'JROABSCeCnModCnMod01000001CHGB10'
@@ -458,6 +467,7 @@ class ABSConfiguration(Configuration):
                         if answer:
                             if answer['status']:
                                 beams_status[str(i)] = 3
+                                print snswer
 
                     except:
                         beams_status[str(i)] = 1
@@ -621,12 +631,12 @@ class ABSConfiguration(Configuration):
         """
 
         parameters = {}
-        ip_address  = self.abs_conf.device.ip_address
+        ip_address  = self.device.ip_address
         ip_address  = ip_address.split('.')
         module_seq  = (ip_address[0],ip_address[1],ip_address[2])
         dot         = '.'
         module_ip   = dot.join(module_seq)+'.'+str(module)
-        module_port = self.abs_conf.device.port_address
+        module_port = self.device.port_address
         write_route = 'http://'+module_ip+':'+str(module_port)+'/write'
 
         #print write_route
@@ -654,6 +664,67 @@ class ABSConfiguration(Configuration):
         #self.device.status = int(answer['status'])
 
         return 1
+
+
+    def write_module_socket(self, module):
+        """
+        This function sends beams list to one abs-module to TCP_Control_Module using sockets
+        """
+
+        ip_address  = self.device.ip_address
+        ip_address  = ip_address.split('.')
+        module_seq  = (ip_address[0],ip_address[1],ip_address[2])
+        dot         = '.'
+        module_ip   = dot.join(module_seq)+'.'+str(module)
+        module_port = self.device.port_address
+
+        header = 'JROABSCeCnModCnMod01000108SNDFexperimento1.ab1'
+        abs_module = 'ABS_'+str(module)
+
+        beams      = self.get_beams()
+        beams_text = ''
+        for beam in beams:
+            modules_conf=json.loads(beam.modules_conf)
+            beams_text = beams_text + modules_conf[str(module)] + '\n'
+
+        message_tx = header + '\n' + abs_module + '\n' + beams_text + '0'
+        print "Send: ", message_tx
+
+        # Create the datagram socket
+        module_address = (module_ip, 5500)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            sock.connect(module_address)
+            sock.send(message_tx)
+            t = sock.recv(1024)
+            print 'Respuesta: \n',t
+
+        except Exception as e:
+            print str(e)
+            sock.close()
+            sock = None
+            return False
+
+        sock.close()
+        sock = None
+
+        return True
+
+    def write_device_socket(self):
+        """
+        This function sends beams list to every connected abs-module to TCP_Control_Module using sockets
+        """
+        module_mode   = json.loads(self.module_mode)
+        module_status = json.loads(self.module_status)
+
+        for i in range(1,65):
+            if module_mode[str(i)] == 0 and module_status[str(i)] == 1: # 0: Sockets + Cserver & 1: Connected
+                try:
+                    self.write_module_socket(i)
+                except Exception as e:
+                    print 'Error ABS '+str(i)+': '+str(e)
+
+        return True
 
 
     def beam_selector(self, module, beam_pos):
@@ -758,13 +829,24 @@ class ABSConfiguration(Configuration):
         # Telling the OS add the socket to the multicast on all interfaces
         group = socket.inet_aton(multicast_group)
         mreq  = struct.pack('4sL', group, socket.INADDR_ANY)
-        sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+
+        try:
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        except Exception as e:
+            self.message = str(e)
+            print str(e)
+            sock.close()
+            sock = None
+            return False
 
         #print 'sending acknowledgement to all: \n' + message_tx
         try:
              sock.sendto(message_tx, (multicast_group, 10000))
         except Exception as e:
              self.message = str(e)
+             print str(e)
+             sock.close()
+             sock = None
              return False
         sock.close()
         sock = None
@@ -911,10 +993,6 @@ class ABSConfiguration(Configuration):
 
         return 1
 
-
-    def f(x):
-        print x
-        return
 
     def multi_procs_test4(self):
         import multiprocessing as mp
