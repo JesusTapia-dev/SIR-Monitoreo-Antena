@@ -792,12 +792,30 @@ class ABSConfiguration(Configuration):
 
         # Se manda a cero RC para poder realizar cambio de beam
         confs = Configuration.objects.filter(experiment = self.experiment)
-        confrc=''
-        for conf in confs:
-            if conf.device.device_type.name == 'rc':
-                confrc = conf
-                confrc.stop_device()
-                break
+        confdds  = ''
+        confjars = ''
+        confrc   = ''
+
+        #TO STOP DEVICES: DDS-JARS-RC
+        for i in range(0,len(confs)):
+            if i==0:
+                for conf in confs:
+                    if conf.device.device_type.name == 'dds':
+                        confdds = conf
+                        confdds.stop_device()
+                        break
+            if i==1:
+                for conf in confs:
+                    if conf.device.device_type.name == 'jars':
+                        confjars = conf
+                        confjars.stop_device()
+                        break
+            if i==2:
+                for conf in confs:
+                    if conf.device.device_type.name == 'rc':
+                        confrc = conf
+                        confrc.stop_device()
+                        break
 
         if beam_pos > 0:
             beam_pos = beam_pos - 1
@@ -851,10 +869,14 @@ class ABSConfiguration(Configuration):
         sock.close()
         sock = None
 
-        #Start RC
+        #Start DDS-RC-JARS
+        if confdds:
+            confdds.start_device()
         if confrc:
             #print confrc
             confrc.start_device()
+        if confjars:
+            confjars.start_device()
 
         self.message = "ABS Beam has been changed"
 
