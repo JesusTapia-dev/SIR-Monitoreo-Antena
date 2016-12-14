@@ -19,7 +19,7 @@ from .forms import OperationSearchForm, FilterForm, ChangeIpForm
 
 from .tasks import task_start, task_stop
 
-from apps.rc.forms import RCConfigurationForm
+from apps.rc.forms import RCConfigurationForm, RCLineCode
 from apps.dds.forms import DDSConfigurationForm
 from apps.jars.forms import JARSConfigurationForm
 from apps.cgs.forms import CGSConfigurationForm
@@ -38,7 +38,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.admin.views.decorators import staff_member_required
 
-
+import ast
 
 CONF_FORMS = {
     'rc': RCConfigurationForm,
@@ -69,7 +69,6 @@ MIX_OPERATIONS = {
     '2': 'AND',
     '3': 'NAND',
 }
-
 
 def index(request):
     kwargs = {'no_sidebar':True}
@@ -827,7 +826,7 @@ def experiment_summary(request, id_exp):
 
     kwargs = {}
 
-    kwargs['experiment_keys'] = ['template', 'radar_system', 'name', 'start_time', 'end_time']
+    kwargs['experiment_keys'] = ['radar_system', 'name', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
 
     kwargs['configuration_keys'] = ['name', 'device__ip_address', 'device__port_address', 'device__status']
@@ -862,29 +861,86 @@ def experiment_summary(request, id_exp):
             rc_lines = experiment_data['configurations']['rc']['lines']
             ipp = configuration.ipp
             if experiment_data['configurations']['rc']['mix'] == 'True':
-                tx = ''
                 code = ''
-                window = ''
             else:
                 code = rc_lines[3]['code']
 
-                window_data = rc_lines[6]['params'][0]
-                h0  = str(window_data['first_height'])
-                dh  = str(window_data['resolution'])
-                nsa = str(window_data['number_of_samples'])
-                window = 'Ho='+h0+'km\nDH='+dh+'km\nNSA='+nsa
-
-                tx = ''
-                if float(rc_lines[1]['delays']) == 0:
-                    tx = rc_lines[2]['pulse_width']
-                elif float(rc_lines[2]['delays']) == 0:
-                    tx = rc_lines[1]['pulse_width']
-                else:
-                    tx = rc_lines[1]['pulse_width']+' | '+rc_lines[2]['pulse_width']
-
-            kwargs['tx']   = tx
             kwargs['code'] = code
-            kwargs['window'] = window
+
+            #---Jueves 01-12-2016---
+
+            lines = configuration.get_lines()
+
+            if lines:
+
+                #TX Delays (TAU)
+                rc_delays_num = 0
+                rc_delays = ''
+                tx_lines = configuration.get_lines(line_type__name='tx')
+                for tx_line in tx_lines:
+                    if len(tx_lines) < 2:
+                        rc_delay = json.loads(tx_line.params)
+                        rc_delays = rc_delays+tx_line.get_name()+': '+rc_delay['delays']+'\n'
+                        delay = ast.literal_eval(rc_delay['delays'])
+                        if isinstance(delay,int):
+                            rc_delays_num += 1
+                        else:
+                            rc_delays_num += len(delay)
+                    else:
+                        rc_delay = json.loads(tx_line.params)
+                        rc_delays = rc_delays+tx_line.get_name()+': '+rc_delay['delays']+'\n'
+                        delay = ast.literal_eval(rc_delay['delays'])
+                        if isinstance(delay,int):
+                            rc_delays_num += 1
+                        else:
+                            rc_delays_num += len(delay)
+
+                #TX: TXA - TXB...
+                for tx_line in tx_lines:
+                    tx_line.name  = tx_line.get_name()
+                    tx_line_parameters = json.loads(tx_line.params)
+                    tx_line.parameters = tx_line_parameters
+
+                #WINDOWS
+                windows_lines = configuration.get_lines(line_type__name='windows')
+                for windows_line in windows_lines:
+                    windows_line.name  = windows_line.get_name()
+                    windows_data        = json.loads(windows_line.params)
+                    windows_params      = windows_data['params'][0]
+                    h0  = str(windows_params['first_height'])
+                    dh  = str(windows_params['resolution'])
+                    nsa = str(windows_params['number_of_samples'])
+                    windows_line.parameters = 'Ho=' + h0 +'km\nDH=' + dh +'km\nNSA=' + nsa
+
+                #CODES
+                code_lines = configuration.get_lines(line_type__name='codes')
+                for code_line in code_lines:
+                    code_line.name = code_line.get_name()
+                    line_params    = json.loads(code_line.params)
+                    rccode         = RCLineCode.objects.get(pk=int(line_params['code']))
+                    code_line.code_name = rccode.name
+
+                #PROG_PULSES
+                progpulses_lines = configuration.get_lines(line_type__name='prog_pulses')
+                for progpulses_line in progpulses_lines:
+                    progpulses_line.name = progpulses_line.get_name()
+                    progpulses_parameters = json.loads(progpulses_line.params)
+                    progpulses_parameters = progpulses_parameters['params'][0]
+                    progpulses_line.parameters = 'Begin: '+str(progpulses_parameters['begin'])+' (Units)\nEnd: '+str(progpulses_parameters['end'])+' (Units)'
+
+
+
+                #kwargs['kwargs_channels'] = sorted(kwargs_channels, reverse=True)
+                kwargs['lines'] = sorted(lines, reverse=True)
+                kwargs['rc_delays'] = rc_delays
+                kwargs['rc_delays_num'] = rc_delays_num
+                kwargs['tx_lines']      = tx_lines
+                kwargs['windows_lines'] = windows_lines
+                kwargs['code_lines']    = code_lines
+                kwargs['progpulses_lines']    = progpulses_lines
+
+
+            #--FIN: Jueves 01-12-2016---
 
         #-------------------- DDS -----------------------:
         if configuration.device.device_type.name == 'dds':
