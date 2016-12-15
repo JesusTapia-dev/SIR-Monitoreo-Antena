@@ -17,7 +17,7 @@
 
 {% endblock %}
 
-
+	<form action="" method="post" class="form login">{% csrf_token %}
 
 <table class="table table-bordered" style="text-align:center;">
 			<!--<h4 class="panel-title">  </h4>-->
@@ -26,44 +26,44 @@
 				<th style="text-align:center;">DDS</th>
 				<th style="text-align:center;">RC</th>
 				<th style="text-align:center;">JARS</th>
-				<th style="text-align:center;">=P</th>
+				<th style="text-align:center;">Insert New Value</th>
 			</tr>
-			
+
 			<tr>
 				<th>Clock In</th>
 				<td id="dds_clock">{{ dds.clock }}</td>
 				<td id="rc_clock">{{ rc.clock_in }}</td>
 				<td id="filter_clock">{{ filter_parms.clock }}</td>
-				<td><input id="suggest_clock"></input></td>
+				<td><input id="suggest_clock" name="suggest_clock"></input></td>
 			</tr>
-			
+
 			<tr>
 				<th>Frequency A (Mhz)</th>
-				<td>{{ dds.frequencyA_Mhz }}</td>
+				<td id="dds_frequencyA">{{ dds.frequencyA_Mhz }}</td>
 				<td>x</td>
-				<td>{{ filter_parms.fch }}</td>
-				<td><input></input></td>
+				<td id="filter_frequencyA">{{ filter_parms.fch }}</td>
+				<td><input id="suggest_frequencyA" name="suggest_frequencyA"></input></td>
 			</tr>
-			
-			<tr>
+
+			<!--<tr>
 				<th>Frequency A (Decimal)</th>
 				<td>{{ dds.frequencyA }}</td>
 				<td>x</td>
 				<td>{{ filter_parms.fch_decimal }}</td>
-				<td><input></input></td>
-			</tr>
-			
-			<tr>
+				<td><input id="suggest_frequencyAdec"></input></td>
+			</tr>-->
+
+			<!--<tr>
 				<th>Sampling Frequency (MHz)</th>
 				<td id="dds_sampfreq">{{ dds.frequencyA }}</td>
 				<td id="rc_sampfreq">{{ samp_freq_rc }}</td>
 				<td id="jars_sampfreq">{{ samp_freq_jars }}</td>
-				<td><input id="suggest_sampfreq"></input></td>
-			</tr>
+				<td><input id="suggest_sampfreq" name="suggest_sampfreq"></input></td>
+			</tr>-->
 </table>
 
 
-
+<!--
 <div class="">
 <h4 class="panel-title"><b> Extra Parameters </b></h4>
 <br>
@@ -76,13 +76,15 @@
 	{% endif %}
 {% endfor %}
 </table>
-
+-->
 
 <div class="pull-right">
-<button type="button" class="btn btn-primary" id="bt_back">Back</button>
-<button type="button" class="btn btn-primary" id="bt_update">{{ button }}</button>
-</div>
 
+			<button type="button" class="btn btn-primary" id="bt_back">Back</button>
+			<button type="submit" class="btn btn-primary" id="bt_update">{{ button }}</button>
+
+</div>
+</form>
 {% endblock %}
 
 {% block sidebar%}
@@ -90,56 +92,70 @@
 {% endblock %}
 
 {% block extra-js%}
+<script src="{% static 'js/dds_conversion.js' %}"></script>
 <script type="text/javascript">
 
 {% if dds_conf %}
 	$(document).ready(function() {
+		$("#suggest_frequencyA").on('change', function() {
+			updateBinaryFrequencies();
+		});
+
 	  $('#dds_clock').click(function(event) {
 		  clock = $("#dds_clock").text();
 		  $("#suggest_clock").val(clock);
 	  });
-	  $('#dds_sampfreq').click(function(event) {
-		  sampfreq = $("#dds_sampfreq").text();
-		  $("#suggest_sampfreq").val(sampfreq);
+	  $('#dds_frequencyA').click(function(event) {
+		  sampfreq = $("#dds_frequencyA").text();
+		  $("#suggest_frequencyA").val(sampfreq);
 	  });
 	});
 {% endif %}
+
 {% if rc_conf %}
 	$(document).ready(function() {
 	  $('#rc_clock').click(function(event) {
 		  clock = $("#rc_clock").text();
 		  $("#suggest_clock").val(clock);
 	  });
-	  $('#rc_sampfreq').click(function(event) {
-		  sampfreq = $("#rc_sampfreq").text();
-		  $("#suggest_sampfreq").val(sampfreq);
-	  });
-    });
+	  //$('#rc_sampfreq').click(function(event) {
+		//  sampfreq = $("#rc_sampfreq").text();
+		//  $("#suggest_sampfreq").val(sampfreq);
+	  //});
+  });
 {% endif %}
-{% if jars_conf %}  
+{% if jars_conf %}
     $(document).ready(function() {
   	  $('#filter_clock').click(function(event) {
   		  clock = $("#filter_clock").text();
 	      $("#suggest_clock").val(clock);
   	  });
-  	  $('#jars_sampfreq').click(function(event) {
-  		  sampfreq = $("#jars_sampfreq").text();
-		  $("#suggest_sampfreq").val(sampfreq);
+  	  $('#filter_frequencyA').click(function(event) {
+  		  sampfreq = $("#filter_frequencyA").text();
+		  $("#suggest_frequencyA").val(sampfreq);
+			updateBinaryFrequencies()
 	  });
-  	});
+  });
 {% endif %}
 
+	function updateBinaryFrequencies() {
+		var clock = {{dds.clock}};
+		var multiplier = {{dds.multiplier}};
+		var freq = $("#suggest_frequencyA").val();
+		var mclock = clock*multiplier;
+		var freq_bin = freq2Binary(mclock, freq);
+		freq = binary2Freq(mclock, freq_bin);
+		$("#suggest_frequencyA").val(freq);
+	}
 
-  
-  
   $(".clickable-row").click(function() {
     document.location = $(this).data("href");
   });
-  
+
   $("#bt_back").click(function() {
 	    document.location = "{% url 'url_experiment' experiment.id%}";
   });
-  
-  
+
+
 </script>
 {% endblock %}

@@ -1009,6 +1009,7 @@ def experiment_verify(request, id_exp):
         #-------------------- JARS -----------------------:
         if configuration.device.device_type.name == 'jars':
             jars_conf = True
+            jars = configuration
             kwargs['jars_conf']    = jars_conf
             filter_parms           = configuration.filter_parms
             filter_parms           = ast.literal_eval(filter_parms)
@@ -1026,6 +1027,7 @@ def experiment_verify(request, id_exp):
         #--------------------- RC ----------------------:
         if configuration.device.device_type.name == 'rc':
             rc_conf = True
+            rc = configuration
             rc_parms = configuration.parms_to_dict()
             if rc_parms['mix'] == 'True':
                 pass
@@ -1042,6 +1044,7 @@ def experiment_verify(request, id_exp):
         #-------------------- DDS ----------------------:
         if configuration.device.device_type.name == 'dds':
             dds_conf = True
+            dds = configuration
             dds_parms = configuration.parms_to_dict()
 
             kwargs['dds_conf'] = dds_conf
@@ -1051,18 +1054,62 @@ def experiment_verify(request, id_exp):
     #------------Validation------------:
     #Clock
     if dds_conf and rc_conf and jars_conf:
-        if filter_parms['clock'] != rc_parms['clock_in'] and rc_parms['clock_in'] != dds_parms['clock']:
+        if float(filter_parms['clock']) != float(rc_parms['clock_in']) and float(rc_parms['clock_in']) != float(dds_parms['clock']):
             messages.warning(request, "Devices don't have the same clock.")
     elif rc_conf and jars_conf:
-        if filter_parms['clock'] != rc_parms['clock_in']:
+        if float(filter_parms['clock']) != float(rc_parms['clock_in']):
             messages.warning(request, "Devices don't have the same clock.")
     elif rc_conf and dds_conf:
-        if rc_parms['clock_in'] != dds_parms['clock']:
+        if float(rc_parms['clock_in']) != float(dds_parms['clock']):
             messages.warning(request, "Devices don't have the same clock.")
         if float(samp_freq_rc) != float(dds_parms['frequencyA']):
             messages.warning(request, "Devices don't have the same Frequency A.")
 
 
+    #------------POST METHOD------------:
+    if request.method == 'POST':
+        if request.POST['suggest_clock']:
+            try:
+                suggest_clock = float(request.POST['suggest_clock'])
+            except:
+                messages.warning(request, "Invalid value in CLOCK IN.")
+                return redirect('url_verify_experiment', id_exp=experiment.id)
+        else:
+            suggest_clock = ""
+        if suggest_clock:
+            if rc_conf:
+                rc.clock_in = suggest_clock
+                rc.save()
+            if jars_conf:
+                filter_parms           = jars.filter_parms
+                filter_parms           = ast.literal_eval(filter_parms)
+                filter_parms['clock'] = suggest_clock
+                jars.filter_parms = json.dumps(filter_parms)
+                jars.save()
+                kwargs['filter_parms'] = filter_parms
+            if dds_conf:
+                dds.clock = suggest_clock
+                dds.save()
+
+        if request.POST['suggest_frequencyA']:
+            try:
+                suggest_frequencyA = float(request.POST['suggest_frequencyA'])
+            except:
+                messages.warning(request, "Invalid value in FREQUENCY A.")
+                return redirect('url_verify_experiment', id_exp=experiment.id)
+        else:
+            suggest_frequencyA = ""
+        if suggest_frequencyA:
+            if jars_conf:
+                filter_parms           = jars.filter_parms
+                filter_parms           = ast.literal_eval(filter_parms)
+                filter_parms['fch'] = suggest_frequencyA
+                jars.filter_parms = json.dumps(filter_parms)
+                jars.save()
+                kwargs['filter_parms'] = filter_parms
+            if dds_conf:
+                dds.frequencyA_Mhz = request.POST['suggest_frequencyA']
+                dds.save()
 
     ###### SIDEBAR ######
     kwargs.update(sidebar(experiment=experiment))
