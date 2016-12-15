@@ -49,7 +49,8 @@
 
 		<table class="table table-bordered">
 			<!--<h4 class="panel-title">  </h4>-->
-			<tr><th>dds</th><td>(=</td></tr>
+			<tr><th>Multiplier</th><td>{{configuration.multiplier}}</td></tr>
+			<tr><th>Frequency A (Mhz)</th><td>{{configuration.frequencyA_Mhz}}</td></tr>
 		</table>
 	{% endif %}
 
@@ -122,7 +123,7 @@
 		<tr><th>Rate (MB/h)</th><td>{{ rate }}</td></tr>
 {% endif %}
 {% if dds_conf %}
-		<tr><th>Vmax (m/s)</th><td>{{ rate }}</td></tr>
+		<!--<tr><th>Vmax (m/s)</th><td>{{ rate }}</td></tr>-->
 {% endif %}
 </table>
 
