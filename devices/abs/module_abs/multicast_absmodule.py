@@ -31,7 +31,7 @@ while True:
     data, address = sock.recvfrom(1024)
     if data != '':
         message = data
-        #try:
+        
         s.sendto(message,absmod)
         rx_text = s.recv(1024)
         s.close()
