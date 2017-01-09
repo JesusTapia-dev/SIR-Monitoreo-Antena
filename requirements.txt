@@ -6,3 +6,5 @@ bokeh
 numpy
 matplotlib
 scipy
+celery
+gunicorn
