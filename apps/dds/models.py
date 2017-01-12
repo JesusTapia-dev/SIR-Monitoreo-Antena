@@ -189,38 +189,24 @@ class DDSConfiguration(Configuration):
         try:
             answer = api.disable_rf(ip = self.device.ip_address,
                                     port = self.device.port_address)
-            if answer[0] == '1':
-                self.message = 'DDS - {}'.format(answer[2:])
-                self.device.status = 2                
-            else:
-                self.message = 'DDS - {}'.format(answer[2:])
-                self.device.status = 1
-                self.device.save()
-                return False
+            
+            return self.status_device()
+            
         except Exception as e:
             self.message = str(e)
             return False
-
-        self.device.save()
-        return True
 
     def start_device(self):
 
         try:
             answer = api.enable_rf(ip = self.device.ip_address,
                                     port = self.device.port_address)
-            self.device.status = answer[0]
-            self.message = 'DDS - {}'.format(answer[2:])
+            
+            return self.status_device()
+            
         except Exception as e:
             self.message = str(e)
             return False
-
-        self.device.save()
-        
-        if self.device.status=='0':
-            return False
-        
-        return True
 
     def read_device(self):
 
@@ -240,18 +226,12 @@ class DDSConfiguration(Configuration):
             answer = api.write_config(ip = self.device.ip_address,
                                       port = self.device.port_address,
                                       parms = self.parms_to_dict())
-            self.device.status = answer[0]
-            self.message = 'DDS - {}'.format(answer[2:])
+            
+            return self.status_device()
+            
         except Exception as e:
             self.message = str(e)
-            return False
-
-        self.device.save()
-        
-        if self.device.status=='0':
-            return False
-        
-        return True
+            return False        
     
     class Meta:
         db_table = 'dds_configurations'
