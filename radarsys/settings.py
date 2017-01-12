@@ -24,7 +24,7 @@ SECRET_KEY = 'xshb$k5fc-+j16)cvyffj&9u__0q3$l!hieh#+tbzqg)*f^km0'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -85,13 +85,15 @@ WSGI_APPLICATION = 'radarsys.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'radarsys',
-        'USER': 'developer',
-        'PASSWORD': 'idi2015',
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            }
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'radarsys.sqlite'),
+        #'ENGINE': 'django.db.backends.mysql',
+        #'NAME': 'radarsys',
+        #'USER': 'developer',
+        #'PASSWORD': 'idi2015',
+        #'OPTIONS': {
+        #    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        #    }
     }
 }
 
