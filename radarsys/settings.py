@@ -85,15 +85,15 @@ WSGI_APPLICATION = 'radarsys.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'radarsys.sqlite'),
-        #'ENGINE': 'django.db.backends.mysql',
-        #'NAME': 'radarsys',
-        #'USER': 'developer',
-        #'PASSWORD': 'idi2015',
-        #'OPTIONS': {
-        #    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        #    }
+        #'ENGINE': 'django.db.backends.sqlite3',
+        #'NAME': os.path.join(BASE_DIR, 'radarsys.sqlite'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'radarsys',
+        'USER': 'developer',
+        'PASSWORD': 'idi2015',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            }
     }
 }
 
@@ -117,10 +117,10 @@ USE_TZ = False
 STATIC_URL = '/static/'
 STATIC_ROOT =  '/var/www/html/static/'
 
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'apps', 'main', 'static'),
-
-)
+#STATICFILES_DIRS = (
+#    os.path.join(BASE_DIR, 'apps', 'main', 'static'),
+#
+#)
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
