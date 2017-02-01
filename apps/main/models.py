@@ -1,4 +1,5 @@
 
+import requests
 from datetime import datetime
 from django.template.base import kwarg_re
 
@@ -138,23 +139,39 @@ class Device(models.Model):
     def change_ip(self, ip_address, mask, gateway, **kwargs):
 
         if self.device_type.name=='dds':
-            try:
-            #if True:
+            try:            
                 answer = dds_api.change_ip(ip = self.ip_address,
                                            port = self.port_address,
                                            new_ip = ip_address,
                                            mask = mask,
                                            gateway = gateway)
                 if answer[0]=='1':
-                    self.message = 'DDS - {}'.format(answer)
+                    self.message = '25|DDS - {}'.format(answer)
                     self.ip_address = ip_address
                     self.save()
                 else:
-                    self.message = 'DDS - {}'.format(answer)
+                    self.message = '30|DDS - {}'.format(answer)
                     return False
             except Exception as e:
-                self.message = str(e)
+                self.message = '40|{}'.format(str(e))
                 return False
+        
+        elif self.device_type.name=='rc':
+            payload = {'ip': ip_address,
+                       'dns': kwargs.get('dns', '8.8.8.8'),
+                       'gateway': gateway,
+                       'subnet': mask}            
+            req = requests.post(self.url('changeip'), data=payload)
+            try:
+                answer = req.json()
+                if answer['changeip']=='ok':                    
+                    self.message = '25|IP succesfully changed'
+                    self.ip_address = ip_address
+                    self.save()
+                else:
+                    self.message = '30|An error ocuur when changing IP'
+            except Exception as e:
+                self.message = '40|{}'.format(str(e))
         else:
             self.message = 'Not implemented'
             return False

@@ -284,7 +284,8 @@ def device_change_ip(request, id_dev):
 
         if request.user.is_staff:
             device.change_ip(**request.POST.dict())
-            messages.success(request, device.message)
+            level, message = device.message.split('|')
+            messages.add_message(request, level, message)
         else:
             messages.error(request, 'Not enough permission to delete this object')
         return redirect(device.get_absolute_url())

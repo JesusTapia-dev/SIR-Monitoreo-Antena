@@ -236,21 +236,36 @@ class RCConfiguration(Configuration):
 
     def get_pulses(self, binary=True):
 
-        pulses = [line.pulses_as_points() for line in self.get_lines()]
-        points = [tup for tups in pulses for tup in tups]
-        points = set([x for tup in points for x in tup])
+        
+        pulses = [line.pulses_as_points() for line in self.get_lines()]        
+        tuples = [tup for tups in pulses for tup in tups]        
+        points = set([x for tup in tuples for x in tup])
         points = list(points)
-        points.sort()
-
-        line_points = [line.pulses_as_points() for line in self.get_lines()]
-        #line_points = [[(x, x+y) for x,y in tups] for tups in line_points]
-        line_points = [[t for x in tups for t in x] for tups in line_points]
-        states = [[1 if x in tups else 0 for tups in line_points] for x in points]
+        points.sort()        
+        states = []
+        last = [0 for x in pulses]
+        
+        for x in points:
+            dum = []
+            for i,tups in enumerate(pulses):
+                ups = [tup[0] for tup in tups]
+                dws = [tup[1] for tup in tups]                
+                if x in ups:
+                    dum.append(1)
+                elif x in dws:
+                    dum.append(0)
+                else:
+                    dum.append(last[i]) 
+            states.append(dum)
+            last = dum            
 
         if binary:
-            states.reverse()
-            states = [int(''.join([str(x) for x in flips]), 2) for flips in states]
-
+            ret = []
+            for flips in states:
+                flips.reverse()
+                ret.append(int(''.join([str(x) for x in flips]), 2))                    
+            states = ret
+                
         return states[:-1]
 
     def add_cmd(self, cmd):
@@ -459,7 +474,9 @@ class RCConfiguration(Configuration):
             self.device.status = 0
             req = requests.get(self.device.url('status'))
             payload = req.json()
-            if payload['status']=='ok':
+            if payload['status']=='enabled':
+                self.device.status = 3
+            elif payload['status']=='disabled':
                 self.device.status = 2
             else:
                 self.device.status = 1                
@@ -545,35 +562,35 @@ class RCConfiguration(Configuration):
         
         values = zip(self.get_pulses(), 
                      [x-1 for x in self.get_delays()])
-        payload = ''
         
-        for tup in values:
-            vals = pack('<HH', *tup)
-            payload += '\x05'+vals[0]+'\x04'+vals[1]+'\x05'+vals[2]+'\x05'+vals[3]        
+        data = bytearray()
+        #reset        
+        data.extend((128, 0))        
+        #disable        
+        data.extend((129, 0))
+        #divider        
+        data.extend((131, self.clock_divider-1))        
+        #enable writing
+        data.extend((139, 62))
+        
+        last = 0
+        for tup in values:                      
+            vals = pack('<HH', last^tup[0], tup[1])            
+            last = tup[0]
+            data.extend((133, vals[1], 132, vals[0], 133, vals[3], 132, vals[2]))            
+        
+        #enable
+        data.extend((129, 1))
         
         try:
-            ## reset                        
-            if not self.reset_device():
-                return False
-            ## stop
-            if not self.stop_device():
-                return False
-            ## write clock divider
-            req = requests.post(self.device.url('divisor'), 
-                                {'divisor': '{:d}'.format(self.clock_divider-1)})
-            payload = req.json()
-            if payload['divisor']=='ok':
-                self.message = 'Error configuring RC clock divider'
-                return False
-            ## write pulses & delays
-            req = requests.post(self.device.url('write'), data=b64encode(payload))
+            req = requests.post(self.device.url('write'), data=b64encode(data))
             payload = req.json()            
             if payload['write']=='ok':
                 self.device.status = 2
                 self.device.save()
                 self.message = 'RC configured'
             else:
-                self.device.status = 4
+                self.device.status = 1
                 self.device.save()
                 self.message = 'RC write not ok'
                 return False
@@ -700,11 +717,11 @@ class RCLine(models.Model):
             tx_width = float(json.loads(RCLine.objects.get(pk=tx_id).params)['pulse_width'])*km2unit/len(json.loads(codes[0].params)['codes'][0])
         else:
             tx_width = float(json.loads(RCLine.objects.get(pk=tx_id).params)['pulse_width'])*km2unit
-
-        if ref=='first_baud':
-            return int(1 + (tx_width + 1)/2 + params['first_height']*km2unit - params['resolution']*km2unit)
-        elif ref=='sub_baud':
-            return int(1 + params['first_height']*km2unit - params['resolution']*km2unit/2)
+        
+        if ref=='first_baud':                        
+            return int(1 + round((tx_width + 1)/2 + params['first_height']*km2unit - params['resolution']*km2unit))
+        elif ref=='sub_baud':                    
+            return int(1 + round(params['first_height']*km2unit - params['resolution']*km2unit/2))
         else:
             return 0
 
@@ -837,8 +854,8 @@ class RCLine(models.Model):
                 for p in params['params']:
                     y_win = self.points(ntx, ipp_u,
                                         p['resolution']*p['number_of_samples']*km2unit,
-                                        before=int(self.rc_configuration.time_before*us2unit)+self.get_win_ref(p, params['TX_ref'], km2unit),
-                                        sync=self.rc_configuration.sync)
+                                        before=int(self.rc_configuration.time_before*us2unit),
+                                        sync=self.get_win_ref(p, params['TX_ref'], km2unit))
 
                     if len(tr_ranges)>0 and tr_ranges[0]!='0':
                         y_win = self.mask_ranges(y_win, tr_ranges)

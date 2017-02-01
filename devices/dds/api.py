@@ -54,10 +54,10 @@ def reset():
     return cmd, payload
 
 @eth_device(ID_CLASS)
-def change_ip(ip, mask="255.255.255.0", gateway="0.0.0.0"):
+def change_ip(new_ip, mask="255.255.255.0", gateway="0.0.0.0"):
 
     cmd = CMD_CHANGEIP
-    payload = ip + '/' + mask + '/' + gateway
+    payload = new_ip + '/' + mask + '/' + gateway
 
     return cmd, payload
 
