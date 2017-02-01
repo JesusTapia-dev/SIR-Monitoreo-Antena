@@ -19,7 +19,7 @@ from .forms import OperationSearchForm, FilterForm, ChangeIpForm
 
 from .tasks import task_start, task_stop
 
-from apps.rc.forms import RCConfigurationForm, RCLineCode
+from apps.rc.forms import RCConfigurationForm, RCLineCode, RCMixConfigurationForm
 from apps.dds.forms import DDSConfigurationForm
 from apps.jars.forms import JARSConfigurationForm
 from apps.cgs.forms import CGSConfigurationForm
@@ -734,16 +734,16 @@ def experiment_mix(request, id_exp):
                               mix=True,
                               parameters='')
         mix.save()
-
+        
         line_type = RCLineType.objects.get(name='mix')
         for i in range(len(rc_confs[0].get_lines())):
             line = RCLine(rc_configuration=mix, line_type=line_type, channel=i)
-            line.save()
+            line.save()    
 
-    initial = {'name': mix.name,
-               'result': parse_mix_result(mix.parameters),
-               'delay': 0,
-               'mask': [0,1,2,3,4,5,6,7]
+    initial = {'name': mix.name, 
+               'result': parse_mix_result(mix.parameters), 
+               'delay': 0, 
+               'mask': [0,1,2,3,4,5,6,7] 
                }
 
     if request.method=='GET':
@@ -1122,7 +1122,7 @@ def experiment_verify(request, id_exp):
     return render(request, 'experiment_verify.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+#@user_passes_test(lambda u:u.is_staff)
 def parse_mix_result(s):
 
     values = s.split('-')

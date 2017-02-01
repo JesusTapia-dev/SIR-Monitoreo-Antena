@@ -906,6 +906,8 @@ class RCLine(models.Model):
                         elif delay+len(Y)<len(y):
                             y_temp = np.zeros(len(y), dtype=np.int8)
                             y_temp[delay:delay+len(Y)] = Y
+                    else:
+                        y_temp = Y.copy()
 
                     if ops[i]=='OR':
                         y = y | y_temp
