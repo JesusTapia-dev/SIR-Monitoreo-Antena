@@ -714,14 +714,14 @@ class RCLine(models.Model):
         codes = [line for line in self.get_lines(line_type__name='codes') if int(json.loads(line.params)['TX_ref'])==int(tx_id)]
 
         if codes:
-            tx_width = float(json.loads(RCLine.objects.get(pk=tx_id).params)['pulse_width'])*km2unit/len(json.loads(codes[0].params)['codes'][0])
+            tx_width = float(json.loads(RCLine.objects.get(pk=tx_id).params)['pulse_width'])*km2unit/len(json.loads(codes[0].params)['codes'][0])            
         else:
             tx_width = float(json.loads(RCLine.objects.get(pk=tx_id).params)['pulse_width'])*km2unit
         
         if ref=='first_baud':                        
             return int(1 + round((tx_width + 1)/2 + params['first_height']*km2unit - params['resolution']*km2unit))
-        elif ref=='sub_baud':                    
-            return int(1 + round(params['first_height']*km2unit - params['resolution']*km2unit/2))
+        elif ref=='sub_baud':            
+            return np.ceil(1 + params['first_height']*km2unit - params['resolution']*km2unit/2)
         else:
             return 0
 
@@ -808,17 +808,20 @@ class RCLine(models.Model):
             tx_params = json.loads(tx.params)
             delays = [float(d)*km2unit for d in tx_params['delays'].split(',') if d]
             f = int(float(tx_params['pulse_width'])*km2unit/len(params['codes'][0]))
-            codes = [(np.fromstring(''.join([s*f for s in code]), dtype=np.uint8)-48).astype(np.int8) for code in params['codes']]
-            codes = [self.array_to_points(code) for code in codes]
+            codes = [(np.fromstring(''.join([s*f for s in code]), dtype=np.uint8)-48).astype(np.int8) for code in params['codes']]            
+            codes = [self.array_to_points(code) for code in codes]            
             n = len(codes)
-
-            for i, tup in enumerate(tx.pulses_as_points()):
-                code = codes[i%n]
-                y.extend([(c[0]+tup[0], c[1]+tup[0]) for c in code])
-
+            
             ranges = tx_params['range'].split(',')
             if len(ranges)>0 and ranges[0]!='0':
-                y = self.mask_ranges(y, ranges)
+                dum = self.mask_ranges(tx.pulses_as_points(), ranges)
+            else:
+                dum = tx.pulses_as_points()            
+                        
+            for i, tup in enumerate(dum):
+                if tup==(0,0): continue
+                code = codes[i%n]
+                y.extend([(c[0]+tup[0], c[1]+tup[0]) for c in code])                        
 
         elif self.line_type.name=='sync':
             params = json.loads(self.params)
@@ -846,8 +849,7 @@ class RCLine(models.Model):
                     y.extend(y_pp)
 
         elif self.line_type.name=='windows':
-            params = json.loads(self.params)
-
+            params = json.loads(self.params)            
             if 'params' in params and len(params['params'])>0:
                 tr_params = json.loads(self.get_lines(line_type__name='tr')[0].params)
                 tr_ranges = tr_params['range'].split(',')
@@ -855,12 +857,13 @@ class RCLine(models.Model):
                     y_win = self.points(ntx, ipp_u,
                                         p['resolution']*p['number_of_samples']*km2unit,
                                         before=int(self.rc_configuration.time_before*us2unit),
-                                        sync=self.get_win_ref(p, params['TX_ref'], km2unit))
+                                        sync=self.rc_configuration.sync+self.get_win_ref(p, params['TX_ref'], km2unit))
 
+                    
                     if len(tr_ranges)>0 and tr_ranges[0]!='0':
                         y_win = self.mask_ranges(y_win, tr_ranges)
 
-                    y.extend(y_win)
+                    y.extend(y_win)                
 
         elif self.line_type.name=='mix':
             values = self.rc_configuration.parameters.split('-')
@@ -955,7 +958,7 @@ class RCLine(models.Model):
                 args = [int(a) for a in index.split('-')]
                 y[args[0]-1:args[1]] = Y[args[0]-1:args[1]]
             else:
-                y[int(index-1)] = Y[int(index-1)]
+                y[int(index)-1] = Y[int(index)-1]
 
         return y
 

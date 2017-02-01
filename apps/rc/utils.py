@@ -1,6 +1,23 @@
 
 import json
 
+
+def parse_range(s):
+    
+    vars = ('TXA,', 'A,', 'TXB,', 'B,', 'TXA', 'TXB', 'A', 'B')
+    
+    for var in vars:
+        if var in s:
+            s = s.replace(var, '')
+            if 'A' in var:
+                ref = 'TXA'
+            else:
+                ref = 'TXB'
+            return ref, s
+        
+    return '0', s
+        
+
 class RCFile(object):
     '''
     Class to handle Radar controller configuration files
@@ -9,6 +26,7 @@ class RCFile(object):
     def __init__(self, f=None):
         
         self.data = {}
+        self.line = ''
         if isinstance(f, str):
             self.f = open(f)
             self.name = f.split('/')[-1]
@@ -78,21 +96,7 @@ class RCFile(object):
 
         #Add TR line
         if 'Pulse selection_TR' in data:
-            if 'A,' in data['Pulse selection_TR']:
-                rng = data['Pulse selection_TR'].replace('A,', '')
-                ref = 'TXA'
-            elif 'A' in data['Pulse selection_TR']:
-                rng = data['Pulse selection_TR'].replace('A', '')
-                ref = 'TXA'
-            elif 'B,' in data['Pulse selection_TR']:
-                rng = data['Pulse selection_TR'].replace('B,', '')
-                ref = 'TXB'
-            elif 'B' in data['Pulse selection_TR']:
-                rng = data['Pulse selection_TR'].replace('B', '')
-                ref = 'TXB'
-            else:
-                rng = data['Pulse selection_TR']
-                ref = '0'
+            ref, rng = parse_range(data['Pulse selection_TR'])
             line = {'type':'tr', 'range': rng if rng else '0', 'TX_ref':ref}
         else:
             line = {'type': 'tr', 'range': '0', 'TX_ref': '0'}
