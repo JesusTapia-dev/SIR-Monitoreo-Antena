@@ -50,7 +50,7 @@
       <div class="panel-body">
       		
 		{% for item in configurations %}
-		<div class="col-xs-6 col-sm-4" >
+		<div class="col-xs-6 col-sm-4" style="padding-top:5px;padding-bottom:5px">
              <a class="bootcards-summary-item" href="{{item.get_absolute_url}}"><br>
                {% if item.device.device_type.name == 'cgs' %}
                 <i class="fa fa-2x fa-clock-o"></i>

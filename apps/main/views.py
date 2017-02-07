@@ -1,3 +1,5 @@
+import ast
+import json
 from datetime import datetime
 
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
@@ -37,8 +39,6 @@ from apps.dds.models import DDSConfiguration
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.admin.views.decorators import staff_member_required
-
-import ast
 
 CONF_FORMS = {
     'rc': RCConfigurationForm,
@@ -815,24 +815,17 @@ def experiment_mix_delete(request, id_exp):
     return redirect('url_mix_experiment', id_exp=id_exp)
 
 
+def experiment_summary(request, id_exp):    
 
-def experiment_summary(request, id_exp):
-
-    import json
-    import ast
-
-    experiment      = get_object_or_404(Experiment, pk=id_exp)
-    experiment_data = json.loads(experiment.parms_to_dict())
+    experiment      = get_object_or_404(Experiment, pk=id_exp)    
     configurations  = Configuration.objects.filter(experiment=experiment, type=0)
 
     kwargs = {}
 
     kwargs['experiment_keys'] = ['radar_system', 'name', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
-
-    kwargs['configuration_keys'] = ['name', 'device__ip_address', 'device__port_address', 'device__status']
-    kwargs['configurations'] = configurations
-    kwargs['experiment_data'] = experiment_data
+    
+    kwargs['configurations'] = []
 
     kwargs['title'] = 'Experiment Summary'
     kwargs['suptitle'] = 'Details'
@@ -842,11 +835,50 @@ def experiment_summary(request, id_exp):
     jars_conf = False
     rc_conf   = False
 
-    for configuration in configurations:
+    for configuration in configurations:       
+
+        #--------------------- RC ----------------------:
+        if configuration.device.device_type.name == 'rc':
+            if configuration.mix:
+                continue
+            rc_conf = True            
+            ipp = configuration.ipp
+            lines = configuration.get_lines(line_type__name='tx')            
+            configuration.tx_lines = []
+
+            for tx_line in lines:
+                line = {'name':tx_line.get_name()}                           
+                tx_params = json.loads(tx_line.params)
+                line['width'] = tx_params['pulse_width']
+                if line['width'] in (0, '0'):
+                    continue
+                delays = tx_params['delays']
+                                
+                if delays not in ('', '0'):
+                    n = len(delays.split(','))
+                    line['taus'] = '{} Taus: {}'.format(n, delays)
+                else:
+                    line['taus'] = '-'
+
+                for code_line in configuration.get_lines(line_type__name='codes'):
+                    code_params = json.loads(code_line.params) 
+                    if tx_line.pk==int(code_params['TX_ref']):
+                        line['codes'] = '{}:{}'.format(RCLineCode.objects.get(pk=code_params['code']),
+                                                       '-'.join(code_params['codes']))
+                
+                for windows_line in configuration.get_lines(line_type__name='windows'):
+                    win_params = json.loads(windows_line.params)
+                    if tx_line.pk==int(win_params['TX_ref']):
+                        windows = ''
+                        for i, params in enumerate(win_params['params']):                      
+                            windows += 'W{}: Ho={first_height} km DH={resolution} km NSA={number_of_samples}<br>'.format(i, **params)           
+                        line['windows'] = mark_safe(windows)
+            
+                configuration.tx_lines.append(line)
+                
         #-------------------- JARS -----------------------:
         if configuration.device.device_type.name == 'jars':
-            jars_conf = True
-            kwargs['jars_conf'] = jars_conf
+            jars_conf = True            
             kwargs['exp_type']  = EXPERIMENT_TYPE[configuration.exp_type][1]
             channels_number     = configuration.channels_number
             exp_type            = configuration.exp_type
@@ -855,98 +887,9 @@ def experiment_summary(request, id_exp):
             filter_parms        = ast.literal_eval(filter_parms)
             spectral_number     = configuration.spectral_number
 
-        #--------------------- RC ----------------------:
-        if configuration.device.device_type.name == 'rc':
-            rc_conf = True
-            kwargs['rc_conf'] = rc_conf
-            rc_lines = experiment_data['configurations']['rc']['lines']
-            ipp = configuration.ipp
-            if experiment_data['configurations']['rc']['mix'] == 'True':
-                code = ''
-            else:
-                code = rc_lines[3]['code']
-
-            kwargs['code'] = code
-
-            #---Jueves 01-12-2016---
-
-            lines = configuration.get_lines()
-
-            if lines:
-
-                #TX Delays (TAU)
-                rc_delays_num = 0
-                rc_delays = ''
-                tx_lines = configuration.get_lines(line_type__name='tx')
-                for tx_line in tx_lines:
-                    if len(tx_lines) < 2:
-                        rc_delay = json.loads(tx_line.params)
-                        rc_delays = rc_delays+tx_line.get_name()+': '+rc_delay['delays']+'\n'
-                        delay = ast.literal_eval(rc_delay['delays'])
-                        if isinstance(delay,int):
-                            rc_delays_num += 1
-                        else:
-                            rc_delays_num += len(delay)
-                    else:
-                        rc_delay = json.loads(tx_line.params)
-                        rc_delays = rc_delays+tx_line.get_name()+': '+rc_delay['delays']+'\n'
-                        delay = ast.literal_eval(rc_delay['delays'])
-                        if isinstance(delay,int):
-                            rc_delays_num += 1
-                        else:
-                            rc_delays_num += len(delay)
-
-                #TX: TXA - TXB...
-                for tx_line in tx_lines:
-                    tx_line.name  = tx_line.get_name()
-                    tx_line_parameters = json.loads(tx_line.params)
-                    tx_line.parameters = tx_line_parameters
-
-                #WINDOWS
-                windows_lines = configuration.get_lines(line_type__name='windows')
-                for windows_line in windows_lines:
-                    windows_line.name  = windows_line.get_name()
-                    windows_data        = json.loads(windows_line.params)
-                    windows_params      = windows_data['params'][0]
-                    h0  = str(windows_params['first_height'])
-                    dh  = str(windows_params['resolution'])
-                    nsa = str(windows_params['number_of_samples'])
-                    windows_line.parameters = 'Ho=' + h0 +'km\nDH=' + dh +'km\nNSA=' + nsa
-
-                #CODES
-                code_lines = configuration.get_lines(line_type__name='codes')
-                for code_line in code_lines:
-                    code_line.name = code_line.get_name()
-                    line_params    = json.loads(code_line.params)
-                    rccode         = RCLineCode.objects.get(pk=int(line_params['code']))
-                    code_line.code_name = rccode.name
-
-                #PROG_PULSES
-                progpulses_lines = configuration.get_lines(line_type__name='prog_pulses')
-                for progpulses_line in progpulses_lines:
-                    progpulses_line.name = progpulses_line.get_name()
-                    progpulses_parameters = json.loads(progpulses_line.params)
-                    progpulses_parameters = progpulses_parameters['params'][0]
-                    progpulses_line.parameters = 'Begin: '+str(progpulses_parameters['begin'])+' (Units)\nEnd: '+str(progpulses_parameters['end'])+' (Units)'
-
-
-
-                #kwargs['kwargs_channels'] = sorted(kwargs_channels, reverse=True)
-                kwargs['lines'] = sorted(lines, reverse=True)
-                kwargs['rc_delays'] = rc_delays
-                kwargs['rc_delays_num'] = rc_delays_num
-                kwargs['tx_lines']      = tx_lines
-                kwargs['windows_lines'] = windows_lines
-                kwargs['code_lines']    = code_lines
-                kwargs['progpulses_lines']    = progpulses_lines
-
-
-            #--FIN: Jueves 01-12-2016---
-
-        #-------------------- DDS -----------------------:
-        if configuration.device.device_type.name == 'dds':
-            dds_conf = True
-            kwargs['dds_conf'] = dds_conf
+        
+        kwargs['configurations'].append(configuration)        
+        
 
         #------ RC & JARS ------:
         ipp = 937.5 #
@@ -980,9 +923,6 @@ def experiment_summary(request, id_exp):
 
 @user_passes_test(lambda u:u.is_staff)
 def experiment_verify(request, id_exp):
-
-    import json
-    import ast
 
     experiment      = get_object_or_404(Experiment, pk=id_exp)
     experiment_data = json.loads(experiment.parms_to_dict())
@@ -1026,21 +966,21 @@ def experiment_verify(request, id_exp):
             kwargs['jars']           = configuration
 
         #--------------------- RC ----------------------:
-        if configuration.device.device_type.name == 'rc':
+        if configuration.device.device_type.name == 'rc' and not configuration.mix:
             rc_conf = True
             rc = configuration
+            
             rc_parms = configuration.parms_to_dict()
-            if rc_parms['mix'] == 'True':
-                pass
-            else:
-                rc_lines     = rc_parms['lines']
-                dh           = rc_lines[6]['params'][0]['resolution']
+            
+            win_lines = rc.get_lines(line_type__name='windows')
+            if win_lines:
+                dh = json.loads(win_lines[0].params)['params'][0]['resolution']
                 #--Sampling Frequency
                 samp_freq_rc = 0.15/dh
                 kwargs['samp_freq_rc'] = samp_freq_rc
-
-            kwargs['rc_conf'] = rc_conf
-            kwargs['rc']      = configuration
+    
+                kwargs['rc_conf'] = rc_conf
+                kwargs['rc']      = configuration
 
         #-------------------- DDS ----------------------:
         if configuration.device.device_type.name == 'dds':

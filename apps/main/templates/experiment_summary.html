@@ -13,25 +13,6 @@
 
 {% block content %}
 
-{% block menu-actions %}
-<!-- <span class=" dropdown pull-right">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-menu-hamburger gi-2x" aria-hidden="true"></span></a>
-  <ul class="dropdown-menu" role="menu">
-    <li><a href="{% url 'url_edit_experiment' experiment.id %}"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> Edit</a></li>
-    <li><a href="{% url 'url_delete_experiment' experiment.id %}"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Delete</a></li>
-    <li><a href="{{ experiment.get_absolute_url_import }}"><span class="glyphicon glyphicon-import" aria-hidden="true"></span> Import </a></li>
-    <li><a href="{{ experiment.get_absolute_url_export }}"><span class="glyphicon glyphicon-export" aria-hidden="true"></span> Export </a></li>
-    {% block extra-menu-actions %}
-    {% endblock %}
-    <li><a>----------------</a></li>
-    <li><a href="{% url 'url_mix_experiment' experiment.id %}"><span class="glyphicon glyphicon-random" aria-hidden="true"></span> Mix RC Configurations </a></li>
-    <li><a href="{% url 'url_add_dev_conf' experiment.id %}"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span> Add Configuration</a></li>
-    <li><a href=#><span class="glyphicon glyphicon-check" aria-hidden="true"></span> Verify Parameters</a></li>
-
-  </ul>
-</span> -->
-{% endblock %}
-
 <table class="table table-bordered">
 {% for key in experiment_keys %}
 <tr><th>{{key|title}}</th><td>{{experiment|attr:key}}</td></tr>
@@ -41,58 +22,37 @@
 
 {% for configuration in configurations %}
 
-	{% if configuration.device.device_type.name == 'dds' %}
-		<div class="">
-		<h4 class="panel-title"><b> DDS </b></h4>
-		<br>
-		</div>
-
-		<table class="table table-bordered">
-			<!--<h4 class="panel-title">  </h4>-->
-			<tr><th>Multiplier</th><td>{{configuration.multiplier}}</td></tr>
+    <div class="">
+        <h4 class="panel-title"><b> {{configuration}}</b></h4>
+        <br>
+    </div>
+	
+	{% if configuration.device.device_type.name == 'dds' %}	
+		<table class="table table-bordered">			
 			<tr><th>Frequency A (Mhz)</th><td>{{configuration.frequencyA_Mhz}}</td></tr>
+			<tr><th>Multiplier</th><td>{{configuration.multiplier}}</td></tr>			
 		</table>
 	{% endif %}
 
-	{% if configuration.device.device_type.name == 'rc' %}
-		<div class="">
-		<h4 class="panel-title"><b> CR </b></h4>
-		<br>
-		</div>
+	{% if configuration.device.device_type.name == 'rc' %}		
 
 		<table class="table table-bordered">
 			<!--<h4 class="panel-title">  </h4>-->
-			<tr><th>IPP(km)</th><td>{{experiment_data.configurations.rc.ipp}}</td></tr>
-			<tr><th>NTX</th><td>{{experiment_data.configurations.rc.ntx}}</td></tr>
-			<tr><th>Code</th><td>{{code}}</td></tr>
-
-			<!--Jueves 01-12-2016-->
-			{% if lines %}
-
-				<tr><th>TAU</th><td>{{rc_delays_num}} taus (km): {{rc_delays|linebreaks}}</td></tr>
-				{% for tx_line in tx_lines %}
-				  <tr><th>{{tx_line.name}}</th><td>{{tx_line.parameters.pulse_width}}km</td></tr>
-				{% endfor %}
-				{% for windows_line in windows_lines%}
-				  <tr><th>{{windows_line.name}}</th><td>{{windows_line.parameters|linebreaks}}</td></tr>
-				{% endfor %}
-				{% for code_line in code_lines%}
-				  <tr><th>{{code_line.name}}</th><td>{{code_line.code_name}}</td></tr>
-				{% endfor %}
-				{% for progpulses_line in progpulses_lines%}
-				  <tr><th>{{progpulses_line.name}}</th><td>{{progpulses_line.parameters|linebreaks}}</td></tr>
-				{% endfor %}
-
-			{% endif %}
-			<!--FIN-->
+			<tr><th>NTXs</th><td>{{configuration.ntx}}</td></tr>
+			<tr><th>IPP(km)</th><td>{{configuration.ipp}}</td></tr>
+									
+			{% for tx_line in configuration.tx_lines %}
+			    <tr><th colspan="2">{{tx_line.name}}</th></tr>
+			    <tr><th>Width(km)</th><td>{{tx_line.width}}</td></tr>
+			    <tr><th>Taus</th><td>{{tx_line.taus}}</td></tr>				
+                <tr><th>codes</th><td>{{tx_line.codes}}</td></tr>
+                <tr><th>Sample Windows</th><td>{{tx_line.windows}}</td></tr>
+			{% endfor %}
+			
 		</table>
 	{% endif %}
 
 	{% if configuration.device.device_type.name == 'jars' %}
-		<div class="">
-		<h4 class="panel-title"><b> JARS </b></h4>
-		<br>
-		</div>
 
 		<table class="table table-bordered">
 			<!--<h4 class="panel-title"> JARS </h4>-->
@@ -107,26 +67,11 @@
 			<tr><th>Acq Prof</th><td>{{configuration.acq_profiles}}</td></tr>
 			<tr><th>Prof x Block</th><td>{{configuration.profiles_block}}</td></tr>
 			<tr><th>Block x File</th><td>{{ configuration.raw_data_blocks }}</td></tr>
+			<tr><th>Rate (MB/h)</th><td>{{ rate }}</td></tr>
 		</table>
 	{% endif %}
 
 {% endfor %}
-
-
-<div class="">
-<h4 class="panel-title"><b> Extra Parameters </b></h4>
-<br>
-</div>
-
-<table class="table table-bordered">
-{% if jars_conf %}
-		<tr><th>Rate (MB/h)</th><td>{{ rate }}</td></tr>
-{% endif %}
-{% if dds_conf %}
-		<!--<tr><th>Vmax (m/s)</th><td>{{ rate }}</td></tr>-->
-{% endif %}
-</table>
-
 
 <div class="pull-right">
 <button type="button" class="btn btn-primary" id="bt_back">Back</button>
