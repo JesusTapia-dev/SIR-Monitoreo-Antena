@@ -13,6 +13,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from apps.main.models import Configuration
 from devices.rc import api
 from .utils import RCFile
+from django.template.defaultfilters import last
 
 # Create your models here.
 
@@ -318,12 +319,13 @@ class RCConfiguration(Configuration):
         # write flips
         data.extend(self.add_cmd('FLIP_START'))
 
-        states = self.get_pulses(binary=False)
+        states = self.get_pulses(binary=True)
 
-        for flips, delay in zip(states, delays):
-            flips.reverse()
-            flip = int(''.join([str(x) for x in flips]), 2)
-            data.extend(self.add_data(flip+1))
+        
+        last = 0
+        for flip, delay in zip(states, delays):            
+            data.extend(self.add_data((flip^last)+1))
+            last = flip
             while delay>252:
                 data.extend(self.add_data(1))
                 delay -= 253

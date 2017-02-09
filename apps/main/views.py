@@ -543,12 +543,12 @@ def experiments(request):
 def experiment(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
-
+    experiment.get_status()
     configurations = Configuration.objects.filter(experiment=experiment, type=0)
 
     kwargs = {}
 
-    kwargs['experiment_keys'] = ['template', 'radar_system', 'name', 'start_time', 'end_time']
+    kwargs['experiment_keys'] = ['radar_system', 'name', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
 
     kwargs['configuration_keys'] = ['name', 'device__ip_address', 'device__port_address', 'device__status']
@@ -708,6 +708,46 @@ def experiment_import(request, id_exp):
     kwargs.update(sidebar(experiment=experiment))
 
     return render(request, 'experiment_import.html', kwargs)
+
+
+@user_passes_test(lambda u:u.is_staff)
+def experiment_start(request, id_exp):
+    
+    exp = get_object_or_404(Experiment, pk=id_exp)
+    
+    if exp.status == 2:
+        messages.warning(request, 'Experiment {} already running'.format(exp))
+
+    elif exp.status == 3:
+        messages.warning(request, 'Experiment {} already programmed'.format(exp))       
+
+    else:
+        task = task_start.delay(exp.pk)
+        exp.status = task.wait()
+        if exp.status==0:
+            messages.error(request, 'Experiment {} not start'.format(exp))
+        if exp.status==2:
+            messages.success(request, 'Experiment {} started'.format(exp))
+
+    exp.save()
+
+    return redirect(exp.get_absolute_url())
+
+
+@user_passes_test(lambda u:u.is_staff)
+def experiment_stop(request, id_exp):
+    
+    exp = get_object_or_404(Experiment, pk=id_exp)
+    
+    if exp.status == 2:
+        task = task_stop.delay(exp.pk)
+        exp.status = task.wait()
+        messages.warning(request, 'Experiment {} stopped'.format(exp))
+        exp.save()
+    else:
+        messages.error(request, 'Experiment {} not running'.format(exp))            
+
+    return redirect(exp.get_absolute_url())
 
 
 @user_passes_test(lambda u:u.is_staff)

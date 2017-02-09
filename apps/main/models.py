@@ -431,7 +431,10 @@ class Experiment(models.Model):
     def get_status(self):
 
         confs =  Configuration.objects.filter(experiment=self)
-
+        
+        for conf in confs:
+            conf.status_device()
+        
         total = confs.aggregate(models.Sum('device__status'))['device__status__sum']
 
         if total==2*confs.count():
@@ -579,6 +582,12 @@ class Experiment(models.Model):
     def get_absolute_url_export(self):
         return reverse('url_export_experiment', args=[str(self.id)])
 
+    def get_absolute_url_start(self):
+        return reverse('url_start_experiment', args=[str(self.id)])
+
+    def get_absolute_url_stop(self):
+        return reverse('url_stop_experiment', args=[str(self.id)])
+
 
 class Configuration(PolymorphicModel):
 
@@ -665,7 +674,7 @@ class Configuration(PolymorphicModel):
 
         if format == 'binary':
             content_type = 'application/octet-stream'
-            filename = '%s_%s.bin' %(self.device.device_type.name, self.name)
+            filename = '%s_%s.dat' %(self.device.device_type.name, self.name)
             content = self.parms_to_binary()
 
         if not content_type:
