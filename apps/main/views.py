@@ -684,7 +684,7 @@ def experiment_import(request, id_exp):
 
     if request.method == 'POST':
         file_form = UploadFileForm(request.POST, request.FILES)
-
+        print 'aqui 1'
         if file_form.is_valid():
 
             parms = experiment.import_from_file(request.FILES['file'])
@@ -712,14 +712,14 @@ def experiment_import(request, id_exp):
 
 @user_passes_test(lambda u:u.is_staff)
 def experiment_start(request, id_exp):
-    
+
     exp = get_object_or_404(Experiment, pk=id_exp)
-    
+
     if exp.status == 2:
         messages.warning(request, 'Experiment {} already running'.format(exp))
 
     elif exp.status == 3:
-        messages.warning(request, 'Experiment {} already programmed'.format(exp))       
+        messages.warning(request, 'Experiment {} already programmed'.format(exp))
 
     else:
         task = task_start.delay(exp.pk)
@@ -736,16 +736,16 @@ def experiment_start(request, id_exp):
 
 @user_passes_test(lambda u:u.is_staff)
 def experiment_stop(request, id_exp):
-    
+
     exp = get_object_or_404(Experiment, pk=id_exp)
-    
+
     if exp.status == 2:
         task = task_stop.delay(exp.pk)
         exp.status = task.wait()
         messages.warning(request, 'Experiment {} stopped'.format(exp))
         exp.save()
     else:
-        messages.error(request, 'Experiment {} not running'.format(exp))            
+        messages.error(request, 'Experiment {} not running'.format(exp))
 
     return redirect(exp.get_absolute_url())
 
@@ -774,16 +774,16 @@ def experiment_mix(request, id_exp):
                               mix=True,
                               parameters='')
         mix.save()
-        
+
         line_type = RCLineType.objects.get(name='mix')
         for i in range(len(rc_confs[0].get_lines())):
             line = RCLine(rc_configuration=mix, line_type=line_type, channel=i)
-            line.save()    
+            line.save()
 
-    initial = {'name': mix.name, 
-               'result': parse_mix_result(mix.parameters), 
-               'delay': 0, 
-               'mask': [0,1,2,3,4,5,6,7] 
+    initial = {'name': mix.name,
+               'result': parse_mix_result(mix.parameters),
+               'delay': 0,
+               'mask': [0,1,2,3,4,5,6,7]
                }
 
     if request.method=='GET':
@@ -855,16 +855,16 @@ def experiment_mix_delete(request, id_exp):
     return redirect('url_mix_experiment', id_exp=id_exp)
 
 
-def experiment_summary(request, id_exp):    
+def experiment_summary(request, id_exp):
 
-    experiment      = get_object_or_404(Experiment, pk=id_exp)    
+    experiment      = get_object_or_404(Experiment, pk=id_exp)
     configurations  = Configuration.objects.filter(experiment=experiment, type=0)
 
     kwargs = {}
 
     kwargs['experiment_keys'] = ['radar_system', 'name', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
-    
+
     kwargs['configurations'] = []
 
     kwargs['title'] = 'Experiment Summary'
@@ -875,25 +875,25 @@ def experiment_summary(request, id_exp):
     jars_conf = False
     rc_conf   = False
 
-    for configuration in configurations:       
+    for configuration in configurations:
 
         #--------------------- RC ----------------------:
         if configuration.device.device_type.name == 'rc':
             if configuration.mix:
                 continue
-            rc_conf = True            
+            rc_conf = True
             ipp = configuration.ipp
-            lines = configuration.get_lines(line_type__name='tx')            
+            lines = configuration.get_lines(line_type__name='tx')
             configuration.tx_lines = []
 
             for tx_line in lines:
-                line = {'name':tx_line.get_name()}                           
+                line = {'name':tx_line.get_name()}
                 tx_params = json.loads(tx_line.params)
                 line['width'] = tx_params['pulse_width']
                 if line['width'] in (0, '0'):
                     continue
                 delays = tx_params['delays']
-                                
+
                 if delays not in ('', '0'):
                     n = len(delays.split(','))
                     line['taus'] = '{} Taus: {}'.format(n, delays)
@@ -901,24 +901,24 @@ def experiment_summary(request, id_exp):
                     line['taus'] = '-'
 
                 for code_line in configuration.get_lines(line_type__name='codes'):
-                    code_params = json.loads(code_line.params) 
+                    code_params = json.loads(code_line.params)
                     if tx_line.pk==int(code_params['TX_ref']):
                         line['codes'] = '{}:{}'.format(RCLineCode.objects.get(pk=code_params['code']),
                                                        '-'.join(code_params['codes']))
-                
+
                 for windows_line in configuration.get_lines(line_type__name='windows'):
                     win_params = json.loads(windows_line.params)
                     if tx_line.pk==int(win_params['TX_ref']):
                         windows = ''
-                        for i, params in enumerate(win_params['params']):                      
-                            windows += 'W{}: Ho={first_height} km DH={resolution} km NSA={number_of_samples}<br>'.format(i, **params)           
+                        for i, params in enumerate(win_params['params']):
+                            windows += 'W{}: Ho={first_height} km DH={resolution} km NSA={number_of_samples}<br>'.format(i, **params)
                         line['windows'] = mark_safe(windows)
-            
+
                 configuration.tx_lines.append(line)
-                
+
         #-------------------- JARS -----------------------:
         if configuration.device.device_type.name == 'jars':
-            jars_conf = True            
+            jars_conf = True
             kwargs['exp_type']  = EXPERIMENT_TYPE[configuration.exp_type][1]
             channels_number     = configuration.channels_number
             exp_type            = configuration.exp_type
@@ -927,9 +927,9 @@ def experiment_summary(request, id_exp):
             filter_parms        = ast.literal_eval(filter_parms)
             spectral_number     = configuration.spectral_number
 
-        
-        kwargs['configurations'].append(configuration)        
-        
+
+        kwargs['configurations'].append(configuration)
+
 
         #------ RC & JARS ------:
         ipp = 937.5 #
@@ -1009,16 +1009,16 @@ def experiment_verify(request, id_exp):
         if configuration.device.device_type.name == 'rc' and not configuration.mix:
             rc_conf = True
             rc = configuration
-            
+
             rc_parms = configuration.parms_to_dict()
-            
+
             win_lines = rc.get_lines(line_type__name='windows')
             if win_lines:
                 dh = json.loads(win_lines[0].params)['params'][0]['resolution']
                 #--Sampling Frequency
                 samp_freq_rc = 0.15/dh
                 kwargs['samp_freq_rc'] = samp_freq_rc
-    
+
                 kwargs['rc_conf'] = rc_conf
                 kwargs['rc']      = configuration
 
