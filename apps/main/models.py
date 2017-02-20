@@ -139,7 +139,7 @@ class Device(models.Model):
     def change_ip(self, ip_address, mask, gateway, **kwargs):
 
         if self.device_type.name=='dds':
-            try:            
+            try:
                 answer = dds_api.change_ip(ip = self.ip_address,
                                            port = self.port_address,
                                            new_ip = ip_address,
@@ -155,16 +155,16 @@ class Device(models.Model):
             except Exception as e:
                 self.message = '40|{}'.format(str(e))
                 return False
-        
+
         elif self.device_type.name=='rc':
             payload = {'ip': ip_address,
                        'dns': kwargs.get('dns', '8.8.8.8'),
                        'gateway': gateway,
-                       'subnet': mask}            
+                       'subnet': mask}
             req = requests.post(self.url('changeip'), data=payload)
             try:
                 answer = req.json()
-                if answer['changeip']=='ok':                    
+                if answer['changeip']=='ok':
                     self.message = '25|IP succesfully changed'
                     self.ip_address = ip_address
                     self.save()
@@ -396,7 +396,7 @@ class Experiment(models.Model):
         result = 1
 
         confs = Configuration.objects.filter(experiment=self).order_by('-device__device_type__sequence')
-        for i in range(0,len(confs)): 
+        for i in range(0,len(confs)):
             if i==0:
                 for conf in confs:
                     if conf.device.device_type.name == 'abs':
@@ -431,10 +431,10 @@ class Experiment(models.Model):
     def get_status(self):
 
         confs =  Configuration.objects.filter(experiment=self)
-        
+
         for conf in confs:
             conf.status_device()
-        
+
         total = confs.aggregate(models.Sum('device__status'))['device__status__sum']
 
         if total==2*confs.count():
@@ -465,23 +465,12 @@ class Experiment(models.Model):
 
         import json
 
-        configurations = Configuration.objects.filter(experiment=self)
+        configurations = Configuration.objects.filter(experiment=self).filter(type=0)
         conf_parameters = {}
         parameters={}
 
         for configuration in configurations:
-            if 'cgs' in configuration.device.device_type.name:
-                conf_parameters['cgs'] = configuration.parms_to_dict()
-            if 'dds' in configuration.device.device_type.name:
-                conf_parameters['dds'] = configuration.parms_to_dict()
-            if 'rc' in configuration.device.device_type.name:
-                conf_parameters['rc'] = configuration.parms_to_dict()
-            if 'jars' in configuration.device.device_type.name:
-                conf_parameters['jars'] = configuration.parms_to_dict()
-            if 'usrp' in configuration.device.device_type.name:
-                conf_parameters['usrp'] = configuration.parms_to_dict()
-            if 'abs' in configuration.device.device_type.name:
-                conf_parameters['abs'] = configuration.parms_to_dict()
+            conf_parameters[configuration.name] = configuration.parms_to_dict()
 
         parameters['configurations'] = conf_parameters
         parameters['end_time']       = self.end_time.strftime("%H:%M:%S")
@@ -510,56 +499,37 @@ class Experiment(models.Model):
         configurations = Configuration.objects.filter(experiment=self)
 
         if configurations:
-                    for configuration in configurations:
-                        configuration.delete()
+            for configuration in configurations:
+                configuration.delete()
+        #If device is missing.
+        for configuration in parms['configurations']:
+            try:
+                device = Device.objects.filter(device_type__name=parms['configurations'][configuration]['device_type'])[0]
+            except:
+                return {'Error': 'Device is not in database. Please create new '+str(parms['configurations'][configuration]['device_type'])+ ' device.'}
 
-        for conf_type in parms['configurations']:
-                    #--For ABS Device:
-                    #--For USRP Device:
-                    #--For JARS Device:
-                    if conf_type == 'jars':
-                        device = get_object_or_404(Device, pk=parms['configurations']['jars']['device_id'])
-                        DevConfModel = CONF_MODELS[conf_type]
-                        confjars_form = DevConfModel(
-                                                  experiment = self,
-                                                  name = 'JARS',
-                                                  device=device,
-                                                  )
-                        confjars_form.dict_to_parms(parms['configurations']['jars'])
-                        confjars_form.save()
-                    #--For RC Device:
-                    if conf_type == 'rc':
-                        device = get_object_or_404(Device, pk=parms['configurations']['rc']['device_id'])
-                        DevConfModel = CONF_MODELS[conf_type]
-                        confrc_form = DevConfModel(
-                                                  experiment = self,
-                                                  name = 'RC',
-                                                  device=device,
-                                                  )
-                        confrc_form.dict_to_parms(parms['configurations']['rc'])
-                        confrc_form.save()
-                    #--For DDS Device:
-                    if conf_type == 'dds':
-                        device = get_object_or_404(Device, pk=parms['configurations']['dds']['device_id'])
-                        DevConfModel = CONF_MODELS[conf_type]
-                        confdds_form = DevConfModel(
-                                                  experiment = self,
-                                                  name = 'DDS',
-                                                  device=device,
-                                                  )
-                        confdds_form.dict_to_parms(parms['configurations']['dds'])
-                        confdds_form.save()
-                    #--For CGS Device:
-                    if conf_type == 'cgs':
-                        device = get_object_or_404(Device, pk=parms['configurations']['cgs']['device_id'])
-                        DevConfModel = CONF_MODELS[conf_type]
-                        confcgs_form = DevConfModel(
-                                                  experiment = self,
-                                                  name = 'CGS',
-                                                  device=device,
-                                                  )
-                        confcgs_form.dict_to_parms(parms['configurations']['cgs'])
-                        confcgs_form.save()
+        for configuration in parms['configurations']:
+            device = Device.objects.filter(device_type__name=parms['configurations'][configuration]['device_type'])[0]
+            if parms['configurations'][configuration]['device_type'] == 'rc':
+                if bool(parms['configurations'][configuration]['mix']) == False:
+                    DevConfModel = CONF_MODELS[parms['configurations'][configuration]['device_type']]
+                    new_conf = DevConfModel(
+                                            experiment = self,
+                                            name       = configuration,
+                                            device     = device,
+                                            )
+                    new_conf.dict_to_parms(parms['configurations'][configuration])
+                    new_conf.save()
+            else:
+                DevConfModel = CONF_MODELS[parms['configurations'][configuration]['device_type']]
+                new_conf = DevConfModel(
+                                        experiment = self,
+                                        name       = configuration,
+                                        device     = device,
+                                        )
+                new_conf.dict_to_parms(parms['configurations'][configuration])
+                new_conf.save()
+
 
         location = Location.objects.get(name = parms['radar'])
         self.name       = parms['experiment']

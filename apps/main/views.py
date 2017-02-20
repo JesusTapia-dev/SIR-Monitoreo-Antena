@@ -684,7 +684,7 @@ def experiment_import(request, id_exp):
 
     if request.method == 'POST':
         file_form = UploadFileForm(request.POST, request.FILES)
-        print 'aqui 1'
+
         if file_form.is_valid():
 
             parms = experiment.import_from_file(request.FILES['file'])
@@ -692,6 +692,10 @@ def experiment_import(request, id_exp):
             if parms:
 
                 new_exp = experiment.dict_to_parms(parms, CONF_MODELS)
+
+                if new_exp.__class__.__name__=='dict':
+                    messages.error(request, new_exp['Error'] )
+                    return redirect(experiment.get_absolute_url_import())
 
                 messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
 

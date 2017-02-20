@@ -112,6 +112,7 @@ class JARSConfiguration(Configuration):
 
         parameters['device_id']        = self.device.id
         parameters['name']             = self.name
+        parameters['device_type']      = self.device.device_type.name
         #parameters['rc']               = self.rc.name
         parameters['exp_type']         = self.exp_type
         parameters['exptype']          = EXPERIMENT_TYPE[self.exp_type][1]

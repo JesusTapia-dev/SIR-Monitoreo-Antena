@@ -74,6 +74,7 @@ class DDSConfiguration(Configuration):
         parameters = {}
 
         parameters['device_id'] = self.device.id
+        parameters['device_type']      = self.device.device_type.name
 
         parameters['clock'] = float(self.clock)
         parameters['multiplier'] = int(self.multiplier)
@@ -155,18 +156,18 @@ class DDSConfiguration(Configuration):
 
         try:
             answer = api.status(ip = self.device.ip_address,
-                                port = self.device.port_address)            
-            if 'clock' in answer:                
+                                port = self.device.port_address)
+            if 'clock' in answer:
                 self.device.status = 1
             else:
-                self.device.status = answer[0] 
-            self.message = 'DDS - {}'.format(answer[2:])            
+                self.device.status = answer[0]
+            self.message = 'DDS - {}'.format(answer[2:])
         except Exception as e:
-            self.message = str(e) 
+            self.message = str(e)
             self.device.status = 0
-        
+
         self.device.save()
-        
+
         if self.device.status in (0, '0'):
             return False
         else:
@@ -189,9 +190,9 @@ class DDSConfiguration(Configuration):
         try:
             answer = api.disable_rf(ip = self.device.ip_address,
                                     port = self.device.port_address)
-            
+
             return self.status_device()
-            
+
         except Exception as e:
             self.message = str(e)
             return False
@@ -201,9 +202,9 @@ class DDSConfiguration(Configuration):
         try:
             answer = api.enable_rf(ip = self.device.ip_address,
                                     port = self.device.port_address)
-            
+
             return self.status_device()
-            
+
         except Exception as e:
             self.message = str(e)
             return False
@@ -226,12 +227,12 @@ class DDSConfiguration(Configuration):
             answer = api.write_config(ip = self.device.ip_address,
                                       port = self.device.port_address,
                                       parms = self.parms_to_dict())
-            
+
             return self.status_device()
-            
+
         except Exception as e:
             self.message = str(e)
-            return False        
-    
+            return False
+
     class Meta:
         db_table = 'dds_configurations'

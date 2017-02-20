@@ -37,6 +37,7 @@ class CGSConfiguration(Configuration):
         parameters = {}
 
         parameters['device_id'] = self.device.id
+        parameters['device_type']      = self.device.device_type.name
 
         if self.freq0 == None or self.freq0 == '':
             parameters['freq0'] = 0

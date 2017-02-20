@@ -135,8 +135,8 @@ class RCConfiguration(Configuration):
         '''
         '''
 
-        ignored = ('parameters', 'type', 'polymorphic_ctype', 'configuration_ptr',
-                   'created_date', 'programmed_date')
+        ignored = ('parameters', 'type','polymorphic_ctype', 'configuration_ptr',
+                   'created_date', 'programmed_date', 'mix')
 
         data = {}
         for field in self._meta.fields:
@@ -145,7 +145,9 @@ class RCConfiguration(Configuration):
             data[field.name] = '{}'.format(field.value_from_object(self))
 
         data['device_id'] = data.pop('device')
+        data['device_type'] = self.device.device_type.name
         data['lines'] = []
+        data['mix'] = self.mix
 
         for line in self.get_lines():
             line_data = json.loads(line.params)
@@ -237,36 +239,36 @@ class RCConfiguration(Configuration):
 
     def get_pulses(self, binary=True):
 
-        
-        pulses = [line.pulses_as_points() for line in self.get_lines()]        
-        tuples = [tup for tups in pulses for tup in tups]        
+
+        pulses = [line.pulses_as_points() for line in self.get_lines()]
+        tuples = [tup for tups in pulses for tup in tups]
         points = set([x for tup in tuples for x in tup])
         points = list(points)
-        points.sort()        
+        points.sort()
         states = []
         last = [0 for x in pulses]
-        
+
         for x in points:
             dum = []
             for i,tups in enumerate(pulses):
                 ups = [tup[0] for tup in tups]
-                dws = [tup[1] for tup in tups]                
+                dws = [tup[1] for tup in tups]
                 if x in ups:
                     dum.append(1)
                 elif x in dws:
                     dum.append(0)
                 else:
-                    dum.append(last[i]) 
+                    dum.append(last[i])
             states.append(dum)
-            last = dum            
+            last = dum
 
         if binary:
             ret = []
             for flips in states:
                 flips.reverse()
-                ret.append(int(''.join([str(x) for x in flips]), 2))                    
+                ret.append(int(''.join([str(x) for x in flips]), 2))
             states = ret
-                
+
         return states[:-1]
 
     def add_cmd(self, cmd):
@@ -277,7 +279,7 @@ class RCConfiguration(Configuration):
     def add_data(self, value):
 
         return (254, value-1)
-    
+
     def parms_to_binary(self, dat=True):
         '''
         Create "dat" stream to be send to CR
@@ -321,9 +323,9 @@ class RCConfiguration(Configuration):
 
         states = self.get_pulses(binary=True)
 
-        
+
         last = 0
-        for flip, delay in zip(states, delays):            
+        for flip, delay in zip(states, delays):
             data.extend(self.add_data((flip^last)+1))
             last = flip
             while delay>252:
@@ -344,7 +346,7 @@ class RCConfiguration(Configuration):
         data.extend(self.add_data(dh))
 
         # write enable
-        data.extend(self.add_cmd('ENABLE'))        
+        data.extend(self.add_cmd('ENABLE'))
 
         if not dat:
             return data
@@ -401,7 +403,7 @@ class RCConfiguration(Configuration):
         ax.set_yticks(range(len(labels)))
         ax.set_yticklabels(labels)
         ax.set_xlabel = 'Units'
-        plot = to_bokeh(fig, use_pandas=False)        
+        plot = to_bokeh(fig, use_pandas=False)
         plot.tools = [PanTool(dimensions=['width']), WheelZoomTool(dimensions=['width']), ResetTool(), SaveTool()]
         plot.toolbar_location="above"
 
@@ -417,36 +419,36 @@ class RCConfiguration(Configuration):
         from bokeh.models.sources import ColumnDataSource
 
         lines = self.get_lines().reverse()
-        
+
         N = len(lines)
         npoints = self.total_units/self.km2unit if km else self.total_units
         ipp = self.ipp if km else self.ipp*self.km2unit
-        
+
         hover = HoverTool(tooltips=[("Line", "@name"),
                                     ("IPP", "@ipp"),
                                     ("X", "@left")])
-        
-        tools = [PanTool(dimensions=['width']), 
-                 WheelZoomTool(dimensions=['width']), 
+
+        tools = [PanTool(dimensions=['width']),
+                 WheelZoomTool(dimensions=['width']),
                  hover, SaveTool()]
-        
-        plot = figure(width=1000, 
-                      height=40+N*50, 
+
+        plot = figure(width=1000,
+                      height=40+N*50,
                       y_range = (0, N),
-                      tools=tools, 
+                      tools=tools,
                       toolbar_location='above',
-                      toolbar_sticky=False,)            
-                
+                      toolbar_sticky=False,)
+
         plot.xaxis.axis_label = 'Km' if km else 'Units'
         plot.xaxis[0].formatter = PrintfTickFormatter(format='%d')
-        plot.yaxis.axis_label = 'Pulses'        
+        plot.yaxis.axis_label = 'Pulses'
         plot.yaxis[0].ticker=FixedTicker(ticks=list(range(N)))
         plot.yaxis[0].formatter = PrintfTickFormatter(format='Line %d')
 
-        for i, line in enumerate(lines):            
-            
+        for i, line in enumerate(lines):
+
             points = [tup for tup in line.pulses_as_points(km=km) if tup!=(0,0)]
-            
+
             source = ColumnDataSource(data = dict(
                                                   bottom = [i for tup in points],
                                                   top = [i+0.5 for tup in points],
@@ -455,7 +457,7 @@ class RCConfiguration(Configuration):
                                                   ipp = [int(tup[0]/ipp) for tup in points],
                                                   name = [line.get_name() for tup in points]
                                                   ))
-            
+
             plot.quad(
                      bottom = 'bottom',
                      top = 'top',
@@ -465,7 +467,7 @@ class RCConfiguration(Configuration):
                      fill_alpha = 0,
                      #line_color = 'blue',
                      )
-            
+
             plot.line([0, npoints], [i, i])#, color='blue')
 
         return components(plot, CDN)
@@ -481,7 +483,7 @@ class RCConfiguration(Configuration):
             elif payload['status']=='disabled':
                 self.device.status = 2
             else:
-                self.device.status = 1                
+                self.device.status = 1
                 self.device.save()
                 self.message = payload['status']
                 return False
@@ -491,32 +493,32 @@ class RCConfiguration(Configuration):
             self.device.save()
             self.message = str(e)
             return False
-            
-        self.device.save()        
-        return True            
+
+        self.device.save()
+        return True
 
     def reset_device(self):
-                
+
         try:
             req = requests.post(self.device.url('reset'))
-            payload = req.json()       
+            payload = req.json()
             if payload['reset']=='ok':
                 self.message = 'RC restarted'
             else:
-                self.message = 'RC restart not ok'                
+                self.message = 'RC restart not ok'
                 self.device.status = 4
                 self.device.save()
         except Exception as e:
             self.message = str(e)
             return False
-            
+
         return True
-        
+
     def stop_device(self):
 
         try:
             req = requests.post(self.device.url('stop'))
-            payload = req.json()          
+            payload = req.json()
             if payload['stop']=='ok':
                 self.device.status = 2
                 self.device.save()
@@ -531,10 +533,10 @@ class RCConfiguration(Configuration):
                 self.device.status = 4
             else:
                 self.device.status = 0
-            self.message = str(e)            
+            self.message = str(e)
             self.device.save()
-            return False            
-        
+            return False
+
         return True
 
     def start_device(self):
@@ -554,39 +556,39 @@ class RCConfiguration(Configuration):
                 self.device.status = 4
             else:
                 self.device.status = 0
-            self.message = str(e)            
+            self.message = str(e)
             self.device.save()
             return False
-                    
+
         return True
 
     def write_device(self):
-        
-        values = zip(self.get_pulses(), 
+
+        values = zip(self.get_pulses(),
                      [x-1 for x in self.get_delays()])
-        
+
         data = bytearray()
-        #reset        
-        data.extend((128, 0))        
-        #disable        
+        #reset
+        data.extend((128, 0))
+        #disable
         data.extend((129, 0))
-        #divider        
-        data.extend((131, self.clock_divider-1))        
+        #divider
+        data.extend((131, self.clock_divider-1))
         #enable writing
         data.extend((139, 62))
-        
+
         last = 0
-        for tup in values:                      
-            vals = pack('<HH', last^tup[0], tup[1])            
+        for tup in values:
+            vals = pack('<HH', last^tup[0], tup[1])
             last = tup[0]
-            data.extend((133, vals[1], 132, vals[0], 133, vals[3], 132, vals[2]))            
-        
+            data.extend((133, vals[1], 132, vals[0], 133, vals[3], 132, vals[2]))
+
         #enable
         data.extend((129, 1))
-        
+
         try:
             req = requests.post(self.device.url('write'), data=b64encode(data))
-            payload = req.json()            
+            payload = req.json()
             if payload['write']=='ok':
                 self.device.status = 2
                 self.device.save()
@@ -596,16 +598,16 @@ class RCConfiguration(Configuration):
                 self.device.save()
                 self.message = 'RC write not ok'
                 return False
-        
+
         except Exception as e:
             if 'No route to host' not in str(e):
                 self.device.status = 4
             else:
                 self.device.status = 0
-            self.message = str(e)            
+            self.message = str(e)
             self.device.save()
             return False
-                    
+
         return True
 
 
@@ -716,13 +718,13 @@ class RCLine(models.Model):
         codes = [line for line in self.get_lines(line_type__name='codes') if int(json.loads(line.params)['TX_ref'])==int(tx_id)]
 
         if codes:
-            tx_width = float(json.loads(RCLine.objects.get(pk=tx_id).params)['pulse_width'])*km2unit/len(json.loads(codes[0].params)['codes'][0])            
+            tx_width = float(json.loads(RCLine.objects.get(pk=tx_id).params)['pulse_width'])*km2unit/len(json.loads(codes[0].params)['codes'][0])
         else:
             tx_width = float(json.loads(RCLine.objects.get(pk=tx_id).params)['pulse_width'])*km2unit
-        
-        if ref=='first_baud':                        
+
+        if ref=='first_baud':
             return int(1 + round((tx_width + 1)/2 + params['first_height']*km2unit - params['resolution']*km2unit))
-        elif ref=='sub_baud':            
+        elif ref=='sub_baud':
             return np.ceil(1 + params['first_height']*km2unit - params['resolution']*km2unit/2)
         else:
             return 0
@@ -810,20 +812,20 @@ class RCLine(models.Model):
             tx_params = json.loads(tx.params)
             delays = [float(d)*km2unit for d in tx_params['delays'].split(',') if d]
             f = int(float(tx_params['pulse_width'])*km2unit/len(params['codes'][0]))
-            codes = [(np.fromstring(''.join([s*f for s in code]), dtype=np.uint8)-48).astype(np.int8) for code in params['codes']]            
-            codes = [self.array_to_points(code) for code in codes]            
+            codes = [(np.fromstring(''.join([s*f for s in code]), dtype=np.uint8)-48).astype(np.int8) for code in params['codes']]
+            codes = [self.array_to_points(code) for code in codes]
             n = len(codes)
-            
+
             ranges = tx_params['range'].split(',')
             if len(ranges)>0 and ranges[0]!='0':
                 dum = self.mask_ranges(tx.pulses_as_points(), ranges)
             else:
-                dum = tx.pulses_as_points()            
-                        
+                dum = tx.pulses_as_points()
+
             for i, tup in enumerate(dum):
                 if tup==(0,0): continue
                 code = codes[i%n]
-                y.extend([(c[0]+tup[0], c[1]+tup[0]) for c in code])                        
+                y.extend([(c[0]+tup[0], c[1]+tup[0]) for c in code])
 
         elif self.line_type.name=='sync':
             params = json.loads(self.params)
@@ -851,7 +853,7 @@ class RCLine(models.Model):
                     y.extend(y_pp)
 
         elif self.line_type.name=='windows':
-            params = json.loads(self.params)            
+            params = json.loads(self.params)
             if 'params' in params and len(params['params'])>0:
                 tr_params = json.loads(self.get_lines(line_type__name='tr')[0].params)
                 tr_ranges = tr_params['range'].split(',')
@@ -861,11 +863,11 @@ class RCLine(models.Model):
                                         before=int(self.rc_configuration.time_before*us2unit),
                                         sync=self.rc_configuration.sync+self.get_win_ref(p, params['TX_ref'], km2unit))
 
-                    
+
                     if len(tr_ranges)>0 and tr_ranges[0]!='0':
                         y_win = self.mask_ranges(y_win, tr_ranges)
 
-                    y.extend(y_win)                
+                    y.extend(y_win)
 
         elif self.line_type.name=='mix':
             values = self.rc_configuration.parameters.split('-')
