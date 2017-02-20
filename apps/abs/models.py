@@ -239,6 +239,7 @@ class ABSConfiguration(Configuration):
 
         parameters['device_id'] = self.device.id
         parameters['name']      = self.name
+        parameters['device_type']      = self.device.device_type.name
         parameters['beams']     = {}
 
         beams = ABSBeam.objects.filter(abs_conf=self)
