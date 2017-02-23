@@ -8,10 +8,10 @@ import requests
 
 class CGSConfiguration(Configuration):
 
-    freq0 = models.PositiveIntegerField(verbose_name='Frequency 0',validators=[MaxValueValidator(450e6)], default = 60)
-    freq1 = models.PositiveIntegerField(verbose_name='Frequency 1',validators=[MaxValueValidator(450e6)], default = 60)
-    freq2 = models.PositiveIntegerField(verbose_name='Frequency 2',validators=[MaxValueValidator(450e6)], default = 60)
-    freq3 = models.PositiveIntegerField(verbose_name='Frequency 3',validators=[MaxValueValidator(450e6)], default = 60)
+    freq0 = models.PositiveIntegerField(verbose_name='Frequency 0 (Hz)',validators=[MaxValueValidator(450e6)], default = 60)
+    freq1 = models.PositiveIntegerField(verbose_name='Frequency 1 (Hz)',validators=[MaxValueValidator(450e6)], default = 60)
+    freq2 = models.PositiveIntegerField(verbose_name='Frequency 2 (Hz)',validators=[MaxValueValidator(450e6)], default = 60)
+    freq3 = models.PositiveIntegerField(verbose_name='Frequency 3 (Hz)',validators=[MaxValueValidator(450e6)], default = 60)
 
     def verify_frequencies(self):
 
@@ -79,7 +79,7 @@ class CGSConfiguration(Configuration):
 
         route = "http://" + str(ip) + ":" + str(port) + "/status/ad9548"
         try:
-            r = requests.get(route,timeout=0.7)
+            r = requests.get(route, timeout=0.8)
         except Exception as e:
             self.device.status = 0
             self.device.save()
@@ -91,13 +91,11 @@ class CGSConfiguration(Configuration):
         icon = response[0]
         status = response[-1]
 
-        #print(icon, status)
         #"icon" could be: "alert" or "okay"
         if "alert" in icon:
-            #if "Starting Up" in status: #No Esta conectado
-            #    self.device.status = 1
-            #else:
             self.device.status = 1
+            self.device.save()
+            self.message = status
             return False
         elif  "okay" in icon:
             self.device.status = 3
@@ -106,7 +104,6 @@ class CGSConfiguration(Configuration):
 
         self.message = status
         self.device.save()
-
 
         return True
 
