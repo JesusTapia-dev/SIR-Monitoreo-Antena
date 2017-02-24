@@ -193,28 +193,31 @@ class CGSConfiguration(Configuration):
         ip=self.device.ip_address
         port=self.device.port_address
 
-        route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
+        route = "http://" + str(ip) + ":" + str(port) + "/read/"
         try:
             frequencies = requests.get(route,timeout=0.7)
-
         except:
             self.message = "Could not read CGS parameters from this device"
             return None
 
         frequencies = frequencies.json()
-        frequencies = frequencies.get("Frecuencias")
-        f0 = frequencies.get("f0")
-        f1 = frequencies.get("f1")
-        f2 = frequencies.get("f2")
-        f3 = frequencies.get("f3")
+        if frequencies:
+            frequencies = frequencies.get("Frequencies")
+            freq0 = frequencies.get("freq0")
+            freq1 = frequencies.get("freq1")
+            freq2 = frequencies.get("freq2")
+            freq3 = frequencies.get("freq3")
 
-        parms = {'freq0': f0,
-                 'freq1': f1,
-                 'freq2': f2,
-                 'freq3': f3}
+            parms = {'freq0': freq0,
+                 'freq1': freq1,
+                 'freq2': freq2,
+                 'freq3': freq3}
 
-        self.message = ""
-        return parms
+            self.message = "CGS parameters have been successfully read"
+            return parms
+        else:
+            self.message = "Error reading CGS parameters"
+            return None
 
 
     def write_device(self):
