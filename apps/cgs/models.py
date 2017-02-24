@@ -226,37 +226,31 @@ class CGSConfiguration(Configuration):
         port=self.device.port_address
 
         #---Frequencies from form
-        f0 = self.freq0
-        f1 = self.freq1
-        f2 = self.freq2
-        f3 = self.freq3
-        post_data = {"f0":f0, "f1":f1, "f2":f2, "f3":f3}
-        route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
+        frequencies = self.parms_to_dict()
+        post_data = {}
+        for data in frequencies:
+            if data in ['freq0','freq1','freq2','freq3']:
+                post_data[data] = frequencies[data]
+
+        route = "http://" + str(ip) + ":" + str(port) + "/write/"
 
         try:
             r = requests.post(route, post_data, timeout=0.7)
         except:
             self.message = "Could not write CGS parameters"
+            self.device.status = 0
+            self.device.save()
             return False
 
-        text = r.text
-        text = text.split(',')
+        response = r.json()
+        self.message = response['message']
+        self.device.status = response['status']
+        self.device.save()
 
-        if len(text)>1:
-            title = text[0]
-            status = text[1]
-            if title == "okay":
-                self.message = status
-                self.device.status =  3
-                self.device.save()
-                return True
-            else:
-                self.message = title + ", " + status
-                self.device.status = 1
-                self.device.save()
-                return False
-
-        return False
+        if self.device.status==1:
+            return False
+            
+        return True
 
 
     class Meta:
