@@ -100,38 +100,32 @@ class CGSConfiguration(Configuration):
         ip=self.device.ip_address
         port=self.device.port_address
 
+        #---Device must be configured
+        if not self.device.status == 2:
+            self.message = 'CGS Device must be configured.'
+            return False
         #---Frequencies from form
-        f0 = self.freq0
-        f1 = self.freq1
-        f2 = self.freq2
-        f3 = self.freq3
-        post_data = {"f0":f0, "f1":f1, "f2":f2, "f3":f3}
-        route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
+        post_data = self.parms_to_dict()
+        route = "http://" + str(ip) + ":" + str(port) + "/write/"
 
         try:
             r = requests.post(route, post_data, timeout=0.7)
-        except:
-            self.message = "Could not start CGS device"
+        except Exception as e:
+            self.message = "Could not start CGS device. "+str(e)
             return False
 
-        text = r.text
-        text = text.split(',')
+        response = r.json()
+        if response['status']==1:
+            self.device.status = 1
+            self.device.save()
+            self.message = response['message']
+            return False
 
-        if len(text)>1:
-            title = text[0]
-            status = text[1]
-            if title == "okay":
-                self.message = status
-                self.device.status =  3
-                self.device.save()
-                return True
-            else:
-                self.message = title + ", " + status
-                self.device.status = 1
-                self.device.save()
-                return False
+        self.device.status = response['status']
+        self.device.save()
+        self.message = response['message']
 
-        return False
+        return True
 
 
     def stop_device(self):
