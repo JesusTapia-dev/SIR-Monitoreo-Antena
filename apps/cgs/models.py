@@ -72,38 +72,25 @@ class CGSConfiguration(Configuration):
 
     def status_device(self):
 
-        import requests
-
         ip=self.device.ip_address
         port=self.device.port_address
 
-        route = "http://" + str(ip) + ":" + str(port) + "/status/ad9548"
+        route = "http://" + str(ip) + ":" + str(port) + "/status/"
         try:
-            r = requests.get(route, timeout=0.8)
+            r = requests.get(route, timeout=0.7)
         except Exception as e:
             self.device.status = 0
             self.device.save()
             self.message = 'Could not read CGS status: ' + str(e)
             return False
 
-        response = str(r.text)
-        response = response.split(";")
-        icon = response[0]
-        status = response[-1]
-
-        #"icon" could be: "alert" or "okay"
-        if "alert" in icon:
-            self.device.status = 1
-            self.device.save()
-            self.message = status
-            return False
-        elif  "okay" in icon:
-            self.device.status = 3
-        else:
-            self.device.status = 1
-
-        self.message = status
+        response = r.json()
+        self.device.status = response['status']
+        self.message = response['message']
         self.device.save()
+
+        if response['components_status']==0:
+            return False
 
         return True
 
@@ -152,43 +139,37 @@ class CGSConfiguration(Configuration):
         ip=self.device.ip_address
         port=self.device.port_address
 
-        f0 = 0
-        f1 = 0
-        f2 = 0
-        f3 = 0
-        post_data = {"f0":f0, "f1":f1, "f2":f2, "f3":f3}
-        route = "http://" + str(ip) + ":" + str(port) + "/frequencies/"
+        if self.device.status == 2: #Configured
+            self.message = 'CGS device is already stopped.'
+            return False
+
+        post_data = {"freq0":0, "freq1":0, "freq2":0, "freq3":0}
+        route = "http://" + str(ip) + ":" + str(port) + "/write/"
 
         try:
             r = requests.post(route, post_data, timeout=0.7)
-        except:
-            self.message = "Could not stop CGS device"
+        except Exception as e:
+            self.message = "Could not write CGS parameters. "+str(e)
+            self.device.status = 0
+            self.device.save()
             return False
 
-        text = r.text
-        text = text.split(',')
+        response = r.json()
+        status = response['status']
+        if status == 1:
+            self.device.status = status
+            self.device.save()
+            self.message = 'Could not stop CGS device.'
+            return False
 
-        if len(text)>1:
-            title = text[0]
-            status = text[1]
-            if title == "okay":
-                self.message = status
-                self.device.status = 1
-                self.device.save()
-                self.message = "CGS device has been stopped"
-                return True
-            else:
-                self.message = title + ", " + status
-                self.device.status = 0
-                self.device.save()
-                return False
+        self.message = 'CGS device has been stopped successfully.'
+        self.device.status = 2
+        self.device.save()
 
-        return False
+        return True
 
 
     def read_device(self):
-
-        import requests
 
         ip=self.device.ip_address
         port=self.device.port_address
@@ -249,7 +230,7 @@ class CGSConfiguration(Configuration):
 
         if self.device.status==1:
             return False
-            
+
         return True
 
 
