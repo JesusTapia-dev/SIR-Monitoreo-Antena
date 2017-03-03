@@ -725,6 +725,12 @@ def experiment_start(request, id_exp):
     elif exp.status == 3:
         messages.warning(request, 'Experiment {} already programmed'.format(exp))
 
+    if not (exp.start_time < datetime.now().time() < exp.end_time):
+        exp.status==1
+        exp.save()
+        messages.warning(request, 'Experiment {} is out of time'.format(exp))
+        return redirect(exp.get_absolute_url())
+
     else:
         task = task_start.delay(exp.pk)
         exp.status = task.wait()
