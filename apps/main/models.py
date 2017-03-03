@@ -348,85 +348,73 @@ class Experiment(models.Model):
     def start(self):
         '''
         Configure and start experiments's devices
+        ABS-CGS-DDS-RC-JARS
         '''
 
         result = 2
 
         confs = Configuration.objects.filter(experiment=self).order_by('device__device_type__sequence')
-        for i in range(0,len(confs)): #ABS-CGS-DDS-RC-JARS
-            if i==0:
-                for conf in confs:
-                    if conf.device.device_type.name == 'abs':
-                        conf.start_device()
-                        break
-            if i==1:
-                for conf in confs:
-                    if conf.device.device_type.name == 'cgs':
-                        conf.start_device()
-                        break
-            if i==2:
-                for conf in confs:
-                    if conf.device.device_type.name == 'dds':
-                        conf.start_device()
-                        break
-            if i==3:
-                for conf in confs:
-                    if conf.device.device_type.name == 'rc':
-                        conf.start_device()
-                        break
-            if i==4:
-                for conf in confs:
-                    if conf.device.device_type.name == 'jars':
-                        conf.start_device()
-                        break
-                #if conf.start_device():
-                #    result &= 2
-                #else:
-                #    result &= 0
-            else:
-                result &= 0
-
+        #Only Configured Devices.
+        for conf in confs:
+            if conf.device.device_type.name == 'rc':
+                continue
+            #if conf.device.status in [0,4]:
+            #    result = 0
+            #    return result
+        for conf in confs:
+            if conf.device.device_type.name == 'rc':
+                continue
+            if conf.device.status == 1:
+                pass#conf.write_device()
+            elif conf.device.status == 3:
+                pass#conf.stop_device()
+        #Start Device
+        for conf in confs:
+            if conf.device.device_type.name == 'rc':
+                continue
+            print 'start: '#conf.start_device()
+            print conf
         return result
+
 
     def stop(self):
         '''
         Stop experiments's devices
+        DDS-JARS-RC-CGS-ABS
         '''
 
         result = 1
 
         confs = Configuration.objects.filter(experiment=self).order_by('-device__device_type__sequence')
-        for i in range(0,len(confs)):
-            if i==0:
-                for conf in confs:
-                    if conf.device.device_type.name == 'abs':
-                        conf.stop_device()
-                        break
-            if i==1:
-                for conf in confs:
-                    if conf.device.device_type.name == 'jars':
-                        conf.stop_device()
-                        break
-            if i==2:
-                for conf in confs:
-                    if conf.device.device_type.name == 'dds':
-                        conf.stop_device()
-                        break
-            if i==3:
-                for conf in confs:
-                    if conf.device.device_type.name == 'cgs':
-                        conf.stop_device()
-                        break
-            if i==4:
-                for conf in confs:
-                    if conf.device.device_type.name == 'rc':
-                        conf.stop_device()
-                        break
-                #result &= 1
-            else:
-                result &= 0
+        #Only Running Devices.
+        for conf in confs:
+            if conf.device.device_type.name == 'rc':
+                continue
+            #if conf.device.status in [0,4]:
+            #    result = 0
+            #    return result
+
+        #Stop Device
+        for conf in confs:
+            if conf.device.device_type.name == 'dds':
+                #conf.stop_device()
+                confs=confs.exclude(device__device_type__name='dds')
+                break
+
+        for conf in confs:
+            if conf.device.device_type.name == 'jars':
+                #conf.stop_device()
+                confs=confs.exclude(device__device_type__name='jars')
+                break
+
+        for conf in confs:
+            if conf.device.device_type.name == 'rc':
+                continue
+            print 'start: '#conf.stop_device()
+            print conf
 
         return result
+
 
     def get_status(self):
 
