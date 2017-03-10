@@ -19,7 +19,7 @@ except ImportError:
 from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm, UploadFileForm, DownloadFileForm, OperationForm, NewForm
 from .forms import OperationSearchForm, FilterForm, ChangeIpForm
 
-from .tasks import task_start, task_stop
+from .tasks import task_start, task_stop, task_status
 
 from apps.rc.forms import RCConfigurationForm, RCLineCode, RCMixConfigurationForm
 from apps.dds.forms import DDSConfigurationForm
@@ -737,10 +737,12 @@ def experiment_start(request, id_exp):
     else:
         task = task_start.delay(exp.pk)
         exp.status = task.wait()
+
         if exp.status==0:
             messages.error(request, 'Experiment {} not start'.format(exp))
         if exp.status==2:
             messages.success(request, 'Experiment {} started'.format(exp))
+            task_status.delay(exp.pk) #background get_status function
         exp.save()
 
     return redirect(exp.get_absolute_url())
@@ -756,7 +758,7 @@ def experiment_stop(request, id_exp):
         return redirect(exp.get_absolute_url())
 
     exp.get_status()
-        
+
     if exp.status == 2:
         task = task_stop.delay(exp.pk)
         exp.status = task.wait()
