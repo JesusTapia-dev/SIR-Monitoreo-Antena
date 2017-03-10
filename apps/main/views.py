@@ -28,7 +28,7 @@ from apps.cgs.forms import CGSConfigurationForm
 from apps.abs.forms import ABSConfigurationForm
 from apps.usrp.forms import USRPConfigurationForm
 
-from .models import Campaign, Experiment, Device, Configuration, Location, RunningExperiment
+from .models import Campaign, Experiment, Device, Configuration, Location, RunningExperiment, DEV_STATES
 from apps.cgs.models import CGSConfiguration
 from apps.jars.models import JARSConfiguration, EXPERIMENT_TYPE
 from apps.usrp.models import USRPConfiguration
@@ -543,7 +543,7 @@ def experiments(request):
 def experiment(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
-    experiment.get_status()
+    #experiment.get_status()
     configurations = Configuration.objects.filter(experiment=experiment, type=0)
 
     kwargs = {}
@@ -719,18 +719,21 @@ def experiment_start(request, id_exp):
 
     exp = get_object_or_404(Experiment, pk=id_exp)
 
-    if exp.status == 2:
-        messages.warning(request, 'Experiment {} already running'.format(exp))
-
-    elif exp.status == 3:
-        messages.warning(request, 'Experiment {} already programmed'.format(exp))
-
-    if not (exp.start_time < datetime.now().time() < exp.end_time):
-        exp.status==1
-        exp.save()
-        messages.warning(request, 'Experiment {} is out of time'.format(exp))
+    confs = Configuration.objects.filter(experiment=exp, type=0)
+    if not confs:
+        messages.error(request, 'Experiment not running. No Device Configurations detected.')
         return redirect(exp.get_absolute_url())
 
+    for conf in confs:
+        conf.status_device()
+        if conf.device.status != 2:
+            messages.error(request, 'Experiment not running. Configuration {} state: '.format(conf) + DEV_STATES[conf.device.status][1])
+            return redirect(exp.get_absolute_url())
+
+    exp.get_status()
+
+    if exp.status == 2:
+        messages.warning(request, 'Experiment {} already running'.format(exp))
     else:
         task = task_start.delay(exp.pk)
         exp.status = task.wait()
@@ -738,8 +741,7 @@ def experiment_start(request, id_exp):
             messages.error(request, 'Experiment {} not start'.format(exp))
         if exp.status==2:
             messages.success(request, 'Experiment {} started'.format(exp))
-
-    exp.save()
+        exp.save()
 
     return redirect(exp.get_absolute_url())
 
@@ -748,7 +750,13 @@ def experiment_start(request, id_exp):
 def experiment_stop(request, id_exp):
 
     exp = get_object_or_404(Experiment, pk=id_exp)
+    confs = Configuration.objects.filter(experiment=exp, type=0)
+    if not confs:
+        messages.error(request, 'No Device Configurations detected.')
+        return redirect(exp.get_absolute_url())
 
+    exp.get_status()
+        
     if exp.status == 2:
         task = task_stop.delay(exp.pk)
         exp.status = task.wait()
