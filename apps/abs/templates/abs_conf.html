@@ -165,6 +165,10 @@
 
 </style>
 
+{% if status_request %}
+    <img id="loading" src="{% static 'images/loader.gif' %}">
+{% endif %}
+
 
 {% if beams %}
 
@@ -536,6 +540,10 @@ $(document).ready(function() {
   {% endif %}
 
 {% endfor %}
+
+{% if status_request %}
+    setTimeout("location.href = '{% url 'url_abs_conf' dev_conf.id %}'",53000);
+{% endif %}
 
 });
 </script>

@@ -52,3 +52,12 @@ def task_change_beam(id_conf):
 
 
     return 2
+
+
+@task(name='status_absdevice')
+def status_absdevice(id_conf):
+
+    abs_conf = Configuration.objects.get(pk=id_conf)
+    abs_conf.absmodule_status()
+
+    return

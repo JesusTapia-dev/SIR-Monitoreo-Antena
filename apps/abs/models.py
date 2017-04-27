@@ -251,6 +251,7 @@ class ABSConfiguration(Configuration):
 
         return parameters
 
+
     def dict_to_parms(self, parameters):
 
         self.name = parameters['name']
@@ -594,6 +595,8 @@ class ABSConfiguration(Configuration):
         self.module_messages = json.dumps(module_messages)
         self.save()
 
+        print 'Termino (='
+
         return
 
 
@@ -615,12 +618,17 @@ class ABSConfiguration(Configuration):
         This function returns the status of all abs-modules as one.
         If at least one module is connected, its answer is "1"
         """
-        self.absmodule_status()
+        #self.absmodule_status()
+        send_task('status_absdevice', [self.id],)
         connected_modules = self.connected_modules()
         if connected_modules>0:
             self.message = 'ABS modules Status have been updated.'
             return 1
+        else:
+            self.device.status=0
+
         self.message = 'No ABS module is connected.'
+        self.save()
         return 0
 
 
@@ -1039,6 +1047,9 @@ class ABSConfiguration(Configuration):
         return reverse('url_import_abs_conf', args=[str(self.id)])
 
 
+    def get_absolute_url_status(self):
+        return reverse('url_status_abs_conf', args=[str(self.id)])
+        
 
 
 class ABSBeam(models.Model):

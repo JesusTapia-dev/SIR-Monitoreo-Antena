@@ -120,7 +120,7 @@ def get_values_from_form(form_data):
 
 
 
-def abs_conf(request, id_conf):
+def abs_conf(request, id_conf, status_request=None):
 
     conf           = get_object_or_404(ABSConfiguration, pk=id_conf)
     beams          = ABSBeam.objects.filter(abs_conf=conf)
@@ -172,12 +172,22 @@ def abs_conf(request, id_conf):
     kwargs['color_status']   = color_status
     kwargs['module_messages'] = module_messages
 
-    #kwargs['only_stop'] = True
+    #if conf.device.status in [0,1]:
+    if conf.connected_modules() == 0:
+        messages.error(request, 'No ABS module is connected.')#conf.message)
+    else:
+        messages.success(request, 'ABS modules are connected.')#conf.message)
 
     ###### SIDEBAR ######
     kwargs.update(sidebar(conf=conf))
 
+    if status_request:
+        conf.status_device()
+        kwargs['status_request'] = True
+        return render(request, 'abs_conf.html', kwargs)
+
     return render(request, 'abs_conf.html', kwargs)
+
 
 def abs_conf_edit(request, id_conf):
 
