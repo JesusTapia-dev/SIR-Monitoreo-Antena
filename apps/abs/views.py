@@ -174,7 +174,9 @@ def abs_conf(request, id_conf, status_request=None):
 
     #if conf.device.status in [0,1]:
     if conf.connected_modules() == 0:
+        conf.device.status = 0
         messages.error(request, 'No ABS module is connected.')#conf.message)
+        conf.device.save()
     else:
         messages.success(request, 'ABS modules are connected.')#conf.message)
 
