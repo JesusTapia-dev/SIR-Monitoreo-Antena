@@ -1,4 +1,4 @@
-Django
+Django==1.10.1
 django-bootstrap3
 mysqlclient
 django-polymorphic
