@@ -1,5 +1,6 @@
 from django.db import models
 from apps.main.models import Configuration
+from apps.main.utils import Params
 # Create your models here.
 
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -69,51 +70,6 @@ class DDSConfiguration(Configuration):
 
         return True
 
-    def parms_to_dict(self):
-
-        parameters = {}
-
-        parameters['device_id'] = self.device.id
-        parameters['device_type']      = self.device.device_type.name
-
-        parameters['clock'] = float(self.clock)
-        parameters['multiplier'] = int(self.multiplier)
-
-        parameters['frequencyA'] = int(self.frequencyA)
-        parameters['frequencyA_Mhz'] = float(self.frequencyA_Mhz)
-
-        parameters['phaseA'] = data.phase_to_binary(self.phaseA_degrees)
-        parameters['phaseA_degrees'] = float(self.phaseA_degrees)
-
-        parameters['modulation'] = int(self.modulation)
-        parameters['amplitude_enabled'] = bool(self.amplitude_enabled)
-
-        if self.frequencyB:
-            parameters['frequencyB'] = int(self.frequencyB)
-            parameters['frequencyB_Mhz'] = float(self.frequencyB_Mhz)
-        else:
-            parameters['frequencyB'] = 0
-            parameters['frequencyB_Mhz'] = 0
-
-        if self.phaseB_degrees:
-            parameters['phaseB_degrees'] = float(self.phaseB_degrees)
-            parameters['phaseB'] = data.phase_to_binary(self.phaseB_degrees)
-        else:
-            parameters['phaseB_degrees'] = 0
-            parameters['phaseB'] = 0
-
-        if self.amplitudeI:
-            parameters['amplitudeI'] = int(self.amplitudeI)
-        else:
-            parameters['amplitudeI'] = 0
-
-        if self.amplitudeQ:
-            parameters['amplitudeQ'] = int(self.amplitudeQ)
-        else:
-            parameters['amplitudeQ'] = 0
-
-        return parameters
-
     def parms_to_text(self):
 
         my_dict = self.parms_to_dict()
@@ -121,36 +77,6 @@ class DDSConfiguration(Configuration):
         text = data.dict_to_text(my_dict)
 
         return text
-
-    def dict_to_parms(self, parameters):
-
-        self.clock = parameters['clock']
-        self.multiplier = parameters['multiplier']
-        self.frequencyA = parameters['frequencyA']
-        self.frequencyB = parameters['frequencyB']
-        self.frequencyA_Mhz = parameters['frequencyA_Mhz']
-        self.frequencyB_Mhz = parameters['frequencyB_Mhz']
-        self.phaseA_degrees = parameters['phaseA_degrees']
-        self.phaseB_degrees = parameters['phaseB_degrees']
-        self.modulation = parameters['modulation']
-        self.amplitude_enabled = parameters['amplitude_enabled']
-
-    def import_from_file(self, fp):
-
-        import os, json
-
-        parms = {}
-
-        path, ext = os.path.splitext(fp.name)
-
-        if ext == '.json':
-            parms = json.load(fp)
-
-        if ext == '.dds':
-            lines = fp.readlines()
-            parms = data.text_to_dict(lines)
-
-        return parms
 
     def status_device(self):
 
