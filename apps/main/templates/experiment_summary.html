@@ -17,6 +17,7 @@
 {% for key in experiment_keys %}
 <tr><th>{{key|title}}</th><td>{{experiment|attr:key}}</td></tr>
 {% endfor %}
+<tr><th>Lambda (m)</th><td>{{radar_lambda}}</td></tr>
 </table>
 
 
@@ -26,33 +27,34 @@
         <h4 class="panel-title"><b> {{configuration}}</b></h4>
         <br>
     </div>
-	
-	{% if configuration.device.device_type.name == 'dds' %}	
-		<table class="table table-bordered">			
+
+	{% if configuration.device.device_type.name == 'dds' %}
+		<table class="table table-bordered">
 			<tr><th>Frequency A (Mhz)</th><td>{{configuration.frequencyA_Mhz}}</td></tr>
-			<tr><th>Multiplier</th><td>{{configuration.multiplier}}</td></tr>			
+			<tr><th>Multiplier</th><td>{{configuration.multiplier}}</td></tr>
 		</table>
 	{% endif %}
 
-	{% if configuration.device.device_type.name == 'rc' %}		
+  {% if configuration.device.device_type.name == 'rc' %}
 
 		<table class="table table-bordered">
 			<!--<h4 class="panel-title">  </h4>-->
 			<tr><th>NTXs</th><td>{{configuration.ntx}}</td></tr>
 			<tr><th>IPP(km)</th><td>{{configuration.ipp}}</td></tr>
-									
+			<tr><th>DC</th><td>{{duty_cycle}}%</td></tr>
+
 			{% for tx_line in configuration.tx_lines %}
 			    <tr><th colspan="2">{{tx_line.name}}</th></tr>
 			    <tr><th>Width(km)</th><td>{{tx_line.width}}</td></tr>
-			    <tr><th>Taus</th><td>{{tx_line.taus}}</td></tr>				
-                <tr><th>codes</th><td>{{tx_line.codes}}</td></tr>
-                <tr><th>Sample Windows</th><td>{{tx_line.windows}}</td></tr>
+			    <tr><th>Taus</th><td>{{tx_line.taus}}</td></tr>
+          <tr><th>codes</th><td>{{tx_line.codes}}</td></tr>
+          <tr><th>Sample Windows</th><td>{{tx_line.windows}}</td></tr>
 			{% endfor %}
-			
+
 		</table>
 	{% endif %}
 
-	{% if configuration.device.device_type.name == 'jars' %}
+  {% if configuration.device.device_type.name == 'jars' %}
 
 		<table class="table table-bordered">
 			<!--<h4 class="panel-title"> JARS </h4>-->
@@ -67,7 +69,11 @@
 			<tr><th>Acq Prof</th><td>{{configuration.acq_profiles}}</td></tr>
 			<tr><th>Prof x Block</th><td>{{configuration.profiles_block}}</td></tr>
 			<tr><th>Block x File</th><td>{{ configuration.raw_data_blocks }}</td></tr>
-			<tr><th>Rate (MB/h)</th><td>{{ rate }}</td></tr>
+			<tr><th>Time per Block (s)</th><td>{{ time_per_block }}</td></tr>
+			<tr><th>Acqtime (s)</th><td>{{ acqtime }}</td></tr>
+			<tr><th>Rate </th><td>{{ rate_bh }} || {{ rate_gh }}</td></tr>
+			<tr><th>Va (m/s)</th><td>{{ va }}</td></tr>
+			<tr><th>Vrange (m/s)</th><td>{{ vrange }}</td></tr>
 		</table>
 	{% endif %}
 

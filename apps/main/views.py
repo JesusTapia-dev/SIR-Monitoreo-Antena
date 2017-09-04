@@ -698,8 +698,6 @@ def experiment_import(request, id_exp):
 @user_passes_test(lambda u:u.is_staff)
 def experiment_start(request, id_exp):
 
-    def experiment_start(request, id_exp):
-
     exp = get_object_or_404(Experiment, pk=id_exp)
 
     if exp.status == 2:

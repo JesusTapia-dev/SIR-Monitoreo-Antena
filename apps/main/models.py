@@ -288,7 +288,7 @@ class Campaign(models.Model):
 
         return self
 
-        def get_experiments_by_radar(self, radar=None):
+    def get_experiments_by_radar(self, radar=None):
 
         ret = []
         if radar:
@@ -330,6 +330,7 @@ class Experiment(models.Model):
     template = models.BooleanField(default=False)
     name = models.CharField(max_length=40, default='', unique=True)
     location = models.ForeignKey('Location', null=True, blank=True, on_delete=models.CASCADE)
+    freq = models.FloatField(verbose_name='Operating Freq. (MHz)', validators=[MinValueValidator(1), MaxValueValidator(10000)], default=49.9200)
     start_time = models.TimeField(default='00:00:00')
     end_time = models.TimeField(default='23:59:59')
     status = models.PositiveSmallIntegerField(default=4, choices=EXP_STATES)
@@ -657,7 +658,8 @@ class Configuration(PolymorphicModel):
 
         self.save()
 
-     def export_to_file(self, format="json"):
+
+    def export_to_file(self, format="json"):
 
         content_type = ''
 
@@ -683,7 +685,7 @@ class Configuration(PolymorphicModel):
 
         return fields
 
-     def import_from_file(self, fp):
+    def import_from_file(self, fp):
 
         parms = {}
 
