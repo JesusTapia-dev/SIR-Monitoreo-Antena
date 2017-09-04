@@ -479,7 +479,7 @@ def campaign_export(request, id_camp):
 
     response = HttpResponse(content_type=content_type)
     response['Content-Disposition'] = 'attachment; filename="%s"' %filename
-    response.write(content)
+    response.write(json.dumps(content, indent=2))
 
     return response
 
@@ -496,17 +496,9 @@ def campaign_import(request, id_camp):
         file_form = UploadFileForm(request.POST, request.FILES)
 
         if file_form.is_valid():
-
-            parms = campaign.import_from_file(request.FILES['file'])
-
-            if parms:
-                parms['name'] = parms['campaign']
-
-                new_camp = campaign.dict_to_parms(parms, CONF_MODELS)
-
-                messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
-
-                return redirect(new_camp.get_absolute_url_edit())
+            new_camp = campaign.dict_to_parms(json.load(request.FILES['file']), CONF_MODELS)
+            messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
+            return redirect(new_camp.get_absolute_url_edit())
 
         messages.error(request, "Could not import parameters from file")
 
@@ -543,12 +535,12 @@ def experiments(request):
 def experiment(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
-    #experiment.get_status()
+
     configurations = Configuration.objects.filter(experiment=experiment, type=0)
 
     kwargs = {}
 
-    kwargs['experiment_keys'] = ['radar_system', 'name', 'start_time', 'end_time']
+    kwargs['experiment_keys'] = ['template', 'radar_system', 'name', 'freq', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
 
     kwargs['configuration_keys'] = ['name', 'device__ip_address', 'device__port_address', 'device__status']
@@ -581,7 +573,7 @@ def experiment_new(request, id_camp=None):
                 kwargs['configuration_keys'] = ['name', 'device__name', 'device__ip_address', 'device__port_address']
                 exp=Experiment.objects.get(pk=request.GET['template'])
                 form = ExperimentForm(instance=exp,
-                                      initial={'name': '{} [{:%Y/%m/%d}]'.format(exp.name, datetime.now()),
+                                      initial={'name': '{}_{:%y%m%d}'.format(exp.name, datetime.now()),
                                                'template': False})
         elif 'blank' in request.GET:
             kwargs['button'] = 'Create'
@@ -668,7 +660,7 @@ def experiment_export(request, id_exp):
 
     response = HttpResponse(content_type=content_type)
     response['Content-Disposition'] = 'attachment; filename="%s"' %filename
-    response.write(content)
+    response.write(json.dumps(content, indent=2))
 
     return response
 
@@ -686,20 +678,9 @@ def experiment_import(request, id_exp):
         file_form = UploadFileForm(request.POST, request.FILES)
 
         if file_form.is_valid():
-
-            parms = experiment.import_from_file(request.FILES['file'])
-
-            if parms:
-
-                new_exp = experiment.dict_to_parms(parms, CONF_MODELS)
-
-                if new_exp.__class__.__name__=='dict':
-                    messages.error(request, new_exp['Error'] )
-                    return redirect(experiment.get_absolute_url_import())
-
-                messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
-
-                return redirect(new_exp.get_absolute_url_edit())
+            new_exp = experiment.dict_to_parms(json.load(request.FILES['file']), CONF_MODELS)
+            messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
+            return redirect(new_exp.get_absolute_url_edit())
 
         messages.error(request, "Could not import parameters from file")
 
@@ -717,32 +698,19 @@ def experiment_import(request, id_exp):
 @user_passes_test(lambda u:u.is_staff)
 def experiment_start(request, id_exp):
 
+    def experiment_start(request, id_exp):
+
     exp = get_object_or_404(Experiment, pk=id_exp)
 
-    confs = Configuration.objects.filter(experiment=exp, type=0)
-    if not confs:
-        messages.error(request, 'Experiment not running. No Device Configurations detected.')
-        return redirect(exp.get_absolute_url())
-
-    for conf in confs:
-        conf.status_device()
-        if conf.device.status != 2:
-            messages.error(request, 'Experiment not running. Configuration {} state: '.format(conf) + DEV_STATES[conf.device.status][1])
-            return redirect(exp.get_absolute_url())
-
-    exp.get_status()
-
     if exp.status == 2:
-        messages.warning(request, 'Experiment {} already running'.format(exp))
+        messages.warning(request, 'Experiment {} already runnnig'.format(exp))
     else:
-        task = task_start.delay(exp.pk)
-        exp.status = task.wait()
-
+        exp.status = exp.start()
         if exp.status==0:
             messages.error(request, 'Experiment {} not start'.format(exp))
         if exp.status==2:
             messages.success(request, 'Experiment {} started'.format(exp))
-            task_status.delay(exp.pk) #background get_status function
+
         exp.save()
 
     return redirect(exp.get_absolute_url())
@@ -752,20 +720,22 @@ def experiment_start(request, id_exp):
 def experiment_stop(request, id_exp):
 
     exp = get_object_or_404(Experiment, pk=id_exp)
-    confs = Configuration.objects.filter(experiment=exp, type=0)
-    if not confs:
-        messages.error(request, 'No Device Configurations detected.')
-        return redirect(exp.get_absolute_url())
-
-    exp.get_status()
 
     if exp.status == 2:
-        task = task_stop.delay(exp.pk)
-        exp.status = task.wait()
-        messages.warning(request, 'Experiment {} stopped'.format(exp))
+        exp.status = exp.stop()
         exp.save()
+        messages.success(request, 'Experiment {} stopped'.format(exp))
     else:
         messages.error(request, 'Experiment {} not running'.format(exp))
+
+    return redirect(exp.get_absolute_url())
+
+
+def experiment_status(request, id_exp):
+
+    exp = get_object_or_404(Experiment, pk=id_exp)
+
+    exp.get_status()
 
     return redirect(exp.get_absolute_url())
 
@@ -882,7 +852,7 @@ def experiment_summary(request, id_exp):
 
     kwargs = {}
 
-    kwargs['experiment_keys'] = ['radar_system', 'name', 'start_time', 'end_time']
+    kwargs['experiment_keys'] = ['radar_system', 'name', 'freq', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
 
     kwargs['configurations'] = []
@@ -892,8 +862,15 @@ def experiment_summary(request, id_exp):
 
     kwargs['button'] = 'Verify Parameters'
 
+    c_vel        = 3.0*(10**8)     #m/s
+    ope_freq     = experiment.freq*(10**6) #1/s
+    radar_lambda = c_vel/ope_freq  #m
+    kwargs['radar_lambda'] = radar_lambda
+
     jars_conf = False
     rc_conf   = False
+    code_id = 0
+    tx_line = {}
 
     for configuration in configurations:
 
@@ -907,6 +884,9 @@ def experiment_summary(request, id_exp):
             configuration.tx_lines = []
 
             for tx_line in lines:
+                if tx_line.get_name()[-1] == 'A':
+                    txa_line = tx_line
+                    txa_params = json.loads(txa_line.params)
                 line = {'name':tx_line.get_name()}
                 tx_params = json.loads(tx_line.params)
                 line['width'] = tx_params['pulse_width']
@@ -922,6 +902,7 @@ def experiment_summary(request, id_exp):
 
                 for code_line in configuration.get_lines(line_type__name='codes'):
                     code_params = json.loads(code_line.params)
+                    code_id     = code_params['code']
                     if tx_line.pk==int(code_params['TX_ref']):
                         line['codes'] = '{}:{}'.format(RCLineCode.objects.get(pk=code_params['code']),
                                                        '-'.join(code_params['codes']))
@@ -930,11 +911,15 @@ def experiment_summary(request, id_exp):
                     win_params = json.loads(windows_line.params)
                     if tx_line.pk==int(win_params['TX_ref']):
                         windows = ''
+                        nsa = win_params['params'][0]['number_of_samples']
                         for i, params in enumerate(win_params['params']):
                             windows += 'W{}: Ho={first_height} km DH={resolution} km NSA={number_of_samples}<br>'.format(i, **params)
                         line['windows'] = mark_safe(windows)
 
                 configuration.tx_lines.append(line)
+
+                if txa_line:
+                    kwargs['duty_cycle'] = float(txa_params['pulse_width'])/ipp*100
 
         #-------------------- JARS -----------------------:
         if configuration.device.device_type.name == 'jars':
@@ -946,34 +931,71 @@ def experiment_summary(request, id_exp):
             filter_parms        = configuration.filter_parms
             filter_parms        = ast.literal_eval(filter_parms)
             spectral_number     = configuration.spectral_number
+            acq_profiles        = configuration.acq_profiles
+            cohe_integr         = configuration.cohe_integr
+            profiles_block      = configuration.profiles_block
 
+            if filter_parms.__class__.__name__=='str':
+                filter_parms = eval(filter_parms)
 
         kwargs['configurations'].append(configuration)
 
 
         #------ RC & JARS ------:
-        ipp = 937.5 #
-        nsa = 200#
-        dh = 1.5             #
-        channels_number = 5 #
-
         if rc_conf and jars_conf:
-            if exp_type  == 0: #Short
-                bytes    = 2
-                b        = nsa*2*bytes*channels_number
-            else:              #Float
-                bytes    = 4
-                channels = channels_number + spectral_number
-                b        = nsa*2*bytes*fftpoints*channels
+            #RC filter values:
 
-            ipps           = (ipp*pow(10,-6))/0.15
-            GB             = 1048576.0*1024.0
-            Hour           = 3600
-            rate           = b/ipps
-            rate           = rate *(1/GB)*(Hour)
-            kwargs['rate'] = str(rate)+" GB/h"
+            if exp_type  == 0: #Short
+                bytes_    = 2
+                b        = nsa*2*bytes_*channels_number
+            else:              #Float
+                bytes_    = 4
+                channels = channels_number + spectral_number
+                b        = nsa*2*bytes_*fftpoints*channels
+
+            codes_num = 7
+            if code_id == 2:
+                codes_num = 7
+            elif code_id ==  12:
+                codes_num = 15
+
+            #Jars filter values:
+            try:
+                clock      = eval(filter_parms['clock'])
+                filter_2   = eval(filter_parms['filter_2'])
+                filter_5   = eval(filter_parms['filter_5'])
+                filter_fir = eval(filter_parms['filter_fir'])
+            except:
+                clock      = float(filter_parms['clock'])
+                filter_2   = int(filter_parms['filter_2'])
+                filter_5   = int(filter_parms['filter_5'])
+                filter_fir = int(filter_parms['filter_fir'])
+            Fs_MHz     = clock/(filter_2*filter_5*filter_fir)
+
+            #Jars values:
+            IPP_units  = ipp/0.15*Fs_MHz
+            IPP_us     = IPP_units / Fs_MHz
+            IPP_s      = IPP_units / (Fs_MHz * (10**6))
+            Ts         = 1/(Fs_MHz*(10**6))
+
+            #Values
+            Va                       = radar_lambda/(4*Ts*cohe_integr)
+            rate_bh                  = ((nsa-codes_num)*channels_number*2*bytes_/IPP_us)*(36*(10**8)/cohe_integr)
+            rate_gh                  = rate_bh/(1024*1024*1024)
+            kwargs['rate_bh']        = str(rate_bh) + " (Bytes/h)"
+            kwargs['rate_gh']        = str(rate_gh)+" (GBytes/h)"
+            kwargs['va']             = Va
+            kwargs['time_per_block'] = IPP_s * profiles_block * cohe_integr
+            kwargs['acqtime']        = IPP_s * acq_profiles
+            kwargs['vrange']         = 3/(2*IPP_s*cohe_integr)
+
         else:
-            kwargs['rate'] = ''
+            kwargs['rate_bh']        = ''
+            kwargs['rate_gh']        = ''
+            kwargs['va']             = ''
+            kwargs['time_per_block'] = ''
+            kwargs['acqtime']        = ''
+            kwargs['vrange']         = ''
 
     ###### SIDEBAR ######
     kwargs.update(sidebar(experiment=experiment))
@@ -985,7 +1007,7 @@ def experiment_summary(request, id_exp):
 def experiment_verify(request, id_exp):
 
     experiment      = get_object_or_404(Experiment, pk=id_exp)
-    experiment_data = json.loads(experiment.parms_to_dict())
+    experiment_data = experiment.parms_to_dict()
     configurations  = Configuration.objects.filter(experiment=experiment, type=0)
 
     kwargs = {}
@@ -1012,14 +1034,14 @@ def experiment_verify(request, id_exp):
             jars_conf = True
             jars = configuration
             kwargs['jars_conf']    = jars_conf
-            filter_parms           = configuration.filter_parms
+            filter_parms           = jars.filter_parms
             filter_parms           = ast.literal_eval(filter_parms)
             kwargs['filter_parms'] = filter_parms
             #--Sampling Frequency
-            clock          = filter_parms['clock']
-            filter_2       = filter_parms['filter_2']
-            filter_5       = filter_parms['filter_5']
-            filter_fir     = filter_parms['filter_fir']
+            clock          = eval(filter_parms['clock'])
+            filter_2       = eval(filter_parms['filter_2'])
+            filter_5       = eval(filter_parms['filter_5'])
+            filter_fir     = eval(filter_parms['filter_fir'])
             samp_freq_jars = clock/filter_2/filter_5/filter_fir
 
             kwargs['samp_freq_jars'] = samp_freq_jars
@@ -1055,15 +1077,15 @@ def experiment_verify(request, id_exp):
     #------------Validation------------:
     #Clock
     if dds_conf and rc_conf and jars_conf:
-        if float(filter_parms['clock']) != float(rc_parms['clock_in']) and float(rc_parms['clock_in']) != float(dds_parms['clock']):
+        if float(filter_parms['clock']) != float(rc_parms['configurations']['byId'][str(rc.pk)]['clock_in']) and float(rc_parms['configurations']['byId'][str(rc.pk)]['clock_in']) != float(dds_parms['configurations']['byId'][str(dds.pk)]['clock']):
             messages.warning(request, "Devices don't have the same clock.")
     elif rc_conf and jars_conf:
-        if float(filter_parms['clock']) != float(rc_parms['clock_in']):
+        if float(filter_parms['clock']) != float(rc_parms['configurations']['byId'][str(rc.pk)]['clock_in']):
             messages.warning(request, "Devices don't have the same clock.")
     elif rc_conf and dds_conf:
-        if float(rc_parms['clock_in']) != float(dds_parms['clock']):
+        if float(rc_parms['configurations']['byId'][str(rc.pk)]['clock_in']) != float(dds_parms['configurations']['byId'][str(dds.pk)]['clock']):
             messages.warning(request, "Devices don't have the same clock.")
-        if float(samp_freq_rc) != float(dds_parms['frequencyA']):
+        if float(samp_freq_rc) != float(dds_parms['configurations']['byId'][str(dds.pk)]['frequencyA']):
             messages.warning(request, "Devices don't have the same Frequency A.")
 
 
@@ -1228,7 +1250,7 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
                     id_dev = conf.device.pk
                     DevConfForm = CONF_FORMS[conf.device.device_type.name]
                     form = DevConfForm(instance=conf,
-                                       initial={'name': '{} [{:%Y/%m/%d}]'.format(conf.name, datetime.now()),
+                                       initial={'name': '{}_{:%y%m%d}'.format(conf.name, datetime.now()),
                                                 'template': False,
                                                 'experiment':id_exp})
             elif 'blank' in request.GET:
@@ -1251,6 +1273,15 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
                 lines = RCLine.objects.filter(rc_configuration=request.GET['template'])
                 for line in lines:
                     line.clone(rc_configuration=conf)
+
+                new_lines = conf.get_lines()
+                for line in new_lines:
+                    line_params = json.loads(line.params)
+                    if 'TX_ref' in line_params:
+                        ref_line = RCLine.objects.get(pk=line_params['TX_ref'])
+                        line_params['TX_ref'] = ['{}'.format(l.pk) for l in new_lines if l.get_name()==ref_line.get_name()][0]
+                        line.params = json.dumps(line_params)
+                        line.save()
 
             if conf.device.device_type.name=='jars':
                 conf.add_parms_to_filter()
@@ -1342,6 +1373,19 @@ def dev_conf_status(request, id_conf):
 
 
 @user_passes_test(lambda u:u.is_staff)
+def dev_conf_reset(request, id_conf):
+
+    conf = get_object_or_404(Configuration, pk=id_conf)
+
+    if conf.reset_device():
+        messages.success(request, conf.message)
+    else:
+        messages.error(request, conf.message)
+
+    return redirect(conf.get_absolute_url())
+
+
+@user_passes_test(lambda u:u.is_staff)
 def dev_conf_write(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1409,10 +1453,11 @@ def dev_conf_import(request, id_conf):
 
         if file_form.is_valid():
 
-            parms = conf.import_from_file(request.FILES['file'])
+            data = conf.import_from_file(request.FILES['file'])
+            parms = Params(data=data).get_conf(dtype=conf.device.device_type.name)
 
             if parms:
-                messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
+
                 form = DevConfForm(initial=parms, instance=conf)
 
                 kwargs = {}
@@ -1426,6 +1471,8 @@ def dev_conf_import(request, id_conf):
 
                 ###### SIDEBAR ######
                 kwargs.update(sidebar(conf=conf))
+
+                messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
 
                 return render(request, '%s_conf_edit.html' % conf.device.device_type.name, kwargs)
 

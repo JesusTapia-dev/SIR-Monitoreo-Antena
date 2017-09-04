@@ -1,7 +1,6 @@
 from django import forms
 from django.utils.safestring import mark_safe
-from .models import Device, Experiment, Campaign, Location
-from apps.main.models import Configuration
+from apps.main.models import Device, Experiment, Campaign, Location, Configuration
 from django.template.defaultfilters import default
 
 FILE_FORMAT = (
@@ -80,6 +79,12 @@ class ExperimentForm(forms.ModelForm):
         self.fields['start_time'].widget = TimepickerWidget(self.fields['start_time'].widget.attrs)
         self.fields['end_time'].widget = TimepickerWidget(self.fields['end_time'].widget.attrs)
 
+    def save(self):
+        exp = super(ExperimentForm, self).save()
+        exp.name = exp.name.replace(' ', '')
+        exp.save()
+        return exp
+
     class Meta:
         model = Experiment
         exclude = ['status']
@@ -105,10 +110,6 @@ class ConfigurationForm(forms.ModelForm):
     class Meta:
         model = Configuration
         exclude = ['type', 'created_date', 'programmed_date', 'parameters']
-
-#class DeviceTypeForm(forms.Form):
-#    device_type = forms.ChoiceField(choices=add_empty_choice(DeviceType.objects.all().order_by('name').values_list('id', 'name')))
-
 
 class UploadFileForm(forms.Form):
 
@@ -184,9 +185,9 @@ class FilterForm(forms.Form):
                 self.fields[field] = forms.CharField(required=False)
 
 class ChangeIpForm(forms.Form):
-    
+
     ip_address = forms.GenericIPAddressField()
     mask = forms.GenericIPAddressField(initial='255.255.255.0')
     gateway = forms.GenericIPAddressField(initial='0.0.0.0')
-    
+    dns = forms.GenericIPAddressField(initial='0.0.0.0')
     

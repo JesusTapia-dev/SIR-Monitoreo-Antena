@@ -1,30 +1,54 @@
 
+import os
+import json
 import requests
+import time
 from datetime import datetime
-from django.template.base import kwarg_re
 
 try:
     from polymorphic.models import PolymorphicModel
 except:
     from polymorphic import PolymorphicModel
 
+from django.template.base import kwarg_re
 from django.db import models
 from django.core.urlresolvers import reverse
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.shortcuts import get_object_or_404
 
+from apps.main.utils import Params
+from apps.rc.utils import RCFile
 from devices.dds import api as dds_api
+from devices.dds import data as dds_data
 
-EXP_STATES = (
-                 (0,'Error'),                 #RED
-                 (1,'Configured'),            #BLUE
-                 (2,'Running'),               #GREEN
-                 (3,'Scheduled'),             #YELLOW
-                 (4,'Not Configured'),        #WHITE
+
+DEV_PORTS = {
+                'rc'    : 2000,
+                'dds'   : 2000,
+                'jars'  : 2000,
+                'usrp'  : 2000,
+                'cgs'   : 8080,
+                'abs'   : 8080
+            }
+
+RADAR_STATES = (
+                 (0, 'No connected'),
+                 (1, 'Connected'),
+                 (2, 'Configured'),
+                 (3, 'Running'),
+                 (4, 'Scheduled'),
              )
 
-CONF_TYPES = (
-                 (0, 'Active'),
-                 (1, 'Historical'),
+EXPERIMENT_TYPE = (
+                   (0, 'RAW_DATA'),
+                   (1, 'PDATA'),
+                   )
+
+DECODE_TYPE = (
+             (0, 'None'),
+             (1, 'TimeDomain'),
+             (2, 'FreqDomain'),
+             (3, 'InvFreqDomain'),
              )
 
 DEV_STATES = (
@@ -45,23 +69,18 @@ DEV_TYPES = (
                 ('abs', 'Automatic Beam Switching'),
             )
 
-DEV_PORTS = {
-                'rc'    : 2000,
-                'dds'   : 2000,
-                'jars'  : 2000,
-                'usrp'  : 2000,
-                'cgs'   : 8080,
-                'abs'   : 8080
-            }
-
-RADAR_STATES = (
-                 (0, 'No connected'),
-                 (1, 'Connected'),
-                 (2, 'Configured'),
-                 (3, 'Running'),
-                 (4, 'Scheduled'),
+EXP_STATES = (
+                 (0,'Error'),                 #RED
+                 (1,'Configured'),            #BLUE
+                 (2,'Running'),               #GREEN
+                 (3,'Scheduled'),             #YELLOW
+                 (4,'Not Configured'),        #WHITE
              )
 
+CONF_TYPES = (
+                 (0, 'Active'),
+                 (1, 'Historical'),
+             )
 
 class Location(models.Model):
 
@@ -136,7 +155,7 @@ class Device(models.Model):
 
         return reverse('url_device', args=[str(self.id)])
 
-    def change_ip(self, ip_address, mask, gateway, **kwargs):
+    def change_ip(self, ip_address, mask, gateway, dns, **kwargs):
 
         if self.device_type.name=='dds':
             try:
@@ -157,11 +176,22 @@ class Device(models.Model):
                 return False
 
         elif self.device_type.name=='rc':
-            payload = {'ip': ip_address,
-                       'dns': kwargs.get('dns', '8.8.8.8'),
-                       'gateway': gateway,
-                       'subnet': mask}
-            req = requests.post(self.url('changeip'), data=payload)
+            headers = {'content-type': "application/json",
+                       'cache-control': "no-cache"}
+
+            ip = [int(x) for x in ip_address.split('.')]
+            dns = [int(x) for x in dns.split('.')]
+            gateway = [int(x) for x in gateway.split('.')]
+            subnet = [int(x) for x in mask.split('.')]
+
+            payload = {
+                "ip": ip,
+                "dns": dns,
+                "gateway": gateway,
+                "subnet": subnet
+                }
+
+            req = requests.post(self.url('changeip'), data=json.dumps(payload), headers=headers)
             try:
                 answer = req.json()
                 if answer['changeip']=='ok':
@@ -199,78 +229,66 @@ class Campaign(models.Model):
         else:
             return u'{}'.format(self.name)
 
+    def jsonify(self):
+
+        data = {}
+
+        ignored = ('template')
+
+        for field in self._meta.fields:
+            if field.name in ignored:
+                continue
+            data[field.name] = field.value_from_object(self)
+
+        data['start_date'] = data['start_date'].strftime('%Y-%m-%d')
+        data['end_date'] = data['end_date'].strftime('%Y-%m-%d')
+
+        return data
+
     def parms_to_dict(self):
 
-        import json
+        params = Params()
+        params.add(self.jsonify(), 'campaigns')
 
-        parameters = {}
-        exp_parameters = {}
-        experiments = Experiment.objects.filter(campaign = self)
+        for exp in Experiment.objects.filter(campaign = self):
+            params.add(exp.jsonify(), 'experiments')
+            configurations = Configuration.objects.filter(experiment=exp, type=0)
 
-        i=1
-        for experiment in experiments:
-            exp_parameters['experiment-'+str(i)]  = json.loads(experiment.parms_to_dict())
-            i += 1
+            for conf in configurations:
+                params.add(conf.jsonify(), 'configurations')
+                if conf.device.device_type.name=='rc':
+                    for line in conf.get_lines():
+                        params.add(line.jsonify(), 'lines')
 
-
-        parameters['experiments'] = exp_parameters
-        parameters['end_date']    = self.end_date.strftime("%Y-%m-%d")
-        parameters['start_date']  = self.start_date.strftime("%Y-%m-%d")
-        parameters['campaign']    = self.__str__()
-        parameters['tags']        =self.tags
-
-        parameters = json.dumps(parameters, indent=2, sort_keys=False)
-
-        return parameters
-
-    def import_from_file(self, fp):
-
-        import os, json
-
-        parms = {}
-
-        path, ext = os.path.splitext(fp.name)
-
-        if ext == '.json':
-            parms = json.loads(fp.read())
-
-        return parms
+        return params.data
 
     def dict_to_parms(self, parms, CONF_MODELS):
 
         experiments = Experiment.objects.filter(campaign = self)
-        configurations = Configuration.objects.filter(experiment = experiments)
-
-        if configurations:
-            for configuration in configurations:
-                configuration.delete()
 
         if experiments:
             for experiment in experiments:
                 experiment.delete()
 
-        for parms_exp in parms['experiments']:
-            location = Location.objects.get(name = parms['experiments'][parms_exp]['radar'])
-            new_exp = Experiment(
-                                 name        = parms['experiments'][parms_exp]['experiment'],
-                                 location    = location,
-                                 start_time  = parms['experiments'][parms_exp]['start_time'],
-                                 end_time    = parms['experiments'][parms_exp]['end_time'],
-                                 )
-            new_exp.save()
-            new_exp.dict_to_parms(parms['experiments'][parms_exp],CONF_MODELS)
-            new_exp.save()
+        for id_exp in parms['experiments']['allIds']:
+            exp_parms = parms['experiments']['byId'][id_exp]
+            dum = (datetime.now() - datetime(1970, 1, 1)).total_seconds()
+            exp = Experiment(name='{}'.format(dum))
+            exp.save()
+            exp.dict_to_parms(parms, CONF_MODELS, id_exp=id_exp)
+            self.experiments.add(exp)
 
-            self.name       = parms['campaign']
-            self.start_date = parms['start_date']
-            self.end_date   = parms['end_date']
-            self.tags       = parms['tags']
-            self.experiments.add(new_exp)
-            self.save()
+        camp_parms = parms['campaigns']['byId'][parms['campaigns']['allIds'][0]]
+
+        self.name = '{}-{}'.format(camp_parms['name'], datetime.now().strftime('%y%m%d'))
+        self.start_date = camp_parms['start_date']
+        self.end_date = camp_parms['end_date']
+        self.tags = camp_parms['tags']
+        self.save()
 
         return self
 
-    def get_experiments_by_radar(self, radar=None):
+        def get_experiments_by_radar(self, radar=None):
 
         ret = []
         if radar:
@@ -326,6 +344,25 @@ class Experiment(models.Model):
         else:
             return u'%s' % (self.name)
 
+    def jsonify(self):
+
+        data = {}
+
+        ignored = ('template')
+
+        for field in self._meta.fields:
+            if field.name in ignored:
+                continue
+            data[field.name] = field.value_from_object(self)
+
+        data['start_time'] = data['start_time'].strftime('%H:%M:%S')
+        data['end_time'] = data['end_time'].strftime('%H:%M:%S')
+        data['location'] = self.location.name
+        data['configurations'] = ['{}'.format(conf.pk) for
+            conf in Configuration.objects.filter(experiment=self)]
+
+        return data
+
     @property
     def radar_system(self):
         return self.location
@@ -353,27 +390,24 @@ class Experiment(models.Model):
 
         result = 2
 
-        confs = Configuration.objects.filter(experiment=self).order_by('device__device_type__sequence')
+        confs = Configuration.objects.filter(experiment=self).filter(type = 0).order_by('-device__device_type__sequence')
         #Only Configured Devices.
         for conf in confs:
-            if conf.device.device_type.name == 'rc':
-                continue
-            #if conf.device.status in [0,4]:
-            #    result = 0
-            #    return result
-        for conf in confs:
-            if conf.device.device_type.name == 'rc':
-                continue
-            if conf.device.status == 1:
-                pass#conf.write_device()
-            elif conf.device.status == 3:
-                pass#conf.stop_device()
-        #Start Device
-        for conf in confs:
-            if conf.device.device_type.name == 'rc':
-                continue
-            print 'start: '#conf.start_device()
-            print conf
+            dev_status = conf.device.status
+            if dev_status in [0,4]:
+                result = 0
+                return result
+            else:
+                if conf.device.device_type.name != 'jars':
+                    conf.write_device()
+                    time.sleep(1)
+                    print conf.device.name+' has started...'
+                else:
+                    conf.stop_device()
+                    conf.write_device()
+                    conf.start_device()
+                    print conf.device.name+' has started...'
+
         return result
 
 
@@ -385,33 +419,22 @@ class Experiment(models.Model):
 
         result = 1
 
-        confs = Configuration.objects.filter(experiment=self).order_by('-device__device_type__sequence')
-        #Only Running Devices.
+        confs = Configuration.objects.filter(experiment=self).filter(type = 0).order_by('device__device_type__sequence')
+
         for conf in confs:
-            if conf.device.device_type.name == 'rc':
-                continue
-            #if conf.device.status in [0,4]:
-            #    result = 0
-            #    return result
+            dev_status = conf.device.status
+            if dev_status in [0,4]:
+                result = 0
+                return result
 
         #Stop Device
+        confs=confs.exclude(device__device_type__name='cgs')
         for conf in confs:
-            if conf.device.device_type.name == 'dds':
-                #conf.stop_device()
-                confs=confs.exclude(device__device_type__name='dds')
-                break
-
-        for conf in confs:
-            if conf.device.device_type.name == 'jars':
-                #conf.stop_device()
-                confs=confs.exclude(device__device_type__name='jars')
-                break
-
-        for conf in confs:
-            if conf.device.device_type.name == 'rc':
-                continue
-            print 'start: '#conf.stop_device()
-            print conf
+            if conf.device.device_type.name != 'rc':
+                conf.stop_device()
+            else:
+                conf.reset_device()
+            print conf.device.name+' has stopped...'
 
         return result
 
@@ -451,79 +474,48 @@ class Experiment(models.Model):
 
     def parms_to_dict(self):
 
-        import json
+        params = Params()
+        params.add(self.jsonify(), 'experiments')
 
-        configurations = Configuration.objects.filter(experiment=self).filter(type=0)
-        conf_parameters = {}
-        parameters={}
+        configurations = Configuration.objects.filter(experiment=self, type=0)
 
-        for configuration in configurations:
-            conf_parameters[configuration.name] = configuration.parms_to_dict()
+        for conf in configurations:
+            params.add(conf.jsonify(), 'configurations')
+            if conf.device.device_type.name=='rc':
+                for line in conf.get_lines():
+                    params.add(line.jsonify(), 'lines')
 
-        parameters['configurations'] = conf_parameters
-        parameters['end_time']       = self.end_time.strftime("%H:%M:%S")
-        parameters['start_time']     = self.start_time.strftime("%H:%M:%S")
-        parameters['radar']          = self.radar_system.name
-        parameters['experiment']     = self.name
-        parameters = json.dumps(parameters, indent=2)
+        return params.data
 
-        return parameters
-
-    def import_from_file(self, fp):
-
-        import os, json
-
-        parms = {}
-
-        path, ext = os.path.splitext(fp.name)
-
-        if ext == '.json':
-            parms = json.loads(fp.read().decode('utf-8'))
-
-        return parms
-
-    def dict_to_parms(self, parms, CONF_MODELS):
+    def dict_to_parms(self, parms, CONF_MODELS, id_exp=None):
 
         configurations = Configuration.objects.filter(experiment=self)
+
+        if id_exp is not None:
+            exp_parms = parms['experiments']['byId'][id_exp]
+        else:
+            exp_parms = parms['experiments']['byId'][parms['experiments']['allIds'][0]]
 
         if configurations:
             for configuration in configurations:
                 configuration.delete()
-        #If device is missing.
-        for configuration in parms['configurations']:
-            try:
-                device = Device.objects.filter(device_type__name=parms['configurations'][configuration]['device_type'])[0]
-            except:
-                return {'Error': 'Device is not in database. Please create new '+str(parms['configurations'][configuration]['device_type'])+ ' device.'}
 
-        for configuration in parms['configurations']:
-            device = Device.objects.filter(device_type__name=parms['configurations'][configuration]['device_type'])[0]
-            if parms['configurations'][configuration]['device_type'] == 'rc':
-                if bool(parms['configurations'][configuration]['mix']) == False:
-                    DevConfModel = CONF_MODELS[parms['configurations'][configuration]['device_type']]
-                    new_conf = DevConfModel(
-                                            experiment = self,
-                                            name       = configuration,
-                                            device     = device,
-                                            )
-                    new_conf.dict_to_parms(parms['configurations'][configuration])
-                    new_conf.save()
-            else:
-                DevConfModel = CONF_MODELS[parms['configurations'][configuration]['device_type']]
-                new_conf = DevConfModel(
-                                        experiment = self,
-                                        name       = configuration,
-                                        device     = device,
-                                        )
-                new_conf.dict_to_parms(parms['configurations'][configuration])
-                new_conf.save()
+        for id_conf in exp_parms['configurations']:
+            conf_parms = parms['configurations']['byId'][id_conf]
+            device = Device.objects.filter(device_type__name=conf_parms['device_type'])[0]
+            model = CONF_MODELS[conf_parms['device_type']]
+            conf = model(
+                experiment = self,
+                device = device,
+                )
+            conf.dict_to_parms(parms, id=id_conf)
 
 
-        location = Location.objects.get(name = parms['radar'])
-        self.name       = parms['experiment']
-        self.location   = location
-        self.start_time = parms['start_time']
-        self.end_time   = parms['end_time']
+        location, created = Location.objects.get_or_create(name=exp_parms['location'])
+        self.name = '{}-{}'.format(exp_parms['name'], datetime.now().strftime('%y%m%d'))
+        self.location = location
+        self.start_time = exp_parms['start_time']
+        self.end_time = exp_parms['end_time']
         self.save()
 
         return self
@@ -581,6 +573,37 @@ class Configuration(PolymorphicModel):
         else:
             return u'{} {}'.format(device, self.name)
 
+    def jsonify(self):
+
+        data = {}
+
+        ignored = ('type', 'polymorphic_ctype', 'configuration_ptr',
+                   'created_date', 'programmed_date', 'template', 'device',
+                   'experiment')
+
+        for field in self._meta.fields:
+            if field.name in ignored:
+                continue
+            data[field.name] = field.value_from_object(self)
+
+        data['device_type'] = self.device.device_type.name
+
+        if self.device.device_type.name == 'rc':
+            data['lines'] = ['{}'.format(line.pk) for line in self.get_lines()]
+            data['delays'] = self.get_delays()
+            data['pulses'] = self.get_pulses()
+
+        elif self.device.device_type.name == 'jars':
+            data['decode_type'] = DECODE_TYPE[self.decode_data][1]
+
+        elif self.device.device_type.name == 'dds':
+            data['frequencyA_Mhz'] = float(data['frequencyA_Mhz'])
+            data['frequencyB_Mhz'] = float(data['frequencyB_Mhz'])
+            data['phaseA'] = dds_data.phase_to_binary(data['phaseA_degrees'])
+            data['phaseB'] = dds_data.phase_to_binary(data['phaseB_degrees'])
+
+        return data
+
     def clone(self, **kwargs):
 
         self.pk = None
@@ -594,12 +617,14 @@ class Configuration(PolymorphicModel):
 
     def parms_to_dict(self):
 
-        parameters = {}
+        params = Params()
+        params.add(self.jsonify(), 'configurations')
 
-        for key in self.__dict__.keys():
-            parameters[key] = getattr(self, key)
+        if self.device.device_type.name=='rc':
+            for line in self.get_lines():
+                params.add(line.jsonify(), 'lines')
 
-        return parameters
+        return params.data
 
     def parms_to_text(self):
 
@@ -611,17 +636,28 @@ class Configuration(PolymorphicModel):
         raise NotImplementedError("This method should be implemented in %s Configuration model" %str(self.device.device_type.name).upper())
 
 
-    def dict_to_parms(self, parameters):
+    def dict_to_parms(self, parameters, id=None):
 
-        if type(parameters) != type({}):
-            return
+        params = Params(parameters)
 
-        for key in parameters.keys():
-            setattr(self, key, parameters[key])
+        if id:
+            data = params.get_conf(id_conf=id)
+        else:
+            data = params.get_conf(dtype=self.device.device_type.name)
 
-    def export_to_file(self, format="json"):
+        if data['device_type']=='rc':
+            self.clean_lines()
+            lines = data.pop('lines', None)
+            for line_id in lines:
+                pass
 
-        import json
+        for key, value in data.items():
+            if key not in ('id', 'device_type'):
+                setattr(self, key, value)
+
+        self.save()
+
+     def export_to_file(self, format="json"):
 
         content_type = ''
 
@@ -632,7 +668,7 @@ class Configuration(PolymorphicModel):
 
         if format == 'binary':
             content_type = 'application/octet-stream'
-            filename = '%s_%s.dat' %(self.device.device_type.name, self.name)
+            filename = '%s_%s.bin' %(self.device.device_type.name, self.name)
             content = self.parms_to_binary()
 
         if not content_type:
@@ -647,9 +683,7 @@ class Configuration(PolymorphicModel):
 
         return fields
 
-    def import_from_file(self, fp):
-
-        import os, json
+     def import_from_file(self, fp):
 
         parms = {}
 
@@ -657,6 +691,13 @@ class Configuration(PolymorphicModel):
 
         if ext == '.json':
             parms = json.load(fp)
+
+        if ext == '.dds':
+            lines = fp.readlines()
+            parms = dds_data.text_to_dict(lines)
+
+        if ext == '.racp':
+            parms = RCFile(fp).to_dict()
 
         return parms
 
