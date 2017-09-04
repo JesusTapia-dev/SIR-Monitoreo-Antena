@@ -24,11 +24,11 @@ def jars_conf(request, id_conf):
     kwargs['dev_conf'] = conf
     kwargs['dev_conf_keys'] = ['name',
                                'cards_number', 'channels_number', 'channels',
-                               'rd_directory', 'pd_directory',
+                               #'rd_directory', 'pd_directory',
                                'data_type',
-                               'acq_profiles', 'profiles_block', 'ftp_interval', 'fftpoints',
-                               'cohe_integr_str',
-                               'incohe_integr', 'cohe_integr', 'filter', 'spectral_number',
+                               'acq_profiles', 'profiles_block', 'raw_data_blocks', 'ftp_interval', 'fftpoints',
+                               'cohe_integr_str', 'decode_data',
+                               'incohe_integr', 'cohe_integr', 'spectral_number',
                                'spectral', 'create_directory', 'include_expname',
                                'save_ch_dc', 'save_data']
 
@@ -65,7 +65,7 @@ def jars_conf_edit(request, id_conf):
 
     kwargs = {}
 
-    kwargs['filter_id'] = conf.filter.id
+    kwargs['filter_id'] = 1
     kwargs['id_dev'] = conf.id
     kwargs['form'] = form
     kwargs['title'] = 'Device Configuration'
@@ -80,16 +80,15 @@ def import_file(request, conf_id):
     if request.method=='POST':
         form = JARSImportForm(request.POST, request.FILES)
         if form.is_valid():
-            try:
-                parms = conf.import_from_file(request.FILES['file_name'])
+            #try:
+            if True:
+                data = conf.import_from_file(request.FILES['file_name'])
+                conf.dict_to_parms(data)
+                messages.success(request, 'Configuration "%s" loaded succesfully' % request.FILES['file_name'])
+                return redirect(conf.get_absolute_url_edit())
 
-                if parms:
-                    conf.update_from_file(parms)
-                    messages.success(request, 'Configuration "%s" loaded succesfully' % request.FILES['file_name'])
-                    return redirect(conf.get_absolute_url_edit())
-
-            except Exception as e:
-                messages.error(request, 'Error parsing file: "%s" - %s' % (request.FILES['file_name'], e))
+            #except Exception as e:
+            #    messages.error(request, 'Error parsing file: "%s" - %s' % (request.FILES['file_name'], e))
 
     else:
         messages.warning(request, 'Your current configuration will be replaced')
@@ -148,7 +147,9 @@ def view_filter(request, conf_id, filter_id):
     filter = get_object_or_404(JARSfilter, pk=filter_id)
 
     filter_parms       = eval(conf.filter_parms)
-    filter.name        = filter_parms['name']
+    if filter_parms.__class__.__name__=='str':
+        filter_parms       = eval(filter_parms)
+    #filter.name        = filter_parms['name']
     filter.clock       = filter_parms['clock']
     filter.mult        = filter_parms['mult']
     filter.fch         = filter_parms['fch']
@@ -156,16 +157,15 @@ def view_filter(request, conf_id, filter_id):
     filter.filter_fir  = filter_parms['filter_fir']
     filter.filter_2    = filter_parms['filter_2']
     filter.filter_5    = filter_parms['filter_5']
-    filter.speed       = filter_parms['speed']
 
     kwargs = {}
     kwargs['conf']          = conf
     kwargs['filter']        = filter
     kwargs['dev_conf']      = filter
-    kwargs['dev_conf_keys'] = ['name', 'clock',
-                               'mult', 'fch', 'fch_decimal',
-                               'filter_fir', 'filter_2',
-                               'filter_5', 'speed']
+    kwargs['dev_conf_keys'] = ['clock', 'mult', #'name',
+                               'fch', 'fch_decimal',
+                               'filter_2', 'filter_5',
+                               'filter_fir']
 
     kwargs['title']         = 'Filter View'
     kwargs['suptitle']      = 'Details'
@@ -188,7 +188,7 @@ def edit_filter(request, conf_id, filter_id):
 
     if request.method=='POST':
         parms = {}
-        parms['name']        = request.POST['name']
+        #parms['name']        = request.POST['name']
         parms['clock']       = request.POST['clock']
         parms['mult']        = request.POST['mult']
         parms['fch']         = request.POST['fch']
@@ -196,7 +196,6 @@ def edit_filter(request, conf_id, filter_id):
         parms['filter_fir'] = request.POST['filter_fir']
         parms['filter_2']   = request.POST['filter_2']
         parms['filter_5']   = request.POST['filter_5']
-        parms['speed']      = request.POST['speed']
 
         conf.filter_parms = parms
         conf.save()

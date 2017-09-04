@@ -1,12 +1,12 @@
+import json
+import requests
+
 from django.db import models
-from apps.main.models import Configuration
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.urlresolvers import reverse
-from devices.jars import api
 
-from apps.rc.models import RCConfiguration
-
-import json
+from apps.main.models import Configuration
+from apps.main.utils import Params
 # Create your models here.
 
 EXPERIMENT_TYPE = (
@@ -19,6 +19,13 @@ DATA_TYPE = (
              (1, 'FLOAT'),
              )
 
+DECODE_TYPE = (
+             (0, 'None'),
+             (1, 'TimeDomain'),
+             (2, 'FreqDomain'),
+             (3, 'InvFreqDomain'),
+             )
+
 class JARSfilter(models.Model):
 
     JARS_NBITS = 32
@@ -26,12 +33,12 @@ class JARSfilter(models.Model):
     name        = models.CharField(max_length=60, unique=True, default='')
     clock       = models.FloatField(verbose_name='Clock In (MHz)',validators=[MinValueValidator(5), MaxValueValidator(75)], null=True, default=60)
     mult        = models.PositiveIntegerField(verbose_name='Multiplier',validators=[MinValueValidator(1), MaxValueValidator(20)], default=5)
-    fch         = models.DecimalField(verbose_name='Frequency (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16, null=True, default=49.9200)
-    fch_decimal = models.BigIntegerField(verbose_name='Frequency (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**JARS_NBITS-1)], null=True, default=721554505)
-    filter_fir  = models.PositiveIntegerField(verbose_name='FIR Filter',validators=[MinValueValidator(1), MaxValueValidator(20)], default = 6)
-    filter_2    = models.PositiveIntegerField(verbose_name='Filter 2',validators=[MinValueValidator(1), MaxValueValidator(20)], default = 10)
-    filter_5    = models.PositiveIntegerField(verbose_name='Filter 5',validators=[MinValueValidator(1), MaxValueValidator(20)], default = 1)
-    speed       = models.PositiveIntegerField(verbose_name='Speed',validators=[MinValueValidator(0), MaxValueValidator(100000)], default = 0)
+    fch         = models.DecimalField(verbose_name='Frequency (MHz)', validators=[MaxValueValidator(150)], max_digits=19, decimal_places=16, null=True, default=49.9200)
+    fch_decimal = models.BigIntegerField(verbose_name='Frequency (Decimal)',validators=[MinValueValidator(-9223372036854775808), MaxValueValidator(2**JARS_NBITS-1)], null=True, default=721554505)
+    filter_2    = models.PositiveIntegerField(verbose_name='Filter 2',validators=[MinValueValidator(2), MaxValueValidator(100)], default = 10)
+    filter_5    = models.PositiveIntegerField(verbose_name='Filter 5',validators=[MinValueValidator(1), MaxValueValidator(100)], default = 1)
+    filter_fir  = models.PositiveIntegerField(verbose_name='FIR Filter',validators=[MinValueValidator(1), MaxValueValidator(100)], default = 6)
+    #speed       = models.PositiveIntegerField(verbose_name='Speed',validators=[MinValueValidator(0), MaxValueValidator(100000)], default = 0)
 
     class Meta:
         db_table = 'jars_filters'
@@ -43,7 +50,7 @@ class JARSfilter(models.Model):
 
         parameters = {}
 
-        parameters['name']        = self.name
+        #parameters['name']        = self.name
         parameters['clock']       = float(self.clock)
         parameters['mult']        = int(self.mult)
         parameters['fch']         = float(self.fch)
@@ -51,13 +58,13 @@ class JARSfilter(models.Model):
         parameters['filter_fir']  = int(self.filter_fir)
         parameters['filter_2']    = int(self.filter_2)
         parameters['filter_5']    = int(self.filter_5)
-        parameters['speed']       = int(self.speed)
+        #parameters['speed']       = int(self.speed)
 
         return parameters
 
     def dict_to_parms(self, parameters):
 
-        self.name        = parameters['name']
+        #self.name        = parameters['name']
         self.clock       = parameters['clock']
         self.mult        = parameters['mult']
         self.fch         = parameters['fch']
@@ -65,7 +72,7 @@ class JARSfilter(models.Model):
         self.filter_fir  = parameters['filter_fir']
         self.filter_2    = parameters['filter_2']
         self.filter_5    = parameters['filter_5']
-        self.speed       = parameters['speed']
+        #self.speed       = parameters['speed']
 
 
 class JARSConfiguration(Configuration):
@@ -81,22 +88,24 @@ class JARSConfiguration(Configuration):
     cards_number     = models.PositiveIntegerField(verbose_name='Number of Cards', validators=[MinValueValidator(1), MaxValueValidator(4)], default = 1)
     channels_number  = models.PositiveIntegerField(verbose_name='Number of Channels', validators=[MinValueValidator(1), MaxValueValidator(8)], default = 5)
     channels         = models.CharField(verbose_name='Channels', max_length=15, default = '1,2,3,4,5')
-    rd_directory     = models.CharField(verbose_name='Raw Data Directory', max_length=200, default='', blank=True, null=True)
-    pd_directory     = models.CharField(verbose_name='Process Data Directory', max_length=200, default='', blank=True, null=True)
-    #raw_data_blocks  = models.PositiveIntegerField(verbose_name='Raw Data Blocks', validators=[MaxValueValidator(5000)], default=120)
+    #rd_directory     = models.CharField(verbose_name='Raw Data Directory', max_length=200, default='', blank=True, null=True)
+    #pd_directory     = models.CharField(verbose_name='Process Data Directory', max_length=200, default='', blank=True, null=True)
     data_type        = models.PositiveIntegerField(verbose_name='Data Type', choices=DATA_TYPE, default=0)
-    acq_profiles     = models.PositiveIntegerField(verbose_name='Acquired Profiles', validators=[MaxValueValidator(5000)], default=400)
-    profiles_block   = models.PositiveIntegerField(verbose_name='Profiles Per Block', validators=[MaxValueValidator(5000)], default=400)
+    raw_data_blocks  = models.PositiveIntegerField(verbose_name='Raw Data Blocks', validators=[MaxValueValidator(5000)], default=60)
+    profiles_block   = models.PositiveIntegerField(verbose_name='Profiles Per Block', default=400)
+    acq_profiles     = models.PositiveIntegerField(verbose_name='Acquired Profiles', default=400)
     ftp_interval     = models.PositiveIntegerField(verbose_name='FTP Interval', default=60)
     fftpoints        = models.PositiveIntegerField(verbose_name='FFT Points',default=16)
     cohe_integr_str  = models.PositiveIntegerField(verbose_name='Coh. Int. Stride',validators=[MinValueValidator(1)], default=30)
     cohe_integr      = models.PositiveIntegerField(verbose_name='Coherent Integrations',validators=[MinValueValidator(1)], default=30)
     incohe_integr    = models.PositiveIntegerField(verbose_name='Incoherent Integrations',validators=[MinValueValidator(1)], default=30)
+    decode_data      = models.PositiveIntegerField(verbose_name='Decode Data', choices=DECODE_TYPE, default=0)
+    post_coh_int     = models.BooleanField(verbose_name='Post Coherent Integration', default=False)
     filter           = models.ForeignKey(JARSfilter, on_delete=models.CASCADE, null=True)
     spectral_number  = models.PositiveIntegerField(verbose_name='# Spectral Combinations',validators=[MinValueValidator(1)], default=1)
     spectral         = models.CharField(verbose_name='Combinations', max_length=5000, default = '[0, 0],')
     create_directory = models.BooleanField(verbose_name='Create Directory Per Day', default=True)
-    include_expname  = models.BooleanField(verbose_name='Experiment Name in Directory', default=True)
+    include_expname  = models.BooleanField(verbose_name='Experiment Name in Directory', default=False)
     #acq_link         = models.BooleanField(verbose_name='Acquisition Link', default=True)
     #view_raw_data    = models.BooleanField(verbose_name='View Raw Data', default=True)
     save_ch_dc       = models.BooleanField(verbose_name='Save Channels DC', default=True)
@@ -106,99 +115,59 @@ class JARSConfiguration(Configuration):
     class Meta:
         db_table = 'jars_configurations'
 
-    def parms_to_dict(self):
-
-        parameters = {}
-
-        parameters['device_id']        = self.device.id
-        parameters['name']             = self.name
-        parameters['device_type']      = self.device.device_type.name
-        #parameters['rc']               = self.rc.name
-        parameters['exp_type']         = self.exp_type
-        parameters['exptype']          = EXPERIMENT_TYPE[self.exp_type][1]
-        parameters['cards_number']     = self.cards_number
-        parameters['channels_number']  = self.channels_number
-        parameters['channels']         = self.channels
-        parameters['rd_directory']     = self.rd_directory
-        #parameters['raw_data_blocks']  = self.raw_data_blocks
-        parameters['data_type']        = self.data_type
-        parameters['cohe_integr_str']  = self.cohe_integr_str
-        parameters['acq_profiles']     = self.acq_profiles
-        parameters['profiles_block']   = self.profiles_block
-        parameters['ftp_interval']     = self.ftp_interval
-        parameters['fftpoints']        = self.fftpoints
-        parameters['cohe_integr']      = self.cohe_integr
-        #parameters['incohe_integr']    = self.incohe_integr
-        parameters['filter']           = self.filter.name
-        parameters['filter_parms']     = self.filter_parms
-        #parameters['spectral_number']  = self.spectral_number
-        #parameters['spectral']         = self.spectral
-        parameters['create_directory'] = bool(self.create_directory)
-        parameters['include_expname']  = bool(self.include_expname)
-        #parameters['acq_link']         = bool(self.acq_link)
-        #parameters['view_raw_data']    = bool(self.view_raw_data)
-        parameters['save_ch_dc']       = bool(self.save_ch_dc)
-        parameters['save_data']        = bool(self.save_data)
-
-        if parameters['exptype'] == 'PDATA':
-            parameters['incohe_integr']    = self.incohe_integr
-            parameters['spectral_number']  = self.spectral_number
-            parameters['spectral']         = self.spectral
-            parameters['pd_directory']     = self.pd_directory
-
-        return parameters
-
     def add_parms_to_filter(self):
         self.filter_parms = self.filter.parms_to_dict()
         self.save()
 
-    def dict_to_parms(self, parameters):
+    def dict_to_parms(self, params, id=None):
 
-        self.name           = parameters['name']
-        self.device.id       = int(parameters['device_id'])
+        if id is not None:
+            data = Params(params).get_conf(id_conf=id)
+        else:
+            data = Params(params).get_conf(dtype='jars')
 
-        self.exp_type        = int(parameters['exp_type'])
-        if parameters['exptype'] == 'PDATA':
-            self.incohe_integr   = parameters['incohe_integr']
-            self.spectral_number = parameters['spectral_number']
-            self.spectral        = parameters['spectral']
-            self.pd_directory    = parameters['pd_directory']
+        self.name           = data['name']
+        self.exp_type        = data['exp_type']
+        #if data['exp_type'] in (1, '1') :
+        self.incohe_integr   = data['incohe_integr']
+        self.spectral_number = data['spectral_number']
+        self.spectral        = data['spectral']
+        #self.pd_directory    = data['pd_directory']
+        self.cards_number    = data['cards_number']
+        self.channels_number = data['channels_number']
+        self.channels        = data['channels']
+        #self.rd_directory    = data['rd_directory']
+        #self.raw_data_blocks = data['raw_data_blocks']
+        self.data_type       = data['data_type']
+        self.cohe_integr_str = data['cohe_integr_str']
+        self.acq_profiles    = data['acq_profiles']
+        self.profiles_block  = data['profiles_block']
+        self.ftp_interval    = data['ftp_interval']
+        self.fftpoints       = data['fftpoints']
+        self.cohe_integr     = data['cohe_integr']
+        self.filter_parms = json.dumps(data['filter_parms'])
+        self.create_directory = data['create_directory']
+        self.include_expname  = data['include_expname']
+        #self.acq_link         = data['acq_link']
+        #self.view_raw_data    = data['view_raw_data']
+        self.save_ch_dc       = data['save_ch_dc']
+        self.save_data        = data['save_data']
+        self.save()
 
-        self.cards_number    = int(parameters['cards_number'])
-        self.channels_number = int(parameters['channels_number'])
-        self.channels        = parameters['channels']
-        self.rd_directory    = parameters['rd_directory']
-        #self.raw_data_blocks = parameters['raw_data_blocks']
-        self.data_type       = parameters['data_type']
-        self.cohe_integr_str = parameters['cohe_integr_str']
-        self.acq_profiles    = parameters['acq_profiles']
-        self.profiles_block  = parameters['profiles_block']
-        self.ftp_interval    = parameters['ftp_interval']
-        self.fftpoints       = parameters['fftpoints']
-        self.cohe_integr     = parameters['cohe_integr']
+    def request(self, cmd, method='get', **kwargs):
 
-        filter_name       = parameters['filter']
-        self.filter    = JARSfilter.objects.get(name=filter_name)
-        self.add_parms_to_filter()
-        self.filter_parms = parameters['filter_parms']
-
-        self.create_directory = bool(parameters['create_directory'])
-        self.include_expname  = bool(parameters['include_expname'])
-        #self.acq_link         = bool(parameters['acq_link'])
-        #self.view_raw_data    = bool(parameters['view_raw_data'])
-        self.save_ch_dc       = bool(parameters['save_ch_dc'])
-        self.save_data        = bool(parameters['save_data'])
+        req = getattr(requests, method)(self.device.url(cmd), **kwargs)
+        payload = req.json()
+        return payload
 
     def status_device(self):
 
         try:
-            answer = api.status(self.device.ip_address,self.device.port_address)
-            self.device.status = int(answer[0])
+            payload = self.request('status',
+                                   params={'name': self.experiment.name})
+            self.device.status = payload['status']
             self.device.save()
-            self.message = answer[2:]
-            if self.device.status == 0:
-                return False
-
+            self.message = payload['message']
         except Exception as e:
             self.device.status = 0
             self.message = str(e)
@@ -210,13 +179,10 @@ class JARSConfiguration(Configuration):
     def stop_device(self):
 
         try:
-            answer = api.stop(self.device.ip_address,self.device.port_address)
-            self.device.status = int(answer[0])
-            self.message = answer[2:]
+            payload = self.request('stop', 'post')
+            self.device.status = payload['status']
             self.device.save()
-            if self.device.status == 0 or self.device.status == 1:
-                return False
-
+            self.message = payload['message']
         except Exception as e:
             self.device.status = 0
             self.message = str(e)
@@ -228,26 +194,15 @@ class JARSConfiguration(Configuration):
     def read_device(self):
 
         try:
-            answer = api.read(self.device.ip_address,self.device.port_address)
-            self.device.status = int(answer[0])
-            self.device.save()
-            self.message = answer[2:]
-            if self.device.status == 1:
-                return False
-            data = json.loads(answer[2:])
-            parms = data['configurations']['jars']
-
+            payload = self.request('read', params={'name': self.experiment.name})
+            self.message = 'Configuration loaded'
         except:
             self.device.status = 0
             self.device.save()
             self.message = 'Could not read JARS configuration.'
             return False
 
-        #self.dict_to_parms(parms)
-        self.message = 'Current JARS configuration was read successfully.'
-        self.device.save()
-        return parms
-
+        return payload
 
     def write_device(self):
 
@@ -256,21 +211,35 @@ class JARSConfiguration(Configuration):
             return False
 
         data = self.experiment.parms_to_dict()
-        data = json.loads(data)
-        data['configurations']['dds']         =''
-        data['configurations']['cgs']         =''
-        data['configurations']['rc']['pulses']=''
-        data['configurations']['rc']['delays']=''
-        json_data = json.dumps(data)
 
+        for key in data['configurations']['allIds']:
+            if data['configurations']['byId'][key]['device_type'] in ('dds', 'cgs'):
+                data['configurations']['allIds'].remove(key)
+                data['configurations']['byId'].pop(key)
+            elif data['configurations']['byId'][key]['device_type'] == 'jars':
+                data['configurations']['byId'][key] = self.parms_to_dict()['configurations']['byId'][str(self.pk)]
+            elif data['configurations']['byId'][key]['device_type'] == 'rc':
+                    data['configurations']['byId'][key]['pulses'] = ''
+                    data['configurations']['byId'][key]['delays'] = ''
+        rc_ids = [pk for pk in data['configurations']['allIds'] if data['configurations']['byId'][pk]['device_type']=='rc']
+        mix_ids = [pk for pk in rc_ids if data['configurations']['byId'][pk]['mix']]
+        if mix_ids:
+            params = data['configurations']['byId'][mix_ids[0]]['parameters']
+            rc = data['configurations']['byId'][params.split('-')[0].split('|')[0]]
+            rc['mix'] = True
+            data['configurations']['byId'][rc['id']] = rc
+        elif len(rc_ids)==0:
+            self.message = 'Missing RC configuration'
+            return False
+
+        json_data = json.dumps(data)
+        print json_data
         try:
-            answer = api.configure(self.device.ip_address,self.device.port_address,json_data)
-            self.device.status = int(answer[0])
-            self.message = answer[2:]
+            payload = self.request('write', 'post', json=json_data)
+            self.device.status = payload['status']
+            self.message = payload['message']
             self.device.save()
             if self.device.status == 1:
-                return False
-            if self.device.status == 3:
                 return False
 
         except Exception as e:
@@ -280,14 +249,14 @@ class JARSConfiguration(Configuration):
             return False
 
         return True
-
 
     def start_device(self):
 
         try:
-            answer = api.start(self.device.ip_address,self.device.port_address)
-            self.device.status = int(answer[0])
-            self.message = answer[2:]
+            payload = self.request('start', 'post',
+                                   json={'name': self.experiment.name})
+            self.device.status = payload['status']
+            self.message = payload['message']
             self.device.save()
             if self.device.status == 1:
                 return False
@@ -300,21 +269,10 @@ class JARSConfiguration(Configuration):
 
         return True
 
+    def update_from_file(self, filename):
 
-    def echo(self):
-
-        answer = api.echo(self.device.ip_address,self.device.port_address,'(=')
-        #print answer
-        self.device.status = int(answer[0])
-        self.message = answer[2:]
-
-        self.device.save()
-
-        return #self.device.status
-
-    def update_from_file(self, parameters):
-
-        self.dict_to_parms(parameters)
+        f = JARSFile(filename)
+        self.dict_to_parms(f.data)
         self.save()
 
     def get_absolute_url_import(self):
