@@ -86,13 +86,13 @@ class RCConfigurationForm(forms.ModelForm):
         if 'clock_divider' in form_data:
             if form_data['clock_divider']<1:
                 self.add_error('clock_divider', 'Invalid Value')
-            else:
-                if form_data['ipp']*(20./3*(form_data['clock_in']/form_data['clock_divider']))%10!=0:
-                    self.add_error('ipp', 'Invalid IPP units={}'.format(form_data['ipp']*(20./3*(form_data['clock_in']/form_data['clock_divider']))))
+            #else:
+            #    if form_data['ipp']*(20./3*(form_data['clock_in']/form_data['clock_divider']))%10!=0:
+            #        self.add_error('ipp', 'Invalid IPP units={}'.format(form_data['ipp']*(20./3*(form_data['clock_in']/form_data['clock_divider']))))
 
         return form_data
 
-    def save(self):        
+    def save(self):
         conf = super(RCConfigurationForm, self).save()
         conf.total_units = conf.ipp*conf.ntx*conf.km2unit
         conf.save()

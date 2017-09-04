@@ -1,4 +1,5 @@
 
+
 import ast
 import json
 import requests
@@ -11,11 +12,10 @@ from django.core.urlresolvers import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from apps.main.models import Configuration
+from apps.main.utils import Params
 from devices.rc import api
-from .utils import RCFile
-from django.template.defaultfilters import last
+from apps.rc.utils import RCFile
 
-# Create your models here.
 
 LINE_TYPES = (
     ('none', 'Not used'),
@@ -57,6 +57,18 @@ DAT_CMDS = {
         'CLOCK_DIVIDER' : 8,
             }
 
+MAX_BITS = 8
+
+# Rotate left: 0b1001 --> 0b0011
+rol = lambda val, r_bits: \
+    (val << r_bits%MAX_BITS) & (2**MAX_BITS-1) | \
+    ((val & (2**MAX_BITS-1)) >> (MAX_BITS-(r_bits%MAX_BITS)))
+
+# Rotate right: 0b1001 --> 0b1100
+ror = lambda val, r_bits: \
+    ((val & (2**MAX_BITS-1)) >> r_bits%MAX_BITS) | \
+    (val << (MAX_BITS-(r_bits%MAX_BITS)) & (2**MAX_BITS-1))
+
 
 class RCConfiguration(Configuration):
 
@@ -80,9 +92,6 @@ class RCConfiguration(Configuration):
     def get_absolute_url_plot(self):
         return reverse('url_plot_rc_pulses', args=[str(self.id)])
 
-    def get_absolute_url_import(self):
-        return reverse('url_import_rc_conf', args=[str(self.id)])
-
     @property
     def ipp_unit(self):
 
@@ -101,6 +110,8 @@ class RCConfiguration(Configuration):
     def clone(self, **kwargs):
 
         lines = self.get_lines()
+        print 'LINES'
+        print lines
         self.pk = None
         self.id = None
         for attr, value in kwargs.items():
@@ -109,6 +120,15 @@ class RCConfiguration(Configuration):
 
         for line in lines:
             line.clone(rc_configuration=self)
+
+        new_lines = self.get_lines()
+        for line in new_lines:
+            line_params = json.loads(line.params)
+            if 'TX_ref' in line_params:
+                ref_line = RCLine.objects.get(pk=line_params['TX_ref'])
+                line_params['TX_ref'] = ['{}'.format(l.pk) for l in new_lines if l.get_name()==ref_line.get_name()][0]
+                line.params = json.dumps(line_params)
+                line.save()
 
         return self
 
@@ -131,49 +151,21 @@ class RCConfiguration(Configuration):
             line.params = '{}'
             line.save()
 
-    def parms_to_dict(self):
+    def dict_to_parms(self, params, id=None):
         '''
         '''
 
-        ignored = ('parameters', 'type','polymorphic_ctype', 'configuration_ptr',
-                   'created_date', 'programmed_date', 'mix')
-
-        data = {}
-        for field in self._meta.fields:
-            if field.name in ignored:
-                continue
-            data[field.name] = '{}'.format(field.value_from_object(self))
-
-        data['device_id'] = data.pop('device')
-        data['device_type'] = self.device.device_type.name
-        data['lines'] = []
-        data['mix'] = self.mix
-
-        for line in self.get_lines():
-            line_data = json.loads(line.params)
-            if 'TX_ref' in line_data and line_data['TX_ref'] not in (0, '0'):
-                line_data['TX_ref'] = RCLine.objects.get(pk=line_data['TX_ref']).get_name()
-            if 'code' in line_data:
-                line_data['code'] = RCLineCode.objects.get(pk=line_data['code']).name
-            line_data['type'] = line.line_type.name
-            line_data['name'] = line.get_name()
-            data['lines'].append(line_data)
-
-        data['delays'] = self.get_delays()
-        data['pulses'] = self.get_pulses()
-
-        return data
-
-    def dict_to_parms(self, data):
-        '''
-        '''
+        if id:
+            data = Params(params).get_conf(id_conf=id)
+        else:
+            data = Params(params).get_conf(dtype='rc')
 
         self.name = data['name']
-        self.ipp = float(data['ipp'])
-        self.ntx = int(data['ntx'])
-        self.clock_in = float(data['clock_in'])
-        self.clock_divider = int(data['clock_divider'])
-        self.clock = float(data['clock'])
+        self.ipp = data['ipp']
+        self.ntx = data['ntx']
+        self.clock_in = data['clock_in']
+        self.clock_divider = data['clock_divider']
+        self.clock = data['clock']
         self.time_before = data['time_before']
         self.time_after = data['time_after']
         self.sync = data['sync']
@@ -182,44 +174,44 @@ class RCConfiguration(Configuration):
         self.save()
         self.clean_lines()
 
-        lines = []
         positions = {'tx':0, 'tr':0}
-
-        for i, line_data in enumerate(data['lines']):
-            name = line_data.pop('name', '')
-            line_type = RCLineType.objects.get(name=line_data.pop('type'))
-            if line_type.name=='codes':
-                code = RCLineCode.objects.get(name=line_data['code'])
-                line_data['code'] = code.pk
-            line = RCLine.objects.filter(rc_configuration=self, channel=i)
-            if line:
-                line = line[0]
-                line.line_type = line_type
-                line.params = json.dumps(line_data)
-            else:
-                line = RCLine(rc_configuration=self, line_type=line_type,
-                              params=json.dumps(line_data),
-                              channel=i)
-
-            if line_type.name=='tx':
-                line.position = positions['tx']
+        for i, id in enumerate(data['lines']):
+            line_data = params['lines']['byId'][id]
+            line_type = RCLineType.objects.get(name=line_data['line_type'])
+            if line_type.name == 'codes':
+                code = RCLineCode.objects.get(name=line_data['params']['code'])
+                line_data['params']['code'] = code.pk
+            if line_type.name == 'tx':
+                position = positions['tx']
                 positions['tx'] += 1
-
-            if line_type.name=='tr':
-                line.position = positions['tr']
+            elif line_type.name == 'tr':
+                position = positions['tr']
                 positions['tr'] += 1
+            else:
+                position = 0
+            line, dum = RCLine.objects.update_or_create(
+                rc_configuration=self,
+                channel=i,
+                position=position,
+                defaults={
+                    'line_type': line_type,
+                    'params': json.dumps(line_data['params'])
+                    }
+                )
 
-            line.save()
-            lines.append(line)
-
-        for line, line_data in zip(lines, data['lines']):
-            if 'TX_ref' in line_data:
-                params = json.loads(line.params)
-                if line_data['TX_ref'] in (0, '0'):
-                    params['TX_ref'] = '0'
+        for i, line in enumerate(self.get_lines()):
+            line_params = json.loads(line.params)
+            if 'TX_ref' in line_params:
+                if line_params['TX_ref'] in (0, '0'):
+                    line_params['TX_ref'] = '0'
                 else:
-                    params['TX_ref'] = [l.pk for l in lines if l.line_type.name=='tx' and line_data['TX_ref'] in l.get_name()][0]
-                line.params = json.dumps(params)
+                    ref_id = '{}'.format(line_params['TX_ref'])
+                    ref_line = params['lines']['byId'][ref_id]
+                    line_params['TX_ref'] = RCLine.objects.get(
+                        rc_configuration=self,
+                        params=json.dumps(ref_line['params'])
+                        ).pk
+                line.params = json.dumps(line_params)
                 line.save()
 
 
@@ -239,7 +231,6 @@ class RCConfiguration(Configuration):
 
     def get_pulses(self, binary=True):
 
-
         pulses = [line.pulses_as_points() for line in self.get_lines()]
         tuples = [tup for tups in pulses for tup in tups]
         points = set([x for tup in tuples for x in tup])
@@ -250,7 +241,7 @@ class RCConfiguration(Configuration):
 
         for x in points:
             dum = []
-            for i,tups in enumerate(pulses):
+            for i, tups in enumerate(pulses):
                 ups = [tup[0] for tup in tups]
                 dws = [tup[1] for tup in tups]
                 if x in ups:
@@ -353,16 +344,6 @@ class RCConfiguration(Configuration):
 
         return '\n'.join(['{}'.format(x) for x in data])
 
-
-    def update_from_file(self, filename):
-        '''
-        Update instance from file
-        '''
-
-        f = RCFile(filename)
-        self.dict_to_parms(f.data)
-        self.update_pulses()
-
     def update_pulses(self):
 
         for line in self.get_lines():
@@ -397,7 +378,6 @@ class RCConfiguration(Configuration):
             if n%f==0:
                 ax.text(x, N, '%s' % n, size=10)
             n += 1
-
 
         labels.reverse()
         ax.set_yticks(range(len(labels)))
@@ -472,26 +452,32 @@ class RCConfiguration(Configuration):
 
         return components(plot, CDN)
 
+    def request(self, cmd, method='get', **kwargs):
+
+        req = getattr(requests, method)(self.device.url(cmd), **kwargs)
+        payload = req.json()
+
+        return payload
+
     def status_device(self):
 
         try:
             self.device.status = 0
-            req = requests.get(self.device.url('status'))
-            payload = req.json()
-            if payload['status']=='enabled':
+            payload = self.request('status')
+            if payload['status']=='enable':
                 self.device.status = 3
-            elif payload['status']=='disabled':
+            elif payload['status']=='disable':
                 self.device.status = 2
             else:
                 self.device.status = 1
                 self.device.save()
-                self.message = payload['status']
+                self.message = 'RC status: {}'.format(payload['status'])
                 return False
         except Exception as e:
             if 'No route to host' not in str(e):
                 self.device.status = 4
             self.device.save()
-            self.message = str(e)
+            self.message = 'RC status: {}'.format(str(e))
             return False
 
         self.device.save()
@@ -500,16 +486,17 @@ class RCConfiguration(Configuration):
     def reset_device(self):
 
         try:
-            req = requests.post(self.device.url('reset'))
-            payload = req.json()
+            payload = self.request('reset', 'post')
             if payload['reset']=='ok':
-                self.message = 'RC restarted'
+                self.message = 'RC restarted OK'
+                self.device.status = 2
+                self.device.save()
             else:
-                self.message = 'RC restart not ok'
+                self.message = 'RC restart fail'
                 self.device.status = 4
                 self.device.save()
         except Exception as e:
-            self.message = str(e)
+            self.message = 'RC reset: {}'.format(str(e))
             return False
 
         return True
@@ -517,14 +504,12 @@ class RCConfiguration(Configuration):
     def stop_device(self):
 
         try:
-            req = requests.post(self.device.url('stop'))
-            payload = req.json()
+            payload = self.request('stop', 'post')
+            self.message = 'RC stop: {}'.format(payload['stop'])
             if payload['stop']=='ok':
                 self.device.status = 2
                 self.device.save()
-                self.message = 'RC stopped'
             else:
-                self.message = 'RC stop not ok'
                 self.device.status = 4
                 self.device.save()
                 return False
@@ -533,7 +518,7 @@ class RCConfiguration(Configuration):
                 self.device.status = 4
             else:
                 self.device.status = 0
-            self.message = str(e)
+            self.message = 'RC stop: {}'.format(str(e))
             self.device.save()
             return False
 
@@ -542,21 +527,19 @@ class RCConfiguration(Configuration):
     def start_device(self):
 
         try:
-            req = requests.post(self.device.url('start'))
-            payload = req.json()
+            payload = self.request('start', 'post')
+            self.message = 'RC start: {}'.format(payload['start'])
             if payload['start']=='ok':
                 self.device.status = 3
                 self.device.save()
-                self.message = 'RC running'
             else:
-                self.message = 'RC start not ok'
                 return False
         except Exception as e:
             if 'No route to host' not in str(e):
                 self.device.status = 4
             else:
                 self.device.status = 0
-            self.message = str(e)
+            self.message = 'RC start: {}'.format(str(e))
             self.device.save()
             return False
 
@@ -587,16 +570,16 @@ class RCConfiguration(Configuration):
         data.extend((129, 1))
 
         try:
-            req = requests.post(self.device.url('write'), data=b64encode(data))
-            payload = req.json()
+            payload = self.request('write', 'post', data=b64encode(data))
+
             if payload['write']=='ok':
-                self.device.status = 2
+                self.device.status = 3
                 self.device.save()
-                self.message = 'RC configured'
+                self.message = 'RC configured and started'
             else:
                 self.device.status = 1
                 self.device.save()
-                self.message = 'RC write not ok'
+                self.message = 'RC write: {}'.format(payload['write'])
                 return False
 
         except Exception as e:
@@ -604,11 +587,15 @@ class RCConfiguration(Configuration):
                 self.device.status = 4
             else:
                 self.device.status = 0
-            self.message = str(e)
+            self.message = 'RC write: {}'.format(str(e))
             self.device.save()
             return False
 
         return True
+
+
+    def get_absolute_url_import(self):
+        return reverse('url_import_rc_conf', args=[str(self.id)])
 
 
 class RCLineCode(models.Model):
@@ -656,9 +643,23 @@ class RCLine(models.Model):
         if self.rc_configuration:
             return u'%s - %s' % (self.rc_configuration, self.get_name())
 
+    def jsonify(self):
+
+        data = {}
+        data['params'] = json.loads(self.params)
+        data['id'] = '{}'.format(self.pk)
+        data['line_type'] = self.line_type.name
+        data['name'] = self.get_name()
+        if data['line_type']=='codes':
+            data['params']['code'] = RCLineCode.objects.get(pk=data['params']['code']).name
+
+        return data
+
+
     def clone(self, **kwargs):
 
         self.pk = None
+        self.id = None
 
         for attr, value in kwargs.items():
             setattr(self, attr, value)
@@ -939,6 +940,9 @@ class RCLine(models.Model):
 
     @staticmethod
     def array_to_points(X):
+
+        if X.size==0:
+            return []
 
         d = X[1:]-X[:-1]
 

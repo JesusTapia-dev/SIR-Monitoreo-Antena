@@ -330,14 +330,14 @@ def import_file(request, conf_id):
         form = RCImportForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-            #if True:
-                conf.update_from_file(request.FILES['file_name'])
+                data = conf.import_from_file(request.FILES['file_name'])
+                conf.dict_to_parms(data)
+                conf.update_pulses()
                 messages.success(request, 'Configuration "%s" loaded succesfully' % request.FILES['file_name'])
                 return redirect(conf.get_absolute_url_edit())
 
             except Exception as e:
-                messages.error(request, 'Error parsing file: "%s" - %s' % (request.FILES['file_name'], e))
-
+                messages.error(request, 'Error parsing file: "%s" - %s' % (request.FILES['file_name'], repr(e)))
     else:
         messages.warning(request, 'Your current configuration will be replaced')
         form = RCImportForm()

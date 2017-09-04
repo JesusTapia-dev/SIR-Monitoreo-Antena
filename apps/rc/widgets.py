@@ -43,7 +43,7 @@ class KmUnitWidget(forms.widgets.TextInput):
         html = '''<div class="col-md-12 col-no-padding">
         <div class="col-md-5 col-no-padding"><input type="{0}" step="any" {1} class="form-control" id="id_{2}" name="{3}" value="{4}"></div>
         <div class="col-md-1 col-no-padding">Km</div>
-        <div class="col-md-5 col-no-padding"><input type="{0}" {1} class="form-control" id="id_{2}_unit" value="{5}"></div>
+        <div class="col-md-5 col-no-padding"><input type="{0}" step="any" {1} class="form-control" id="id_{2}_unit" value="{5}"></div>
         <div class="col-md-1 col-no-padding">Units</div></div><br>'''.format(input_type, disabled, label, name, value, unit)
 
         script = '''<script type="text/javascript">
@@ -92,7 +92,7 @@ class UnitKmWidget(forms.widgets.TextInput):
             label += '_{0}_{1}'.format(attrs['line'].pk, name.split('|')[0])
 
         html = '''<div class="col-md-12 col-no-padding">
-        <div class="col-md-5 col-no-padding"><input type="number" {0} class="form-control" id="id_{1}_unit" name="{2}" value="{3}"></div>
+        <div class="col-md-5 col-no-padding"><input type="number" step="any" {0} class="form-control" id="id_{1}_unit" name="{2}" value="{3}"></div>
         <div class="col-md-1 col-no-padding">Units</div>
         <div class="col-md-5 col-no-padding"><input type="number" step="any" {4} class="form-control" id="id_{5}" value="{6}"></div>
         <div class="col-md-1 col-no-padding">Km</div></div>'''.format(disabled, label, name, value, disabled, label, km)
@@ -136,7 +136,7 @@ class KmUnitHzWidget(forms.widgets.TextInput):
         html = '''<div class="col-md-12 col-no-padding">
         <div class="col-md-3 col-no-padding"><input type="number" step="any" {0} class="form-control" id="id_{1}" name="{2}" value="{3}"></div>
         <div class="col-md-1 col-no-padding">Km</div>
-        <div class="col-md-3 col-no-padding"><input type="number" {4} class="form-control" id="id_{1}_unit" value="{5}"></div>
+        <div class="col-md-3 col-no-padding"><input type="number" step="any" {4} class="form-control" id="id_{1}_unit" value="{5}"></div>
         <div class="col-md-1 col-no-padding">Units</div>
         <div class="col-md-3 col-no-padding"><input type="number" step="any" {4} class="form-control" id="id_{1}_hz" value="{6}"></div>
         <div class="col-md-1 col-no-padding">Hz</div>
@@ -188,7 +188,7 @@ class KmUnitDcWidget(forms.widgets.TextInput):
         html = '''<div class="col-md-12 col-no-padding">
         <div class="col-md-3 col-no-padding"><input type="number" step="any" {0} class="form-control" id="id_{1}" name="{2}" value="{3}"></div>
         <div class="col-md-1 col-no-padding">Km</div>
-        <div class="col-md-3 col-no-padding"><input type="number" {4} class="form-control" id="id_{1}_unit" value="{5}"></div>
+        <div class="col-md-3 col-no-padding"><input type="number" step="any" {4} class="form-control" id="id_{1}_unit" value="{5}"></div>
         <div class="col-md-1 col-no-padding">Units</div>
         <div class="col-md-3 col-no-padding"><input type="number" step="any" {4} class="form-control" id="id_{1}_dc" value="{6}"></div>
         <div class="col-md-1 col-no-padding">DC[%]</div>
@@ -231,7 +231,11 @@ class DefaultWidget(forms.widgets.TextInput):
         name = attrs.get('name', label)
         if 'line' in attrs:
             label += '_{0}_{1}'.format(attrs['line'].pk, name.split('|')[0])
-        html = '<div class="col-md-12 col-no-padding"><div class="col-md-5 col-no-padding"><input {0} type="{1}" class="form-control" id="id_{2}" name="{3}" value="{4}"></div></div>'.format(disabled, itype, label, name, value)
+
+        if itype=='number':
+            html = '<div class="col-md-12 col-no-padding"><div class="col-md-5 col-no-padding"><input {0} type="{1}" step="any" class="form-control" id="id_{2}" name="{3}" value="{4}"></div></div>'.format(disabled, itype, label, name, value)
+        else:
+            html = '<div class="col-md-12 col-no-padding"><div class="col-md-5 col-no-padding"><input {0} type="{1}" step="any" class="form-control" id="id_{2}" name="{3}" value="{4}"></div></div>'.format(disabled, itype, label, name, value)
 
         if 'last_height' in label or 'number_of_samples' in label:
             script = '''<script type="text/javascript">
