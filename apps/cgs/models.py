@@ -1,5 +1,6 @@
 from django.db import models
 from apps.main.models import Configuration
+from apps.main.utils import Params
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from .files import read_json_file
@@ -16,58 +17,6 @@ class CGSConfiguration(Configuration):
     def verify_frequencies(self):
 
         return True
-
-
-    def update_from_file(self, fp):
-
-        kwargs = read_json_file(fp)
-
-        if not kwargs:
-            return False
-
-        self.freq0 = kwargs['freq0']
-        self.freq1 = kwargs['freq1']
-        self.freq2 = kwargs['freq2']
-        self.freq3 = kwargs['freq3']
-
-        return True
-
-    def parms_to_dict(self):
-
-        parameters = {}
-
-        parameters['device_id'] = self.device.id
-        parameters['device_type']      = self.device.device_type.name
-
-        if self.freq0 == None or self.freq0 == '':
-            parameters['freq0'] = 0
-        else:
-            parameters['freq0'] = self.freq0
-
-        if self.freq1 == None or self.freq1 == '':
-            parameters['freq1'] = 0
-        else:
-            parameters['freq1'] = self.freq1
-
-        if self.freq2 == None or self.freq2 == '':
-            parameters['freq2'] = 0
-        else:
-            parameters['freq2'] = self.freq2
-
-        if self.freq3 == None or self.freq3 == '':
-            parameters['freq3'] = 0
-        else:
-            parameters['freq3'] = self.freq3
-
-        return parameters
-
-
-    def dict_to_parms(self, parameters):
-
-        self.freq0 = parameters['freq0']
-        self.freq1 = parameters['freq1']
-        self.freq2 = parameters['freq2']
-        self.freq3 = parameters['freq3']
 
 
     def status_device(self):
@@ -201,14 +150,17 @@ class CGSConfiguration(Configuration):
         port=self.device.port_address
 
         #---Frequencies from form
-        frequencies = self.parms_to_dict()
+        parms = self.parms_to_dict()['configurations']
+        for parm in parms['allIds']:
+                byid = parm
+        frequencies = parms['byId'][byid]
         post_data = {}
         for data in frequencies:
             if data in ['freq0','freq1','freq2','freq3']:
                 post_data[data] = frequencies[data]
 
         route = "http://" + str(ip) + ":" + str(port) + "/write/"
-
+        print post_data
         try:
             r = requests.post(route, post_data, timeout=0.7)
         except:
