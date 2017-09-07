@@ -95,7 +95,6 @@ class JARSConfiguration(Configuration):
     incohe_integr    = models.PositiveIntegerField(verbose_name='Incoherent Integrations',validators=[MinValueValidator(1)], default=30)
     decode_data      = models.PositiveIntegerField(verbose_name='Decode Data', choices=DECODE_TYPE, default=0)
     post_coh_int     = models.BooleanField(verbose_name='Post Coherent Integration', default=False)
-    filter           = models.ForeignKey(JARSfilter, on_delete=models.CASCADE, null=True)
     spectral_number  = models.PositiveIntegerField(verbose_name='# Spectral Combinations',validators=[MinValueValidator(1)], default=1)
     spectral         = models.CharField(verbose_name='Combinations', max_length=5000, default = '[0, 0],')
     create_directory = models.BooleanField(verbose_name='Create Directory Per Day', default=True)
@@ -103,14 +102,10 @@ class JARSConfiguration(Configuration):
     #view_raw_data    = models.BooleanField(verbose_name='View Raw Data', default=True)
     save_ch_dc       = models.BooleanField(verbose_name='Save Channels DC', default=True)
     save_data        = models.BooleanField(verbose_name='Save Data', default=True)
-    filter_parms     = models.CharField(max_length=10000, default='{"name": "49_92MHz_clock60MHz_F1KHz_12_25_2", "clock": 60, "mult": 5, "fch": 49.92, "fch_decimal":	721554506, "filter_fir": 2, "filter_2": 12, "filter_5": 25}, "model": "jars.jarsfilter", "pk": 1}')
+    filter_parms     = models.CharField(max_length=10000, default='{"clock": 60, "mult": 5, "fch": 49.92, "fch_decimal":	721554506, "filter_fir": 2, "filter_2": 12, "filter_5": 25}, "model": "jars.jarsfilter", "pk": 1}')
 
     class Meta:
         db_table = 'jars_configurations'
-
-    def add_parms_to_filter(self):
-        self.filter_parms = self.filter.parms_to_dict()
-        self.save()
 
     def filter_resolution(self):
         filter_parms = eval(self.filter_parms)

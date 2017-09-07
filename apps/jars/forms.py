@@ -67,7 +67,7 @@ class JARSfilterForm(forms.ModelForm):
                     jars_filter = JARSfilter.objects.get(pk=kwargs['initial']['filter_id'])  
                     labels = [f.name for f in jars_filter._meta.get_fields()]
                     
-                    for label in ['id', 'jarsconfiguration']:
+                    for label in ['id']:
                         labels.remove(label)
                     for label in labels:
                         self.fields['name'].initial = kwargs['initial']['filter_id']

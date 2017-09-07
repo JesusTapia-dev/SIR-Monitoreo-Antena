@@ -180,9 +180,9 @@ def change_filter(request, conf_id, filter_id=None):
 
     if request.method=='GET':
         if not filter_id:
-            form = JARSfilterForm(initial={'jars_configuration':conf_id, 'filter_id': 0})
+            form = JARSfilterForm(initial={'filter_id': 0})
         else:
-            form = JARSfilterForm(initial={'jars_configuration':conf_id, 'filter_id': filter_id})
+            form = JARSfilterForm(initial={'filter_id': filter_id})
 
     if request.method=='POST':
         form = JARSfilterForm(request.POST)
