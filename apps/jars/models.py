@@ -33,12 +33,11 @@ class JARSfilter(models.Model):
     name        = models.CharField(max_length=60, unique=True, default='')
     clock       = models.FloatField(verbose_name='Clock In (MHz)',validators=[MinValueValidator(5), MaxValueValidator(75)], null=True, default=60)
     mult        = models.PositiveIntegerField(verbose_name='Multiplier',validators=[MinValueValidator(1), MaxValueValidator(20)], default=5)
-    fch         = models.DecimalField(verbose_name='Frequency (MHz)', validators=[MaxValueValidator(150)], max_digits=19, decimal_places=16, null=True, default=49.9200)
+    fch         = models.FloatField(verbose_name='Frequency (MHz)', validators=[MaxValueValidator(150)], null=True, default=49.9200)
     fch_decimal = models.BigIntegerField(verbose_name='Frequency (Decimal)',validators=[MinValueValidator(-9223372036854775808), MaxValueValidator(2**JARS_NBITS-1)], null=True, default=721554505)
     filter_2    = models.PositiveIntegerField(verbose_name='Filter 2',validators=[MinValueValidator(2), MaxValueValidator(100)], default = 10)
     filter_5    = models.PositiveIntegerField(verbose_name='Filter 5',validators=[MinValueValidator(1), MaxValueValidator(100)], default = 1)
     filter_fir  = models.PositiveIntegerField(verbose_name='FIR Filter',validators=[MinValueValidator(1), MaxValueValidator(100)], default = 6)
-    #speed       = models.PositiveIntegerField(verbose_name='Speed',validators=[MinValueValidator(0), MaxValueValidator(100000)], default = 0)
 
     class Meta:
         db_table = 'jars_filters'
@@ -58,7 +57,6 @@ class JARSfilter(models.Model):
         parameters['filter_fir']  = int(self.filter_fir)
         parameters['filter_2']    = int(self.filter_2)
         parameters['filter_5']    = int(self.filter_5)
-        #parameters['speed']       = int(self.speed)
 
         return parameters
 
@@ -72,7 +70,6 @@ class JARSfilter(models.Model):
         self.filter_fir  = parameters['filter_fir']
         self.filter_2    = parameters['filter_2']
         self.filter_5    = parameters['filter_5']
-        #self.speed       = parameters['speed']
 
 
 class JARSConfiguration(Configuration):
@@ -83,13 +80,10 @@ class JARSConfiguration(Configuration):
     BEGIN_ON_START   = True
     REFRESH_RATE     = 1
 
-    #rc               = models.ForeignKey(RCConfiguration, on_delete=models.CASCADE, null=True)
     exp_type         = models.PositiveIntegerField(verbose_name='Experiment Type', choices=EXPERIMENT_TYPE, default=0)
     cards_number     = models.PositiveIntegerField(verbose_name='Number of Cards', validators=[MinValueValidator(1), MaxValueValidator(4)], default = 1)
     channels_number  = models.PositiveIntegerField(verbose_name='Number of Channels', validators=[MinValueValidator(1), MaxValueValidator(8)], default = 5)
     channels         = models.CharField(verbose_name='Channels', max_length=15, default = '1,2,3,4,5')
-    #rd_directory     = models.CharField(verbose_name='Raw Data Directory', max_length=200, default='', blank=True, null=True)
-    #pd_directory     = models.CharField(verbose_name='Process Data Directory', max_length=200, default='', blank=True, null=True)
     data_type        = models.PositiveIntegerField(verbose_name='Data Type', choices=DATA_TYPE, default=0)
     raw_data_blocks  = models.PositiveIntegerField(verbose_name='Raw Data Blocks', validators=[MaxValueValidator(5000)], default=60)
     profiles_block   = models.PositiveIntegerField(verbose_name='Profiles Per Block', default=400)
@@ -106,11 +100,10 @@ class JARSConfiguration(Configuration):
     spectral         = models.CharField(verbose_name='Combinations', max_length=5000, default = '[0, 0],')
     create_directory = models.BooleanField(verbose_name='Create Directory Per Day', default=True)
     include_expname  = models.BooleanField(verbose_name='Experiment Name in Directory', default=False)
-    #acq_link         = models.BooleanField(verbose_name='Acquisition Link', default=True)
     #view_raw_data    = models.BooleanField(verbose_name='View Raw Data', default=True)
     save_ch_dc       = models.BooleanField(verbose_name='Save Channels DC', default=True)
     save_data        = models.BooleanField(verbose_name='Save Data', default=True)
-    filter_parms     = models.CharField(max_length=10000, default='{}')
+    filter_parms     = models.CharField(max_length=10000, default='{"name": "49_92MHz_clock60MHz_F1KHz_12_25_2", "clock": 60, "mult": 5, "fch": 49.92, "fch_decimal":	721554506, "filter_fir": 2, "filter_2": 12, "filter_5": 25}, "model": "jars.jarsfilter", "pk": 1}')
 
     class Meta:
         db_table = 'jars_configurations'
@@ -118,6 +111,19 @@ class JARSConfiguration(Configuration):
     def add_parms_to_filter(self):
         self.filter_parms = self.filter.parms_to_dict()
         self.save()
+
+    def filter_resolution(self):
+        filter_parms = eval(self.filter_parms)
+        if filter_parms.__class__.__name__=='str':
+            filter_parms = eval(filter_parms)
+
+        filter_clock = filter_parms['clock']
+        filter_2 = filter_parms['filter_2']
+        filter_5 = filter_parms['filter_5']
+        filter_fir = filter_parms['filter_fir']
+
+        resolution = round((filter_clock/(filter_2*filter_5*filter_fir)),2)
+        return resolution
 
     def dict_to_parms(self, params, id=None):
 

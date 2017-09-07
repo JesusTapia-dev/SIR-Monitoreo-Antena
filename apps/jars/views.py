@@ -8,16 +8,25 @@ from apps.main.views import sidebar
 
 from .models import JARSConfiguration, JARSfilter
 from .forms import JARSConfigurationForm, JARSfilterForm, JARSImportForm
+
+import json
 # Create your views here.
 
 def jars_conf(request, id_conf):
 
     conf = get_object_or_404(JARSConfiguration, pk=id_conf)
 
-    ip=conf.device.ip_address
-    port=conf.device.port_address
+    filter_parms = eval(conf.filter_parms)
+    if filter_parms.__class__.__name__=='str':
+        filter_parms = eval(filter_parms)
 
     kwargs = {}
+    kwargs['filter'] = filter_parms
+    kwargs['filter_keys']  = ['clock', 'mult', 'fch', 'fch_decimal',
+                                'filter_fir', 'filter_2', 'filter_5']
+    filter_resolution=conf.filter_resolution()
+    kwargs['resolution'] = filter_resolution
+
     kwargs['status'] = conf.device.get_status_display()
 
 
@@ -50,24 +59,36 @@ def jars_conf_edit(request, id_conf):
 
     conf = get_object_or_404(JARSConfiguration, pk=id_conf)
 
+    filter_parms = eval(conf.filter_parms)
+    if filter_parms.__class__.__name__=='str':
+        filter_parms = eval(filter_parms)
+
     if request.method=='GET':
         form = JARSConfigurationForm(instance=conf)
+        filter_form = JARSfilterForm(initial=filter_parms)
 
     if request.method=='POST':
         form = JARSConfigurationForm(request.POST, instance=conf)
+        filter_form = JARSfilterForm(request.POST)
+
+        if filter_form.is_valid():
+            jars_filter = filter_form.cleaned_data
+            try:
+                jars_filter.pop('name')
+            except:
+                pass
 
         if form.is_valid():
             conf = form.save(commit=False)
+            conf.filter_parms = json.dumps(jars_filter)
             conf.save()
             return redirect('url_jars_conf', id_conf=conf.id)
 
-            ##ERRORS
-
     kwargs = {}
 
-    kwargs['filter_id'] = 1
     kwargs['id_dev'] = conf.id
     kwargs['form'] = form
+    kwargs['filter_form'] = filter_form
     kwargs['title'] = 'Device Configuration'
     kwargs['suptitle'] = 'Edit'
     kwargs['button'] = 'Save'
@@ -244,3 +265,29 @@ def new_filter(request, conf_id):
     kwargs['dev_conf'] = conf
 
     return render(request, 'jars_new_filter.html', kwargs)
+
+
+def change_filter(request, conf_id, filter_id=None):
+
+    conf = get_object_or_404(JARSConfiguration, pk=conf_id)
+    
+    if filter_id:
+        if filter_id.__class__.__name__ not in ['int', 'float']:
+            filter_id = eval(filter_id)
+            
+    if filter_id == 0:
+        return redirect('url_change_jars_filter', conf_id=conf.id)
+
+    if request.method=='GET':
+        if not filter_id:
+            form = JARSfilterForm(initial={'jars_configuration':conf_id, 'filter_id': 0})
+        else:
+            form = JARSfilterForm(initial={'jars_configuration':conf_id, 'filter_id': filter_id})
+
+    kwargs = {}
+    kwargs['title'] = 'JARS Configuration'
+    kwargs['suptitle'] = 'Change Filter'
+    kwargs['form'] = form
+    kwargs['conf_id'] = conf.id
+    kwargs['filter_id'] = filter_id
+    return render(request, 'change_jars_filter.html', kwargs)

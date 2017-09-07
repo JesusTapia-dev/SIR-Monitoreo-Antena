@@ -4,6 +4,14 @@ from django import forms
 from apps.main.models import Device, Experiment
 from .models import JARSConfiguration, JARSfilter
 from .widgets import SpectralWidget
+from apps.main.forms import add_empty_choice
+
+def create_choices_from_model(model, filter_id=None):
+
+    #instance = globals()[model]
+    choices = model.objects.all().values_list('pk', 'name')
+    choices = add_empty_choice(choices)
+    return choices
 
 class JARSConfigurationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -41,15 +49,35 @@ class JARSfilterForm(forms.ModelForm):
         instance = getattr(self, 'instance', None)
 
         self.fields['fch_decimal'].widget.attrs['readonly'] = True
-
+        
         if 'initial' in kwargs:
-            self.fields.pop('name')
-            #self.fields['name'].widget.attrs['disabled'] = 'disabled'
+            if 'filter_id' not in kwargs['initial']:
+                self.fields.pop('name')
+            else:
+                self.fields['name'] = forms.ChoiceField(choices=create_choices_from_model(JARSfilter))
+                filter_id = kwargs['initial']['filter_id']
 
+                if filter_id == 0:
+                    for value in self.fields:
+                        if value != 'name':
+                            self.fields.pop(value)
+                    self.fields['name'].label = "Filter Template Name"
+                else:
+                    self.fields['name'] = forms.ChoiceField(choices=create_choices_from_model(JARSfilter, kwargs['initial']['filter_id']))
+                    jars_filter = JARSfilter.objects.get(pk=kwargs['initial']['filter_id'])  
+                    labels = [f.name for f in jars_filter._meta.get_fields()]
+                    
+                    for label in ['id', 'jarsconfiguration']:
+                        labels.remove(label)
+                    for label in labels:
+                        self.fields['name'].initial = kwargs['initial']['filter_id']
+                        self.fields[label].initial = getattr(jars_filter,label)
+                    self.fields['name'].label = "Filter Template Name"
 
     class Meta:
         model = JARSfilter
         exclude = ('type', 'parameters', 'status')
+
 
 class ExtFileField(forms.FileField):
     """

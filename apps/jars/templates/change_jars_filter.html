@@ -1,0 +1,13 @@
+{% extends "dev_conf_edit.html" %}
+
+{% block extra-js%}
+
+<script type="text/javascript">
+
+  $("#id_name").change(function() {
+    var url = "{% url 'url_change_jars_filter' conf_id %}";
+    document.location = url + $(this).val()+"/";
+  });
+
+</script>
+{% endblock %}

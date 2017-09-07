@@ -1,12 +1,6 @@
-{% extends "base.html" %}
 {% load bootstrap3 %}
 {% load static %}
 {% load main_tags %}
-
-{% block search-active %}active{% endblock %}
-
-{% block content-title %}{{title}}{% endblock %}
-{% block content-suptitle %}{{suptitle}}{% endblock %}
 
 {% block content %}
 
@@ -15,45 +9,19 @@
 {% endblock %}
 
 <table class="table table-bordered">
-		
-	{% for key in dev_conf_keys %}
-	<tr>
-		<th>{% get_verbose_field_name dev_conf key %}</th>
-		<td>{{dev_conf|attr:key}}</td>
-	</tr>
-	{% endfor %}
+
+	<tr> <th>Clock in (MHz)</th><td>{{filter.clock}}</td>            </tr>
+	<tr> <th>Multiplier</th><td>{{filter.mult}}</td>	               </tr>
+	<tr> <th>Frequency (MHz)</th><td>{{filter.fch}}</td>             </tr>
+	<tr> <th>Frequency (Decimal)</th><td>{{filter.fch_decimal}}</td> </tr>
+	<tr> <th>Filter 2</th><td>{{filter.filter_2}}</td>               </tr>
+	<tr> <th>Filter 5</th><td>{{filter.filter_5}}</td>               </tr>
+	<tr> <th>FIR Filter</th><td>{{filter.filter_fir}}</td>           </tr>
+
 </table>
-{% if button %}
-  <div class="pull-right">
-  <button type="button" class="btn btn-primary" id="back_button">{% if cancel %}{{cancel}}{% else %}Back{% endif %}</button>
-  <button type="button" id="edit_button" class="btn btn-primary">{{edit_button}}</button>
-  <button type="button" id="new_button" class="btn btn-primary">{{add_button}}</button>
-  </div>
-{% endif %}
+
 
 {% block extra-content %}
 {% endblock %}
 
-{% endblock %}
-
-{% block sidebar%}
-{% include "sidebar_devices.html" %}
-{% endblock %}
-
-{% block extra-js%}
-<script type="text/javascript">
-  
-  $("#edit_button").click(function() {
-    document.location = "{% url 'url_edit_jars_filter' conf.id filter.id%}";
-  });
-  
-  $("#back_button").click(function() {
-	    document.location = "{% url 'url_edit_jars_conf' conf.id%}";
-  });
-  
-  $("#new_button").click(function() {
-	    document.location = "{% url 'url_new_jars_filter' conf.id%}";
-  });
-  
-</script>
 {% endblock %}
