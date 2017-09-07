@@ -24,9 +24,12 @@ def jars_conf(request, id_conf):
     kwargs['filter'] = filter_parms
     kwargs['filter_keys']  = ['clock', 'mult', 'fch', 'fch_decimal',
                                 'filter_fir', 'filter_2', 'filter_5']
+    
     filter_resolution=conf.filter_resolution()
-    kwargs['resolution'] = filter_resolution
-
+    kwargs['resolution'] = '{} (MHz)'.format(filter_resolution)
+    if filter_resolution < 1:
+        kwargs['resolution'] = '{} (kHz)'.format(filter_resolution*1000)
+    
     kwargs['status'] = conf.device.get_status_display()
 
 
@@ -284,10 +287,25 @@ def change_filter(request, conf_id, filter_id=None):
         else:
             form = JARSfilterForm(initial={'jars_configuration':conf_id, 'filter_id': filter_id})
 
+    if request.method=='POST':
+        form = JARSfilterForm(request.POST)
+        if form.is_valid():
+            jars_filter = form.cleaned_data
+            try:
+                jars_filter.pop('name')
+            except:
+                pass
+            conf.filter_parms = json.dumps(jars_filter)
+            conf.save()
+            return redirect('url_edit_jars_conf', id_conf=conf.id)
+
+        print jars_filter
+
     kwargs = {}
     kwargs['title'] = 'JARS Configuration'
     kwargs['suptitle'] = 'Change Filter'
     kwargs['form'] = form
+    kwargs['button'] = 'Change'
     kwargs['conf_id'] = conf.id
     kwargs['filter_id'] = filter_id
     return render(request, 'change_jars_filter.html', kwargs)
