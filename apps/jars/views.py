@@ -2,6 +2,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
+from django.http import HttpResponse
 
 from apps.main.models import Device
 from apps.main.views import sidebar
@@ -207,3 +208,28 @@ def change_filter(request, conf_id, filter_id=None):
     kwargs['conf_id'] = conf.id
     kwargs['filter_id'] = filter_id
     return render(request, 'change_jars_filter.html', kwargs)
+
+
+def get_log(request, conf_id):
+
+    conf = get_object_or_404(JARSConfiguration, pk=conf_id)
+    response = conf.get_log()
+
+    if not response:
+        message = conf.message
+        messages.error(request, message)
+        return redirect('url_jars_conf', id_conf=conf.id)
+    
+    try:
+        message = response.json()['message']
+        messages.error(request, message)
+        return redirect('url_jars_conf', id_conf=conf.id)
+    except Exception as e:
+        message = 'Restarting Report.txt has been downloaded successfully.'
+    
+    content = response
+    filename     =  'Log_%s_%s.txt' %(conf.experiment.name, conf.experiment.id)
+    response = HttpResponse(content,content_type='text/plain')
+    response['Content-Disposition'] = 'attachment; filename="%s"' %filename
+
+    return response

@@ -9,4 +9,5 @@ urlpatterns = (
     url(r'^(?P<conf_id>-?\d+)/change_filter/(?P<filter_id>-?\d+)/$', views.change_filter, name='url_change_jars_filter'),
     url(r'^(?P<conf_id>-?\d+)/import/$', views.import_file, name='url_import_jars_conf'),
     url(r'^(?P<conf_id>-?\d+)/read/$', views.read_conf, name='url_read_jars_conf'),
+    url(r'^(?P<conf_id>-?\d+)/get_log/$', views.get_log, name='url_get_jars_log'),
 )

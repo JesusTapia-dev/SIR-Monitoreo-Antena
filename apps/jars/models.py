@@ -7,6 +7,7 @@ from django.core.urlresolvers import reverse
 
 from apps.main.models import Configuration
 from apps.main.utils import Params
+
 # Create your models here.
 
 EXPERIMENT_TYPE = (
@@ -102,7 +103,7 @@ class JARSConfiguration(Configuration):
     #view_raw_data    = models.BooleanField(verbose_name='View Raw Data', default=True)
     save_ch_dc       = models.BooleanField(verbose_name='Save Channels DC', default=True)
     save_data        = models.BooleanField(verbose_name='Save Data', default=True)
-    filter_parms     = models.CharField(max_length=10000, default='{"clock": 60, "mult": 5, "fch": 49.92, "fch_decimal":	721554506, "filter_fir": 2, "filter_2": 12, "filter_5": 25}, "model": "jars.jarsfilter", "pk": 1}')
+    filter_parms     = models.CharField(max_length=10000, default='{"clock": 60, "mult": 5, "fch": 49.92, "fch_decimal":	721554506, "filter_fir": 2, "filter_2": 12, "filter_5": 25}')
 
     class Meta:
         db_table = 'jars_configurations'
@@ -112,7 +113,7 @@ class JARSConfiguration(Configuration):
         if filter_parms.__class__.__name__=='str':
             filter_parms = eval(filter_parms)
 
-        filter_clock = filter_parms['clock']
+        filter_clock = float(filter_parms['clock'])
         filter_2 = filter_parms['filter_2']
         filter_5 = filter_parms['filter_5']
         filter_fir = filter_parms['filter_fir']
@@ -270,6 +271,24 @@ class JARSConfiguration(Configuration):
 
         return True
 
+    
+    def get_log(self):
+
+        payload = None
+
+        try:
+            payload = requests.get(self.device.url('get_log'), params={'name':self.experiment.name})
+        except:
+            self.device.status = 0
+            self.device.save()
+            self.message = 'Jars API is not running.'
+            return False
+        
+        self.message = 'Jars API is running'
+
+        return payload
+
+
     def update_from_file(self, filename):
 
         f = JARSFile(filename)
@@ -281,3 +300,6 @@ class JARSConfiguration(Configuration):
 
     def get_absolute_url_read(self):
         return reverse('url_read_jars_conf', args=[str(self.id)])
+
+    def get_absolute_url_log(self):
+        return reverse('url_get_jars_log', args=[str(self.id)])

@@ -1281,9 +1281,6 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
                         line.params = json.dumps(line_params)
                         line.save()
 
-            if conf.device.device_type.name=='jars':
-                conf.add_parms_to_filter()
-
             return redirect('url_dev_conf', id_conf=conf.pk)
 
     kwargs['id_exp'] = id_exp
