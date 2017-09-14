@@ -37,13 +37,20 @@ def jars_conf(request, id_conf):
     kwargs['dev_conf'] = conf
     kwargs['dev_conf_keys'] = ['name',
                                'cards_number', 'channels_number', 'channels',
-                               #'rd_directory', 'pd_directory',
-                               'data_type',
-                               'acq_profiles', 'profiles_block', 'raw_data_blocks', 'ftp_interval', 'fftpoints',
-                               'cohe_integr_str', 'decode_data',
-                               'incohe_integr', 'cohe_integr', 'spectral_number',
+                               'ftp_interval', 'data_type','acq_profiles', 
+                               'profiles_block', 'raw_data_blocks', 'ftp_interval',
+                               'cohe_integr_str', 'cohe_integr', 'decode_data', 'post_coh_int',
+                               'incohe_integr', 'fftpoints', 'spectral_number',
                                'spectral', 'create_directory', 'include_expname',
                                'save_ch_dc', 'save_data']
+
+    if conf.exp_type == 0:
+        for field in ['incohe_integr','fftpoints','spectral_number', 'spectral', 'save_ch_dc']:
+            kwargs['dev_conf_keys'].remove(field)
+
+    if conf.decode_data == 0:
+        kwargs['dev_conf_keys'].remove('decode_data')
+        kwargs['dev_conf_keys'].remove('post_coh_int')
 
     kwargs['title'] = 'JARS Configuration'
     kwargs['suptitle'] = 'Details'
@@ -105,16 +112,14 @@ def import_file(request, conf_id):
     if request.method=='POST':
         form = JARSImportForm(request.POST, request.FILES)
         if form.is_valid():
-            #try:
-            if True:
+            try:
                 data = conf.import_from_file(request.FILES['file_name'])
                 conf.dict_to_parms(data)
                 messages.success(request, 'Configuration "%s" loaded succesfully' % request.FILES['file_name'])
                 return redirect(conf.get_absolute_url_edit())
-
-            #except Exception as e:
-            #    messages.error(request, 'Error parsing file: "%s" - %s' % (request.FILES['file_name'], e))
-
+            
+            except Exception as e:
+                messages.error(request, 'Error parsing file: "%s" - %s' % (request.FILES['file_name'], repr(e)))
     else:
         messages.warning(request, 'Your current configuration will be replaced')
         form = JARSImportForm()

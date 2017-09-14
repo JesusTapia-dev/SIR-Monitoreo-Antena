@@ -112,5 +112,4 @@ class ExtFileField(forms.FileField):
 
 class JARSImportForm(forms.Form):
 
-    #file_name = ExtFileField(extensions=['.racp', '.json', '.dat'])
-    file_name = ExtFileField(extensions=['.json'])
+    file_name = ExtFileField(extensions=['.racp','.json'])

@@ -33,7 +33,7 @@ class SpectralWidget(forms.widgets.TextInput):
         else:
             codes=''
 
-        html = '''<textarea rows="5" {0} class="form-control" id="id_{1}" name="{2}" style="white-space:nowrap; overflow:scroll;">{3}</textarea>
+        html = '''<textarea rows="5" {0} class="form-control" id="id_{1}" name="{2}" disabled style="white-space:nowrap; overflow:scroll;">{3}</textarea>
                   <input type="text" class="col-md-1 col-no-padding" id="num1" value=0>
                   <input type="text" class="col-md-1 col-no-padding" id="num2" value=0>
                   <button type="button" class="button" id="add_spectral_button"> Add </button>

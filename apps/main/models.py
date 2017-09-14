@@ -18,6 +18,7 @@ from django.shortcuts import get_object_or_404
 
 from apps.main.utils import Params
 from apps.rc.utils import RCFile
+from apps.jars.utils import RacpFile
 from devices.dds import api as dds_api
 from devices.dds import data as dds_data
 
@@ -699,6 +700,10 @@ class Configuration(PolymorphicModel):
             parms = dds_data.text_to_dict(lines)
 
         if ext == '.racp':
+            if self.device.device_type.name == 'jars':
+                parms = RacpFile(fp).to_dict()
+                parms['filter_parms'] = json.loads(self.filter_parms)
+                return parms
             parms = RCFile(fp).to_dict()
 
         return parms

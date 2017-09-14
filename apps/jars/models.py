@@ -122,38 +122,43 @@ class JARSConfiguration(Configuration):
         return resolution
 
     def dict_to_parms(self, params, id=None):
-
+        
         if id is not None:
             data = Params(params).get_conf(id_conf=id)
         else:
             data = Params(params).get_conf(dtype='jars')
-
+            data['filter_parms'] = params['filter_parms']
+        
         self.name           = data['name']
         self.exp_type        = data['exp_type']
-        #if data['exp_type'] in (1, '1') :
-        self.incohe_integr   = data['incohe_integr']
-        self.spectral_number = data['spectral_number']
-        self.spectral        = data['spectral']
-        #self.pd_directory    = data['pd_directory']
+        #----PDATA----
+        if self.exp_type == 1:
+            self.incohe_integr   = data['incohe_integr']
+            self.spectral_number = data['spectral_number']
+            self.spectral        = data['spectral']
+            self.fftpoints       = data['fftpoints']
+            self.save_ch_dc      = data['save_ch_dc']
+        else:
+            self.raw_data_blocks = data['raw_data_blocks']
+        #----PDATA----        
         self.cards_number    = data['cards_number']
         self.channels_number = data['channels_number']
         self.channels        = data['channels']
-        #self.rd_directory    = data['rd_directory']
-        #self.raw_data_blocks = data['raw_data_blocks']
-        self.data_type       = data['data_type']
-        self.cohe_integr_str = data['cohe_integr_str']
-        self.acq_profiles    = data['acq_profiles']
+        self.data_type       = data['data_type']        
         self.profiles_block  = data['profiles_block']
+        self.acq_profiles    = data['acq_profiles']
         self.ftp_interval    = data['ftp_interval']
-        self.fftpoints       = data['fftpoints']
+        self.cohe_integr_str = data['cohe_integr_str']
         self.cohe_integr     = data['cohe_integr']
-        self.filter_parms = json.dumps(data['filter_parms'])
+        #----DECODE----
+        self.decode_data     = data['decode_data']
+        self.post_coh_int    = data['post_coh_int']
+        #----DECODE----
         self.create_directory = data['create_directory']
         self.include_expname  = data['include_expname']
-        #self.acq_link         = data['acq_link']
-        #self.view_raw_data    = data['view_raw_data']
-        self.save_ch_dc       = data['save_ch_dc']
         self.save_data        = data['save_data']
+        self.filter_parms     = json.dumps(data['filter_parms'])
+        
         self.save()
 
     def request(self, cmd, method='get', **kwargs):
