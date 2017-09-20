@@ -664,6 +664,11 @@ class Configuration(PolymorphicModel):
 
         content_type = ''
 
+        if format == 'racp':
+            content_type = 'text/plain'
+            filename = '%s_%s.%s' %(self.device.device_type.name, self.name, 'racp')
+            content = self.parms_to_text(file_format = 'racp')
+
         if format == 'text':
             content_type = 'text/plain'
             filename = '%s_%s.%s' %(self.device.device_type.name, self.name, self.device.device_type.name)

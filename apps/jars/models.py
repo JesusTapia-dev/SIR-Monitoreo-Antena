@@ -7,6 +7,7 @@ from django.core.urlresolvers import reverse
 
 from apps.main.models import Configuration
 from apps.main.utils import Params
+from .utils import create_jarsfiles
 
 # Create your models here.
 
@@ -160,6 +161,38 @@ class JARSConfiguration(Configuration):
         self.filter_parms     = json.dumps(data['filter_parms'])
         
         self.save()
+
+    def parms_to_text(self, file_format='jars'):
+
+        data = self.experiment.parms_to_dict()
+
+        for key in data['configurations']['allIds']:
+            if data['configurations']['byId'][key]['device_type'] in ('dds', 'cgs'):
+                data['configurations']['allIds'].remove(key)
+                data['configurations']['byId'].pop(key)
+            elif data['configurations']['byId'][key]['device_type'] == 'jars':
+                data['configurations']['byId'][key] = self.parms_to_dict()['configurations']['byId'][str(self.pk)]
+            elif data['configurations']['byId'][key]['device_type'] == 'rc':
+                    data['configurations']['byId'][key]['pulses'] = ''
+                    data['configurations']['byId'][key]['delays'] = ''
+        rc_ids = [pk for pk in data['configurations']['allIds'] if data['configurations']['byId'][pk]['device_type']=='rc']
+        mix_ids = [pk for pk in rc_ids if data['configurations']['byId'][pk]['mix']]
+       
+        if mix_ids:
+            params = data['configurations']['byId'][mix_ids[0]]['parameters']
+            rc = data['configurations']['byId'][params.split('-')[0].split('|')[0]]
+            rc['mix'] = True
+            data['configurations']['byId'][rc['id']] = rc
+        elif len(rc_ids)==0:
+            self.message = 'File needs RC configuration'
+            return ''
+
+        json_data = json.dumps(data)
+        racp_file, filter_file = create_jarsfiles(json_data)
+        if file_format=='racp':
+            return racp_file
+
+        return filter_file
 
     def request(self, cmd, method='get', **kwargs):
 

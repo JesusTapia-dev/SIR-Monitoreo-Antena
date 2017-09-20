@@ -72,7 +72,7 @@ class DDSConfiguration(Configuration):
 
     def parms_to_text(self):
 
-        my_dict = self.parms_to_dict()
+        my_dict = self.parms_to_dict()['configurations']['byId'][str(self.id)]
 
         text = data.dict_to_text(my_dict)
 
@@ -152,7 +152,7 @@ class DDSConfiguration(Configuration):
         try:
             answer = api.write_config(ip = self.device.ip_address,
                                       port = self.device.port_address,
-                                      parms = self.parms_to_dict())
+                                      parms = self.parms_to_dict()['configurations']['byId'][str(self.id)])
 
             return self.status_device()
 

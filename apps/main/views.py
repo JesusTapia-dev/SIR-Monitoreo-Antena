@@ -1498,7 +1498,9 @@ def dev_conf_export(request, id_conf):
 
         if file_form.is_valid():
             fields = conf.export_to_file(format = file_form.cleaned_data['format'])
-
+            if not fields['content']:
+                messages.error(request, conf.message)
+                return redirect(conf.get_absolute_url_export())
             response = HttpResponse(content_type=fields['content_type'])
             response['Content-Disposition'] = 'attachment; filename="%s"' %fields['filename']
             response.write(fields['content'])

@@ -34,7 +34,7 @@ class JARSConfigurationForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super(JARSConfigurationForm, self).clean()
         experiment = cleaned_data.get('experiment')
-        if experiment == None:
+        if not experiment:
             msg = "Error: Jars Configuration needs an Experiment"
             self.add_error('experiment', msg)
 

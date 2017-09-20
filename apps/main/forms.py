@@ -18,6 +18,12 @@ RC_FILE_FORMAT = (
                 ('binary', 'dat'),
                 )
 
+JARS_FILE_FORMAT = (
+                ('json', 'json'),
+                ('racp', 'racp'),
+                ('text', 'jars'),
+                )
+
 def add_empty_choice(choices, pos=0, label='-----'):
     if len(choices)>0:
         choices = list(choices)
@@ -130,6 +136,9 @@ class DownloadFileForm(forms.Form):
 
         if device_type == 'rc':
             self.fields['format'].choices = RC_FILE_FORMAT
+
+        if device_type == 'jars':
+            self.fields['format'].choices = JARS_FILE_FORMAT
 
 class OperationForm(forms.Form):
 
