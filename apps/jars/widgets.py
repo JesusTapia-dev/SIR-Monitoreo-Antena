@@ -14,6 +14,7 @@ class SpectralWidget(forms.widgets.TextInput):
 
         disabled = 'disabled' if attrs.get('disabled', False) else ''
         name = attrs.get('name', label)
+        #print value
         if '[' in value:
             if value[len(value)-1] == ",":
                 value = ast.literal_eval(value)
