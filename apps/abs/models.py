@@ -429,7 +429,7 @@ class ABSConfiguration(Configuration):
 
         try:
             #r_write = requests.post(write_route, parameters, timeout=0.5)
-            r_write = requests.post(write_route, json = parameters, timeout=0.5)
+            r_write = requests.post(write_route, json = parameters, timeout=0.7)
             answer  = r_write.json()
             #self.message = answer['message']
         except:
@@ -469,7 +469,7 @@ class ABSConfiguration(Configuration):
                         if answer:
                             if answer['status']:
                                 beams_status[str(i)] = 3
-                                print snswer
+                                print answer
 
                     except:
                         beams_status[str(i)] = 1
@@ -800,7 +800,7 @@ class ABSConfiguration(Configuration):
         """
 
         # Se manda a cero RC para poder realizar cambio de beam
-        confs = Configuration.objects.filter(experiment = self.experiment)
+        confs = Configuration.objects.filter(experiment = self.experiment).filter(type=0)
         confdds  = ''
         confjars = ''
         confrc   = ''
@@ -845,20 +845,22 @@ class ABSConfiguration(Configuration):
         flag  = str(flag)
         function = 'CHGB'
         message_tx = header+flag+function+str(beam_pos)+'0'
-
+        print message_tx
         multicast_group = '224.3.29.71'
         server_address = ('',10000)
-
+        #Specific Netwrok Interface
+        local_ip='192.168.1.153'  
         # Create the socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # Bind to the server address
         sock.bind(server_address)
         # Telling the OS add the socket to the multicast on all interfaces
         group = socket.inet_aton(multicast_group)
-        mreq  = struct.pack('4sL', group, socket.INADDR_ANY)
+        mreq  = struct.pack('4sL', group, 1) #socket.INADDR_ANY
 
         try:
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+            #sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(local_ip)) #Specific Netwrok Interface
         except Exception as e:
             self.message = str(e)
             print str(e)
@@ -888,6 +890,7 @@ class ABSConfiguration(Configuration):
             confjars.start_device()
 
         self.message = "ABS Beam has been changed"
+        print self.message
 
         return True
 

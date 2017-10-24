@@ -272,7 +272,7 @@ def send_beam(request, id_conf, id_beam):
         else:
             i += 1
     beam_pos = i + 1 #Estandarizar
-    print 'Position: ',beam_pos
+    print '%s Position: %s' % (beam.name, str(beam_pos))
     conf.send_beam_num(beam_pos)
 
     return redirect('url_abs_conf', conf.id)
