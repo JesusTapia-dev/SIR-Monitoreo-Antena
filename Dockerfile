@@ -1,17 +1,17 @@
 FROM bitnami/minideb:jessie
 
 # setup libraries
-RUN install_packages python \
-                     python-pip \
-                     python-dev \
-                     gfortran \
-                     libpng-dev \ 
-                     freetype* \
-                     libblas-dev \
-                     liblapack-dev \
-                     libmysqlclient-dev \
-                     libatlas-base-dev
-                     
+RUN install_packages python --fix-missing \
+                     python-pip --fix-missing \
+                     python-dev --fix-missing \
+                     gfortran --fix-missing \
+                     libpng-dev --fix-missing \ 
+                     freetype* --fix-missing \
+                     libblas-dev --fix-missing \
+                     liblapack-dev --fix-missing \
+                     libmysqlclient-dev --fix-missing \
+                     libatlas-base-dev --fix-missing
+
 # set working directory
 RUN mkdir /radarsys
 WORKDIR /radarsys
