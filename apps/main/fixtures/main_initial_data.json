@@ -1,4 +1,4 @@
-[[
+[
 {"fields": {"name": "JRO", "description": ""}, "model": "main.location", "pk": 1},
 {"fields": {"name": "JASMET", "description": ""}, "model": "main.location", "pk": 2},
 {"fields": {"name": "SOUSY", "description": ""}, "model": "main.location", "pk": 3},
