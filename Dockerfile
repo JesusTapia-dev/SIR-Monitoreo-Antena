@@ -1,4 +1,4 @@
-FROM bitnami/minideb:latest
+FROM bitnami/minideb:jessie
 
 # setup libraries
 RUN install_packages python --timeout 120 \
