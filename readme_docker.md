@@ -1,0 +1,25 @@
+### Docker de la base de datos ###
+#       'NAME': 'radarsys',
+#       'USER': 'developer',
+#       'PASSWORD': 'idi2015',
+
+#Preparar Base de Datos para la aplicacion:
+## Crear imagen "mysql:5.6"
+docker create -v /var/lib/mysql --name mysql-radarsys-data mysql:5.6 /bin/true
+## Ejecutar Container "mysql-radarsys-server"
+docker run --name mysql-radarsys-server -d -e MYSQL_ROOT_PASSWORD=r00tJRO -e MYSQL_DATABASE=radarsys \
+          -e MYSQL_USER=developer -e MYSQL_PASSWORD=idi2015 --volumes-from mysql-radarsys-data mysql:5.6
+
+#Aplicacion Sistema Integrado de Radar
+## Debe crearse *Dockerfile*
+## Crear la imagen
+docker build  -t radarsys:v01 .
+# Ejecutar Container
+docker run -d --name radarsys01 --link mysql-radarsys-server -p 3000:3000 \
+-v /home/ubuntu/docker_shared/radarsys/media:/myapp/media \
+--add-host smtp_server:172.17.0.1  radarsys:v01
+
+
+
+####  Archivos Compartidos:
+# /home/soporte/docker_shared/radarsys/media
