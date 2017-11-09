@@ -130,7 +130,7 @@ STATICFILES_FINDERS = (
 FIXTURE_DIRS = (
     os.path.join(BASE_DIR, 'apps', 'rc', 'fixtures'),
     os.path.join(BASE_DIR, 'apps', 'main', 'fixtures'),
-
+    os.path.join(BASE_DIR, 'apps', 'jars', 'fixtures'),
 )
 
 # Celery stuff
