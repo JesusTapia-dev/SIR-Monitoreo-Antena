@@ -9,7 +9,9 @@ RUN install_packages python \
                      freetype* \
                      libblas-dev \
                      liblapack-dev \
+                     libmysqlclient-dev \
                      libatlas-base-dev
+                     
 # set working directory
 RUN mkdir /radarsys
 WORKDIR /radarsys
@@ -18,7 +20,8 @@ WORKDIR /radarsys
 COPY . ./
 
 # Install python dependences
-RUN pip install -r requirements.txt
+RUN pip install -v --timeout 120 -r requirements.txt
+
 RUN python manage.py makemigrations \
     && python manage.py migrate \
     && python manage.py loaddata apps/main/fixtures/main_initial_data.json \
