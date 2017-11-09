@@ -8,3 +8,4 @@ matplotlib
 scipy
 celery
 gunicorn
+requests==2.11.1
