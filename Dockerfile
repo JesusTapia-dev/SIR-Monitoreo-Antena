@@ -1,16 +1,16 @@
 FROM bitnami/minideb:jessie
 
 # setup libraries
-RUN install_packages python --timeout 120 \
-                     python-pip --timeout 120 \
-                     python-dev --timeout 120 \
-                     gfortran --timeout 120 \
-                     libpng-dev --timeout 120 \ 
-                     freetype* --timeout 120 \
-                     libblas-dev --timeout 120 \
-                     liblapack-dev --timeout 120 \
-                     libmysqlclient-dev --timeout 120 \
-                     libatlas-base-dev --timeout 120
+RUN install_packages python \
+                     python-pip \
+                     python-dev \
+                     gfortran \
+                     libpng-dev \ 
+                     freetype*  \
+                     libblas-dev  \
+                     liblapack-dev  \
+                     libmysqlclient-dev \
+                     libatlas-base-dev 
 
 # set working directory
 RUN mkdir /radarsys
