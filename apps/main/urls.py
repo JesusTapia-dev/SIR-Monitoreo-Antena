@@ -4,6 +4,9 @@ from apps.main import views
 
 urlpatterns = (
     url(r'^$', views.index, name='index'),
+
+    url(r'^realtime/$', views.real_time, name='url_real_time'),
+
     url(r'^location/new/$', views.location_new, name='url_add_location'),
     url(r'^location/$', views.locations, name='url_locations'),
     url(r'^location/(?P<id_loc>-?\d+)/$', views.location, name='url_location'),

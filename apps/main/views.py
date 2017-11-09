@@ -1707,3 +1707,17 @@ def radar_refresh(request, id_camp, id_radar):
         exp.get_status()
 
     return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
+
+
+def real_time(request):
+
+    graphic_path = "/home/fiorella/Pictures/catwbeanie.jpg"
+
+    kwargs = {}
+    kwargs['title'] = 'CLAIRE'
+    kwargs['suptitle'] = 'Real Time'
+    kwargs['no_sidebar'] = True
+    kwargs['graphic_path'] = graphic_path
+    kwargs['graphic1_path'] = 'http://www.bluemaize.net/im/girls-accessories/shark-beanie-11.jpg'
+
+    return render(request, 'real_time.html', kwargs)
