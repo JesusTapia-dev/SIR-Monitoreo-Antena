@@ -1,16 +1,17 @@
-FROM bitnami/minideb:jessie
+FROM python:2.7.11
 
 # setup libraries
-RUN install_packages python \
-                     python-pip \
-                     python-dev \
-                     gfortran \
-                     libpng-dev \ 
-                     freetype*  \
-                     libblas-dev  \
-                     liblapack-dev  \
-                     libmysqlclient-dev \
-                     libatlas-base-dev 
+#RUN apt-get install python \
+                     #python-pip \
+                     #python-dev \
+                     #gfortran \
+                     #libpng-dev \ 
+                     #freetype*  \
+                     #libblas-dev  \
+                     #liblapack-dev  \
+                     #libmysqlclient-dev \
+                     #libatlas-base-dev 
+
 
 # set working directory
 RUN mkdir /radarsys
@@ -22,11 +23,12 @@ COPY . ./
 # Install python dependences
 RUN pip install -v --timeout 120 -r requirements.txt
 
-RUN python manage.py makemigrations \
-    && python manage.py migrate \
-    && python manage.py loaddata apps/main/fixtures/main_initial_data.json \
-    && python manage.py loaddata apps/rc/fixtures/rc_initial_data.json \
-    && python manage.py loaddata apps/jars/fixtures/jars_initial_data.json
+#(Solo si mysql existe)
+#RUN python manage.py makemigrations \
+#    && python manage.py migrate \
+#    && python manage.py loaddata apps/main/fixtures/main_initial_data.json \
+#    && python manage.py loaddata apps/rc/fixtures/rc_initial_data.json \
+#    && python manage.py loaddata apps/jars/fixtures/jars_initial_data.json
 
 EXPOSE 3000
 CMD ["python", "manage.py", "runserver", "0.0.0.0:3000"]

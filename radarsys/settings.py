@@ -90,6 +90,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'radarsys',
         'USER': 'developer',
+        #'HOST': 'mysql-radarsys-server',
         'PASSWORD': 'idi2015',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
