@@ -20,6 +20,8 @@ docker run -d --name radarsys01 --link mysql-radarsys-server -p 3000:3000 \
 --add-host smtp_server:172.17.0.1  radarsys:v01
 
 ## Dentro del Container: se debe realizar las siguiente modificaciones
+### Para ingresar al container: 
+	docker exec -i -t radarsys01 /bin/bash
 ### Es necesario ejecutar: 
 	apt-get update
 	apt-get install nano
