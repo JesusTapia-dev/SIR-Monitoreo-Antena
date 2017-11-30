@@ -25,19 +25,19 @@ def jars_conf(request, id_conf):
     kwargs['filter'] = filter_parms
     kwargs['filter_keys']  = ['clock', 'mult', 'fch', 'fch_decimal',
                                 'filter_fir', 'filter_2', 'filter_5']
-    
+
     filter_resolution=conf.filter_resolution()
     kwargs['resolution'] = '{} (MHz)'.format(filter_resolution)
     if filter_resolution < 1:
         kwargs['resolution'] = '{} (kHz)'.format(filter_resolution*1000)
-    
+
     kwargs['status'] = conf.device.get_status_display()
 
 
     kwargs['dev_conf'] = conf
     kwargs['dev_conf_keys'] = ['name',
                                'cards_number', 'channels_number', 'channels',
-                               'ftp_interval', 'data_type','acq_profiles', 
+                               'ftp_interval', 'data_type','acq_profiles',
                                'profiles_block', 'raw_data_blocks', 'ftp_interval',
                                'cohe_integr_str', 'cohe_integr', 'decode_data', 'post_coh_int',
                                'incohe_integr', 'fftpoints', 'spectral_number',
@@ -117,7 +117,7 @@ def import_file(request, conf_id):
                 conf.dict_to_parms(data)
                 messages.success(request, 'Configuration "%s" loaded succesfully' % request.FILES['file_name'])
                 return redirect(conf.get_absolute_url_edit())
-            
+
             except Exception as e:
                 messages.error(request, 'Error parsing file: "%s" - %s' % (request.FILES['file_name'], repr(e)))
     else:
@@ -176,11 +176,11 @@ def read_conf(request, conf_id):
 def change_filter(request, conf_id, filter_id=None):
 
     conf = get_object_or_404(JARSConfiguration, pk=conf_id)
-    
+
     if filter_id:
         if filter_id.__class__.__name__ not in ['int', 'float']:
             filter_id = eval(filter_id)
-            
+
     if filter_id == 0:
         return redirect('url_change_jars_filter', conf_id=conf.id)
 
@@ -224,14 +224,14 @@ def get_log(request, conf_id):
         message = conf.message
         messages.error(request, message)
         return redirect('url_jars_conf', id_conf=conf.id)
-    
+
     try:
         message = response.json()['message']
         messages.error(request, message)
         return redirect('url_jars_conf', id_conf=conf.id)
     except Exception as e:
         message = 'Restarting Report.txt has been downloaded successfully.'
-    
+
     content = response
     filename     =  'Log_%s_%s.txt' %(conf.experiment.name, conf.experiment.id)
     response = HttpResponse(content,content_type='text/plain')

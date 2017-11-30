@@ -49,7 +49,7 @@ class JARSfilterForm(forms.ModelForm):
         instance = getattr(self, 'instance', None)
 
         self.fields['fch_decimal'].widget.attrs['readonly'] = True
-        
+
         if 'initial' in kwargs:
             if 'filter_id' not in kwargs['initial']:
                 self.fields.pop('name')
@@ -64,9 +64,9 @@ class JARSfilterForm(forms.ModelForm):
                     self.fields['name'].label = "Filter Template Name"
                 else:
                     self.fields['name'] = forms.ChoiceField(choices=create_choices_from_model(JARSfilter, kwargs['initial']['filter_id']))
-                    jars_filter = JARSfilter.objects.get(pk=kwargs['initial']['filter_id'])  
+                    jars_filter = JARSfilter.objects.get(pk=kwargs['initial']['filter_id'])
                     labels = [f.name for f in jars_filter._meta.get_fields()]
-                    
+
                     for label in ['id']:
                         labels.remove(label)
                     for label in labels:
