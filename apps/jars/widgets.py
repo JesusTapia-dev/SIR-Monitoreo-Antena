@@ -12,9 +12,13 @@ class SpectralWidget(forms.widgets.TextInput):
 
     def render(self, label, value, attrs=None):
 
-        disabled = 'disabled' if attrs.get('disabled', False) else ''
+        readonly = 'readonly' if attrs.get('readonly', False) else ''
         name = attrs.get('name', label)
-        #print value
+        print 'ESTO!'
+        print value
+        if value == None:
+            value = '[0, 0],'
+        print readonly
         if '[' in value:
             if value[len(value)-1] == ",":
                 value = ast.literal_eval(value)
@@ -34,7 +38,7 @@ class SpectralWidget(forms.widgets.TextInput):
         else:
             codes=''
 
-        html = '''<textarea rows="5" {0} class="form-control" id="id_{1}" name="{2}" disabled style="white-space:nowrap; overflow:scroll;">{3}</textarea>
+        html = '''<textarea rows="5" {0} class="form-control" id="id_{1}" name="{2}" style="white-space:nowrap; overflow:scroll;">{3}</textarea>
                   <input type="text" class="col-md-1 col-no-padding" id="num1" value=0>
                   <input type="text" class="col-md-1 col-no-padding" id="num2" value=0>
                   <button type="button" class="button" id="add_spectral_button"> Add </button>
@@ -42,7 +46,7 @@ class SpectralWidget(forms.widgets.TextInput):
                   <button type="button" class="button pull-right" id="cross_spectral_button"> Cross </button>
                   <button type="button" class="button pull-right" id="self_spectral_button"> Self </button>
                   <button type="button" class="button pull-right" id="all_spectral_button"> All </button>
-                  '''.format(disabled, label, name, codes)
+                  '''.format(readonly, label, name, codes)
 
         script = '''
                 <script type="text/javascript">
