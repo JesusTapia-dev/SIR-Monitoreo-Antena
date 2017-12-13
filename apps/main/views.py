@@ -27,6 +27,7 @@ from apps.jars.forms import JARSConfigurationForm
 from apps.cgs.forms import CGSConfigurationForm
 from apps.abs.forms import ABSConfigurationForm
 from apps.usrp.forms import USRPConfigurationForm
+from .utils import Params
 
 from .models import Campaign, Experiment, Device, Configuration, Location, RunningExperiment, DEV_STATES
 from apps.cgs.models import CGSConfiguration
