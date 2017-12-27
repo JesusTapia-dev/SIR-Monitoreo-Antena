@@ -90,7 +90,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'radarsys',
         'USER': 'developer',
-        #'HOST': 'mysql-radarsys-server',
+        #'HOST': 'mysql',
         'PASSWORD': 'idi2015',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
@@ -140,9 +140,16 @@ FIXTURE_DIRS = (
 )
 
 # Celery stuff
-
-BROKER_URL = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+REDIS_HOST = 'redis'
+BROKER_TRANSPORT = 'redis'
+#--Development--# (Para Pruebas Locales)
+BROKER_URL = 'redis://127.0.0.1:6300'
+CELERY_RESULT_BACKEND = 'redis://localhost:6300'
+#---------------#
+#--Production---# (Para Docker)
+#CELERY_BROKER_TRANSPORT = BROKER_URL = 'redis://%s:6379/0' % REDIS_HOST
+#CELERY_RESULT_BACKEND = 'redis://%s:6379/0' % REDIS_HOST
+#---------------#
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

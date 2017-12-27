@@ -31,6 +31,9 @@ docker run -d --name radarsys01 --link mysql-radarsys-server -p 3000:3000 \
 	MEDIA_ROOT: 'media'
 ### En el script abs/utils/Graphics_OverJro.py, matplotlib Agg debe estar habilitado
 	matplotlib.use("Agg")
+### En el script radarsys/urls.py comentar para que nginx sirva "static":
+	#from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+	#urlpatterns += staticfiles_urlpatterns()
 
 ### Ejecutar los siguientes comandos (solo si ya se creo mysql-radarsys-server):
  python manage.py makemigrations \
