@@ -1,0 +1,17 @@
+server {
+
+    listen 80;
+    server_name sir.com;
+
+    access_log /dev/stdout;
+    error_log /dev/stdout info;
+
+    location /static {
+        alias /data/media/static;
+    }
+
+    location / {
+        proxy_pass http://web:8080;
+    }
+
+}
