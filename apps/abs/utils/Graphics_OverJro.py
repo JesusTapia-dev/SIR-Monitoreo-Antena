@@ -25,7 +25,7 @@ import matplotlib
 #    matplotlib.use("Agg")
 #else:
 #    matplotlib.use('TKAgg')
-#matplotlib.use("Agg")
+matplotlib.use("Agg")
 #matplotlib.interactive(1)
 import matplotlib.pyplot
 #import Numeric

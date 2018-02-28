@@ -72,8 +72,8 @@ ror = lambda val, r_bits: \
 
 class RCConfiguration(Configuration):
 
-    ipp = models.FloatField(verbose_name='IPP [Km]', validators=[MinValueValidator(1), MaxValueValidator(9000)], default=300)
-    ntx = models.PositiveIntegerField(verbose_name='Number of TX', validators=[MinValueValidator(1), MaxValueValidator(400)], default=1)
+    ipp = models.FloatField(verbose_name='IPP [Km]', validators=[MinValueValidator(1)], default=300)
+    ntx = models.PositiveIntegerField(verbose_name='Number of TX', validators=[MinValueValidator(1)], default=1)
     clock_in = models.FloatField(verbose_name='Clock in [MHz]', validators=[MinValueValidator(1), MaxValueValidator(80)], default=1)
     clock_divider = models.PositiveIntegerField(verbose_name='Clock divider', validators=[MinValueValidator(1), MaxValueValidator(256)], default=1)
     clock = models.FloatField(verbose_name='Clock Master [MHz]', blank=True, default=1)
@@ -109,9 +109,7 @@ class RCConfiguration(Configuration):
 
     def clone(self, **kwargs):
 
-        lines = self.get_lines()
-        print 'LINES'
-        print lines
+        lines = self.get_lines()        
         self.pk = None
         self.id = None
         for attr, value in kwargs.items():
@@ -124,7 +122,7 @@ class RCConfiguration(Configuration):
         new_lines = self.get_lines()
         for line in new_lines:
             line_params = json.loads(line.params)
-            if 'TX_ref' in line_params:
+            if 'TX_ref' in line_params and (line_params['TX_ref'] != '0'):
                 ref_line = RCLine.objects.get(pk=line_params['TX_ref'])
                 line_params['TX_ref'] = ['{}'.format(l.pk) for l in new_lines if l.get_name()==ref_line.get_name()][0]
                 line.params = json.dumps(line_params)
@@ -242,17 +240,17 @@ class RCConfiguration(Configuration):
         for x in points:
             dum = []
             for i, tups in enumerate(pulses):
-                ups = [tup[0] for tup in tups]
-                dws = [tup[1] for tup in tups]
+                ups = [tup[0] for tup in tups if tup!=(0,0)]
+                dws = [tup[1] for tup in tups if tup!=(0,0)]
                 if x in ups:
                     dum.append(1)
                 elif x in dws:
                     dum.append(0)
                 else:
                     dum.append(last[i])
-            states.append(dum)
+            states.append(dum)            
             last = dum
-
+        
         if binary:
             ret = []
             for flips in states:
@@ -351,6 +349,8 @@ class RCConfiguration(Configuration):
 
     def plot_pulses2(self, km=False):
 
+        import matplotlib
+        matplotlib.use('Agg')
         import matplotlib.pyplot as plt
         from bokeh.resources import CDN
         from bokeh.embed import components
@@ -545,11 +545,17 @@ class RCConfiguration(Configuration):
 
         return True
 
-    def write_device(self):
+    def write_device(self):        
 
-        values = zip(self.get_pulses(),
-                     [x-1 for x in self.get_delays()])
-
+        #values = zip(self.get_pulses(), [x-1 for x in self.get_delays()])
+        
+        values = []
+        for pulse, delay in zip(self.get_pulses(), self.get_delays()):
+            while delay>65535:
+                values.append((pulse, 65535))
+                delay -= 65535
+            values.append((pulse, delay-1))
+        
         data = bytearray()
         #reset
         data.extend((128, 0))
@@ -570,8 +576,16 @@ class RCConfiguration(Configuration):
         data.extend((129, 1))
 
         try:
+            payload = self.request('stop', 'post')
+            payload = self.request('reset', 'post')
+            #payload = self.request('divider', 'post', data={'divider': self.clock_divider-1})
+            #payload = self.request('write', 'post', data=b64encode(bytearray((139, 62))), timeout=20)
+            n = len(data)
+            x = 0
+            #while x < n:
             payload = self.request('write', 'post', data=b64encode(data))
-
+            #    x += 1024
+            
             if payload['write']=='ok':
                 self.device.status = 3
                 self.device.save()
@@ -581,6 +595,8 @@ class RCConfiguration(Configuration):
                 self.device.save()
                 self.message = 'RC write: {}'.format(payload['write'])
                 return False
+
+            #payload = self.request('start', 'post')
 
         except Exception as e:
             if 'No route to host' not in str(e):
@@ -641,7 +657,7 @@ class RCLine(models.Model):
 
     def __str__(self):
         if self.rc_configuration:
-            return u'%s - %s' % (self.rc_configuration, self.get_name())
+            return u'{}|{} - {}'.format(self.pk, self.get_name(), self.rc_configuration.name)
 
     def jsonify(self):
 
@@ -856,12 +872,16 @@ class RCLine(models.Model):
         elif self.line_type.name=='windows':
             params = json.loads(self.params)
             if 'params' in params and len(params['params'])>0:
-                tr_params = json.loads(self.get_lines(line_type__name='tr')[0].params)
-                tr_ranges = tr_params['range'].split(',')
+                tr_lines = self.get_lines(line_type__name='tr')
+                if tr_lines:
+                    tr_params = json.loads(self.get_lines(line_type__name='tr')[0].params)
+                    tr_ranges = tr_params['range'].split(',')
+                else:
+                    tr_ranges = []
                 for p in params['params']:
                     y_win = self.points(ntx, ipp_u,
                                         p['resolution']*p['number_of_samples']*km2unit,
-                                        before=int(self.rc_configuration.time_before*us2unit),
+                                        before=int(self.rc_configuration.time_before*us2unit)+p['first_height']*km2unit,
                                         sync=self.rc_configuration.sync+self.get_win_ref(p, params['TX_ref'], km2unit))
 
 

@@ -1,5 +1,3 @@
-FROM tutum/nginx
-
-RUN rm /etc/nginx/sites-enabled/default
-ADD sites-enabled/ /etc/nginx/sites-enabled
-ADD sites-enabled/radarsys /etc/nginx/conf.d/
+FROM nginx:1.13.8-alpine
+RUN rm /etc/nginx/conf.d/default.conf
+ADD sites-enabled/radarsys.conf /etc/nginx/conf.d/

@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
@@ -85,19 +85,14 @@ WSGI_APPLICATION = 'radarsys.wsgi.application'
 
 DATABASES = {
     'default': {
-        #'ENGINE': 'django.db.backends.sqlite3',
-        #'NAME': os.path.join(BASE_DIR, 'radarsys.sqlite'),
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'radarsys',
-        'USER': 'developer',
-        #'HOST': 'mysql',
-        'PASSWORD': 'idi2015',
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            }
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get('POSTGRES_DB_NAME', 'radarsys'),
+        'USER': os.environ.get('POSTGRES_USER', 'docker'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'docker'),
+        'HOST': os.environ.get('POSTGRES_PORT_5432_TCP_ADDR', 'postgres'),
+        'PORT': os.environ.get('POSTGRES_PORT_5432_TCP_PORT', ''),
     }
 }
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -115,41 +110,25 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
-MEDIA_ROOT = 'media'#os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/site_media/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 STATIC_URL = '/static/'
-#STATIC_ROOT =  '/var/www/html/static/'
-STATIC_ROOT = os.path.join(MEDIA_ROOT, 'static')
-
-#STATICFILES_DIRS = (
-#    os.path.join(BASE_DIR, 'apps', 'main', 'static'),
-#
-#)
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-FIXTURE_DIRS = (
-    os.path.join(BASE_DIR, 'apps', 'rc', 'fixtures'),
-    os.path.join(BASE_DIR, 'apps', 'main', 'fixtures'),
-    os.path.join(BASE_DIR, 'apps', 'jars', 'fixtures'),
-)
-
 # Celery stuff
-REDIS_HOST = 'redis'
+REDIS_HOST = os.environ.get('HOST_REDIS', '127.0.0.1')
+
 BROKER_TRANSPORT = 'redis'
-#--Development--# (Para Pruebas Locales)
-BROKER_URL = 'redis://127.0.0.1:6300'
-CELERY_RESULT_BACKEND = 'redis://localhost:6300'
-#---------------#
-#--Production---# (Para Docker)
-#CELERY_BROKER_TRANSPORT = BROKER_URL = 'redis://%s:6379/0' % REDIS_HOST
-#CELERY_RESULT_BACKEND = 'redis://%s:6379/0' % REDIS_HOST
-#---------------#
+BROKER_URL = 'redis://%s:6379/0' % REDIS_HOST
+
+CELERY_RESULT_BACKEND = 'redis://%s:6379/0' % REDIS_HOST
+CELERY_BROKER_TRANSPORT = BROKER_URL
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

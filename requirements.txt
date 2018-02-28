@@ -1,12 +1,12 @@
 Django==1.10.1
 django-bootstrap3
-mysqlclient
+psycopg2
 django-polymorphic
-bokeh
-numpy
+bokeh==0.12.1
+numpy==1.13.3
 matplotlib
 scipy
 celery
 gunicorn
-requests==2.11.1
+requests
 redis

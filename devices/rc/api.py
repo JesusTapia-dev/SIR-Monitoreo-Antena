@@ -21,7 +21,8 @@ class RCApi(object):
     def load(self, filename):
         
         self.params = json.load(open(filename))
-        print 'RC Configuration: {}'.format(self.params['name'])
+        self.pk = self.params['configurations']['allIds'][0]      
+        print 'RC Configuration: {}'.format(self.params['configurations']['byId'][self.pk]['name'])
         
     def status(self):
         
@@ -56,40 +57,45 @@ class RCApi(object):
     def write(self):
         
         url_write = os.path.join(self.url, 'write')
-        url_divider = os.path.join(self.url, 'divisor')
-                
-        values = zip(self.params['pulses'], 
-                     [x-1 for x in self.params['delays']])
+        url_divider = os.path.join(self.url, 'divider')            
+
+        values = zip(self.params['configurations']['byId'][self.pk]['pulses'], 
+                     [x-1 for x in self.params['configurations']['byId'][self.pk]['delays']])
         payload = ''
         
         for tup in values:
             vals = pack('<HH', *tup)
-            payload += '\x05'+vals[0]+'\x04'+vals[1]+'\x05'+vals[2]+'\x04'+vals[3]
+            payload += '\x85'+vals[0]+'\x84'+vals[1]+'\x85'+vals[2]+'\x84'+vals[3]
         
         req = requests.post(url_divider, 
-                            data={'divisor':int(self.params['clock_divider'])-1})
-        
+                            data={'divider':int(self.params['configurations']['byId'][self.pk]['clock_divider'])-1})
+                
         if 'ok' not in req.text:
             print 'Error sending divider'
             return False
-        
+
         req = requests.post(url_write, 
                             data=b64encode(payload))
         return req.json()
 
 if __name__ == '__main__':
-    
+    import time
     ip = '10.10.10.100'    
-    filename = '/home/jespinoza/Downloads/rc_150EEJ.json'    
-
+    
+    filename = './dia.json'    
+    
     rc = RCApi(ip)
     rc.load(filename)
     
-    print rc.status()
-    print rc.reset()
-    print rc.stop()
+    # print rc.status()
+    # time.sleep(1)
+    # print rc.reset()
+    # time.sleep(1)
+    # print rc.stop()
+    # time.sleep(1)
     print rc.write()
-    print rc.start()
+    # time.sleep(1)
+    # print rc.start()
     
     
     
