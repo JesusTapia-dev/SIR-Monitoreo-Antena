@@ -122,12 +122,13 @@ STATICFILES_FINDERS = (
 )
 
 # Celery stuff
-REDIS_HOST = os.environ.get('HOST_REDIS', '127.0.0.1')
+REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
+REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
 
 BROKER_TRANSPORT = 'redis'
-BROKER_URL = 'redis://%s:6379/0' % REDIS_HOST
+BROKER_URL = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
 
-CELERY_RESULT_BACKEND = 'redis://%s:6379/0' % REDIS_HOST
+CELERY_RESULT_BACKEND = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
 CELERY_BROKER_TRANSPORT = BROKER_URL
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
