@@ -551,9 +551,9 @@ class RCConfiguration(Configuration):
         
         values = []
         for pulse, delay in zip(self.get_pulses(), self.get_delays()):
-            while delay>65535:
+            while delay>65536:
                 values.append((pulse, 65535))
-                delay -= 65535
+                delay -= 65536
             values.append((pulse, delay-1))
         
         data = bytearray()
