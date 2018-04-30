@@ -872,12 +872,9 @@ class RCLine(models.Model):
         elif self.line_type.name=='windows':
             params = json.loads(self.params)
             if 'params' in params and len(params['params'])>0:
-                tr_lines = self.get_lines(line_type__name='tr')
-                if tr_lines:
-                    tr_params = json.loads(self.get_lines(line_type__name='tr')[0].params)
-                    tr_ranges = tr_params['range'].split(',')
-                else:
-                    tr_ranges = []
+                tx = RCLine.objects.get(pk=params['TX_ref'])
+                tx_params = json.loads(tx.params)
+                ranges = tx_params['range'].split(',')
                 for p in params['params']:
                     y_win = self.points(ntx, ipp_u,
                                         p['resolution']*p['number_of_samples']*km2unit,
@@ -885,8 +882,8 @@ class RCLine(models.Model):
                                         sync=self.rc_configuration.sync+self.get_win_ref(p, params['TX_ref'], km2unit))
 
 
-                    if len(tr_ranges)>0 and tr_ranges[0]!='0':
-                        y_win = self.mask_ranges(y_win, tr_ranges)
+                    if len(ranges)>0 and ranges[0]!='0':
+                        y_win = self.mask_ranges(y_win, ranges)
 
                     y.extend(y_win)
 
