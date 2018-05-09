@@ -547,20 +547,22 @@ class RCConfiguration(Configuration):
 
     def write_device(self):        
 
-        #values = zip(self.get_pulses(), [x-1 for x in self.get_delays()])
-        
         values = []
         for pulse, delay in zip(self.get_pulses(), self.get_delays()):
             while delay>65536:
                 values.append((pulse, 65535))
                 delay -= 65536
             values.append((pulse, delay-1))
-        
         data = bytearray()
         #reset
         data.extend((128, 0))
         #disable
         data.extend((129, 0))
+        #SW switch
+        if self.control_sw:
+            data.extend((130, 2))
+        else:
+            data.extend((130, 0))
         #divider
         data.extend((131, self.clock_divider-1))
         #enable writing
