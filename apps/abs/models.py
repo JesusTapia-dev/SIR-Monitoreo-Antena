@@ -9,7 +9,7 @@ import socket
 import json
 import requests
 import struct
-import sys, time
+import os, sys, time
 
 import multiprocessing
 
@@ -408,7 +408,7 @@ class ABSConfiguration(Configuration):
             return False
         else:
             self.message = "ABS Beams List have been sent to ABS Modules"
-            beams[0].set_as_activebeam()
+            self.active_beam = beams[0].pk
 
         self.device.status = 3
         self.module_status = ''.join(status)
@@ -490,7 +490,7 @@ class ABSConfiguration(Configuration):
         # Create the datagram socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(0.01)
-        local_ip = "0.0.0.0"
+        local_ip = os.environ.get('LOCAL_IP', '127.0.0.1')
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(local_ip))
         sent = sock.sendto(message, multicast_group)
         print('Sending ' + message)
