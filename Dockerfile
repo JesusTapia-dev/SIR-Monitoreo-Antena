@@ -9,7 +9,7 @@ ADD requirements.txt ./requirements.txt
 RUN apt-get clean && apt-get update && apt-get install -y --no-install-recommends \
 	gcc \
     g++ \
-    && pip install -v --timeout 120 -r requirements.txt --no-cache-dir --index-url http://10.10.20.128:8010/simple --trusted-host 10.10.20.128 \
+    && pip install -v --timeout 120 -r requirements.txt --no-cache-dir \
     && apt-get purge -y --auto-remove gcc g++\
 	&& rm -rf /var/lib/apt/lists/*
 
