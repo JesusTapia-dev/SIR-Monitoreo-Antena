@@ -21,9 +21,9 @@ class JARSConfigurationForm(forms.ModelForm):
         if instance and instance.pk:
             devices = Device.objects.filter(device_type__name='jars')
 
-            if instance.experiment:
-                experiments = Experiment.objects.filter(pk=instance.experiment.id)
-                self.fields['experiment'].widget.choices = [(experiment.id, experiment) for experiment in experiments]
+            #if instance.experiment:
+            #    experiments = Experiment.objects.filter(pk=instance.experiment.id)
+            #    self.fields['experiment'].widget.choices = [(experiment.id, experiment) for experiment in experiments]
 
             self.fields['device'].widget.choices = [(device.id, device) for device in devices]
             #self.fields['spectral'].widget = SpectralWidget()
@@ -31,12 +31,12 @@ class JARSConfigurationForm(forms.ModelForm):
         self.fields['spectral'].widget = SpectralWidget()
 
     #-------------JARS Configuration needs an Experiment-----------------
-    def clean(self):
-        cleaned_data = super(JARSConfigurationForm, self).clean()
-        experiment = cleaned_data.get('experiment')
-        if not experiment:
-            msg = "Error: Jars Configuration needs an Experiment"
-            self.add_error('experiment', msg)
+    #def clean(self):
+    #    cleaned_data = super(JARSConfigurationForm, self).clean()
+    #    experiment = cleaned_data.get('experiment')
+    #    if not experiment:
+    #        msg = "Error: Jars Configuration needs an Experiment"
+    #        self.add_error('experiment', msg)
 
     class Meta:
         model = JARSConfiguration

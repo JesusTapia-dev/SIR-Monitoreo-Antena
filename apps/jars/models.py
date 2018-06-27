@@ -273,7 +273,7 @@ class JARSConfiguration(Configuration):
             return False
 
         json_data = json.dumps(data)
-        print json_data
+
         try:
             payload = self.request('write', 'post', json=json_data)
             self.device.status = payload['status']
