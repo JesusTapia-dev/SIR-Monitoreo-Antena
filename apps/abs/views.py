@@ -9,6 +9,7 @@ from django.core.urlresolvers import reverse
 from datetime import datetime
 from time import sleep
 import os
+import io
 
 from apps.main.models import Device, Configuration, Experiment
 from apps.main.views import sidebar
@@ -369,8 +370,7 @@ def plot_patterns(request, id_conf, id_beam=None):
 
     if id_beam:
         beam  = get_object_or_404(ABSBeam, pk=id_beam)
-        kwargs['beam']       = beam
-
+        kwargs['beam'] = beam
 
     ###### SIDEBAR ######
 
@@ -392,20 +392,15 @@ def plot_pattern(request, id_conf, id_beam, antenna):
 
     conf = get_object_or_404(ABSConfiguration, pk=id_conf)
     beam = get_object_or_404(ABSBeam, pk=id_beam)
-
-    name = conf.experiment.name
-
     just_rx = 1 if json.loads(beam.only_rx)[antenna] else 0
     phases = json.loads(beam.antenna)['antenna_{}'.format(antenna)]
     gain_tx = json.loads(beam.tx)[antenna]
     gain_rx = json.loads(beam.rx)[antenna]
     ues = json.loads(beam.ues)[antenna]
-
-    newOverJro = overJroShow(name)
+    newOverJro = overJroShow(beam.name)
     fig = newOverJro.plotPattern2(datetime.today(), phases, gain_tx, gain_rx, ues, just_rx)
-
-    response=HttpResponse(content_type='image/png')
-
-    fig.canvas.print_png(response)
-
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png')
+    response = HttpResponse(buf.getvalue(), content_type='image/png')
     return response
+    
