@@ -119,32 +119,31 @@ def get_values_from_form(form_data):
     return beam_data
 
 
+def abs_conf(request, id_conf):
 
-def abs_conf(request, id_conf, status_request=None):
-
-    conf           = get_object_or_404(ABSConfiguration, pk=id_conf)
-    beams          = ABSBeam.objects.filter(abs_conf=conf)
-    active_beam_id = json.loads(conf.active_beam)
-
+    conf = get_object_or_404(ABSConfiguration, pk=id_conf)
+    beams = ABSBeam.objects.filter(abs_conf=conf)
     #------------Colors for Active Beam:-------------
-    modules_status = json.loads(conf.module_status)
+    all_status = {}
     module_messages = json.loads(conf.module_messages)
 
     color_status   = {}
-    for status in modules_status:
-        if modules_status[status] == 3:    #Running background-color: #00cc00;
-            color_status[status] = 'class=text-success'#'bgcolor=#00cc00'
-        elif modules_status[status] == 1:  #Connected background-color: #ee902c;
-            color_status[status] = 'class=text-warning'#'bgcolor=#ee902c'
-        else:                              #Disconnected background-color: #ff0000;
-            color_status[status] = 'class=text-danger'#'bgcolor=#FF0000'
+    for i, status in enumerate(conf.module_status):
+        if status == '3':    #Running background-color: #00cc00;
+            all_status['{}'.format(i+1)] = 2
+            color_status['{}'.format(i+1)] = 'class=text-success'#'bgcolor=#00cc00'
+        elif status == '1':  #Connected background-color: #ee902c;
+            all_status['{}'.format(i+1)] = 1
+            color_status['{}'.format(i+1)] = 'class=text-warning'#'bgcolor=#ee902c'
+        else:                #Disconnected background-color: #ff0000;
+            all_status['{}'.format(i+1)] = 0
+            color_status['{}'.format(i+1)] = 'class=text-danger'#'bgcolor=#FF0000'
     #------------------------------------------------
 
     kwargs = {}
-    #kwargs['status'] = conf.device.get_status_display()
     kwargs['connected_modules'] = str(conf.connected_modules())+'/64'
-
     kwargs['dev_conf'] = conf
+    
     if conf.operation_mode == 0:
         kwargs['dev_conf_keys'] = ['name', 'operation_mode']
     else:
@@ -152,41 +151,17 @@ def abs_conf(request, id_conf, status_request=None):
 
     kwargs['title'] = 'ABS Configuration'
     kwargs['suptitle'] = 'Details'
-    #kwargs['no_play'] = True
-
     kwargs['button'] = 'Edit Configuration'
-    #------------------Active Beam-----------------------
-    try:
-        active_beam_id = active_beam_id['active_beam']
-        active_beam = ABSBeam.objects.get(pk=active_beam_id)
-        kwargs['active_beam'] = active_beam
-        for beam in beams:
-            if beam.id == active_beam.id:
-                beam.color_status    = color_status
-                beam.module_messages = module_messages
-    except:
-        active_beam = ''
-    #----------------------------------------------------
-    kwargs['beams']    = beams
-    kwargs['modules_status'] = modules_status
+    
+    if conf.active_beam != 0:
+        kwargs['active_beam'] = int(conf.active_beam)
+
+    kwargs['beams'] = beams
+    kwargs['modules_status'] = all_status
     kwargs['color_status']   = color_status
     kwargs['module_messages'] = module_messages
-
-    #if conf.device.status in [0,1]:
-    if conf.connected_modules() == 0:
-        conf.device.status = 0
-        messages.error(request, 'No ABS module is connected.')#conf.message)
-        conf.device.save()
-    else:
-        messages.success(request, 'ABS modules are connected.')#conf.message)
-
     ###### SIDEBAR ######
     kwargs.update(sidebar(conf=conf))
-
-    if status_request:
-        conf.status_device()
-        kwargs['status_request'] = True
-        return render(request, 'abs_conf.html', kwargs)
 
     return render(request, 'abs_conf.html', kwargs)
 
@@ -196,7 +171,6 @@ def abs_conf_edit(request, id_conf):
     conf     = get_object_or_404(ABSConfiguration, pk=id_conf)
 
     beams = ABSBeam.objects.filter(abs_conf=conf)
-    print beams
 
     if request.method=='GET':
         form = ABSConfigurationForm(instance=conf)
@@ -262,9 +236,8 @@ def send_beam(request, id_conf, id_beam):
     conf = get_object_or_404(ABSConfiguration, pk=id_conf)
     beam = get_object_or_404(ABSBeam, pk=id_beam)
     beams_list    = ABSBeam.objects.filter(abs_conf=conf)
-    #To set this beam as an Active Beam
-    beam.set_as_activebeam()
-    #To send beam position to abs-modules
+    conf.active_beam = id_beam
+
     i = 0
     for b in beams_list:
         if b.id == int(id_beam):
@@ -273,7 +246,7 @@ def send_beam(request, id_conf, id_beam):
             i += 1
     beam_pos = i + 1 #Estandarizar
     print '%s Position: %s' % (beam.name, str(beam_pos))
-    conf.send_beam_num(beam_pos)
+    conf.send_beam(beam_pos)
 
     return redirect('url_abs_conf', conf.id)
 
@@ -284,7 +257,6 @@ def add_beam(request, id_conf):
     confs    = Configuration.objects.all()
 
     if request.method=='GET':
-        #form = ABSBeamEditForm()
         form = ABSBeamAddForm()
 
     if request.method=='POST':
@@ -293,18 +265,15 @@ def add_beam(request, id_conf):
         beam_data = get_values_from_form(request.POST)
 
         new_beam = ABSBeam(
-                   name    =beam_data['name'],
-                   antenna =json.dumps(beam_data['antenna']),
-                   abs_conf=conf,
-                   tx      =json.dumps(beam_data['tx']),
-                   rx      =json.dumps(beam_data['rx']),
-                   ues     =json.dumps(beam_data['ues']),
-                   only_rx =json.dumps(beam_data['only_rx'])
+                   name = beam_data['name'],
+                   antenna = json.dumps(beam_data['antenna']),
+                   abs_conf = conf,
+                   tx = json.dumps(beam_data['tx']),
+                   rx = json.dumps(beam_data['rx']),
+                   ues = json.dumps(beam_data['ues']),
+                   only_rx = json.dumps(beam_data['only_rx'])
                    )
         new_beam.save()
-        #---Update 6bits configuration and add beam to abs configuration beams list.
-        new_beam.modules_6bits()
-        #new_beam.add_beam2list()
         messages.success(request, 'Beam: "%s" has been added.'  % new_beam.name)
 
         return redirect('url_edit_abs_conf', conf.id)
