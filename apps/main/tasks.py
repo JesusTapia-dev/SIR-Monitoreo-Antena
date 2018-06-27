@@ -19,6 +19,13 @@ def task_stop(id_exp):
 
     return exp.stop()
 
+def kill_tasks():
+
+    i = task.control.inspect()
+    tasks = i.scheduled()
+    print tasks
+    #if tasks:
+    #    print dir(tasks[0])
 
 #Task to get status
 @task

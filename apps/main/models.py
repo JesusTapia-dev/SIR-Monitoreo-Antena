@@ -361,7 +361,7 @@ class Experiment(models.Model):
         data['end_time'] = data['end_time'].strftime('%H:%M:%S')
         data['location'] = self.location.name
         data['configurations'] = ['{}'.format(conf.pk) for
-            conf in Configuration.objects.filter(experiment=self)]
+            conf in Configuration.objects.filter(experiment=self, type=0)]
 
         return data
 
@@ -392,23 +392,17 @@ class Experiment(models.Model):
 
         result = 2
 
-        confs = Configuration.objects.filter(experiment=self).filter(type = 0).order_by('-device__device_type__sequence')
+        confs = Configuration.objects.filter(experiment=self, type = 0).order_by('-device__device_type__sequence')
         #Only Configured Devices.
         for conf in confs:
-            dev_status = conf.device.status
-            if dev_status in [0,4]:
+            if conf.device.status in (0, 4):
                 result = 0
                 return result
-            else:
-                if conf.device.device_type.name != 'jars':
-                    conf.write_device()
-                    time.sleep(1)
-                    print conf.device.name+' has started...'
-                else:
-                    conf.stop_device()
-                    conf.write_device()
-                    conf.start_device()
-                    print conf.device.name+' has started...'
+        for conf in confs:
+            conf.stop_device()
+            #conf.write_device()
+            conf.start_device()
+            print conf.device.name+' has started...'
 
         return result
 
@@ -421,21 +415,13 @@ class Experiment(models.Model):
 
         result = 1
 
-        confs = Configuration.objects.filter(experiment=self).filter(type = 0).order_by('device__device_type__sequence')
-
-        for conf in confs:
-            dev_status = conf.device.status
-            if dev_status in [0,4]:
-                result = 0
-                return result
-
-        #Stop Device
+        confs = Configuration.objects.filter(experiment=self, type = 0).order_by('device__device_type__sequence')
         confs=confs.exclude(device__device_type__name='cgs')
         for conf in confs:
-            if conf.device.device_type.name != 'rc':
-                conf.stop_device()
-            else:
-                conf.reset_device()
+            if conf.device.status in (0, 4):
+                result = 0
+                continue
+            conf.stop_device()
             print conf.device.name+' has stopped...'
 
         return result
@@ -443,7 +429,10 @@ class Experiment(models.Model):
 
     def get_status(self):
 
-        confs =  Configuration.objects.filter(experiment=self)
+        if self.status == 3:
+            return
+
+        confs =  Configuration.objects.filter(experiment=self, type=0)
 
         for conf in confs:
             conf.status_device()
@@ -457,9 +446,8 @@ class Experiment(models.Model):
         else:
             status = 0
 
-        if self.status<>3:
-            self.status = status
-            self.save()
+        self.status = status
+        self.save()
 
     def status_color(self):
         color = 'muted'

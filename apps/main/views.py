@@ -1,6 +1,6 @@
 import ast
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.utils.safestring import mark_safe
@@ -19,7 +19,7 @@ except ImportError:
 from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm, UploadFileForm, DownloadFileForm, OperationForm, NewForm
 from .forms import OperationSearchForm, FilterForm, ChangeIpForm
 
-from .tasks import task_start, task_stop, task_status
+from .tasks import task_start, task_stop, task_status, kill_tasks
 
 from apps.rc.forms import RCConfigurationForm, RCLineCode, RCMixConfigurationForm
 from apps.dds.forms import DDSConfigurationForm
@@ -363,7 +363,7 @@ def campaign_new(request):
                 kwargs['experiment_keys'] = ['name', 'start_time', 'end_time']
                 camp = Campaign.objects.get(pk=request.GET['template'])
                 form = CampaignForm(instance=camp,
-                                    initial={'name':'{} [{:%Y/%m/%d}]'.format(camp.name, datetime.now()),
+                                    initial={'name':'{}_{:%Y%m%d}'.format(camp.name, datetime.now()),
                                              'template':False})
         elif 'blank' in request.GET:
             kwargs['button'] = 'Create'
@@ -1198,7 +1198,7 @@ def dev_confs(request):
 
     kwargs = get_paginator(Configuration, page, order, filters)
 
-    form = FilterForm(initial=request.GET, extra_fields=['tags','template'])
+    form = FilterForm(initial=request.GET, extra_fields=['tags', 'template', 'historical'])
     kwargs['keys'] = ['name', 'experiment', 'type', 'programmed_date']
     kwargs['title'] = 'Configuration'
     kwargs['suptitle'] = 'List'
@@ -1392,7 +1392,7 @@ def dev_conf_write(request, id_conf):
     else:
         messages.error(request, conf.message)
 
-    return redirect(conf.get_absolute_url())
+    return redirect(get_object_or_404(Configuration, pk=id_conf).get_absolute_url())
 
 
 @user_passes_test(lambda u:u.is_staff)
@@ -1577,16 +1577,21 @@ def get_paginator(model, page, order, filters={}, n=10):
     [filters.pop(key) for key in filters.keys() if filters[key] in ('', ' ')]
     filters.pop('page', None)
 
+    fields = [f.name for f in model._meta.get_fields()]
+
     if 'template' in filters:
         filters['template'] = True
+    if 'historical' in filters:
+        filters.pop('historical')
+        filters['type'] = 1
+    elif 'type' in fields:
+        filters['type'] = 0
     if 'start_date' in filters:
         filters['start_date__gte'] = filters.pop('start_date')
     if 'end_date' in filters:
         filters['start_date__lte'] = filters.pop('end_date')
     if 'tags' in filters:
         tags = filters.pop('tags')
-        fields = [f.name for f in model._meta.get_fields()]
-
         if 'tags' in fields:
             query = query | Q(tags__icontains=tags)
         if 'name' in fields:
@@ -1625,8 +1630,8 @@ def operation(request, id_camp=None):
         form = OperationForm(initial={'campaign': campaign.id}, campaigns=campaigns)
         kwargs['campaign'] = campaign
     else:
-        form = OperationForm(campaigns=campaigns)
-        kwargs['form'] = form
+        # form = OperationForm(campaigns=campaigns)
+        kwargs['campaigns'] = campaigns
         return render(request, 'operation.html', kwargs)
 
     #---Experiment
@@ -1645,11 +1650,13 @@ def radar_start(request, id_camp, id_radar):
 
     campaign = get_object_or_404(Campaign, pk = id_camp)
     experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
-    now = datetime.utcnow()
-
+    now = datetime.now()
     for exp in experiments:
-        date = datetime.combine(datetime.now().date(), exp.start_time)
-
+        start = datetime.combine(datetime.now().date(), exp.start_time)
+        end = datetime.combine(datetime.now().date(), exp.start_time)
+        if end < start:
+            end += timedelta(1)
+        
         if exp.status == 2:
             messages.warning(request, 'Experiment {} already running'.format(exp))
             continue
@@ -1658,21 +1665,23 @@ def radar_start(request, id_camp, id_radar):
             messages.warning(request, 'Experiment {} already programmed'.format(exp))
             continue
 
-        if date>campaign.end_date or date<campaign.start_date:
+        if start > campaign.end_date or start < campaign.start_date:
             messages.warning(request, 'Experiment {} out of date'.format(exp))
             continue
 
-        if now>=date:
+        if now > start and now <= end:
             task = task_start.delay(exp.pk)
             exp.status = task.wait()
             if exp.status==0:
                 messages.error(request, 'Experiment {} not start'.format(exp))
             if exp.status==2:
+                task = task_stop.apply_async((exp.pk,), eta=end+timedelta(hours=5))
                 messages.success(request, 'Experiment {} started'.format(exp))
         else:
-            task = task_start.apply_async((exp.pk,), eta=date)
+            task = task_start.apply_async((exp.pk,), eta=start+timedelta(hours=5))
+            task = task_stop.apply_async((exp.pk,), eta=end+timedelta(hours=5))
             exp.status = 3
-            messages.success(request, 'Experiment {} programmed to start at {}'.format(exp, date))
+            messages.success(request, 'Experiment {} programmed to start at {}'.format(exp, start))
 
         exp.save()
 
@@ -1694,6 +1703,7 @@ def radar_stop(request, id_camp, id_radar):
             exp.save()
         else:
             messages.error(request, 'Experiment {} not running'.format(exp))
+    kill_tasks()
 
     return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 

@@ -188,8 +188,8 @@ class FilterForm(forms.Form):
                 if 'initial' in kwargs:
                     self.fields[field].widget.attrs = {'start_date':kwargs['initial'].get('start_date', ''),
                                                        'end_date':kwargs['initial'].get('end_date', '')}
-            elif 'template' in field:
-                self.fields['template'] = forms.BooleanField(required=False)
+            elif  field in ('template', 'historical'):
+                self.fields[field] = forms.BooleanField(required=False)
             else:
                 self.fields[field] = forms.CharField(required=False)
 
