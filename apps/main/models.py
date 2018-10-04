@@ -248,7 +248,7 @@ class Campaign(models.Model):
 
     def parms_to_dict(self):
 
-        params = Params()
+        params = Params({})
         params.add(self.jsonify(), 'campaigns')
 
         for exp in Experiment.objects.filter(campaign = self):
@@ -334,6 +334,7 @@ class Experiment(models.Model):
     freq = models.FloatField(verbose_name='Operating Freq. (MHz)', validators=[MinValueValidator(1), MaxValueValidator(10000)], default=49.9200)
     start_time = models.TimeField(default='00:00:00')
     end_time = models.TimeField(default='23:59:59')
+    task = models.CharField(max_length=36, default='', blank=True, null=True)
     status = models.PositiveSmallIntegerField(default=4, choices=EXP_STATES)
 
     class Meta:
@@ -373,7 +374,7 @@ class Experiment(models.Model):
 
         confs = Configuration.objects.filter(experiment=self, type=0)
         self.pk = None
-        self.name = '{} [{:%Y/%m/%d}]'.format(self.name, datetime.now())
+        self.name = '{} [{:%Y-%m-%d}]'.format(self.name, datetime.now())
         for attr, value in kwargs.items():
             setattr(self, attr, value)
 
@@ -391,8 +392,16 @@ class Experiment(models.Model):
         '''
 
         result = 2
-
-        confs = Configuration.objects.filter(experiment=self, type = 0).order_by('-device__device_type__sequence')
+        confs = []
+        allconfs = Configuration.objects.filter(experiment=self, type = 0).order_by('-device__device_type__sequence')
+        rc_mix = [conf for conf in allconfs if conf.device.device_type.name=='rc' and conf.mix]
+        if rc_mix:
+            for conf in allconfs:
+                if conf.device.device_type.name == 'rc' and  not conf.mix:
+                    continue
+                confs.append(conf)
+        else:
+            confs = allconfs
         #Only Configured Devices.
         for conf in confs:
             if conf.device.status in (0, 4):
@@ -400,9 +409,9 @@ class Experiment(models.Model):
                 return result
         for conf in confs:
             conf.stop_device()
-            #conf.write_device()
+            conf.write_device()
             conf.start_device()
-            print conf.device.name+' has started...'
+            time.sleep(1)
 
         return result
 
@@ -422,7 +431,6 @@ class Experiment(models.Model):
                 result = 0
                 continue
             conf.stop_device()
-            print conf.device.name+' has stopped...'
 
         return result
 
@@ -464,7 +472,7 @@ class Experiment(models.Model):
 
     def parms_to_dict(self):
 
-        params = Params()
+        params = Params({})
         params.add(self.jsonify(), 'experiments')
 
         configurations = Configuration.objects.filter(experiment=self, type=0)
@@ -532,19 +540,13 @@ class Experiment(models.Model):
 class Configuration(PolymorphicModel):
 
     template = models.BooleanField(default=False)
-
     name = models.CharField(verbose_name="Configuration Name", max_length=40, default='')
-
     experiment = models.ForeignKey('Experiment', verbose_name='Experiment', null=True, blank=True, on_delete=models.CASCADE)
     device = models.ForeignKey('Device', verbose_name='Device', null=True, on_delete=models.CASCADE)
-
     type = models.PositiveSmallIntegerField(default=0, choices=CONF_TYPES)
-
     created_date = models.DateTimeField(auto_now_add=True)
     programmed_date = models.DateTimeField(auto_now=True)
-
     parameters = models.TextField(default='{}')
-
     message = ""
 
     class Meta:
@@ -607,7 +609,7 @@ class Configuration(PolymorphicModel):
 
     def parms_to_dict(self):
 
-        params = Params()
+        params = Params({})
         params.add(self.jsonify(), 'configurations')
 
         if self.device.device_type.name=='rc':

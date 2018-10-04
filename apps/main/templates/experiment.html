@@ -70,8 +70,12 @@
                 <i class="fa fa-3x fa-puzzle-piece"></i>
                {%endif%}
                    <h4>{{item}}<br><small>{{item.device.ip_address}}</small>
-                       <span class="label label-{{item.device.status_color}}">{{item.device.get_status_display}}</span>
-                   </h4>
+		       {%if experiment.status == 3 %}
+		       <span class="label label-info">Configured</span>
+		       {%else%}
+		       <span class="label label-{{item.device.status_color}}">{{item.device.get_status_display}}</span>
+                       {%endif%}
+		   </h4>
              </a>
         </div>
 		{% endfor %}

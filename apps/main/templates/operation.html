@@ -18,30 +18,28 @@
 
 <h3>Current Campaigns</h3>
 <br>
-
-	  <div class="bootcards-list">    
-	    <div class="panel panel-default">
-        <div class="list-group">
-			  {% for item in campaigns %}
-					  <a class="list-group-item" href="{{item.pk}}">
-							<div class="row">
-								<div class="col-sm-6">
-								  <i class="fa fa-3x fa-calendar pull-left"></i>
-								  <h4 class="list-group-item-heading">{{item.name}}</h4>
-									<p class="list-group-item-text">Radar: {% for radar in item.get_experiments_by_radar %}{{radar.name}},{% endfor %}</p>
-								</div>
-								<div class="col-sm-6">
-									<p class="list-group-item-text">From: {{item.start_date}}</p>
-									<p class="list-group-item-text">To: {{item.end_date}}</p>
-								</div>
-							</div>
-            </a>
-			  {% endfor %}
-        </div>
-	    </div>
+<div class="bootcards-list">    
+  <div class="panel panel-default">
+    <div class="list-group">
+    {% for item in campaigns %}
+    <a class="list-group-item" href="{{item.pk}}">
+        <div class="row">
+          <div class="col-sm-6">
+          <i class="fa fa-3x fa-calendar pull-left"></i>
+	  <h4 class="list-group-item-heading">{{item.name}}</h4>
+	  <p class="list-group-item-text">Radar: {% for radar in item.get_experiments_by_radar %}{{radar.name}},{% endfor %}</p>
 	  </div>
-	  
+	  <div class="col-sm-6">
+	  <p class="list-group-item-text">From: {{item.start_date}}</p>
+	  <p class="list-group-item-text">To: {{item.end_date}}</p>
+	  </div>
 
+	</div>
+    </a>
+    {% endfor %}
+  </div>
+  </div>
+</div>
 
 {% endif %}
 

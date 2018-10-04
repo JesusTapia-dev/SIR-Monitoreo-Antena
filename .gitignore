@@ -1,4 +1,5 @@
 migrations/
+*.sqlite
 .vscode/
 *.pyc
 .env
