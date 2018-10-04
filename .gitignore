@@ -1,4 +1,5 @@
 migrations/
+.DS_Store
 *.sqlite
 .vscode/
 *.pyc
