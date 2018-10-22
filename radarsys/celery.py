@@ -10,6 +10,7 @@ app = Celery('radarsys')
 # Using a string here means the worker will not have to
 # pickle the object when using Windows.
 app.config_from_object('django.conf:settings')
+app.conf.broker_transport_options = {'visibility_timeout': 86400}
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 

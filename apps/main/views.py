@@ -19,7 +19,7 @@ except ImportError:
 from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm, UploadFileForm, DownloadFileForm, OperationForm, NewForm
 from .forms import OperationSearchForm, FilterForm, ChangeIpForm
 
-from .tasks import task_start, task_stop, task_status, kill_tasks
+from .tasks import task_start
 
 from apps.rc.forms import RCConfigurationForm, RCLineCode, RCMixConfigurationForm
 from apps.dds.forms import DDSConfigurationForm
@@ -36,6 +36,8 @@ from apps.usrp.models import USRPConfiguration
 from apps.abs.models import ABSConfiguration
 from apps.rc.models import RCConfiguration, RCLine, RCLineType
 from apps.dds.models import DDSConfiguration
+
+from radarsys.celery import app
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
@@ -836,7 +838,7 @@ def experiment_mix(request, id_exp):
 @user_passes_test(lambda u:u.is_staff)
 def experiment_mix_delete(request, id_exp):
 
-    conf = RCConfiguration.objects.get(experiment=id_exp, mix=True)
+    conf = RCConfiguration.objects.get(experiment=id_exp, mix=True, type=0)
     values = conf.parameters.split('-')
     conf.parameters = '-'.join(values[:-1])
     conf.save()
@@ -1653,7 +1655,7 @@ def radar_start(request, id_camp, id_radar):
     now = datetime.now()
     for exp in experiments:
         start = datetime.combine(datetime.now().date(), exp.start_time)
-        end = datetime.combine(datetime.now().date(), exp.start_time)
+        end = datetime.combine(datetime.now().date(), exp.end_time)
         if end < start:
             end += timedelta(1)
         
@@ -1670,16 +1672,17 @@ def radar_start(request, id_camp, id_radar):
             continue
 
         if now > start and now <= end:
-            task = task_start.delay(exp.pk)
+            exp.status = 3
+            exp.save()
+            task = task_start.delay(exp.id)
             exp.status = task.wait()
             if exp.status==0:
                 messages.error(request, 'Experiment {} not start'.format(exp))
             if exp.status==2:
-                task = task_stop.apply_async((exp.pk,), eta=end+timedelta(hours=5))
                 messages.success(request, 'Experiment {} started'.format(exp))
         else:
-            task = task_start.apply_async((exp.pk,), eta=start+timedelta(hours=5))
-            task = task_stop.apply_async((exp.pk,), eta=end+timedelta(hours=5))
+            task = task_start.apply_async((exp.pk, ), eta=start+timedelta(hours=5))
+            exp.task = task.id
             exp.status = 3
             messages.success(request, 'Experiment {} programmed to start at {}'.format(exp, start))
 
@@ -1696,14 +1699,13 @@ def radar_stop(request, id_camp, id_radar):
 
     for exp in experiments:
 
+        if exp.task:
+            app.control.revoke(exp.task)
         if exp.status == 2:
-            task = task_stop.delay(exp.pk)
-            exp.status = task.wait()
+            exp.stop()
             messages.warning(request, 'Experiment {} stopped'.format(exp))
-            exp.save()
-        else:
-            messages.error(request, 'Experiment {} not running'.format(exp))
-    kill_tasks()
+        exp.status = 1
+        exp.save()
 
     return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 

@@ -256,24 +256,16 @@ class JARSConfiguration(Configuration):
             if data['configurations']['byId'][key]['device_type'] in ('dds', 'cgs'):
                 data['configurations']['allIds'].remove(key)
                 data['configurations']['byId'].pop(key)
-            elif data['configurations']['byId'][key]['device_type'] == 'jars':
-                data['configurations']['byId'][key] = self.parms_to_dict()['configurations']['byId'][str(self.pk)]
             elif data['configurations']['byId'][key]['device_type'] == 'rc':
                     data['configurations']['byId'][key]['pulses'] = ''
                     data['configurations']['byId'][key]['delays'] = ''
         rc_ids = [pk for pk in data['configurations']['allIds'] if data['configurations']['byId'][pk]['device_type']=='rc']
-        mix_ids = [pk for pk in rc_ids if data['configurations']['byId'][pk]['mix']]
-        if mix_ids:
-            params = data['configurations']['byId'][mix_ids[0]]['parameters']
-            rc = data['configurations']['byId'][params.split('-')[0].split('|')[0]]
-            rc['mix'] = True
-            data['configurations']['byId'][rc['id']] = rc
-        elif len(rc_ids)==0:
+        if len(rc_ids)==0:
             self.message = 'Missing RC configuration'
             return False
 
         json_data = json.dumps(data)
-
+        
         try:
             payload = self.request('write', 'post', json=json_data)
             self.device.status = payload['status']

@@ -93,7 +93,7 @@ class ExperimentForm(forms.ModelForm):
 
     class Meta:
         model = Experiment
-        exclude = ['status']
+        exclude = ['task', 'status']
 
 class LocationForm(forms.ModelForm):
     class Meta:
