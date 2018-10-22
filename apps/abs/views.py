@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.conf import settings
 from django.http import HttpResponse
 from django.core.urlresolvers import reverse
+from django.views.decorators.csrf import csrf_exempt
 
 from datetime import datetime
 from time import sleep
@@ -200,6 +201,15 @@ def abs_conf_edit(request, id_conf):
 
     return render(request, 'abs_conf_edit.html', kwargs)
 
+@csrf_exempt
+def abs_conf_alert(request):
+
+    if request.method == 'POST':
+        print request.POST
+        return HttpResponse(json.dumps({'result':1}), content_type='application/json')
+    else:
+        return redirect('index')
+
 
 def import_file(request, id_conf):
 
@@ -342,7 +352,6 @@ def remove_beam(request, id_conf, id_beam):
     if request.method=='POST':
         if beam:
             try:
-                beam.remove_beamfromlist()
                 beam.delete()
                 messages.success(request, 'Beam: "%s" has been deleted.'  % beam)
             except:

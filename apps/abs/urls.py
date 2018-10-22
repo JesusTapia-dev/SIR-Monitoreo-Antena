@@ -5,6 +5,7 @@ from apps.abs import views
 urlpatterns = (
     url(r'^(?P<id_conf>-?\d+)/$', views.abs_conf, name='url_abs_conf'),
     url(r'^(?P<id_conf>-?\d+)/edit/$', views.abs_conf_edit, name='url_edit_abs_conf'),
+    url(r'^alert/$', views.abs_conf_alert, name='url_alert_abs_conf'),
     url(r'^(?P<id_conf>-?\d+)/import/$', views.import_file, name='url_import_abs_conf'),
     #url(r'^(?P<id_conf>-?\d+)/status/', views.abs_conf, {'status_request':True},name='url_status_abs_conf'),
     url(r'^(?P<id_conf>-?\d+)/change_beam/(?P<id_beam>-?\d+)/$', views.send_beam, name='url_send_beam'),
