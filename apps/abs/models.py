@@ -396,7 +396,8 @@ class ABSConfiguration(Configuration):
                         status[int(address[0][10:])-1] = '3'
                     elif data == '0':
                         status[int(address[0][10:])-1] = '1'
-                except:
+                except Exception as e:
+                    print 'Error {}'.format(e)
                     n += 1
             sock.close()
         else:
@@ -492,9 +493,10 @@ class ABSConfiguration(Configuration):
         multicast_group = ('224.3.29.71', 10000)
         # Create the datagram socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.settimeout(0.5)
+        sock.settimeout(1)
         # sock.bind((local_ip, 10000))
         local_ip = os.environ.get('LOCAL_IP', '127.0.0.1')
+        local_ip = '192.168.1.128'
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(local_ip))
         sent = sock.sendto(message, multicast_group)
         print('Sending ' + message)
@@ -513,6 +515,7 @@ class ABSConfiguration(Configuration):
         for i in range(32):
             #if True:
             try:
+                address = None
                 data, address = sock.recvfrom(1024)
                 print address, data
                 if data == '1':
@@ -552,10 +555,8 @@ class ABSConfiguration(Configuration):
         confdds  = ''
         confjars = ''
         confrc   = ''
-        print 'Starting...', self.experiment
         #TO STOP DEVICES: DDS-JARS-RC
         for i in range(0,len(confs)):
-            print i
             if i==0:
                 for conf in confs:
                     if conf.device.device_type.name == 'dds':
@@ -570,12 +571,10 @@ class ABSConfiguration(Configuration):
                         break
             if i==2:
                 for conf in confs:
-                    print conf
                     if conf.device.device_type.name == 'rc':
                         confrc = conf
                         confrc.stop_device()
                         break
-        print 'Stop devices'
         if beam_pos > 0:
             beam_pos = beam_pos - 1
         else:
@@ -585,9 +584,7 @@ class ABSConfiguration(Configuration):
         #El servidor tcp en el embebido comienza a contar desde 0
         status = ['0'] * 64
         message = 'CHGB{}'.format(beam_pos) 
-        print 'Before send'
         sock = self.send_multicast(message)
-        print 'Waiting'
         for i in range(32):
             try:
                 data, address = sock.recvfrom(1024)
@@ -596,7 +593,8 @@ class ABSConfiguration(Configuration):
                     status[int(address[0][10:])-1] = '3'
                 elif data == '0':
                     status[int(address[0][10:])-1] = '1'
-            except:
+            except  Exception as e:
+                print 'Error {}'.format(e)
                 pass
 
         sock.close()
