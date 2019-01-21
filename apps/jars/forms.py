@@ -2,7 +2,7 @@ import os
 
 from django import forms
 from apps.main.models import Device, Experiment
-from .models import JARSConfiguration, JARSfilter
+from .models import JARSConfiguration, JARSFilter
 from .widgets import SpectralWidget
 from apps.main.forms import add_empty_choice
 
@@ -20,63 +20,50 @@ class JARSConfigurationForm(forms.ModelForm):
 
         if instance and instance.pk:
             devices = Device.objects.filter(device_type__name='jars')
-
-            #if instance.experiment:
-            #    experiments = Experiment.objects.filter(pk=instance.experiment.id)
-            #    self.fields['experiment'].widget.choices = [(experiment.id, experiment) for experiment in experiments]
-
             self.fields['device'].widget.choices = [(device.id, device) for device in devices]
-            #self.fields['spectral'].widget = SpectralWidget()
         self.fields['spectral_number'].widget.attrs['readonly'] = True
         self.fields['spectral'].widget = SpectralWidget()
 
-    #-------------JARS Configuration needs an Experiment-----------------
-    #def clean(self):
-    #    cleaned_data = super(JARSConfigurationForm, self).clean()
-    #    experiment = cleaned_data.get('experiment')
-    #    if not experiment:
-    #        msg = "Error: Jars Configuration needs an Experiment"
-    #        self.add_error('experiment', msg)
-
     class Meta:
         model = JARSConfiguration
-        exclude = ('type', 'parameters', 'status', 'filter_parms')
+        exclude = ('type', 'parameters', 'status', 'filter_parms', 'author', 'hash', 'filter')
 
-
-class JARSfilterForm(forms.ModelForm):
+class JARSFilterForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
-        super(JARSfilterForm, self).__init__(*args, **kwargs)
+        super(JARSFilterForm, self).__init__(*args, **kwargs)
         instance = getattr(self, 'instance', None)
 
-        self.fields['fch_decimal'].widget.attrs['readonly'] = True
+        self.fields['f_decimal'].widget.attrs['readonly'] = True
 
         if 'initial' in kwargs:
-            if 'filter_id' not in kwargs['initial']:
-                self.fields.pop('name')
-            else:
-                self.fields['name'] = forms.ChoiceField(choices=create_choices_from_model(JARSfilter))
-                filter_id = kwargs['initial']['filter_id']
+            self.fields['filter_template'] = forms.ChoiceField(
+                choices=create_choices_from_model(JARSFilter),
+                initial = kwargs['initial']['id']
+            )
+            # self.fields['name'].initial = kwargs['initial']['id']
+            
+                # filter_id = kwargs['initial']['filter_id']
 
-                if filter_id == 0:
-                    for value in self.fields:
-                        if value != 'name':
-                            self.fields.pop(value)
-                    self.fields['name'].label = "Filter Template Name"
-                else:
-                    self.fields['name'] = forms.ChoiceField(choices=create_choices_from_model(JARSfilter, kwargs['initial']['filter_id']))
-                    jars_filter = JARSfilter.objects.get(pk=kwargs['initial']['filter_id'])
-                    labels = [f.name for f in jars_filter._meta.get_fields()]
+                # if filter_id == 0:
+                #     for value in self.fields:
+                #         if value != 'name':
+                #             self.fields.pop(value)
+                #     self.fields['name'].label = "Filter Template Name"
+                # else:
+                #     self.fields['name'] = forms.ChoiceField(choices=create_choices_from_model(JARSFilter, kwargs['initial']['filter_id']))
+                #     jars_filter = JARSFilter.objects.get(pk=kwargs['initial']['filter_id'])
+                #     labels = [f.name for f in jars_filter._meta.get_fields()]
 
-                    for label in ['id']:
-                        labels.remove(label)
-                    for label in labels:
-                        self.fields['name'].initial = kwargs['initial']['filter_id']
-                        self.fields[label].initial = getattr(jars_filter,label)
-                    self.fields['name'].label = "Filter Template Name"
+                #     for label in ['id']:
+                #         labels.remove(label)
+                #     for label in labels:
+                #         self.fields['name'].initial = kwargs['initial']['filter_id']
+                #         self.fields[label].initial = getattr(jars_filter,label)
+                #     self.fields['name'].label = "Filter Template Name"
 
     class Meta:
-        model = JARSfilter
-        exclude = ('type', 'parameters', 'status')
+        model = JARSFilter
+        exclude = ('name', )
 
 
 class ExtFileField(forms.FileField):

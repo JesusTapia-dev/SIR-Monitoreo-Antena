@@ -15,6 +15,7 @@ from django.db import models
 from django.core.urlresolvers import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User
 
 from apps.main.utils import Params
 from apps.rc.utils import RCFile
@@ -114,8 +115,6 @@ class Device(models.Model):
 
     device_type = models.ForeignKey(DeviceType, on_delete=models.CASCADE)
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
-
-    name = models.CharField(max_length=40, default='')
     ip_address = models.GenericIPAddressField(protocol='IPv4', default='0.0.0.0')
     port_address = models.PositiveSmallIntegerField(default=2000)
     description = models.TextField(blank=True, null=True)
@@ -125,8 +124,13 @@ class Device(models.Model):
         db_table = 'db_devices'
 
     def __str__(self):
-        return u'[{}]: {}'.format(self.device_type.name.upper(),
-                                    self.name)
+        ret = u'{} [{}]'.format(self.device_type.name.upper(), self.location.name)
+        
+        return ret
+
+    @property
+    def name(self):
+        return str(self)
 
     def get_status(self):
         return self.status
@@ -153,8 +157,13 @@ class Device(models.Model):
             return 'http://{}:{}/'.format(self.ip_address, self.port_address)
 
     def get_absolute_url(self):
-
         return reverse('url_device', args=[str(self.id)])
+
+    def get_absolute_url_edit(self):
+        return reverse('url_edit_device', args=[str(self.id)])
+
+    def get_absolute_url_delete(self):
+        return reverse('url_delete_device', args=[str(self.id)])
 
     def change_ip(self, ip_address, mask, gateway, dns, **kwargs):
 
@@ -216,10 +225,11 @@ class Campaign(models.Model):
     name = models.CharField(max_length=60, unique=True)
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
-    tags = models.CharField(max_length=40)
+    tags = models.CharField(max_length=40, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     experiments = models.ManyToManyField('Experiment', blank=True)
-
+    author = models.ForeignKey(User, null=True, blank=True)
+    
     class Meta:
         db_table = 'db_campaigns'
         ordering = ('name',)
@@ -312,12 +322,14 @@ class Campaign(models.Model):
     def get_absolute_url_edit(self):
         return reverse('url_edit_campaign', args=[str(self.id)])
 
+    def get_absolute_url_delete(self):
+        return reverse('url_delete_campaign', args=[str(self.id)])
+
     def get_absolute_url_export(self):
         return reverse('url_export_campaign', args=[str(self.id)])
 
     def get_absolute_url_import(self):
         return reverse('url_import_campaign', args=[str(self.id)])
-
 
 
 class RunningExperiment(models.Model):
@@ -336,6 +348,8 @@ class Experiment(models.Model):
     end_time = models.TimeField(default='23:59:59')
     task = models.CharField(max_length=36, default='', blank=True, null=True)
     status = models.PositiveSmallIntegerField(default=4, choices=EXP_STATES)
+    author = models.ForeignKey(User, null=True, blank=True)
+    hash = models.CharField(default='', max_length=64, null=True, blank=True)
 
     class Meta:
         db_table = 'db_experiments'
@@ -343,9 +357,9 @@ class Experiment(models.Model):
 
     def __str__(self):
         if self.template:
-            return u'%s (template)' % (self.name)
+            return u'%s (template)' % (self.name[:8])
         else:
-            return u'%s' % (self.name)
+            return u'%s' % (self.name[:10])
 
     def jsonify(self):
 
@@ -374,7 +388,7 @@ class Experiment(models.Model):
 
         confs = Configuration.objects.filter(experiment=self, type=0)
         self.pk = None
-        self.name = '{} [{:%Y-%m-%d}]'.format(self.name, datetime.now())
+        self.name = '{}_{:%y%m%d}'.format(self.name, datetime.now())
         for attr, value in kwargs.items():
             setattr(self, attr, value)
 
@@ -524,6 +538,9 @@ class Experiment(models.Model):
     def get_absolute_url_edit(self):
         return reverse('url_edit_experiment', args=[str(self.id)])
 
+    def get_absolute_url_delete(self):
+        return reverse('url_delete_experiment', args=[str(self.id)])
+
     def get_absolute_url_import(self):
         return reverse('url_import_experiment', args=[str(self.id)])
 
@@ -540,30 +557,43 @@ class Experiment(models.Model):
 class Configuration(PolymorphicModel):
 
     template = models.BooleanField(default=False)
-    name = models.CharField(verbose_name="Configuration Name", max_length=40, default='')
+    # name = models.CharField(verbose_name="Configuration Name", max_length=40, default='')
+    label = models.CharField(verbose_name="Label", max_length=40, default='', blank=True, null=True)
     experiment = models.ForeignKey('Experiment', verbose_name='Experiment', null=True, blank=True, on_delete=models.CASCADE)
     device = models.ForeignKey('Device', verbose_name='Device', null=True, on_delete=models.CASCADE)
     type = models.PositiveSmallIntegerField(default=0, choices=CONF_TYPES)
     created_date = models.DateTimeField(auto_now_add=True)
     programmed_date = models.DateTimeField(auto_now=True)
     parameters = models.TextField(default='{}')
+    author = models.ForeignKey(User, null=True, blank=True)
+    hash = models.CharField(default='', max_length=64, null=True, blank=True)
     message = ""
 
     class Meta:
         db_table = 'db_configurations'
+        ordering = ('device__device_type__name',)
 
     def __str__(self):
 
-        device = '{}:'.format(self.device.device_type.name.upper())
+        ret = u'{} '.format(self.device.device_type.name.upper())
 
         if 'mix' in [f.name for f in self._meta.get_fields()]:
             if self.mix:
-                device = '{} MIXED:'.format(self.device.device_type.name.upper())
+                ret = '{} MIX '.format(self.device.device_type.name.upper())
+        
+        if 'label' in [f.name for f in self._meta.get_fields()]:
+            ret += '{}'.format(self.label[:8])
 
+        #ret += '[ {} ]'.format(self.device.location.name)
         if self.template:
-            return u'{} {} (template)'.format(device, self.name)
-        else:
-            return u'{} {}'.format(device, self.name)
+            ret += ' (template)'
+        
+        return ret
+
+    @property
+    def name(self):
+
+        return str(self)
 
     def jsonify(self):
 
@@ -739,6 +769,9 @@ class Configuration(PolymorphicModel):
     def get_absolute_url_edit(self):
         return reverse('url_edit_%s_conf' % self.device.device_type.name, args=[str(self.id)])
 
+    def get_absolute_url_delete(self):
+        return reverse('url_delete_dev_conf', args=[str(self.id)])
+    
     def get_absolute_url_import(self):
         return reverse('url_import_dev_conf', args=[str(self.id)])
 

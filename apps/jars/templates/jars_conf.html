@@ -4,16 +4,22 @@
 {% load main_tags %}
 
 {% block extra-menu-actions %}
-<li><a href="{{ dev_conf.get_absolute_url_log }}"><span class="glyphicon glyphicon-save-file" aria-hidden="true"></span> Get Log File</a></li>
+<li><a href="{{ dev_conf.get_absolute_url_log }}"><span class="glyphicon glyphicon-save-file" aria-hidden="true"></span>
+        Get Log File</a></li>
 {% endblock %}
 
 {% block extra-content %}
 
 <div class="clearfix"></div>
-<h2>JARS filter: {{resolution}}</h2>
-<hr>
-<div class="panel-group" id="div_lines" role="tablist" aria-multiselectable="true">
-{% include "jars_filter.html" %}
-</div>
+<h2>Filter: {{resolution}}</h2>
+<br>
+<table class="table table-bordered">
+    {% for key in filter_keys %}
+    <tr>
+        <th>{% get_verbose_field_name filter_obj key %}</th>
+        <td>{{filter|attr:key}}</td>
+    </tr>
+    {% endfor %}
+</table>
 
 {% endblock extra-content%}

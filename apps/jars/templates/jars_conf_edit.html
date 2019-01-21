@@ -8,25 +8,33 @@
   {% csrf_token %}
   {% bootstrap_form form layout='horizontal' size='medium' %}
   <div style="clear: both;"></div>
-  <h2>JARS filter</h2>
-  <hr>
-  <div class="panel-group" id="div_lines" role="tablist" aria-multiselectable="true">
-  {% include "jars_filter_edit.html" %}
+  <h2>Filter <small>{{filter_name}}</small></h2>
+  <br>
+  {% bootstrap_form filter_form layout='horizontal' size='medium' %}
+  <div style="clear: both;"></div>
+  <br>
+  <div class="pull-right">
+    <button type="button" class="btn btn-primary" onclick="{% if previous %}window.location.replace('{{ previous }}');{% else %}history.go(-1);{% endif %}">Cancel</button>
+    <button type="submit" class="btn btn-primary">{{button}}</button>
   </div>
+
   <div style="clear: both;"></div>
   <br>
 </form>
 {% endblock %}
 
-
 {% block extra-js%}
 <script src="{% static 'js/jars.js' %}"></script>
-
+<script src="{% static 'js/filters.js' %}"></script>
 <script type="text/javascript">
 
-$("#bt_cancel").click(function() {
+  $("#bt_cancel").click(function () {
     document.location = "{% url 'url_jars_conf' id_dev %}";
-});
+  });
+
+  $("#id_filter_template").change(function () {
+    document.location = "{% url 'url_change_jars_filter' id_dev %}" + $("#id_filter_template").val();
+  });
 
 </script>
 {% endblock %}

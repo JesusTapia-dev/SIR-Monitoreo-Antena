@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {# bootstrap_css #}
     
-    <link href="{% static 'css/bootstrap-spacelab.min.css' %}" media="all" rel="stylesheet">
+    <link href="{% static 'css/bootstrap-yeti.min.css' %}" media="all" rel="stylesheet">
     <link href="{% static 'css/bootcards-desktop.min.css' %}" media="all" rel="stylesheet">
     <link href="{% static 'css/font-awesome.min.css' %}" media="all" rel="stylesheet">
     <!--link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet"-->
@@ -58,27 +58,20 @@
       </div>
       <div class="collapse navbar-collapse" id="navigationbar">
         <ul class="nav navbar-nav">
-          <li class=" dropdown {% block operation-active %}{% endblock %}"><a href="{% url 'url_operation'%}">Operation</a>
+          <li class=" dropdown {% block operation-active %}{% endblock %}">
+            <a href="{% url 'url_operation'%}">Operation</a>
           </li>
-          <li class=" dropdown {% block new-active %}{% endblock %}">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">New<span class="caret"></span></a>
-            <ul class="dropdown-menu" role="menu">
-              <li><a href="{% url 'url_add_campaign' %}">Campaign</a></li>
-              <li><a href="{% url 'url_add_experiment' %}">Experiment</a></li>
-              <li><a href="{% url 'url_add_dev_conf' 0%}">Device Configuration</a></li>
-              <li><a href="{% url 'url_add_device'%}">Device</a></li>
-              <li><a href="{% url 'url_add_location'%}">Radar System</a></li>
-            </ul>
+          <li class=" dropdown {% block campaign-active %}{% endblock %}">
+            <a href="{% url 'url_campaigns'%}">Campaigns</a>
           </li>
-          <li class=" dropdown {% block search-active %}{% endblock %}">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Search<span class="caret"></span></a>
-            <ul class="dropdown-menu" role="menu">
-              <li><a href="{% url 'url_campaigns' %}">Campaigns</a></li>
-              <li><a href="{% url 'url_experiments' %}">Experiments</a></li>
-              <li><a href="{% url 'url_dev_confs' %}">Configurations</a></li>
-              <li><a href="{% url 'url_devices' %}">Devices</a></li>
-              <li><a href="{% url 'url_locations' %}">Radar Systems</a></li>
-            </ul>
+          <li class=" dropdown {% block experiment-active %}{% endblock %}">
+            <a href="{% url 'url_experiments'%}">Experiments</a>
+          </li>
+          <li class=" dropdown {% block configuration-active %}{% endblock %}">
+            <a href="{% url 'url_dev_confs'%}">Configurations</a>
+          </li>
+          <li class=" dropdown {% block device-active %}{% endblock %}">
+            <a href="{% url 'url_devices'%}">Devices</a>
           </li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
@@ -87,7 +80,7 @@
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Hi {{ user.username }}<span class="caret"></span></a>
              <ul class="dropdown-menu" role="menu">
-                <li><a href="/admin">Control Panel</a></li>
+                <li><a href="/admin" target="_blank">Control Panel</a></li>
                 <li><a href="{% url 'url_logout' %}">Logout</a></li>
              </ul>
           </li>

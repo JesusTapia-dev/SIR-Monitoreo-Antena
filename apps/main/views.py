@@ -1,5 +1,6 @@
 import ast
 import json
+import hashlib
 from datetime import datetime, timedelta
 
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
@@ -10,6 +11,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
 from django.http.request import QueryDict
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 try:
     from urllib.parse import urlencode
@@ -39,9 +41,6 @@ from apps.dds.models import DDSConfiguration
 
 from radarsys.celery import app
 
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.decorators import user_passes_test
-from django.contrib.admin.views.decorators import staff_member_required
 
 CONF_FORMS = {
     'rc': RCConfigurationForm,
@@ -73,8 +72,32 @@ MIX_OPERATIONS = {
     '3': 'NAND',
 }
 
+
+def is_developer(user):
+
+    groups = [str(g.name) for g in user.groups.all()]
+    return 'Developer' in groups or user.is_staff
+
+
+def is_operator(user):
+
+    groups = [str(g.name) for g in user.groups.all()]
+    return 'Operator' in groups or user.is_staff
+
+
+def has_been_modified(model):
+
+    prev_hash = model.hash
+    new_hash = hashlib.sha256(str(model.parms_to_dict)).hexdigest()
+    if prev_hash != new_hash:
+        model.hash = new_hash
+        model.save()
+        return True
+    return False
+
+
 def index(request):
-    kwargs = {'no_sidebar':True}
+    kwargs = {'no_sidebar': True}
 
     return render(request, 'index.html', kwargs)
 
@@ -108,7 +131,7 @@ def location(request, id_loc):
     return render(request, 'location.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def location_new(request):
 
     if request.method == 'GET':
@@ -130,15 +153,15 @@ def location_new(request):
     return render(request, 'base_edit.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def location_edit(request, id_loc):
 
     location = get_object_or_404(Location, pk=id_loc)
 
-    if request.method=='GET':
+    if request.method == 'GET':
         form = LocationForm(instance=location)
 
-    if request.method=='POST':
+    if request.method == 'POST':
         form = LocationForm(request.POST, instance=location)
 
         if form.is_valid():
@@ -154,12 +177,12 @@ def location_edit(request, id_loc):
     return render(request, 'base_edit.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def location_delete(request, id_loc):
 
     location = get_object_or_404(Location, pk=id_loc)
 
-    if request.method=='POST':
+    if request.method == 'POST':
 
         if request.user.is_staff:
             location.delete()
@@ -169,12 +192,11 @@ def location_delete(request, id_loc):
         return redirect(location.get_absolute_url())
 
     kwargs = {
-              'title': 'Delete',
-              'suptitle': 'Location',
-              'object': location,
-              'previous': location.get_absolute_url(),
-              'delete': True
-              }
+        'title': 'Delete',
+        'suptitle': 'Location',
+        'object': location,
+        'delete': True
+    }
 
     return render(request, 'confirm.html', kwargs)
 
@@ -182,13 +204,22 @@ def location_delete(request, id_loc):
 def devices(request):
 
     page = request.GET.get('page')
-    order = ('device_type', 'name')
+    order = ('location', 'device_type')
 
-    kwargs = get_paginator(Device, page, order)
-    kwargs['keys'] = ['name', 'ip_address', 'port_address', 'device_type']
+    filters = request.GET.copy()
+    kwargs = get_paginator(Device, page, order, filters)
+    form = FilterForm(initial=request.GET, extra_fields=['tags'])
+
+    kwargs['keys'] = ['device_type', 'location',
+                      'ip_address', 'port_address', 'actions']
     kwargs['title'] = 'Device'
     kwargs['suptitle'] = 'List'
     kwargs['no_sidebar'] = True
+    kwargs['form'] = form
+    kwargs['add_url'] = reverse('url_add_device')
+    filters.pop('page', None)
+    kwargs['q'] = urlencode(filters)
+    kwargs['menu'] = 'device'
 
     return render(request, 'base_list.html', kwargs)
 
@@ -199,7 +230,8 @@ def device(request, id_dev):
 
     kwargs = {}
     kwargs['device'] = device
-    kwargs['device_keys'] = ['device_type', 'name', 'ip_address', 'port_address', 'description']
+    kwargs['device_keys'] = ['device_type',
+                             'ip_address', 'port_address', 'description']
 
     kwargs['title'] = 'Device'
     kwargs['suptitle'] = 'Details'
@@ -207,7 +239,7 @@ def device(request, id_dev):
     return render(request, 'device.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def device_new(request):
 
     if request.method == 'GET':
@@ -229,15 +261,15 @@ def device_new(request):
     return render(request, 'base_edit.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def device_edit(request, id_dev):
 
     device = get_object_or_404(Device, pk=id_dev)
 
-    if request.method=='GET':
+    if request.method == 'GET':
         form = DeviceForm(instance=device)
 
-    if request.method=='POST':
+    if request.method == 'POST':
         form = DeviceForm(request.POST, instance=device)
 
         if form.is_valid():
@@ -253,12 +285,12 @@ def device_edit(request, id_dev):
     return render(request, 'base_edit.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def device_delete(request, id_dev):
 
     device = get_object_or_404(Device, pk=id_dev)
 
-    if request.method=='POST':
+    if request.method == 'POST':
 
         if request.user.is_staff:
             device.delete()
@@ -268,39 +300,39 @@ def device_delete(request, id_dev):
         return redirect(device.get_absolute_url())
 
     kwargs = {
-              'title': 'Delete',
-              'suptitle': 'Device',
-              'object': device,
-              'previous': device.get_absolute_url(),
-              'delete': True
-              }
+        'title': 'Delete',
+        'suptitle': 'Device',
+        'object': device,
+        'delete': True
+    }
 
     return render(request, 'confirm.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def device_change_ip(request, id_dev):
 
     device = get_object_or_404(Device, pk=id_dev)
 
-    if request.method=='POST':
+    if request.method == 'POST':
 
         if request.user.is_staff:
             device.change_ip(**request.POST.dict())
             level, message = device.message.split('|')
             messages.add_message(request, level, message)
         else:
-            messages.error(request, 'Not enough permission to delete this object')
+            messages.error(
+                request, 'Not enough permission to delete this object')
         return redirect(device.get_absolute_url())
 
     kwargs = {
-              'title': 'Device',
-              'suptitle': 'Change IP',
-              'object': device,
-              'previous': device.get_absolute_url(),
-              'form': ChangeIpForm(initial={'ip_address':device.ip_address}),
-              'message' : ' ',
-              }
+        'title': 'Device',
+        'suptitle': 'Change IP',
+        'object': device,
+        'previous': device.get_absolute_url(),
+        'form': ChangeIpForm(initial={'ip_address': device.ip_address}),
+        'message': ' ',
+    }
 
     return render(request, 'confirm.html', kwargs)
 
@@ -313,12 +345,14 @@ def campaigns(request):
 
     kwargs = get_paginator(Campaign, page, order, filters)
 
-    form = FilterForm(initial=request.GET, extra_fields=['range_date', 'tags','template'])
-    kwargs['keys'] = ['name', 'start_date', 'end_date']
+    form = FilterForm(initial=request.GET, extra_fields=[
+                      'range_date', 'tags', 'template'])
+    kwargs['keys'] = ['name', 'start_date', 'end_date', 'actions']
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = 'List'
     kwargs['no_sidebar'] = True
     kwargs['form'] = form
+    kwargs['add_url'] = reverse('url_add_campaign')
     filters.pop('page', None)
     kwargs['q'] = urlencode(filters)
 
@@ -334,10 +368,12 @@ def campaign(request, id_camp):
 
     kwargs = {}
     kwargs['campaign'] = campaign
-    kwargs['campaign_keys'] = ['template', 'name', 'start_date', 'end_date', 'tags', 'description']
+    kwargs['campaign_keys'] = ['template', 'name',
+                               'start_date', 'end_date', 'tags', 'description']
 
     kwargs['experiments'] = experiments
-    kwargs['experiment_keys'] = ['name', 'radar_system', 'start_time', 'end_time']
+    kwargs['experiment_keys'] = [
+        'name', 'radar_system', 'start_time', 'end_time']
 
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = 'Details'
@@ -348,7 +384,7 @@ def campaign(request, id_camp):
     return render(request, 'campaign.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def campaign_new(request):
 
     kwargs = {}
@@ -356,17 +392,18 @@ def campaign_new(request):
     if request.method == 'GET':
 
         if 'template' in request.GET:
-            if request.GET['template']=='0':
-                form = NewForm(initial={'create_from':2},
+            if request.GET['template'] == '0':
+                form = NewForm(initial={'create_from': 2},
                                template_choices=Campaign.objects.filter(template=True).values_list('id', 'name'))
             else:
                 kwargs['button'] = 'Create'
-                kwargs['experiments'] = Configuration.objects.filter(experiment=request.GET['template'])
+                kwargs['experiments'] = Configuration.objects.filter(
+                    experiment=request.GET['template'])
                 kwargs['experiment_keys'] = ['name', 'start_time', 'end_time']
                 camp = Campaign.objects.get(pk=request.GET['template'])
                 form = CampaignForm(instance=camp,
-                                    initial={'name':'{}_{:%Y%m%d}'.format(camp.name, datetime.now()),
-                                             'template':False})
+                                    initial={'name': '{}_{:%Y%m%d}'.format(camp.name, datetime.now()),
+                                             'template': False})
         elif 'blank' in request.GET:
             kwargs['button'] = 'Create'
             form = CampaignForm()
@@ -388,7 +425,8 @@ def campaign_new(request):
         form = CampaignForm(post)
 
         if form.is_valid():
-            campaign = form.save()
+            campaign = form.save(commit=False)
+            campaign.author = request.user
             for exp in experiments:
                 campaign.experiments.add(exp)
             campaign.save()
@@ -401,15 +439,15 @@ def campaign_new(request):
     return render(request, 'campaign_edit.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def campaign_edit(request, id_camp):
 
     campaign = get_object_or_404(Campaign, pk=id_camp)
 
-    if request.method=='GET':
+    if request.method == 'GET':
         form = CampaignForm(instance=campaign)
 
-    if request.method=='POST':
+    if request.method == 'POST':
         exps = campaign.experiments.all().values_list('pk', flat=True)
         post = request.POST.copy()
         new_exps = post.getlist('experiments')
@@ -442,12 +480,12 @@ def campaign_edit(request, id_camp):
     return render(request, 'campaign_edit.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def campaign_delete(request, id_camp):
 
     campaign = get_object_or_404(Campaign, pk=id_camp)
 
-    if request.method=='POST':
+    if request.method == 'POST':
         if request.user.is_staff:
 
             for exp in campaign.experiments.all():
@@ -462,32 +500,31 @@ def campaign_delete(request, id_camp):
         return redirect(campaign.get_absolute_url())
 
     kwargs = {
-              'title': 'Delete',
-              'suptitle': 'Campaign',
-              'object': campaign,
-              'previous': campaign.get_absolute_url(),
-              'delete': True
-              }
+        'title': 'Delete',
+        'suptitle': 'Campaign',
+        'object': campaign,
+        'delete': True
+    }
 
     return render(request, 'confirm.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def campaign_export(request, id_camp):
 
     campaign = get_object_or_404(Campaign, pk=id_camp)
     content = campaign.parms_to_dict()
     content_type = 'application/json'
-    filename     =  '%s_%s.json' %(campaign.name, campaign.id)
+    filename = '%s_%s.json' % (campaign.name, campaign.id)
 
     response = HttpResponse(content_type=content_type)
-    response['Content-Disposition'] = 'attachment; filename="%s"' %filename
+    response['Content-Disposition'] = 'attachment; filename="%s"' % filename
     response.write(json.dumps(content, indent=2))
 
     return response
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def campaign_import(request, id_camp):
 
     campaign = get_object_or_404(Campaign, pk=id_camp)
@@ -499,8 +536,10 @@ def campaign_import(request, id_camp):
         file_form = UploadFileForm(request.POST, request.FILES)
 
         if file_form.is_valid():
-            new_camp = campaign.dict_to_parms(json.load(request.FILES['file']), CONF_MODELS)
-            messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
+            new_camp = campaign.dict_to_parms(
+                json.load(request.FILES['file']), CONF_MODELS)
+            messages.success(
+                request, "Parameters imported from: '%s'." % request.FILES['file'].name)
             return redirect(new_camp.get_absolute_url_edit())
 
         messages.error(request, "Could not import parameters from file")
@@ -520,15 +559,26 @@ def experiments(request):
     order = ('location',)
     filters = request.GET.copy()
 
+    if 'my experiments' in filters:
+        filters.pop('my experiments', None)
+        filters['mine'] = request.user.id
+
     kwargs = get_paginator(Experiment, page, order, filters)
 
-    form = FilterForm(initial=request.GET, extra_fields=['tags','template'])
+    fields = ['tags', 'template']
+    if request.user.is_authenticated:
+        fields.append('my experiments')
 
-    kwargs['keys'] = ['name', 'radar_system', 'start_time', 'end_time']
+    form = FilterForm(initial=request.GET, extra_fields=fields)
+
+    kwargs['keys'] = ['name', 'radar_system',
+                      'start_time', 'end_time', 'actions']
     kwargs['title'] = 'Experiment'
     kwargs['suptitle'] = 'List'
     kwargs['no_sidebar'] = True
     kwargs['form'] = form
+    kwargs['add_url'] = reverse('url_add_experiment')
+    filters = request.GET.copy()
     filters.pop('page', None)
     kwargs['q'] = urlencode(filters)
 
@@ -539,14 +589,17 @@ def experiment(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
 
-    configurations = Configuration.objects.filter(experiment=experiment, type=0)
+    configurations = Configuration.objects.filter(
+        experiment=experiment, type=0)
 
     kwargs = {}
 
-    kwargs['experiment_keys'] = ['template', 'radar_system', 'name', 'freq', 'start_time', 'end_time']
+    kwargs['experiment_keys'] = ['template', 'radar_system',
+                                 'name', 'freq', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
 
-    kwargs['configuration_keys'] = ['name', 'device__ip_address', 'device__port_address', 'device__status']
+    kwargs['configuration_keys'] = ['name', 'device__ip_address',
+                                    'device__port_address', 'device__status']
     kwargs['configurations'] = configurations
 
     kwargs['title'] = 'Experiment'
@@ -560,21 +613,27 @@ def experiment(request, id_exp):
     return render(request, 'experiment.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def experiment_new(request, id_camp=None):
 
+    if not is_developer(request.user):
+        messages.error(
+            request, 'Developer required, to create new Experiments')
+        return redirect('index')
     kwargs = {}
 
     if request.method == 'GET':
         if 'template' in request.GET:
-            if request.GET['template']=='0':
-                form = NewForm(initial={'create_from':2},
+            if request.GET['template'] == '0':
+                form = NewForm(initial={'create_from': 2},
                                template_choices=Experiment.objects.filter(template=True).values_list('id', 'name'))
             else:
                 kwargs['button'] = 'Create'
-                kwargs['configurations'] = Configuration.objects.filter(experiment=request.GET['template'])
-                kwargs['configuration_keys'] = ['name', 'device__name', 'device__ip_address', 'device__port_address']
-                exp=Experiment.objects.get(pk=request.GET['template'])
+                kwargs['configurations'] = Configuration.objects.filter(
+                    experiment=request.GET['template'])
+                kwargs['configuration_keys'] = ['name', 'device__name',
+                                                'device__ip_address', 'device__port_address']
+                exp = Experiment.objects.get(pk=request.GET['template'])
                 form = ExperimentForm(instance=exp,
                                       initial={'name': '{}_{:%y%m%d}'.format(exp.name, datetime.now()),
                                                'template': False})
@@ -587,10 +646,13 @@ def experiment_new(request, id_camp=None):
     if request.method == 'POST':
         form = ExperimentForm(request.POST)
         if form.is_valid():
-            experiment = form.save()
+            experiment = form.save(commit=False)
+            experiment.author = request.user
+            experiment.save()
 
             if 'template' in request.GET:
-                configurations = Configuration.objects.filter(experiment=request.GET['template'], type=0)
+                configurations = Configuration.objects.filter(
+                    experiment=request.GET['template'], type=0)
                 for conf in configurations:
                     conf.clone(experiment=experiment, template=False)
 
@@ -603,7 +665,7 @@ def experiment_new(request, id_camp=None):
     return render(request, 'experiment_edit.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def experiment_edit(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
@@ -611,7 +673,7 @@ def experiment_edit(request, id_exp):
     if request.method == 'GET':
         form = ExperimentForm(instance=experiment)
 
-    if request.method=='POST':
+    if request.method == 'POST':
         form = ExperimentForm(request.POST, instance=experiment)
 
         if form.is_valid():
@@ -627,12 +689,12 @@ def experiment_edit(request, id_exp):
     return render(request, 'experiment_edit.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def experiment_delete(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
 
-    if request.method=='POST':
+    if request.method == 'POST':
         if request.user.is_staff:
             for conf in Configuration.objects.filter(experiment=experiment):
                 conf.delete()
@@ -643,35 +705,34 @@ def experiment_delete(request, id_exp):
         return redirect(experiment.get_absolute_url())
 
     kwargs = {
-              'title': 'Delete',
-              'suptitle': 'Experiment',
-              'object': experiment,
-              'previous': experiment.get_absolute_url(),
-              'delete': True
-              }
+        'title': 'Delete',
+        'suptitle': 'Experiment',
+        'object': experiment,
+        'delete': True
+    }
 
     return render(request, 'confirm.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def experiment_export(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
     content = experiment.parms_to_dict()
     content_type = 'application/json'
-    filename     =  '%s_%s.json' %(experiment.name, experiment.id)
+    filename = '%s_%s.json' % (experiment.name, experiment.id)
 
     response = HttpResponse(content_type=content_type)
-    response['Content-Disposition'] = 'attachment; filename="%s"' %filename
+    response['Content-Disposition'] = 'attachment; filename="%s"' % filename
     response.write(json.dumps(content, indent=2))
 
     return response
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def experiment_import(request, id_exp):
 
-    experiment     = get_object_or_404(Experiment, pk=id_exp)
+    experiment = get_object_or_404(Experiment, pk=id_exp)
     configurations = Configuration.objects.filter(experiment=experiment)
 
     if request.method == 'GET':
@@ -681,8 +742,10 @@ def experiment_import(request, id_exp):
         file_form = UploadFileForm(request.POST, request.FILES)
 
         if file_form.is_valid():
-            new_exp = experiment.dict_to_parms(json.load(request.FILES['file']), CONF_MODELS)
-            messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
+            new_exp = experiment.dict_to_parms(
+                json.load(request.FILES['file']), CONF_MODELS)
+            messages.success(
+                request, "Parameters imported from: '%s'." % request.FILES['file'].name)
             return redirect(new_exp.get_absolute_url_edit())
 
         messages.error(request, "Could not import parameters from file")
@@ -698,7 +761,7 @@ def experiment_import(request, id_exp):
     return render(request, 'experiment_import.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def experiment_start(request, id_exp):
 
     exp = get_object_or_404(Experiment, pk=id_exp)
@@ -707,9 +770,9 @@ def experiment_start(request, id_exp):
         messages.warning(request, 'Experiment {} already runnnig'.format(exp))
     else:
         exp.status = exp.start()
-        if exp.status==0:
+        if exp.status == 0:
             messages.error(request, 'Experiment {} not start'.format(exp))
-        if exp.status==2:
+        if exp.status == 2:
             messages.success(request, 'Experiment {} started'.format(exp))
 
         exp.save()
@@ -717,7 +780,7 @@ def experiment_start(request, id_exp):
     return redirect(exp.get_absolute_url())
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def experiment_stop(request, id_exp):
 
     exp = get_object_or_404(Experiment, pk=id_exp)
@@ -741,15 +804,18 @@ def experiment_status(request, id_exp):
     return redirect(exp.get_absolute_url())
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def experiment_mix(request, id_exp):
 
     experiment = get_object_or_404(Experiment, pk=id_exp)
-    rc_confs = [conf for conf in RCConfiguration.objects.filter(experiment=id_exp,
-                                                                mix=False)]
+    rc_confs = [conf for conf in RCConfiguration.objects.filter(
+        experiment=id_exp,
+        type=0,
+        mix=False)]
 
-    if len(rc_confs)<2:
-        messages.warning(request, 'You need at least two RC Configurations to make a mix')
+    if len(rc_confs) < 2:
+        messages.warning(
+            request, 'You need at least two RC Configurations to make a mix')
         return redirect(experiment.get_absolute_url())
 
     mix_confs = RCConfiguration.objects.filter(experiment=id_exp, mix=True)
@@ -774,13 +840,13 @@ def experiment_mix(request, id_exp):
     initial = {'name': mix.name,
                'result': parse_mix_result(mix.parameters),
                'delay': 0,
-               'mask': [0,1,2,3,4,5,6,7]
+               'mask': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
                }
 
-    if request.method=='GET':
+    if request.method == 'GET':
         form = RCMixConfigurationForm(confs=rc_confs, initial=initial)
 
-    if request.method=='POST':
+    if request.method == 'POST':
         result = mix.parameters
 
         if '{}|'.format(request.POST['experiment']) in result:
@@ -795,22 +861,24 @@ def experiment_mix(request, id_exp):
 
             if result:
                 result = '{}-{}|{}|{}|{}|{}'.format(mix.parameters,
-                                            request.POST['experiment'],
-                                            mode,
-                                            operation,
-                                            float(request.POST['delay']),
-                                            parse_mask(request.POST.getlist('mask'))
-                                            )
+                                                    request.POST['experiment'],
+                                                    mode,
+                                                    operation,
+                                                    float(
+                                                        request.POST['delay']),
+                                                    parse_mask(
+                                                        request.POST.getlist('mask'))
+                                                    )
             else:
                 result = '{}|{}|{}|{}|{}'.format(request.POST['experiment'],
-                                        mode,
-                                        operation,
-                                        float(request.POST['delay']),
-                                        parse_mask(request.POST.getlist('mask'))
-                                        )
+                                                 mode,
+                                                 operation,
+                                                 float(request.POST['delay']),
+                                                 parse_mask(
+                                                     request.POST.getlist('mask'))
+                                                 )
 
             mix.parameters = result
-            mix.name = request.POST['name']
             mix.save()
             mix.update_pulses()
 
@@ -819,23 +887,22 @@ def experiment_mix(request, id_exp):
 
         form = RCMixConfigurationForm(initial=initial, confs=rc_confs)
 
-
     kwargs = {
-              'title': 'Experiment',
-              'suptitle': 'Mix Configurations',
-              'form' : form,
-              'extra_button': 'Delete',
-              'button': 'Add',
-              'cancel': 'Back',
-              'previous': experiment.get_absolute_url(),
-              'id_exp':id_exp,
+        'title': 'Experiment',
+        'suptitle': 'Mix Configurations',
+        'form': form,
+        'extra_button': 'Delete',
+        'button': 'Add',
+        'cancel': 'Back',
+        'previous': experiment.get_absolute_url(),
+        'id_exp': id_exp,
 
-              }
+    }
 
     return render(request, 'experiment_mix.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def experiment_mix_delete(request, id_exp):
 
     conf = RCConfiguration.objects.get(experiment=id_exp, mix=True, type=0)
@@ -848,155 +915,145 @@ def experiment_mix_delete(request, id_exp):
 
 def experiment_summary(request, id_exp):
 
-    experiment      = get_object_or_404(Experiment, pk=id_exp)
-    configurations  = Configuration.objects.filter(experiment=experiment, type=0)
+    experiment = get_object_or_404(Experiment, pk=id_exp)
+    configurations = Configuration.objects.filter(
+        experiment=experiment, type=0)
 
     kwargs = {}
-
-    kwargs['experiment_keys'] = ['radar_system', 'name', 'freq', 'start_time', 'end_time']
+    kwargs['experiment_keys'] = ['radar_system',
+                                 'name', 'freq', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
-
     kwargs['configurations'] = []
-
     kwargs['title'] = 'Experiment Summary'
     kwargs['suptitle'] = 'Details'
-
     kwargs['button'] = 'Verify Parameters'
 
-    c_vel        = 3.0*(10**8)     #m/s
-    ope_freq     = experiment.freq*(10**6) #1/s
-    radar_lambda = c_vel/ope_freq  #m
+    c_vel = 3.0*(10**8)  # m/s
+    ope_freq = experiment.freq*(10**6)  # 1/s
+    radar_lambda = c_vel/ope_freq  # m
     kwargs['radar_lambda'] = radar_lambda
 
-    jars_conf = False
-    rc_conf   = False
+    ipp = None
+    nsa = 1
     code_id = 0
     tx_line = {}
 
-    for configuration in configurations:
+    for configuration in configurations.filter(device__device_type__name = 'rc'):
 
-        #--------------------- RC ----------------------:
-        if configuration.device.device_type.name == 'rc':
-            if configuration.mix:
-                continue
-            rc_conf = True
-            ipp = configuration.ipp
-            lines = configuration.get_lines(line_type__name='tx')
-            configuration.tx_lines = []
+        if configuration.mix:
+            continue
+        conf = {'conf': configuration}
+        conf['keys'] = []
+        conf['NTxs'] = configuration.ntx
+        conf['keys'].append('NTxs')
+        ipp = configuration.ipp
+        conf['IPP'] = ipp
+        conf['keys'].append('IPP')
+        lines = configuration.get_lines(line_type__name='tx')
 
-            for tx_line in lines:
-                if tx_line.get_name()[-1] == 'A':
-                    txa_line = tx_line
-                    txa_params = json.loads(txa_line.params)
-                line = {'name':tx_line.get_name()}
-                tx_params = json.loads(tx_line.params)
-                line['width'] = tx_params['pulse_width']
-                if line['width'] in (0, '0'):
-                    continue
-                delays = tx_params['delays']
+        for tx_line in lines:
+            tx_params = json.loads(tx_line.params)
+            conf[tx_line.get_name()] = '{} Km'.format(tx_params['pulse_width'])
+            conf['keys'].append(tx_line.get_name())
+            delays = tx_params['delays']
+            if delays not in ('', '0'):
+                n = len(delays.split(','))
+                taus = '{} Taus: {}'.format(n, delays)
+            else:
+                taus = '-'
+            conf['Taus ({})'.format(tx_line.get_name())] = taus
+            conf['keys'].append('Taus ({})'.format(tx_line.get_name()))
+            for code_line in configuration.get_lines(line_type__name='codes'):
+                code_params = json.loads(code_line.params)
+                code_id = code_params['code']
+                if tx_line.pk == int(code_params['TX_ref']):
+                    conf['Code ({})'.format(tx_line.get_name())] = '{}:{}'.format(RCLineCode.objects.get(pk=code_params['code']),
+                                                    '-'.join(code_params['codes']))
+                    conf['keys'].append('Code ({})'.format(tx_line.get_name()))
 
-                if delays not in ('', '0'):
-                    n = len(delays.split(','))
-                    line['taus'] = '{} Taus: {}'.format(n, delays)
-                else:
-                    line['taus'] = '-'
+            for windows_line in configuration.get_lines(line_type__name='windows'):
+                win_params = json.loads(windows_line.params)
+                if tx_line.pk == int(win_params['TX_ref']):
+                    windows = ''
+                    nsa = win_params['params'][0]['number_of_samples']
+                    for i, params in enumerate(win_params['params']):
+                        windows += 'W{}: Ho={first_height} km DH={resolution} km NSA={number_of_samples}<br>'.format(
+                            i, **params)
+                    conf['Window'] = mark_safe(windows)
+                    conf['keys'].append('Window')
 
-                for code_line in configuration.get_lines(line_type__name='codes'):
-                    code_params = json.loads(code_line.params)
-                    code_id     = code_params['code']
-                    if tx_line.pk==int(code_params['TX_ref']):
-                        line['codes'] = '{}:{}'.format(RCLineCode.objects.get(pk=code_params['code']),
-                                                       '-'.join(code_params['codes']))
+        kwargs['configurations'].append(conf)
 
-                for windows_line in configuration.get_lines(line_type__name='windows'):
-                    win_params = json.loads(windows_line.params)
-                    if tx_line.pk==int(win_params['TX_ref']):
-                        windows = ''
-                        nsa = win_params['params'][0]['number_of_samples']
-                        for i, params in enumerate(win_params['params']):
-                            windows += 'W{}: Ho={first_height} km DH={resolution} km NSA={number_of_samples}<br>'.format(i, **params)
-                        line['windows'] = mark_safe(windows)
+    for configuration in configurations.filter(device__device_type__name = 'jars'):
 
-                configuration.tx_lines.append(line)
+        conf = {'conf': configuration}
+        conf['keys'] = []
+        conf['Type of Data'] = EXPERIMENT_TYPE[configuration.exp_type][1]
+        conf['keys'].append('Type of Data')
+        channels_number = configuration.channels_number
+        exp_type = configuration.exp_type
+        fftpoints = configuration.fftpoints
+        filter_parms = json.loads(configuration.filter_parms)
+        spectral_number = configuration.spectral_number
+        acq_profiles = configuration.acq_profiles
+        cohe_integr = configuration.cohe_integr
+        profiles_block = configuration.profiles_block
 
-                if txa_line:
-                    kwargs['duty_cycle'] = float(txa_params['pulse_width'])/ipp*100
+        conf['Num of Profiles'] = acq_profiles
+        conf['keys'].append('Num of Profiles')
 
-        #-------------------- JARS -----------------------:
-        if configuration.device.device_type.name == 'jars':
-            jars_conf = True
-            kwargs['exp_type']  = EXPERIMENT_TYPE[configuration.exp_type][1]
-            channels_number     = configuration.channels_number
-            exp_type            = configuration.exp_type
-            fftpoints           = configuration.fftpoints
-            filter_parms        = configuration.filter_parms
-            filter_parms        = ast.literal_eval(filter_parms)
-            spectral_number     = configuration.spectral_number
-            acq_profiles        = configuration.acq_profiles
-            cohe_integr         = configuration.cohe_integr
-            profiles_block      = configuration.profiles_block
+        conf['Prof per Block'] = profiles_block
+        conf['keys'].append('Prof per Block')
 
-            if filter_parms.__class__.__name__=='str':
-                filter_parms = eval(filter_parms)
+        conf['Blocks per File'] = configuration.raw_data_blocks
+        conf['keys'].append('Blocks per File')
 
-        kwargs['configurations'].append(configuration)
+        if exp_type == 0:  # Short
+            bytes_ = 2
+            b = nsa*2*bytes_*channels_number
+        else:  # Float
+            bytes_ = 4
+            channels = channels_number + spectral_number
+            b = nsa*2*bytes_*fftpoints*channels
 
-
-        #------ RC & JARS ------:
-        if rc_conf and jars_conf:
-            #RC filter values:
-
-            if exp_type  == 0: #Short
-                bytes_    = 2
-                b        = nsa*2*bytes_*channels_number
-            else:              #Float
-                bytes_    = 4
-                channels = channels_number + spectral_number
-                b        = nsa*2*bytes_*fftpoints*channels
-
+        codes_num = 7
+        if code_id == 2:
             codes_num = 7
-            if code_id == 2:
-                codes_num = 7
-            elif code_id ==  12:
-                codes_num = 15
+        elif code_id == 12:
+            codes_num = 15
 
-            #Jars filter values:
-            try:
-                clock      = eval(filter_parms['clock'])
-                filter_2   = eval(filter_parms['filter_2'])
-                filter_5   = eval(filter_parms['filter_5'])
-                filter_fir = eval(filter_parms['filter_fir'])
-            except:
-                clock      = float(filter_parms['clock'])
-                filter_2   = int(filter_parms['filter_2'])
-                filter_5   = int(filter_parms['filter_5'])
-                filter_fir = int(filter_parms['filter_fir'])
-            Fs_MHz     = clock/(filter_2*filter_5*filter_fir)
+        #Jars filter values:
 
-            #Jars values:
-            IPP_units  = ipp/0.15*Fs_MHz
-            IPP_us     = IPP_units / Fs_MHz
-            IPP_s      = IPP_units / (Fs_MHz * (10**6))
-            Ts         = 1/(Fs_MHz*(10**6))
+        clock = float(filter_parms['clock'])
+        filter_2 = int(filter_parms['cic_2'])
+        filter_5 = int(filter_parms['cic_5'])
+        filter_fir = int(filter_parms['fir'])
+        Fs_MHz = clock/(filter_2*filter_5*filter_fir)
 
-            #Values
-            Va                       = radar_lambda/(4*Ts*cohe_integr)
-            rate_bh                  = ((nsa-codes_num)*channels_number*2*bytes_/IPP_us)*(36*(10**8)/cohe_integr)
-            rate_gh                  = rate_bh/(1024*1024*1024)
-            kwargs['rate_bh']        = str(rate_bh) + " (Bytes/h)"
-            kwargs['rate_gh']        = str(rate_gh)+" (GBytes/h)"
-            kwargs['va']             = Va
-            kwargs['time_per_block'] = IPP_s * profiles_block * cohe_integr
-            kwargs['acqtime']        = IPP_s * acq_profiles
-            kwargs['vrange']         = 3/(2*IPP_s*cohe_integr)
+        #Jars values:
+        if ipp is not None:
+            IPP_units = ipp/0.15*Fs_MHz
+            IPP_us = IPP_units / Fs_MHz
+            IPP_s = IPP_units / (Fs_MHz * (10**6))
+            Ts = 1/(Fs_MHz*(10**6))
 
-        else:
-            kwargs['rate_bh']        = ''
-            kwargs['rate_gh']        = ''
-            kwargs['va']             = ''
-            kwargs['time_per_block'] = ''
-            kwargs['acqtime']        = ''
-            kwargs['vrange']         = ''
+            Va = radar_lambda/(4*Ts*cohe_integr)
+            rate_bh = ((nsa-codes_num)*channels_number*2 *
+                        bytes_/IPP_us)*(36*(10**8)/cohe_integr)
+            rate_gh = rate_bh/(1024*1024*1024)
+    
+            conf['Time per Block'] = IPP_s * profiles_block * cohe_integr
+            conf['keys'].append('Time per Block')
+            conf['Acq time'] = IPP_s * acq_profiles
+            conf['keys'].append('Acq time')
+            conf['Data rate'] = str(rate_gh)+" (GB/h)"
+            conf['keys'].append('Data rate')
+            conf['Va (m/s)'] = Va
+            conf['keys'].append('Va (m/s)')
+            conf['Vrange (m/s)'] = 3/(2*IPP_s*cohe_integr)
+            conf['keys'].append('Vrange (m/s)')
+        
+        kwargs['configurations'].append(conf)
 
     ###### SIDEBAR ######
     kwargs.update(sidebar(experiment=experiment))
@@ -1004,19 +1061,22 @@ def experiment_summary(request, id_exp):
     return render(request, 'experiment_summary.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def experiment_verify(request, id_exp):
 
-    experiment      = get_object_or_404(Experiment, pk=id_exp)
+    experiment = get_object_or_404(Experiment, pk=id_exp)
     experiment_data = experiment.parms_to_dict()
-    configurations  = Configuration.objects.filter(experiment=experiment, type=0)
+    configurations = Configuration.objects.filter(
+        experiment=experiment, type=0)
 
     kwargs = {}
 
-    kwargs['experiment_keys'] = ['template', 'radar_system', 'name', 'start_time', 'end_time']
+    kwargs['experiment_keys'] = ['template',
+                                 'radar_system', 'name', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
 
-    kwargs['configuration_keys'] = ['name', 'device__ip_address', 'device__port_address', 'device__status']
+    kwargs['configuration_keys'] = ['name', 'device__ip_address',
+                                    'device__port_address', 'device__status']
     kwargs['configurations'] = configurations
     kwargs['experiment_data'] = experiment_data
 
@@ -1026,27 +1086,26 @@ def experiment_verify(request, id_exp):
     kwargs['button'] = 'Update'
 
     jars_conf = False
-    rc_conf   = False
-    dds_conf   = False
+    rc_conf = False
+    dds_conf = False
 
     for configuration in configurations:
         #-------------------- JARS -----------------------:
         if configuration.device.device_type.name == 'jars':
             jars_conf = True
             jars = configuration
-            kwargs['jars_conf']    = jars_conf
-            filter_parms           = jars.filter_parms
-            filter_parms           = ast.literal_eval(filter_parms)
+            kwargs['jars_conf'] = jars_conf
+            filter_parms = json.loads(jars.filter_parms)
             kwargs['filter_parms'] = filter_parms
             #--Sampling Frequency
-            clock          = eval(filter_parms['clock'])
-            filter_2       = eval(filter_parms['filter_2'])
-            filter_5       = eval(filter_parms['filter_5'])
-            filter_fir     = eval(filter_parms['filter_fir'])
+            clock = filter_parms['clock']
+            filter_2 = filter_parms['cic_2']
+            filter_5 = filter_parms['cic_5']
+            filter_fir = filter_parms['fir']
             samp_freq_jars = clock/filter_2/filter_5/filter_fir
 
             kwargs['samp_freq_jars'] = samp_freq_jars
-            kwargs['jars']           = configuration
+            kwargs['jars'] = configuration
 
         #--------------------- RC ----------------------:
         if configuration.device.device_type.name == 'rc' and not configuration.mix:
@@ -1063,7 +1122,7 @@ def experiment_verify(request, id_exp):
                 kwargs['samp_freq_rc'] = samp_freq_rc
 
                 kwargs['rc_conf'] = rc_conf
-                kwargs['rc']      = configuration
+                kwargs['rc'] = configuration
 
         #-------------------- DDS ----------------------:
         if configuration.device.device_type.name == 'dds':
@@ -1072,8 +1131,7 @@ def experiment_verify(request, id_exp):
             dds_parms = configuration.parms_to_dict()
 
             kwargs['dds_conf'] = dds_conf
-            kwargs['dds']      = configuration
-
+            kwargs['dds'] = configuration
 
     #------------Validation------------:
     #Clock
@@ -1087,8 +1145,8 @@ def experiment_verify(request, id_exp):
         if float(rc_parms['configurations']['byId'][str(rc.pk)]['clock_in']) != float(dds_parms['configurations']['byId'][str(dds.pk)]['clock']):
             messages.warning(request, "Devices don't have the same clock.")
         if float(samp_freq_rc) != float(dds_parms['configurations']['byId'][str(dds.pk)]['frequencyA']):
-            messages.warning(request, "Devices don't have the same Frequency A.")
-
+            messages.warning(
+                request, "Devices don't have the same Frequency A.")
 
     #------------POST METHOD------------:
     if request.method == 'POST':
@@ -1105,8 +1163,8 @@ def experiment_verify(request, id_exp):
                 rc.clock_in = suggest_clock
                 rc.save()
             if jars_conf:
-                filter_parms           = jars.filter_parms
-                filter_parms           = ast.literal_eval(filter_parms)
+                filter_parms = jars.filter_parms
+                filter_parms = ast.literal_eval(filter_parms)
                 filter_parms['clock'] = suggest_clock
                 jars.filter_parms = json.dumps(filter_parms)
                 jars.save()
@@ -1125,8 +1183,8 @@ def experiment_verify(request, id_exp):
             suggest_frequencyA = ""
         if suggest_frequencyA:
             if jars_conf:
-                filter_parms           = jars.filter_parms
-                filter_parms           = ast.literal_eval(filter_parms)
+                filter_parms = jars.filter_parms
+                filter_parms = ast.literal_eval(filter_parms)
                 filter_parms['fch'] = suggest_frequencyA
                 jars.filter_parms = json.dumps(filter_parms)
                 jars.save()
@@ -1135,17 +1193,10 @@ def experiment_verify(request, id_exp):
                 dds.frequencyA_Mhz = request.POST['suggest_frequencyA']
                 dds.save()
 
-    ###### SIDEBAR ######
     kwargs.update(sidebar(experiment=experiment))
-
-
-
-
-
     return render(request, 'experiment_verify.html', kwargs)
 
 
-#@user_passes_test(lambda u:u.is_staff)
 def parse_mix_result(s):
 
     values = s.split('-')
@@ -1159,28 +1210,29 @@ def parse_mix_result(s):
             continue
         pk, mode, operation, delay, mask = value.split('|')
         conf = RCConfiguration.objects.get(pk=pk)
-        if i==0:
+        if i == 0:
             html += '{:20.18}{:3}{:4}{:9}km{:>6}\r\n'.format(
-                                conf.name,
-                                mode,
-                                '   ',
-                                delay,
-                                mask)
+                conf.name,
+                mode,
+                '   ',
+                delay,
+                mask)
         else:
             html += '{:20.18}{:3}{:4}{:9}km{:>6}\r\n'.format(
-                                conf.name,
-                                mode,
-                                operation,
-                                delay,
-                                mask)
+                conf.name,
+                mode,
+                operation,
+                delay,
+                mask)
 
     return mark_safe(html)
+
 
 def parse_mask(l):
 
     values = []
 
-    for x in range(8):
+    for x in range(16):
         if '{}'.format(x) in l:
             values.append(1)
         else:
@@ -1193,19 +1245,25 @@ def parse_mask(l):
 
 def dev_confs(request):
 
-
     page = request.GET.get('page')
-    order = ('type', 'device__device_type', 'experiment')
+    order = ('programmed_date', )
     filters = request.GET.copy()
-
+    if 'my configurations' in filters:
+        filters.pop('my configurations', None)
+        filters['mine'] = request.user.id
     kwargs = get_paginator(Configuration, page, order, filters)
-
-    form = FilterForm(initial=request.GET, extra_fields=['tags', 'template', 'historical'])
-    kwargs['keys'] = ['name', 'experiment', 'type', 'programmed_date']
+    fields = ['tags', 'template', 'historical']
+    if request.user.is_authenticated:
+        fields.append('my configurations')
+    form = FilterForm(initial=request.GET, extra_fields=fields)
+    kwargs['keys'] = ['name', 'experiment',
+                      'type', 'programmed_date', 'actions']
     kwargs['title'] = 'Configuration'
     kwargs['suptitle'] = 'List'
     kwargs['no_sidebar'] = True
     kwargs['form'] = form
+    kwargs['add_url'] = reverse('url_add_dev_conf', args=[0])
+    filters = request.GET.copy()
     filters.pop('page', None)
     kwargs['q'] = urlencode(filters)
 
@@ -1219,16 +1277,21 @@ def dev_conf(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def dev_conf_new(request, id_exp=0, id_dev=0):
+
+    if not is_developer(request.user):
+        messages.error(
+            request, 'Developer required, to create new configurations')
+        return redirect('index')
 
     initial = {}
     kwargs = {}
 
-    if id_exp!=0:
+    if id_exp != 0:
         initial['experiment'] = id_exp
 
-    if id_dev!=0:
+    if id_dev != 0:
         initial['device'] = id_dev
 
     if request.method == 'GET':
@@ -1241,19 +1304,21 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
             form = DevConfForm(initial=initial)
         else:
             if 'template' in request.GET:
-                if request.GET['template']=='0':
-                    choices = [(conf.pk, '{}'.format(conf)) for conf in Configuration.objects.filter(template=True)]
-                    form = NewForm(initial={'create_from':2},
+                if request.GET['template'] == '0':
+                    choices = [(conf.pk, '{}'.format(conf))
+                               for conf in Configuration.objects.filter(template=True)]
+                    form = NewForm(initial={'create_from': 2},
                                    template_choices=choices)
                 else:
                     kwargs['button'] = 'Create'
-                    conf = Configuration.objects.get(pk=request.GET['template'])
+                    conf = Configuration.objects.get(
+                        pk=request.GET['template'])
                     id_dev = conf.device.pk
                     DevConfForm = CONF_FORMS[conf.device.device_type.name]
                     form = DevConfForm(instance=conf,
                                        initial={'name': '{}_{:%y%m%d}'.format(conf.name, datetime.now()),
                                                 'template': False,
-                                                'experiment':id_exp})
+                                                'experiment': id_exp})
             elif 'blank' in request.GET:
                 kwargs['button'] = 'Create'
                 form = ConfigurationForm(initial=initial)
@@ -1268,10 +1333,13 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
         form = DevConfForm(request.POST)
         kwargs['button'] = 'Create'
         if form.is_valid():
-            conf = form.save()
+            conf = form.save(commit=False)
+            conf.author = request.user
+            conf.save()
 
-            if 'template' in request.GET and conf.device.device_type.name=='rc':
-                lines = RCLine.objects.filter(rc_configuration=request.GET['template'])
+            if 'template' in request.GET and conf.device.device_type.name == 'rc':
+                lines = RCLine.objects.filter(
+                    rc_configuration=request.GET['template'])
                 for line in lines:
                     line.clone(rc_configuration=conf)
 
@@ -1280,7 +1348,8 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
                     line_params = json.loads(line.params)
                     if 'TX_ref' in line_params:
                         ref_line = RCLine.objects.get(pk=line_params['TX_ref'])
-                        line_params['TX_ref'] = ['{}'.format(l.pk) for l in new_lines if l.get_name()==ref_line.get_name()][0]
+                        line_params['TX_ref'] = ['{}'.format(
+                            l.pk) for l in new_lines if l.get_name() == ref_line.get_name()][0]
                         line.params = json.dumps(line_params)
                         line.save()
 
@@ -1291,7 +1360,6 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
     kwargs['title'] = 'Configuration'
     kwargs['suptitle'] = 'New'
 
-
     if id_dev != 0:
         device = Device.objects.get(pk=id_dev)
         kwargs['device'] = device.device_type.name
@@ -1299,17 +1367,17 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
     return render(request, 'dev_conf_edit.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def dev_conf_edit(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
 
     DevConfForm = CONF_FORMS[conf.device.device_type.name]
 
-    if request.method=='GET':
+    if request.method == 'GET':
         form = DevConfForm(instance=conf)
 
-    if request.method=='POST':
+    if request.method == 'POST':
         form = DevConfForm(request.POST, instance=conf)
 
         if form.is_valid():
@@ -1328,7 +1396,7 @@ def dev_conf_edit(request, id_conf):
     return render(request, '%s_conf_edit.html' % conf.device.device_type.name, kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def dev_conf_start(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1343,7 +1411,7 @@ def dev_conf_start(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def dev_conf_stop(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1370,7 +1438,7 @@ def dev_conf_status(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def dev_conf_reset(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1383,28 +1451,29 @@ def dev_conf_reset(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def dev_conf_write(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
 
     if conf.write_device():
         messages.success(request, conf.message)
-        conf.clone(type=1, template=False)
+        if has_been_modified(conf):
+            conf.clone(type=1, template=False)
     else:
         messages.error(request, conf.message)
 
     return redirect(get_object_or_404(Configuration, pk=id_conf).get_absolute_url())
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def dev_conf_read(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
 
     DevConfForm = CONF_FORMS[conf.device.device_type.name]
 
-    if request.method=='GET':
+    if request.method == 'GET':
 
         parms = conf.read_device()
         #conf.status_device()
@@ -1415,7 +1484,7 @@ def dev_conf_read(request, id_conf):
 
         form = DevConfForm(initial=parms, instance=conf)
 
-    if request.method=='POST':
+    if request.method == 'POST':
         form = DevConfForm(request.POST, instance=conf)
 
         if form.is_valid():
@@ -1434,10 +1503,10 @@ def dev_conf_read(request, id_conf):
     ###### SIDEBAR ######
     kwargs.update(sidebar(conf=conf))
 
-    return render(request, '%s_conf_edit.html' %conf.device.device_type.name, kwargs)
+    return render(request, '%s_conf_edit.html' % conf.device.device_type.name, kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def dev_conf_import(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1452,7 +1521,8 @@ def dev_conf_import(request, id_conf):
         if file_form.is_valid():
 
             data = conf.import_from_file(request.FILES['file'])
-            parms = Params(data=data).get_conf(dtype=conf.device.device_type.name)
+            parms = Params(data=data).get_conf(
+                dtype=conf.device.device_type.name)
 
             if parms:
 
@@ -1470,7 +1540,8 @@ def dev_conf_import(request, id_conf):
                 ###### SIDEBAR ######
                 kwargs.update(sidebar(conf=conf))
 
-                messages.success(request, "Parameters imported from: '%s'." %request.FILES['file'].name)
+                messages.success(
+                    request, "Parameters imported from: '%s'." % request.FILES['file'].name)
 
                 return render(request, '%s_conf_edit.html' % conf.device.device_type.name, kwargs)
 
@@ -1488,7 +1559,7 @@ def dev_conf_import(request, id_conf):
     return render(request, 'dev_conf_import.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def dev_conf_export(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
@@ -1497,15 +1568,17 @@ def dev_conf_export(request, id_conf):
         file_form = DownloadFileForm(conf.device.device_type.name)
 
     if request.method == 'POST':
-        file_form = DownloadFileForm(conf.device.device_type.name, request.POST)
+        file_form = DownloadFileForm(
+            conf.device.device_type.name, request.POST)
 
         if file_form.is_valid():
-            fields = conf.export_to_file(format = file_form.cleaned_data['format'])
+            fields = conf.export_to_file(
+                format=file_form.cleaned_data['format'])
             if not fields['content']:
                 messages.error(request, conf.message)
                 return redirect(conf.get_absolute_url_export())
             response = HttpResponse(content_type=fields['content_type'])
-            response['Content-Disposition'] = 'attachment; filename="%s"' %fields['filename']
+            response['Content-Disposition'] = 'attachment; filename="%s"' % fields['filename']
             response.write(fields['content'])
 
             return response
@@ -1522,12 +1595,12 @@ def dev_conf_export(request, id_conf):
     return render(request, 'dev_conf_export.html', kwargs)
 
 
-@user_passes_test(lambda u:u.is_staff)
+@login_required
 def dev_conf_delete(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
 
-    if request.method=='POST':
+    if request.method == 'POST':
         if request.user.is_staff:
             conf.delete()
             return redirect('url_dev_confs')
@@ -1536,12 +1609,11 @@ def dev_conf_delete(request, id_conf):
         return redirect(conf.get_absolute_url())
 
     kwargs = {
-              'title': 'Delete',
-              'suptitle': 'Experiment',
-              'object': conf,
-              'previous': conf.get_absolute_url(),
-              'delete': True
-              }
+        'title': 'Delete',
+        'suptitle': 'Configuration',
+        'object': conf,
+        'delete': True
+    }
 
     return render(request, 'confirm.html', kwargs)
 
@@ -1561,16 +1633,18 @@ def sidebar(**kwargs):
         campaign = experiment.campaign_set.all()
         if campaign:
             side_data['campaign'] = campaign[0]
-            experiments = campaign[0].experiments.all()
+            experiments = campaign[0].experiments.all().order_by('name')
         else:
             experiments = [experiment]
         configurations = experiment.configuration_set.filter(type=0)
         side_data['side_experiments'] = experiments
-        side_data['side_configurations'] = configurations
+        side_data['side_configurations'] = configurations.order_by(
+            'device__device_type__name')
 
     return side_data
 
-def get_paginator(model, page, order, filters={}, n=10):
+
+def get_paginator(model, page, order, filters={}, n=8):
 
     kwargs = {}
     query = Q()
@@ -1596,13 +1670,19 @@ def get_paginator(model, page, order, filters={}, n=10):
         tags = filters.pop('tags')
         if 'tags' in fields:
             query = query | Q(tags__icontains=tags)
-        if 'name' in fields:
-            query = query | Q(name__icontains=tags)
+        if 'label' in fields:
+            query = query | Q(label__icontains=tags)
         if 'location' in fields:
             query = query | Q(location__name__icontains=tags)
         if 'device' in fields:
             query = query | Q(device__device_type__name__icontains=tags)
+            query = query | Q(device__location__name__icontains=tags)
+        if 'device_type' in fields:
+            query = query | Q(device_type__name__icontains=tags)
 
+    if 'mine' in filters:
+        filters['author_id'] = filters['mine']
+        filters.pop('mine')
     object_list = model.objects.filter(query, **filters).order_by(*order)
     paginator = Paginator(object_list, n)
 
@@ -1618,6 +1698,7 @@ def get_paginator(model, page, order, filters={}, n=10):
 
     return kwargs
 
+
 def operation(request, id_camp=None):
 
     kwargs = {}
@@ -1626,10 +1707,10 @@ def operation(request, id_camp=None):
     campaigns = Campaign.objects.filter(start_date__lte=datetime.now(),
                                         end_date__gte=datetime.now()).order_by('-start_date')
 
-
     if id_camp:
-        campaign = get_object_or_404(Campaign, pk = id_camp)
-        form = OperationForm(initial={'campaign': campaign.id}, campaigns=campaigns)
+        campaign = get_object_or_404(Campaign, pk=id_camp)
+        form = OperationForm(
+            initial={'campaign': campaign.id}, campaigns=campaigns)
         kwargs['campaign'] = campaign
     else:
         # form = OperationForm(campaigns=campaigns)
@@ -1650,7 +1731,7 @@ def operation(request, id_camp=None):
 @login_required
 def radar_start(request, id_camp, id_radar):
 
-    campaign = get_object_or_404(Campaign, pk = id_camp)
+    campaign = get_object_or_404(Campaign, pk=id_camp)
     experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
     now = datetime.now()
     for exp in experiments:
@@ -1658,13 +1739,15 @@ def radar_start(request, id_camp, id_radar):
         end = datetime.combine(datetime.now().date(), exp.end_time)
         if end < start:
             end += timedelta(1)
-        
+
         if exp.status == 2:
-            messages.warning(request, 'Experiment {} already running'.format(exp))
+            messages.warning(
+                request, 'Experiment {} already running'.format(exp))
             continue
 
         if exp.status == 3:
-            messages.warning(request, 'Experiment {} already programmed'.format(exp))
+            messages.warning(
+                request, 'Experiment {} already programmed'.format(exp))
             continue
 
         if start > campaign.end_date or start < campaign.start_date:
@@ -1676,15 +1759,17 @@ def radar_start(request, id_camp, id_radar):
             exp.save()
             task = task_start.delay(exp.id)
             exp.status = task.wait()
-            if exp.status==0:
+            if exp.status == 0:
                 messages.error(request, 'Experiment {} not start'.format(exp))
-            if exp.status==2:
+            if exp.status == 2:
                 messages.success(request, 'Experiment {} started'.format(exp))
         else:
-            task = task_start.apply_async((exp.pk, ), eta=start+timedelta(hours=5))
+            task = task_start.apply_async(
+                (exp.pk, ), eta=start+timedelta(hours=5))
             exp.task = task.id
             exp.status = 3
-            messages.success(request, 'Experiment {} programmed to start at {}'.format(exp, start))
+            messages.success(
+                request, 'Experiment {} programmed to start at {}'.format(exp, start))
 
         exp.save()
 
@@ -1694,7 +1779,7 @@ def radar_start(request, id_camp, id_radar):
 @login_required
 def radar_stop(request, id_camp, id_radar):
 
-    campaign = get_object_or_404(Campaign, pk = id_camp)
+    campaign = get_object_or_404(Campaign, pk=id_camp)
     experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
 
     for exp in experiments:
@@ -1713,7 +1798,7 @@ def radar_stop(request, id_camp, id_radar):
 @login_required
 def radar_refresh(request, id_camp, id_radar):
 
-    campaign = get_object_or_404(Campaign, pk = id_camp)
+    campaign = get_object_or_404(Campaign, pk=id_camp)
     experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
 
     for exp in experiments:

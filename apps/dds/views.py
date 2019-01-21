@@ -20,7 +20,7 @@ def dds_conf(request, id_conf):
 #         messages.error(request, message=answer)
 
     kwargs['dev_conf'] = conf
-    kwargs['dev_conf_keys'] = ['name',
+    kwargs['dev_conf_keys'] = [
                                'clock',
                                'multiplier',
                                'frequencyA_Mhz',

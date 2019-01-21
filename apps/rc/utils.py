@@ -27,7 +27,6 @@ class RCFile(object):
     '''
 
     def __init__(self, f=None):
-        print dir(f)
         self.data = {}
         self.lines = []
         self.line = ''
@@ -73,7 +72,7 @@ class RCFile(object):
         self.data['device_type'] = 'rc'
         self.data['experiment_type'] = data['EXPERIMENT TYPE']
         self.data['header_version'] = data['HEADER VERSION']
-        self.data['name'] = data['EXPERIMENT NAME']
+        self.data['label'] = data['EXPERIMENT NAME']
         self.data['ipp'] = float(data['IPP'])
         self.data['ntx'] = int(data['NTX'])
 

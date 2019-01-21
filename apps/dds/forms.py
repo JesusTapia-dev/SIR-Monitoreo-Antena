@@ -24,4 +24,4 @@ class DDSConfigurationForm(forms.ModelForm):
 
     class Meta:
         model = DDSConfiguration
-        exclude = ('type', 'parameters', 'status')
+        exclude = ('type', 'parameters', 'status', 'author', 'hash')

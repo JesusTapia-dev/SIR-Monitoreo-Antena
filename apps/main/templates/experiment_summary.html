@@ -21,61 +21,18 @@
 </table>
 
 
-{% for configuration in configurations %}
+{% for conf in configurations %}
 
     <div class="">
-        <h4 class="panel-title"><b> {{configuration}}</b></h4>
+        <h4 class="panel-title"><b> {{conf.conf}}</b></h4>
         <br>
     </div>
 
-	{% if configuration.device.device_type.name == 'dds' %}
-		<table class="table table-bordered">
-			<tr><th>Frequency A (Mhz)</th><td>{{configuration.frequencyA_Mhz}}</td></tr>
-			<tr><th>Multiplier</th><td>{{configuration.multiplier}}</td></tr>
-		</table>
-	{% endif %}
-
-  {% if configuration.device.device_type.name == 'rc' %}
-
-		<table class="table table-bordered">
-			<!--<h4 class="panel-title">  </h4>-->
-			<tr><th>NTXs</th><td>{{configuration.ntx}}</td></tr>
-			<tr><th>IPP(km)</th><td>{{configuration.ipp}}</td></tr>
-			<tr><th>DC</th><td>{{duty_cycle}}%</td></tr>
-
-			{% for tx_line in configuration.tx_lines %}
-			    <tr><th colspan="2">{{tx_line.name}}</th></tr>
-			    <tr><th>Width(km)</th><td>{{tx_line.width}}</td></tr>
-			    <tr><th>Taus</th><td>{{tx_line.taus}}</td></tr>
-          <tr><th>codes</th><td>{{tx_line.codes}}</td></tr>
-          <tr><th>Sample Windows</th><td>{{tx_line.windows}}</td></tr>
-			{% endfor %}
-
-		</table>
-	{% endif %}
-
-  {% if configuration.device.device_type.name == 'jars' %}
-
-		<table class="table table-bordered">
-			<!--<h4 class="panel-title"> JARS </h4>-->
-			<tr><th>Data Type</th><td>{{exp_type}}</td></tr>
-			<tr><th># Channels</th><td>{{configuration.channels_number}}</td></tr>
-			<tr><th>Coh Int</th><td>{{configuration.cohe_integr}}</td></tr>
-			<tr><th>FFT Points</th><td>{{configuration.fftpoints}}</td></tr>
-			{% if exp_type == 'PDATA'%}
-				<tr><th>Inc Int</th><td>{{configuration.incohe_integr}}</td></tr>
-				<tr><th>Spec. Comb.</th><td>{{configuration.spectral}}</td></tr>
-			{% endif %}
-			<tr><th>Acq Prof</th><td>{{configuration.acq_profiles}}</td></tr>
-			<tr><th>Prof x Block</th><td>{{configuration.profiles_block}}</td></tr>
-			<tr><th>Block x File</th><td>{{ configuration.raw_data_blocks }}</td></tr>
-			<tr><th>Time per Block (s)</th><td>{{ time_per_block }}</td></tr>
-			<tr><th>Acqtime (s)</th><td>{{ acqtime }}</td></tr>
-			<tr><th>Rate </th><td>{{ rate_bh }} || {{ rate_gh }}</td></tr>
-			<tr><th>Va (m/s)</th><td>{{ va }}</td></tr>
-			<tr><th>Vrange (m/s)</th><td>{{ vrange }}</td></tr>
-		</table>
-	{% endif %}
+	<table class="table table-bordered">
+		{% for key in conf.keys %}
+		<tr><th>{{key}}</th><td>{{conf|attr:key}}</td></tr>
+		{% endfor %}
+	</table>
 
 {% endfor %}
 
@@ -92,10 +49,6 @@
 
 {% block extra-js%}
 <script type="text/javascript">
-
-  $(".clickable-row").click(function() {
-    document.location = $(this).data("href");
-  });
 
   $("#bt_back").click(function() {
 	    document.location = "{% url 'url_experiment' experiment.id%}";

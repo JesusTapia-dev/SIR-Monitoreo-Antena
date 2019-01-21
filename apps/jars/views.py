@@ -7,8 +7,8 @@ from django.http import HttpResponse
 from apps.main.models import Device
 from apps.main.views import sidebar
 
-from .models import JARSConfiguration, JARSfilter
-from .forms import JARSConfigurationForm, JARSfilterForm, JARSImportForm
+from .models import JARSConfiguration, JARSFilter
+from .forms import JARSConfigurationForm, JARSFilterForm, JARSImportForm
 
 import json
 # Create your views here.
@@ -17,26 +17,23 @@ def jars_conf(request, id_conf):
 
     conf = get_object_or_404(JARSConfiguration, pk=id_conf)
 
-    filter_parms = eval(conf.filter_parms)
-    if filter_parms.__class__.__name__=='str':
-        filter_parms = eval(filter_parms)
+    filter_parms = json.loads(conf.filter_parms)
 
     kwargs = {}
     kwargs['filter'] = filter_parms
-    kwargs['filter_keys']  = ['clock', 'mult', 'fch', 'fch_decimal',
-                                'filter_fir', 'filter_2', 'filter_5']
+    kwargs['filter_obj'] = JARSFilter.objects.get(pk=1)
+    kwargs['filter_keys']  = ['clock', 'multiplier', 'frequency', 'f_decimal',
+                              'cic_2', 'scale_cic_2', 'cic_5', 'scale_cic_5', 'fir', 
+                              'scale_fir', 'number_taps', 'taps']
 
-    filter_resolution=conf.filter_resolution()
+    filter_resolution = conf.filter_resolution()
     kwargs['resolution'] = '{} (MHz)'.format(filter_resolution)
     if filter_resolution < 1:
         kwargs['resolution'] = '{} (kHz)'.format(filter_resolution*1000)
 
     kwargs['status'] = conf.device.get_status_display()
-
-
     kwargs['dev_conf'] = conf
-    kwargs['dev_conf_keys'] = ['name',
-                               'cards_number', 'channels_number', 'channels',
+    kwargs['dev_conf_keys'] = ['cards_number', 'channels_number', 'channels',
                                'ftp_interval', 'data_type','acq_profiles',
                                'profiles_block', 'raw_data_blocks', 'ftp_interval',
                                'cohe_integr_str', 'cohe_integr', 'decode_data', 'post_coh_int',
@@ -55,12 +52,6 @@ def jars_conf(request, id_conf):
     kwargs['title'] = 'JARS Configuration'
     kwargs['suptitle'] = 'Details'
 
-    kwargs['button'] = 'Edit Configuration'
-
-    #kwargs['no_play'] = True
-
-    #kwargs['only_stop'] = True
-
     ###### SIDEBAR ######
     kwargs.update(sidebar(conf=conf))
 
@@ -70,24 +61,21 @@ def jars_conf_edit(request, id_conf):
 
     conf = get_object_or_404(JARSConfiguration, pk=id_conf)
 
-    filter_parms = eval(conf.filter_parms)
-    if filter_parms.__class__.__name__=='str':
-        filter_parms = eval(filter_parms)
-
+    filter_parms = json.loads(conf.filter_parms)
+    
     if request.method=='GET':
         form = JARSConfigurationForm(instance=conf)
-        filter_form = JARSfilterForm(initial=filter_parms)
+        filter_form = JARSFilterForm(initial=filter_parms)
 
     if request.method=='POST':
         form = JARSConfigurationForm(request.POST, instance=conf)
-        filter_form = JARSfilterForm(request.POST)
+        filter_form = JARSFilterForm(request.POST)
 
         if filter_form.is_valid():
-            jars_filter = filter_form.cleaned_data
-            try:
-                jars_filter.pop('name')
-            except:
-                pass
+           jars_filter = filter_form.cleaned_data
+           jars_filter['id'] = request.POST['filter_template']
+        else:
+           messages.error(request, filter_form.errors)
 
         if form.is_valid():
             conf = form.save(commit=False)
@@ -100,6 +88,7 @@ def jars_conf_edit(request, id_conf):
     kwargs['id_dev'] = conf.id
     kwargs['form'] = form
     kwargs['filter_form'] = filter_form
+    kwargs['filter_name'] = JARSFilter.objects.get(pk=filter_parms['id']).name
     kwargs['title'] = 'Device Configuration'
     kwargs['suptitle'] = 'Edit'
     kwargs['button'] = 'Save'
@@ -171,49 +160,14 @@ def read_conf(request, conf_id):
 
     return render(request, 'jars_conf_edit.html', kwargs)
 
-
-
-def change_filter(request, conf_id, filter_id=None):
+def change_filter(request, conf_id, filter_id):
 
     conf = get_object_or_404(JARSConfiguration, pk=conf_id)
+    filter = get_object_or_404(JARSFilter, pk=filter_id)
+    conf.filter_parms = json.dumps(filter.jsonify())
+    conf.save()
 
-    if filter_id:
-        if filter_id.__class__.__name__ not in ['int', 'float']:
-            filter_id = eval(filter_id)
-
-    if filter_id == 0:
-        return redirect('url_change_jars_filter', conf_id=conf.id)
-
-    if request.method=='GET':
-        if not filter_id:
-            form = JARSfilterForm(initial={'filter_id': 0})
-        else:
-            form = JARSfilterForm(initial={'filter_id': filter_id})
-
-    if request.method=='POST':
-        form = JARSfilterForm(request.POST)
-        if form.is_valid():
-            jars_filter = form.cleaned_data
-            try:
-                jars_filter.pop('name')
-            except:
-                pass
-            conf.filter_parms = json.dumps(jars_filter)
-            conf.save()
-            return redirect('url_edit_jars_conf', id_conf=conf.id)
-        else:
-            messages.error(request, "Select a Filter Template")
-            return redirect('url_change_jars_filter', conf_id=conf.id)
-
-    kwargs = {}
-    kwargs['title'] = 'JARS Configuration'
-    kwargs['suptitle'] = 'Change Filter'
-    kwargs['form'] = form
-    kwargs['button'] = 'Change'
-    kwargs['conf_id'] = conf.id
-    kwargs['filter_id'] = filter_id
-    return render(request, 'change_jars_filter.html', kwargs)
-
+    return redirect('url_edit_jars_conf', id_conf=conf.id)    
 
 def get_log(request, conf_id):
 

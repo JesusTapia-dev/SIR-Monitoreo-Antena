@@ -85,13 +85,17 @@ WSGI_APPLICATION = 'radarsys.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('POSTGRES_DB_NAME', 'radarsys'),
-        'USER': os.environ.get('POSTGRES_USER', 'docker'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'docker'),
-        'HOST': os.environ.get('POSTGRES_PORT_5432_TCP_ADDR', 'postgres'),
-        'PORT': os.environ.get('POSTGRES_PORT_5432_TCP_PORT', ''),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'radarsys.sqlite',
     }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    #     'NAME': os.environ.get('POSTGRES_DB_NAME', 'radarsys'),
+    #     'USER': os.environ.get('POSTGRES_USER', 'docker'),
+    #     'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'docker'),
+    #     'HOST': os.environ.get('POSTGRES_PORT_5432_TCP_ADDR', 'postgres'),
+    #     'PORT': os.environ.get('POSTGRES_PORT_5432_TCP_PORT', ''),
+    # }
 }
 
 # Internationalization

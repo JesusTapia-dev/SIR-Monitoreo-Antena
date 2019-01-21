@@ -14,11 +14,8 @@ class SpectralWidget(forms.widgets.TextInput):
 
         readonly = 'readonly' if attrs.get('readonly', False) else ''
         name = attrs.get('name', label)
-        print 'ESTO!'
-        print value
         if value == None:
             value = '[0, 0],'
-        print readonly
         if '[' in value:
             if value[len(value)-1] == ",":
                 value = ast.literal_eval(value)

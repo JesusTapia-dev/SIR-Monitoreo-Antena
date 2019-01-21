@@ -4,3 +4,4 @@ migrations/
 .vscode/
 *.pyc
 .env
+remove_migrations.py

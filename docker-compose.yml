@@ -45,6 +45,8 @@ services:
     volumes:
       - ./postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
       - pgdata:/var/lib/postgresql/data
+    # ports:
+    #   - 5432:5432
     env_file: .env      
 
   # Web Server

@@ -4,6 +4,7 @@ import json
 from django.contrib import messages
 from django.utils.safestring import mark_safe
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
+from django.contrib.auth.decorators import login_required
 
 from apps.main.models import Experiment, Device
 from apps.main.views import sidebar
@@ -27,11 +28,12 @@ def conf(request, conf_id):
     kwargs = {}
     kwargs['dev_conf'] = conf
     kwargs['rc_lines'] = lines
-    kwargs['dev_conf_keys'] = ['name', 'ipp_unit', 'ntx', 'clock_in', 'clock_divider', 'clock',
-                               'time_before', 'time_after', 'sync', 'sampling_reference', 'control_tx', 'control_sw']
+    kwargs['dev_conf_keys'] = ['ipp_unit', 'ntx', 'clock_in', 'clock_divider', 'clock',
+                               'time_before', 'time_after', 'sync', 'sampling_reference', 
+                               'control_tx', 'control_sw']
 
-    kwargs['title'] = 'RC Configuration'
-    kwargs['suptitle'] = 'Details'
+    kwargs['title'] = 'Configuration'
+    kwargs['suptitle'] = 'Detail'
 
     kwargs['button'] = 'Edit Configuration'
     ###### SIDEBAR ######
@@ -39,7 +41,7 @@ def conf(request, conf_id):
 
     return render(request, 'rc_conf.html', kwargs)
 
-
+@login_required
 def conf_edit(request, conf_id):
 
     conf = get_object_or_404(RCConfiguration, pk=conf_id)
@@ -131,7 +133,6 @@ def conf_edit(request, conf_id):
     kwargs['title'] = 'RC Configuration'
     kwargs['suptitle'] = 'Edit'
     kwargs['button'] = 'Update'
-    kwargs['previous'] = conf.get_absolute_url()
 
     return render(request, 'rc_conf_edit.html', kwargs)
 
@@ -399,3 +400,8 @@ def plot_pulses2(request, conf_id):
         return HttpResponse(json.dumps({'div':mark_safe(div), 'script':mark_safe(script)}), content_type="application/json")
     else:
         return render(request, 'rc_pulses.html', kwargs)
+
+def conf_raw(request, conf_id):
+    conf = get_object_or_404(RCConfiguration, pk=conf_id)
+    raw = conf.write_device(raw=True)
+    return HttpResponse(raw, content_type='application/json')

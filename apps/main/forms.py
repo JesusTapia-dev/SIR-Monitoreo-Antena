@@ -75,7 +75,7 @@ class CampaignForm(forms.ModelForm):
 
     class Meta:
         model = Campaign
-        exclude = ['']
+        exclude = ['author']
 
 
 class ExperimentForm(forms.ModelForm):
@@ -85,15 +85,15 @@ class ExperimentForm(forms.ModelForm):
         self.fields['start_time'].widget = TimepickerWidget(self.fields['start_time'].widget.attrs)
         self.fields['end_time'].widget = TimepickerWidget(self.fields['end_time'].widget.attrs)
 
-    def save(self):
-        exp = super(ExperimentForm, self).save()
+    def save(self, *args, **kwargs):
+        exp = super(ExperimentForm, self).save(*args, **kwargs)
         exp.name = exp.name.replace(' ', '')
         exp.save()
         return exp
 
     class Meta:
         model = Experiment
-        exclude = ['task', 'status']
+        exclude = ['task', 'status', 'author', 'hash']
 
 class LocationForm(forms.ModelForm):
     class Meta:
@@ -115,7 +115,7 @@ class ConfigurationForm(forms.ModelForm):
 
     class Meta:
         model = Configuration
-        exclude = ['type', 'created_date', 'programmed_date', 'parameters']
+        exclude = ['type', 'created_date', 'programmed_date', 'parameters', 'author', 'hash']
 
 class UploadFileForm(forms.Form):
 
@@ -188,7 +188,7 @@ class FilterForm(forms.Form):
                 if 'initial' in kwargs:
                     self.fields[field].widget.attrs = {'start_date':kwargs['initial'].get('start_date', ''),
                                                        'end_date':kwargs['initial'].get('end_date', '')}
-            elif  field in ('template', 'historical'):
+            elif  field in ('template', 'historical') or 'my ' in field:
                 self.fields[field] = forms.BooleanField(required=False)
             else:
                 self.fields[field] = forms.CharField(required=False)

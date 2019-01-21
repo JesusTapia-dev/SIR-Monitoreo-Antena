@@ -78,7 +78,7 @@ class RCConfigurationForm(forms.ModelForm):
 
     class Meta:
         model = RCConfiguration
-        exclude = ('type', 'parameters', 'status', 'total_units', 'mix')
+        exclude = ('type', 'parameters', 'status', 'total_units', 'mix', 'author', 'hash')
 
     def clean(self):
         form_data = super(RCConfigurationForm, self).clean()
@@ -92,8 +92,8 @@ class RCConfigurationForm(forms.ModelForm):
 
         return form_data
 
-    def save(self):
-        conf = super(RCConfigurationForm, self).save()
+    def save(self, *args, **kwargs):
+        conf = super(RCConfigurationForm, self).save(*args, **kwargs)
         conf.total_units = conf.ipp*conf.ntx*conf.km2unit
         conf.save()
         return conf
@@ -112,8 +112,10 @@ class RCMixConfigurationForm(forms.Form):
                                   choices=[(0, 'OR'), (1, 'XOR'), (2, 'AND'), (3, 'NAND')],
                                   initial=1)
     delay = forms.CharField()
-    mask = forms.MultipleChoiceField(choices=[(0, 'L1'),(1, 'L2'),(2, 'L3'),(3, 'L4'),(4, 'L5'),(5, 'L6'),(6, 'L7'),(7, 'L8')],
-                                     widget=HCheckboxSelectMultiple())
+    mask = forms.MultipleChoiceField(
+        choices=[(0, 'L1'),(1, 'L2'),(2, 'L3'),(3, 'L4'),(4, 'L5'),(5, 'L6'),(6, 'L7'),(7, 'L8'),
+        (8, 'L9'),(9, 'L10'),(10, 'L11'),(11, 'L12'),(12, 'L13'),(13, 'L14'),(14, 'L15'),(15, 'L16')],
+        widget=HCheckboxSelectMultiple())
     result = forms.CharField(required=False,
                              widget=forms.Textarea(attrs={'readonly':True, 'rows':5, 'class':'tabuled'}))
 

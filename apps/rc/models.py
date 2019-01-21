@@ -158,7 +158,7 @@ class RCConfiguration(Configuration):
         else:
             data = Params(params).get_conf(dtype='rc')
 
-        self.name = data['name']
+        # self.name = data['name']
         self.ipp = data['ipp']
         self.ntx = data['ntx']
         self.clock_in = data['clock_in']
@@ -545,7 +545,7 @@ class RCConfiguration(Configuration):
 
         return True
 
-    def write_device(self):        
+    def write_device(self, raw=False):        
 
         values = []
         for pulse, delay in zip(self.get_pulses(), self.get_delays()):
@@ -576,6 +576,9 @@ class RCConfiguration(Configuration):
 
         #enable
         data.extend((129, 1))
+
+        if raw:
+            return b64encode(data)
 
         try:
             payload = self.request('stop', 'post')

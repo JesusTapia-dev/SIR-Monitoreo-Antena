@@ -1,3 +1,30 @@
-[{"fields": {"name": "49_92MHz_clock60MHz_F1KHz_12_25_2", "clock": 60, "mult": 5, "fch": 49.92, "fch_decimal":	721554506, "filter_fir": 2, "filter_2": 12, "filter_5": 25}, "model": "jars.jarsfilter", "pk": 1},
-{"fields": {"name": "49_920MHz_clock60MHz_F1MHz_10_1_6", "clock": 60, "mult": 5, "fch": 49.92, "fch_decimal":	721554506, "filter_fir": 6, "filter_2": 10, "filter_5": 1}, "model": "jars.jarsfilter", "pk": 2}
+[
+    {
+        "fields": {
+            "name": "49_92MHz_clock60MHz_F1KHz_12_25_2",
+            "clock": 60,
+            "multiplier": 5,
+            "frequency": 49.92,
+            "f_decimal": 721554506,
+            "fir": 2,
+            "cic_2": 12,
+            "cic_5": 25
+        },
+        "model": "jars.jarsfilter",
+        "pk": 1
+    },
+    {
+        "fields": {
+            "name": "49_920MHz_clock60MHz_F1MHz_10_1_6",
+            "clock": 60,
+            "multiplier": 5,
+            "frequency": 49.92,
+            "f_decimal": 721554506,
+            "fir": 6,
+            "cic_2": 10,
+            "cic_5": 1
+        },
+        "model": "jars.jarsfilter",
+        "pk": 2
+    }
 ]

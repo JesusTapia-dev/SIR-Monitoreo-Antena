@@ -24,8 +24,7 @@ class CGSConfigurationForm(forms.ModelForm):
 
     class Meta:
         model = CGSConfiguration
-        exclude = ('type', 'parameters', 'status')
-        #fields = ('experiment', 'device', 'freq0', 'freq1', 'freq2', 'freq3')
+        exclude = ('type', 'parameters', 'status', 'author', 'hash')
 
 
 class UploadFileForm(forms.Form):

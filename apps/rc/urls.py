@@ -10,7 +10,7 @@ urlpatterns = (
     url(r'^(?P<conf_id>-?\d+)/plot2/$', views.plot_pulses2, name='url_plot_rc_pulses2'),
     #url(r'^(?P<id_conf>-?\d+)/write/$', 'apps.main.views.dev_conf_write', name='url_write_rc_conf'),
     #url(r'^(?P<id_conf>-?\d+)/read/$', 'apps.main.views.dev_conf_read', name='url_read_rc_conf'),
-
+    url(r'^(?P<conf_id>-?\d+)/raw/$', views.conf_raw, name='url_raw_rc_conf'),
     url(r'^(?P<conf_id>-?\d+)/add_line/$', views.add_line, name='url_add_rc_line'),
     url(r'^(?P<conf_id>-?\d+)/add_line/(?P<line_type_id>-?\d+)/$', views.add_line, name='url_add_rc_line'),
     url(r'^(?P<conf_id>-?\d+)/add_line/(?P<line_type_id>-?\d+)/code/(?P<code_id>-?\d+)/$', views.add_line, name='url_add_rc_line_code'),

@@ -227,7 +227,7 @@ class ABSConfiguration(Configuration):
         parameters = {}
 
         parameters['device_id'] = self.device.id
-        parameters['name']      = self.name
+        parameters['label']      = self.label
         parameters['device_type']      = self.device.device_type.name
         parameters['beams']     = {}
 
@@ -243,7 +243,7 @@ class ABSConfiguration(Configuration):
 
     def dict_to_parms(self, parameters):
 
-        self.name = parameters['name']
+        self.label = parameters['label']
 
         absbeams  = ABSBeam.objects.filter(abs_conf=self)
         beams     = parameters['beams']

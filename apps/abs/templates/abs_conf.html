@@ -1,36 +1,31 @@
-{% extends "dev_conf.html" %} {% load static %} {% load bootstrap3 %} {% load main_tags %} 
+{% extends "dev_conf.html" %} {% load static %} {% load bootstrap3 %} {% load main_tags %}
 {% block extra-head %}
 <style>
   .abs {
-    border: 2px solid #00334d;
-    vertical-align: center;
+    width: auto;
     display: inline-block;
-  }
-
-  .abs tr:nth-child(1) {
-    border-bottom: 1px dashed #00334d;
-  }
-
-  .abs tr {
-    border-bottom: 0px solid #00334d;
+    text-align: center;
   }
 
   .abs td {
-    border-right: 1px dashed #00334d;
-    text-align: center;
-    padding: 5px;
+    padding: 4px;
   }
 
+  .module td {
+    padding: 4px 15px 4px 15px;
+    font-weight: bold;
+    border: 1px solid
+  }
 
   .legend {
     margin-left: 15px;
     display: inline-block;
-    border: 2px solid #00334d;
+    border: 2px solid;
     vertical-align: top;
   }
 
   .legend th {
-    border-bottom: 1px dashed #00334d;
+    border-bottom: 1px dashed;
     font-weight: bold;
     vertical-align: center;
     text-align: center;
@@ -41,135 +36,6 @@
     text-align: center;
   }
 
-
-  .north {
-    border: 2px solid #00334d;
-    vertical-align: center;
-    font-weight: bold;
-  }
-
-  .north tr {
-    border: 1px solid #ffffff;
-
-  }
-
-  .north td {
-    border: 2px solid #e2e2e7;
-    text-align: center;
-    padding: 1px 15px 1px 15px;
-  }
-
-  .north tr:nth-child(even) td:nth-child(n) {
-    border-bottom: 12px solid #e2e2e7;
-  }
-
-  .north td:nth-child(n) {
-    border-right: 12px solid #e2e2e7;
-  }
-
-  .north td:nth-last-child(4n+1) {
-    border-right: 2px solid #e2e2e7;
-  }
-
-  .north tr:nth-last-child(1) td:nth-child(n) {
-    border-bottom: 3px solid #e2e2e7;
-  }
-
-  .east {
-    border: 2px solid #00334d;
-    vertical-align: center;
-    font-weight: bold;
-  }
-
-  .east tr {
-    border: 1px solid #ffffff;
-  }
-
-  .east td {
-    border: 2px solid #e2e2e7;
-    text-align: center;
-    padding: 1px 15px 1px 15px;
-  }
-
-  .east tr:nth-child(even) td:nth-child(n) {
-    border-bottom: 12px solid #e2e2e7;
-  }
-
-  .east td:nth-child(n) {
-    border-right: 12px solid #e2e2e7;
-  }
-
-  .east td:nth-last-child(4n+1) {
-    border-right: 2px solid #e2e2e7;
-  }
-
-  .east tr:nth-last-child(1) td:nth-child(n) {
-    border-bottom: 3px solid #e2e2e7;
-  }
-
-  .west {
-    border: 2px solid #00334d;
-    vertical-align: center;
-    font-weight: bold;
-  }
-
-  .west tr {
-    border: 1px solid #ffffff;
-  }
-
-  .west td {
-    border: 2px solid #e2e2e7;
-    text-align: center;
-    padding: 1px 15px 1px 15px;
-  }
-
-  .west tr:nth-child(even) td:nth-child(n) {
-    border-bottom: 12px solid #e2e2e7;
-  }
-
-  .west td:nth-child(n) {
-    border-right: 12px solid #e2e2e7;
-  }
-
-  .west td:nth-last-child(4n+1) {
-    border-right: 2px solid #e2e2e7;
-  }
-
-  .west tr:nth-last-child(1) td:nth-child(n) {
-    border-bottom: 3px solid #e2e2e7;
-  }
-
-  .south {
-    border: 2px solid #00334d;
-    vertical-align: center;
-    font-weight: bold;
-  }
-
-  .south tr {
-    border: 1px solid #ffffff;
-  }
-
-  .south td {
-    border: 2px solid #e2e2e7;
-    text-align: center;
-    padding: 1px 15px 1px 15px;
-  }
-
-  .south tr:nth-child(even) td:nth-child(n) {
-    border-bottom: 12px solid #e2e2e7;
-  }
-
-  .south td:nth-child(n) {
-    border-right: 12px solid #e2e2e7;
-  }
-
-  .south td:nth-last-child(4n+1) {
-    border-right: 2px solid #e2e2e7;
-  }
-
-  .south tr:nth-last-child(1) td:nth-child(n) {
-    border-bottom: 3px solid #e2e2e7;
-  }
 </style>
 {% endblock %}
 {% block extra-menu-actions %}
@@ -177,7 +43,7 @@
   <a href="{{ dev_conf.get_absolute_url_plot }}" target="_blank">
     <span class="glyphicon glyphicon-picture" aria-hidden="true"></span> View Patterns </a>
 </li>
-{% endblock %} 
+{% endblock %}
 {% block extra-content %}
 {% if beams %}
 <h4>Beams:</h4>
@@ -198,7 +64,7 @@
         <tr>
           <td>
             <b>North Quarter</b>
-            <table class="north ">
+            <table class="module">
               <tr>
                 <td {%if beam.pk == active_beam %} {{color_status.1}} t{%endif%} itle='{{module_messages.1}}'>{{beam.get_upvalues.0}}</td>
                 <td {%if beam.pk == active_beam %} {{color_status.2}} t{%endif%} itle='{{module_messages.2}}'>{{beam.get_upvalues.1}}</td>
@@ -251,7 +117,7 @@
           </td>
           <td>
             <b>East Quarter</b>
-            <table class="east ">
+            <table class="module">
               <tr>
                 <td {%if beam.pk == active_beam %} {{color_status.5}} t{%endif%} itle='{{module_messages.5}}'>{{beam.get_upvalues.4}}</td>
                 <td {%if beam.pk == active_beam %} {{color_status.6}} t{%endif%} itle='{{module_messages.6}}'>{{beam.get_upvalues.5}}</td>
@@ -306,7 +172,7 @@
         <tr>
           <td>
             <b>West Quarter</b>
-            <table class="west ">
+            <table class="module">
               <tr>
                 <td {%if beam.pk == active_beam %} {{color_status.33}} {%endif%} title='{{module_messages.33}}'>{{beam.get_upvalues.32}}</td>
                 <td {%if beam.pk == active_beam %} {{color_status.34}} {%endif%} title='{{module_messages.34}}'>{{beam.get_upvalues.33}}</td>
@@ -359,7 +225,7 @@
           </td>
           <td>
             <b>South Quarter</b>
-            <table class="south ">
+            <table class="module">
               <tr>
                 <td {%if beam.pk == active_beam %} {{color_status.37}} {%endif%} title='{{module_messages.37}}'>{{beam.get_upvalues.36}}</td>
                 <td {%if beam.pk == active_beam %} {{color_status.38}} {%endif%} title='{{module_messages.38}}'>{{beam.get_upvalues.37}}</td>

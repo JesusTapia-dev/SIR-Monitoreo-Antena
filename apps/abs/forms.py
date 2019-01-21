@@ -10,7 +10,9 @@ class ABSConfigurationForm(forms.ModelForm):
 
     class Meta:
         model = ABSConfiguration
-        exclude = ('type', 'status', 'parameters', 'active_beam', 'module_status', 'module_messages', 'module_mode')
+        exclude = ('type', 'status', 'parameters', 'active_beam', 
+            'module_status', 'module_messages', 'module_mode',
+            'author', 'hash')
 
 
 class ABSBeamAddForm(forms.Form):
