@@ -377,8 +377,10 @@ class ABSConfiguration(Configuration):
             return False
 
         #-------------Write each abs module-----------
+
         if beams:
-            message = 'SNDF{:02d}'.format(nbeams)
+            block_id = 0
+            message = 'SNDF{:03d}{:02d}{:02d}'.format(nbeams, nbeams, block_id)
             for i, status in enumerate(self.module_status):
                 message += ''.join([fromBinary2Char(beam.module_6bits(i)) for beam in beams])
             status = ['0'] * 64
@@ -386,14 +388,16 @@ class ABSConfiguration(Configuration):
 
             sock = self.send_multicast(message)
 
-            for i in range(64):
+            for i in range(32):
                 try:
                     data, address = sock.recvfrom(1024)
+                    print address, data
                     if data == '1':
                         status[int(address[0][10:])-1] = '3'
                     elif data == '0':
                         status[int(address[0][10:])-1] = '1'
-                except:
+                except Exception as e:
+                    print 'Error {}'.format(e)
                     n += 1
             sock.close()
         else:
@@ -481,7 +485,7 @@ class ABSConfiguration(Configuration):
         for i, status in  enumerate(self.module_status):
             if status != '0':
                 num += 1
-                print('status {}:{}'.format(i+1, status))
+                #print('status {}:{}'.format(i+1, status))
         return num
 
     def send_multicast(self, message):
@@ -489,8 +493,10 @@ class ABSConfiguration(Configuration):
         multicast_group = ('224.3.29.71', 10000)
         # Create the datagram socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.settimeout(0.01)
+        sock.settimeout(1)
+        # sock.bind((local_ip, 10000))
         local_ip = os.environ.get('LOCAL_IP', '127.0.0.1')
+        local_ip = '192.168.1.128'
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(local_ip))
         sent = sock.sendto(message, multicast_group)
         print('Sending ' + message)
@@ -506,9 +512,12 @@ class ABSConfiguration(Configuration):
         
         n = 0
         status = ['0'] * 64
-        for i in range(64):
+        for i in range(32):
+            #if True:
             try:
+                address = None
                 data, address = sock.recvfrom(1024)
+                print address, data
                 if data == '1':
                     status[int(address[0][10:])-1] = '3'
                 elif data == '0':
@@ -516,6 +525,7 @@ class ABSConfiguration(Configuration):
                 n += 1
                 print('Module: {} connected'.format(address))
             except:
+                print('Module: {} error'.format(address))
                 pass
         sock.close()
         
@@ -538,11 +548,13 @@ class ABSConfiguration(Configuration):
         """
 
         # Se manda a cero RC para poder realizar cambio de beam
-        confs = Configuration.objects.filter(experiment = self.experiment).filter(type=0)
+        if self.experiment is None:
+            confs = []
+        else:
+            confs = Configuration.objects.filter(experiment = self.experiment).filter(type=0)
         confdds  = ''
         confjars = ''
         confrc   = ''
-
         #TO STOP DEVICES: DDS-JARS-RC
         for i in range(0,len(confs)):
             if i==0:
@@ -563,7 +575,6 @@ class ABSConfiguration(Configuration):
                         confrc = conf
                         confrc.stop_device()
                         break
-
         if beam_pos > 0:
             beam_pos = beam_pos - 1
         else:
@@ -574,8 +585,7 @@ class ABSConfiguration(Configuration):
         status = ['0'] * 64
         message = 'CHGB{}'.format(beam_pos) 
         sock = self.send_multicast(message)
-
-        for i in range(64):
+        for i in range(32):
             try:
                 data, address = sock.recvfrom(1024)
                 print address, data
@@ -583,7 +593,8 @@ class ABSConfiguration(Configuration):
                     status[int(address[0][10:])-1] = '3'
                 elif data == '0':
                     status[int(address[0][10:])-1] = '1'
-            except:
+            except  Exception as e:
+                print 'Error {}'.format(e)
                 pass
 
         sock.close()
@@ -670,6 +681,7 @@ class ABSBeam(models.Model):
         """
         This function reads antenna pattern and choose 6bits (upbits-downbits) for one abs module
         """
+        module += 1
         if module > 64:
             beam_bits = ""
             return beam_bits
