@@ -184,7 +184,7 @@ def location_delete(request, id_loc):
 
     if request.method == 'POST':
 
-        if request.user.is_staff:
+        if is_developer(request.user):
             location.delete()
             return redirect('url_locations')
 
@@ -219,8 +219,7 @@ def devices(request):
     kwargs['add_url'] = reverse('url_add_device')
     filters.pop('page', None)
     kwargs['q'] = urlencode(filters)
-    kwargs['menu'] = 'device'
-
+    kwargs['menu_devices'] = 'active'
     return render(request, 'base_list.html', kwargs)
 
 
@@ -235,6 +234,7 @@ def device(request, id_dev):
 
     kwargs['title'] = 'Device'
     kwargs['suptitle'] = 'Details'
+    kwargs['menu_devices'] = 'active'
 
     return render(request, 'device.html', kwargs)
 
@@ -257,6 +257,7 @@ def device_new(request):
     kwargs['title'] = 'Device'
     kwargs['suptitle'] = 'New'
     kwargs['button'] = 'Create'
+    kwargs['menu_devices'] = 'active'
 
     return render(request, 'base_edit.html', kwargs)
 
@@ -281,6 +282,7 @@ def device_edit(request, id_dev):
     kwargs['title'] = 'Device'
     kwargs['suptitle'] = 'Edit'
     kwargs['button'] = 'Update'
+    kwargs['menu_devices'] = 'active'
 
     return render(request, 'base_edit.html', kwargs)
 
@@ -292,7 +294,7 @@ def device_delete(request, id_dev):
 
     if request.method == 'POST':
 
-        if request.user.is_staff:
+        if is_developer(request.user):
             device.delete()
             return redirect('url_devices')
 
@@ -305,6 +307,7 @@ def device_delete(request, id_dev):
         'object': device,
         'delete': True
     }
+    kwargs['menu_devices'] = 'active'
 
     return render(request, 'confirm.html', kwargs)
 
@@ -316,7 +319,7 @@ def device_change_ip(request, id_dev):
 
     if request.method == 'POST':
 
-        if request.user.is_staff:
+        if is_developer(request.user):
             device.change_ip(**request.POST.dict())
             level, message = device.message.split('|')
             messages.add_message(request, level, message)
@@ -333,6 +336,7 @@ def device_change_ip(request, id_dev):
         'form': ChangeIpForm(initial={'ip_address': device.ip_address}),
         'message': ' ',
     }
+    kwargs['menu_devices'] = 'active'
 
     return render(request, 'confirm.html', kwargs)
 
@@ -340,7 +344,7 @@ def device_change_ip(request, id_dev):
 def campaigns(request):
 
     page = request.GET.get('page')
-    order = ('start_date',)
+    order = ('-start_date',)
     filters = request.GET.copy()
 
     kwargs = get_paginator(Campaign, page, order, filters)
@@ -355,6 +359,7 @@ def campaigns(request):
     kwargs['add_url'] = reverse('url_add_campaign')
     filters.pop('page', None)
     kwargs['q'] = urlencode(filters)
+    kwargs['menu_campaigns'] = 'active'
 
     return render(request, 'base_list.html', kwargs)
 
@@ -380,6 +385,7 @@ def campaign(request, id_camp):
 
     kwargs['form'] = form
     kwargs['button'] = 'Add Experiment'
+    kwargs['menu_campaigns'] = 'active'
 
     return render(request, 'campaign.html', kwargs)
 
@@ -435,6 +441,7 @@ def campaign_new(request):
     kwargs['form'] = form
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = 'New'
+    kwargs['menu_campaigns'] = 'active'
 
     return render(request, 'campaign_edit.html', kwargs)
 
@@ -476,6 +483,7 @@ def campaign_edit(request, id_camp):
     kwargs['title'] = 'Campaign'
     kwargs['suptitle'] = 'Edit'
     kwargs['button'] = 'Update'
+    kwargs['menu_campaigns'] = 'active'
 
     return render(request, 'campaign_edit.html', kwargs)
 
@@ -486,7 +494,7 @@ def campaign_delete(request, id_camp):
     campaign = get_object_or_404(Campaign, pk=id_camp)
 
     if request.method == 'POST':
-        if request.user.is_staff:
+        if is_developer(request.user):
 
             for exp in campaign.experiments.all():
                 for conf in Configuration.objects.filter(experiment=exp):
@@ -505,6 +513,7 @@ def campaign_delete(request, id_camp):
         'object': campaign,
         'delete': True
     }
+    kwargs['menu_campaigns'] = 'active'
 
     return render(request, 'confirm.html', kwargs)
 
@@ -549,6 +558,7 @@ def campaign_import(request, id_camp):
     kwargs['form'] = file_form
     kwargs['suptitle'] = 'Importing file'
     kwargs['button'] = 'Import'
+    kwargs['menu_campaigns'] = 'active'
 
     return render(request, 'campaign_import.html', kwargs)
 
@@ -581,6 +591,7 @@ def experiments(request):
     filters = request.GET.copy()
     filters.pop('page', None)
     kwargs['q'] = urlencode(filters)
+    kwargs['menu_experiments'] = 'active'
 
     return render(request, 'base_list.html', kwargs)
 
@@ -597,15 +608,13 @@ def experiment(request, id_exp):
     kwargs['experiment_keys'] = ['template', 'radar_system',
                                  'name', 'freq', 'start_time', 'end_time']
     kwargs['experiment'] = experiment
-
     kwargs['configuration_keys'] = ['name', 'device__ip_address',
                                     'device__port_address', 'device__status']
     kwargs['configurations'] = configurations
-
     kwargs['title'] = 'Experiment'
     kwargs['suptitle'] = 'Details'
-
     kwargs['button'] = 'Add Configuration'
+    kwargs['menu_experiments'] = 'active'
 
     ###### SIDEBAR ######
     kwargs.update(sidebar(experiment=experiment))
@@ -661,6 +670,7 @@ def experiment_new(request, id_camp=None):
     kwargs['form'] = form
     kwargs['title'] = 'Experiment'
     kwargs['suptitle'] = 'New'
+    kwargs['menu_experiments'] = 'active'
 
     return render(request, 'experiment_edit.html', kwargs)
 
@@ -685,6 +695,7 @@ def experiment_edit(request, id_exp):
     kwargs['title'] = 'Experiment'
     kwargs['suptitle'] = 'Edit'
     kwargs['button'] = 'Update'
+    kwargs['menu_experiments'] = 'active'
 
     return render(request, 'experiment_edit.html', kwargs)
 
@@ -695,7 +706,7 @@ def experiment_delete(request, id_exp):
     experiment = get_object_or_404(Experiment, pk=id_exp)
 
     if request.method == 'POST':
-        if request.user.is_staff:
+        if is_developer(request.user):
             for conf in Configuration.objects.filter(experiment=experiment):
                 conf.delete()
             experiment.delete()
@@ -755,6 +766,7 @@ def experiment_import(request, id_exp):
     kwargs['form'] = file_form
     kwargs['suptitle'] = 'Importing file'
     kwargs['button'] = 'Import'
+    kwargs['menu_experiments'] = 'active'
 
     kwargs.update(sidebar(experiment=experiment))
 
@@ -818,7 +830,7 @@ def experiment_mix(request, id_exp):
             request, 'You need at least two RC Configurations to make a mix')
         return redirect(experiment.get_absolute_url())
 
-    mix_confs = RCConfiguration.objects.filter(experiment=id_exp, mix=True)
+    mix_confs = RCConfiguration.objects.filter(experiment=id_exp, mix=True, type=0)
 
     if mix_confs:
         mix = mix_confs[0]
@@ -898,6 +910,7 @@ def experiment_mix(request, id_exp):
         'id_exp': id_exp,
 
     }
+    kwargs['menu_experiments'] = 'active'
 
     return render(request, 'experiment_mix.html', kwargs)
 
@@ -1054,6 +1067,7 @@ def experiment_summary(request, id_exp):
             conf['keys'].append('Vrange (m/s)')
         
         kwargs['configurations'].append(conf)
+    kwargs['menu_experiments'] = 'active'
 
     ###### SIDEBAR ######
     kwargs.update(sidebar(experiment=experiment))
@@ -1193,6 +1207,7 @@ def experiment_verify(request, id_exp):
                 dds.frequencyA_Mhz = request.POST['suggest_frequencyA']
                 dds.save()
 
+    kwargs['menu_experiments'] = 'active'
     kwargs.update(sidebar(experiment=experiment))
     return render(request, 'experiment_verify.html', kwargs)
 
@@ -1266,6 +1281,7 @@ def dev_confs(request):
     filters = request.GET.copy()
     filters.pop('page', None)
     kwargs['q'] = urlencode(filters)
+    kwargs['menu_configurations'] = 'active'
 
     return render(request, 'base_list.html', kwargs)
 
@@ -1359,6 +1375,7 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
     kwargs['form'] = form
     kwargs['title'] = 'Configuration'
     kwargs['suptitle'] = 'New'
+    kwargs['menu_configurations'] = 'active'
 
     if id_dev != 0:
         device = Device.objects.get(pk=id_dev)
@@ -1389,6 +1406,7 @@ def dev_conf_edit(request, id_conf):
     kwargs['title'] = 'Device Configuration'
     kwargs['suptitle'] = 'Edit'
     kwargs['button'] = 'Update'
+    kwargs['menu_configurations'] = 'active'
 
     ###### SIDEBAR ######
     kwargs.update(sidebar(conf=conf))
@@ -1553,6 +1571,7 @@ def dev_conf_import(request, id_conf):
     kwargs['form'] = file_form
     kwargs['suptitle'] = 'Importing file'
     kwargs['button'] = 'Import'
+    kwargs['menu_configurations'] = 'active'
 
     kwargs.update(sidebar(conf=conf))
 
@@ -1591,6 +1610,7 @@ def dev_conf_export(request, id_conf):
     kwargs['form'] = file_form
     kwargs['suptitle'] = 'Exporting file'
     kwargs['button'] = 'Export'
+    kwargs['menu_configurations'] = 'active'
 
     return render(request, 'dev_conf_export.html', kwargs)
 
@@ -1601,7 +1621,7 @@ def dev_conf_delete(request, id_conf):
     conf = get_object_or_404(Configuration, pk=id_conf)
 
     if request.method == 'POST':
-        if request.user.is_staff:
+        if is_developer(request.user):
             conf.delete()
             return redirect('url_dev_confs')
 
@@ -1614,6 +1634,7 @@ def dev_conf_delete(request, id_conf):
         'object': conf,
         'delete': True
     }
+    kwargs['menu_configurations'] = 'active'
 
     return render(request, 'confirm.html', kwargs)
 
@@ -1704,6 +1725,7 @@ def operation(request, id_camp=None):
     kwargs = {}
     kwargs['title'] = 'Radars Operation'
     kwargs['no_sidebar'] = True
+    kwargs['menu_operation'] = 'active'
     campaigns = Campaign.objects.filter(start_date__lte=datetime.now(),
                                         end_date__gte=datetime.now()).order_by('-start_date')
 
@@ -1819,3 +1841,10 @@ def real_time(request):
     kwargs['graphic1_path'] = 'http://www.bluemaize.net/im/girls-accessories/shark-beanie-11.jpg'
 
     return render(request, 'real_time.html', kwargs)
+
+def theme(request, theme):
+    
+    user = request.user
+    user.profile.theme = theme
+    user.save()
+    return redirect('index')

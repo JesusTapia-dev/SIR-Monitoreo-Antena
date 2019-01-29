@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {# bootstrap_css #}
     
-    <link href="{% static 'css/bootstrap-yeti.min.css' %}" media="all" rel="stylesheet">
+    <link href="{% static '' %}css/bootstrap-{{theme}}.min.css" media="all" rel="stylesheet">
     <link href="{% static 'css/bootcards-desktop.min.css' %}" media="all" rel="stylesheet">
     <link href="{% static 'css/font-awesome.min.css' %}" media="all" rel="stylesheet">
     <!--link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet"-->
@@ -54,23 +54,23 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="{% url 'index' %}" style="padding-top:1px"><img class="logo" alt="JRO" src="{% static "images/logo-jro-color-trans.png" %}"></a>
+        <a class="navbar-brand" href="{% url 'index' %}" style="padding-top:0"><img class="logo" alt="JRO" src="{% static "images/sir.png" %}"></a>
       </div>
       <div class="collapse navbar-collapse" id="navigationbar">
         <ul class="nav navbar-nav">
-          <li class=" dropdown {% block operation-active %}{% endblock %}">
+          <li class="dropdown {{menu_operation}}">
             <a href="{% url 'url_operation'%}">Operation</a>
           </li>
-          <li class=" dropdown {% block campaign-active %}{% endblock %}">
+          <li class="dropdown {{menu_campaigns}}">
             <a href="{% url 'url_campaigns'%}">Campaigns</a>
           </li>
-          <li class=" dropdown {% block experiment-active %}{% endblock %}">
+          <li class="dropdown {{menu_experiments}}">
             <a href="{% url 'url_experiments'%}">Experiments</a>
           </li>
-          <li class=" dropdown {% block configuration-active %}{% endblock %}">
+          <li class="dropdown {{menu_configurations}}">
             <a href="{% url 'url_dev_confs'%}">Configurations</a>
           </li>
-          <li class=" dropdown {% block device-active %}{% endblock %}">
+          <li class="dropdown {{menu_devices}}">
             <a href="{% url 'url_devices'%}">Devices</a>
           </li>
         </ul>
@@ -78,7 +78,23 @@
           <li class="nav-divider"></li>
           {% if user.is_authenticated %}
           <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Hi {{ user.username }}<span class="caret"></span></a>
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Theme<span class="caret"></span></a>
+             <ul class="dropdown-menu" role="menu">
+                <li class="{{cosmo_active}}"><a href="{% url 'url_theme' 'cosmo' %}">Cosmo</a></li>
+                <li class="{{custom_active}}"><a href="{% url 'url_theme' 'custom' %}">Custom</a></li>
+                <li class="{{flatly_active}}"><a href="{% url 'url_theme' 'flatly' %}">Flatly</a></li>
+                <li class="{{journal_active}}"><a href="{% url 'url_theme' 'journal' %}">Journal</a></li>
+                <li class="{{lumen_active}}"><a href="{% url 'url_theme' 'lumen' %}">Lumen</a></li>
+                <li class="{{sandstone_active}}"><a href="{% url 'url_theme' 'sandstone' %}">Sandstone</a></li>
+                <li class="{{simplex_active}}"><a href="{% url 'url_theme' 'simplex' %}">Simplex</a></li>
+                <li class="{{slate_active}}"><a href="{% url 'url_theme' 'slate' %}">Slate</a></li>
+                <li class="{{spacelab_active}}"><a href="{% url 'url_theme' 'spacelab' %}">SpaceLab</a></li>
+                <li class="{{united_active}}"><a href="{% url 'url_theme' 'united' %}">United</a></li>
+                <li class="{{yeti_active}}"><a href="{% url 'url_theme' 'yeti' %}">Yeti</a></li>
+             </ul>
+          </li>
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Hi, {{ user.first_name }}<span class="caret"></span></a>
              <ul class="dropdown-menu" role="menu">
                 <li><a href="/admin" target="_blank">Control Panel</a></li>
                 <li><a href="{% url 'url_logout' %}">Logout</a></li>

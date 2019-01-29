@@ -39,4 +39,7 @@ def get_verbose_field_name(instance, field_name):
     """
     if field_name=='ipp_unit':
         return 'IPP [Km(Units)]'
-    return mark_safe(instance._meta.get_field(field_name).verbose_name)
+    elif getattr(instance, field_name, False):
+        return mark_safe(instance._meta.get_field(field_name).verbose_name)
+    else:
+        return field_name.title()
