@@ -16,6 +16,8 @@ from django.core.urlresolvers import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from apps.main.utils import Params
 from apps.rc.utils import RCFile
@@ -83,6 +85,20 @@ CONF_TYPES = (
                  (0, 'Active'),
                  (1, 'Historical'),
              )
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    theme = models.CharField(max_length=30, default='yeti')
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
+
 
 class Location(models.Model):
 
@@ -357,9 +373,9 @@ class Experiment(models.Model):
 
     def __str__(self):
         if self.template:
-            return u'%s (template)' % (self.name[:8])
+            return u'%s (template)' % (self.name)
         else:
-            return u'%s' % (self.name[:10])
+            return u'%s' % (self.name)
 
     def jsonify(self):
 
@@ -582,9 +598,8 @@ class Configuration(PolymorphicModel):
                 ret = '{} MIX '.format(self.device.device_type.name.upper())
         
         if 'label' in [f.name for f in self._meta.get_fields()]:
-            ret += '{}'.format(self.label[:8])
+            ret += '{}'.format(self.label)
 
-        #ret += '[ {} ]'.format(self.device.location.name)
         if self.template:
             ret += ' (template)'
         
