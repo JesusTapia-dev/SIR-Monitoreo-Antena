@@ -57,7 +57,7 @@ class JARSFilter(models.Model):
                                             MinValueValidator(0), MaxValueValidator(7)], default=3)
     number_taps = models.PositiveIntegerField(verbose_name='Number of taps', validators=[
                                               MinValueValidator(1), MaxValueValidator(256)], default=4)
-    taps = models.CharField(verbose_name='Taps', max_length=256, default='')
+    taps = models.CharField(verbose_name='Taps', max_length=1600, default='0')
 
     class Meta:
         db_table = 'jars_filters'
