@@ -1,7 +1,7 @@
 '''
 Created on Jan 5, 2016
-
-@author: Juan C. Espinoza
+Modified on Jan 24, 2019
+@authors: Juan C. Espinoza, Fiorella Quino, John Rojas
 
 '''
 
@@ -18,9 +18,9 @@ from datetime import datetime, timedelta
 
 from flask import Flask, jsonify, request, send_file
 
-PATH = 'F:\SIR_DATA'
+PATH = 'G:\SIR_DATA'
 EXE = 'C:\JROAdquisicion\src\JROAcquisitionSoftware\Release\JROAcquisitionSoftware.exe'
-IPHOST='10.10.10.165'
+IPHOST='10.10.10.X'
 OPT = '--jars' #'--cbsim'
 PROC = False
 OUT = None
@@ -69,7 +69,7 @@ class StdoutReader(object):
                     if LOGGING:
                         self._l.write('{}'.format(raw))
                     print line
-                    if 'Block' not in line:
+                    if 'Error... restarting' in line or 'Trying restart' in line:
                         self._f.write('{} at {}\n'.format(line,
                                                           datetime.now().ctime()))
 
@@ -240,7 +240,7 @@ def create_jarsfiles(json_data):
 	Function to create *.racp and *.jars files with json_data
 	"""
     global EXPNAME
-    
+
     data = json.loads(json_data)
     exp_id = data['experiments']['allIds'][0]
     experiment = data['experiments']['byId'][exp_id]
@@ -253,21 +253,21 @@ def create_jarsfiles(json_data):
     if not os.path.exists(folder_name+'/DATA'):
         os.mkdir(folder_name+'/DATA')
 
-	try:
+    try:
         json_file = open(folder_name+'/'+name+'_jars.json', 'w')
     except:
-        return 0, 'Error creating .json file'
-
+        return 0, 'Error creating .json file'    
+    
     json_file.write(json_data)
     json_file.close()
-		
+
     try:
         racp_file = open(folder_name+'/'+name+'_jars.racp', 'w')
     except:
         return 0, 'Error creating .racp file'
 
     conf_ids = data['configurations']['allIds']
-
+	
     rcs = [pk for pk in conf_ids \
         if data['configurations']['byId'][pk]['device_type'] == 'rc']
     if len(rcs) == 1:
@@ -319,7 +319,7 @@ def create_jarsfiles(json_data):
     else:
         racp_text += 'IPP={}\n'.format(float(rc_mix['ipp']))
         racp_text += 'NTX={}\n'.format(rc_mix['ntx'])
-    
+
     racp_text += 'TXA={}\n'.format(
         data['lines']['byId'][rc['lines'][1]]['params']['pulse_width']
     )
@@ -396,7 +396,7 @@ def create_jarsfiles(json_data):
         racp_text += 'RAW DATA BLOCKS={}\n'.format(jars['raw_data_blocks'])
         spectra_text = ''
     else:
-        racp_text += 'PROCESS DATA BLOCKS=100\n'
+        racp_text += 'PROCESS DATA BLOCKS={}\n'.format(jars['raw_data_blocks'])	# 26/12/2018
         spectra_text = '------------------------------------------\n'
 
         if jars['fftpoints'] > 1:
@@ -482,20 +482,21 @@ def create_jarsfiles(json_data):
         filter_parms = eval(filter_parms)
     if filter_parms.__class__.__name__ == 'str':
         filter_parms = eval(filter_parms)
+
     try:
         fclock = float(filter_parms['clock'])
-        fch = float(filter_parms['fch'])
-        m_dds = float(filter_parms['mult'])
-        M_CIC2 = float(filter_parms['filter_2'])
-        M_CIC5 = float(filter_parms['filter_5'])
-        M_RCF = float(filter_parms['filter_fir'])
+        fch = float(filter_parms['frequency'])
+        m_dds = float(filter_parms['multiplier'])
+        M_CIC2 = float(filter_parms['cic_2'])
+        M_CIC5 = float(filter_parms['cic_5'])
+        M_RCF = float(filter_parms['fir'])
     except:
         fclock = eval(filter_parms['clock'])
-        fch = eval(filter_parms['fch'])
-        m_dds = eval(filter_parms['mult'])
-        M_CIC2 = eval(filter_parms['filter_2'])
-        M_CIC5 = eval(filter_parms['filter_5'])
-        M_RCF = eval(filter_parms['filter_fir'])
+        fch = eval(filter_parms['frequency'])
+        m_dds = eval(filter_parms['multiplier'])
+        M_CIC2 = eval(filter_parms['cic_2'])
+        M_CIC5 = eval(filter_parms['cic_5'])
+        M_RCF = eval(filter_parms['fir'])
 
     filter_text = 'Loading\n'
     filter_text += 'Impulse file found -> C:\jars\F1MHZ_8_MATCH.imp\n'
@@ -523,6 +524,8 @@ def create_jarsfiles(json_data):
     if S_CIC2 > 7:
         S_CIC2 = 7
 
+    S_CIC2 = float(filter_parms['scale_cic_2']) ## 19/12/18
+
     filter_text += '305h -> {}\n'.format(int(S_CIC2))
     filter_text += '306h -> {}\n'.format(int(M_CIC2-1))
 
@@ -535,7 +538,8 @@ def create_jarsfiles(json_data):
         S_CIC5 = 7
 
     OL_CIC5 = ((M_CIC5**5)/(2**(S_CIC5+5)))*OL_CIC2
-
+    S_CIC5 = float(filter_parms['scale_cic_5']) #19/12/18
+	
     filter_text += '307h -> {}\n'.format(int(S_CIC5))
     filter_text += '308h -> {}\n'.format(int(M_CIC5-1))
 
@@ -545,6 +549,8 @@ def create_jarsfiles(json_data):
         S_RCF = 0
     if S_RCF > 7:
         S_RCF = 7
+
+    S_RCF = int(float(filter_parms['scale_fir'])) #19/12/18
     
     filter_text += '309h -> {}\n'.format(S_RCF)
     filter_text += '30Ah -> {}\n'.format(int(M_RCF-1))
@@ -553,29 +559,49 @@ def create_jarsfiles(json_data):
     filter_text += '30Bh -> {}\n'.format(Offset)
 
     ntaps = int(M_RCF)
+    ntaps = int(float(filter_parms['number_taps'])) #19/12/18
+
     filter_text += '30Ch -> {}\n'.format(ntaps-1)
     filter_text += '30Dh -> 0\n'
 
     fsamp = fclock/(M_CIC2*M_CIC5*M_RCF)
     
     tap = int(2.0*((2**19)-1)/(ntaps*OL_CIC5))
-    for p in range(0, ntaps):
-        filter_text += ' {} -> {}\n'.format(p, int(math.ceil(tap)))#filter_text += ' {} -> {}\n'.format(p, int(math.ceil(hn)))
-    
+    #tap = int(filter_parms['taps'].split(',')[0]) #19/12/18
+    tap = filter_parms['taps'].split(',') #19/12/18
+
+    numtaps = len(tap) # 23/01/19 incluido para saber la cantidad de coeficientes del filtro
+
+    for p in range(0, numtaps):#for p in range(0, ntaps):
+        #filter_text += ' {} -> {}\n'.format(p, int(math.ceil(tap)))#filter_text += ' {} -> {}\n'.format(p, int(math.ceil(hn)))
+        filter_text += ' {} -> {}\n'.format(p, int(math.ceil(int(tap[p]))))#filter_text += ' {} -> {}\n'.format(p, int(math.ceil(hn)))
+
     filter_text += 'RCF Gain -> .999996185302734\n'
     filter_text += 'Chip Restarted:\n'
     filter_text += '300h -> 1\n'
     filter_text += '300h -> 0'
 
-    filter_name = '{}_{}MHz_clock{}MHz_F{}MHz_{}_{}_{}.jars'.format(
+    if fsamp >= 1: # frecuencia de muestreo mayor a 1MHz [24/01/19]
+        filter_name = '{}_{}MHz_clock{}MHz_F{}MHz_{}_{}_{}.jars'.format(
         abs(fch),
         int((abs(fch)-abs(int(fch)))*1000),
         fclock,
         round(fsamp,3),
-        M_CIC2,
-        M_CIC5,
-        M_RCF
+        int(M_CIC2),
+        int(M_CIC5),
+        int(M_RCF)
     )
+
+    if fsamp < 1: # frecuencia de muestreo menor a 1MHz [24/01/19]
+        filter_name = '{}_{}MHz_clock{}MHz_F{}KHz_{}_{}_{}.jars'.format(
+        abs(fch),
+        int((abs(fch)-abs(int(fch)))*1000),
+        fclock,
+        round(fsamp,3)*1e3,
+        int(M_CIC2),
+        int(M_CIC5),
+        int(M_RCF)
+    )    
     
     jars_file = open(os.path.join(folder_name, filter_name), 'wb')
     jars_file.write(filter_text)
@@ -770,4 +796,4 @@ def get_log():
             })    
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0', port=5000)
