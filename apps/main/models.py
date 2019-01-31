@@ -88,7 +88,9 @@ CONF_TYPES = (
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    theme = models.CharField(max_length=30, default='yeti')
+    theme = models.CharField(max_length=30, default='spacelab')
+    abs_active = models.ForeignKey('Configuration', null=True, blank=True, verbose_name='Current ABS')
+
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

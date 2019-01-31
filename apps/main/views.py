@@ -1444,9 +1444,24 @@ def dev_conf_stop(request, id_conf):
     return redirect(conf.get_absolute_url())
 
 
+@login_required
 def dev_conf_status(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
+
+    if conf.device.device_type.name == 'abs':
+        abs = request.user.profile.abs_active
+        if abs<>conf:
+            url = '#' if abs is None else abs.get_absolute_url()
+            label = 'None' if abs is None else abs.label
+            messages.warning(
+                request, 
+                mark_safe('The current configuration has not been written in the modules, the active configuration is <a href="{}">{}</a>'.format(
+                    url,
+                    label
+                    ))
+                )
+            return redirect(conf.get_absolute_url())
 
     if conf.status_device():
         messages.success(request, conf.message)

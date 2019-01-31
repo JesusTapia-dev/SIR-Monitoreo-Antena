@@ -1,7 +1,6 @@
 from django.db import models
-from apps.main.models import Configuration
+from apps.main.models import Configuration, User
 from django.core.urlresolvers import reverse
-# Create your models here.
 from celery.execute import send_task
 from datetime import datetime
 import ast
@@ -10,9 +9,6 @@ import json
 import requests
 import struct
 import os, sys, time
-
-import multiprocessing
-
 
 antenna_default = json.dumps({
                     "antenna_up": [[0.0,0.0,0.0,0.0,0.5,0.5,0.5,0.5],
@@ -210,7 +206,7 @@ OPERATION_MODES = (
 
 class ABSConfiguration(Configuration):
     active_beam     = models.PositiveSmallIntegerField(verbose_name='Active Beam', default=0)
-    module_status   = models.CharField(verbose_name='Module Status', max_length=10000, default=json.dumps(status_default))
+    module_status   = models.CharField(verbose_name='Module Status', max_length=10000, default=status_default)
     operation_mode  = models.PositiveSmallIntegerField(verbose_name='Operation Mode', choices=OPERATION_MODES, default = 0)
     operation_value = models.FloatField(verbose_name='Periodic (seconds)', default="10", null=True, blank=True)
     module_messages = models.CharField(verbose_name='Modules Messages', max_length=10000, default=json.dumps(default_messages))
@@ -417,6 +413,9 @@ class ABSConfiguration(Configuration):
         self.device.status = 3
         self.module_status = ''.join(status)
         self.save()
+        for u in User.objects.all():
+            u.profile.abs_active = self
+            u.save()
         return True
 
 
@@ -494,11 +493,9 @@ class ABSConfiguration(Configuration):
         # Create the datagram socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(1)
-        # sock.bind((local_ip, 10000))
         local_ip = os.environ.get('LOCAL_IP', '127.0.0.1')
-        local_ip = '192.168.1.128'
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(local_ip))
-        sent = sock.sendto(message, multicast_group)
+        sock.sendto(message, multicast_group)
         print('Sending ' + message)
         return sock
 
@@ -517,13 +514,19 @@ class ABSConfiguration(Configuration):
             try:
                 address = None
                 data, address = sock.recvfrom(1024)
-                print address, data
-                if data == '1':
-                    status[int(address[0][10:])-1] = '3'
-                elif data == '0':
-                    status[int(address[0][10:])-1] = '1'
+                x = int(address[0][10:])-1
+                if data[0] == '1':
+                    remote = fromChar2Binary(data[1])
+                    local = ABSBeam.objects.get(pk=self.active_beam).module_6bits(x)
+                    if local == remote:
+                        status[x] = '3'
+                        print('Module: {} connected...igual'.format(address))
+                    else:
+                        status[x] = '2'
+                        print('Module: {} connected...diferente'.format(address))
+                elif data[0] == '0':
+                    status[x] = '1'
                 n += 1
-                print('Module: {} connected'.format(address))
             except:
                 print('Module: {} error'.format(address))
                 pass

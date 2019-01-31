@@ -118,5 +118,13 @@
         },
         "model": "auth.user",
         "pk": 1
+    },
+    {
+        "fields": {
+            "user": 1,
+            "theme": "spacelab"
+        },
+        "model": "main.profile",
+        "pk": 1
     }
 ]

@@ -6,6 +6,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.core.urlresolvers import reverse
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.safestring import mark_safe
 
 from datetime import datetime
 from time import sleep
@@ -134,6 +135,9 @@ def abs_conf(request, id_conf):
         if status == '3':    #Running background-color: #00cc00;
             all_status['{}'.format(i+1)] = 2
             color_status['{}'.format(i+1)] = 'class=text-success'#'bgcolor=#00cc00'
+        elif status == '2':
+            all_status['{}'.format(i+1)] = 1
+            color_status['{}'.format(i+1)] = 'class=text-info'
         elif status == '1':  #Connected background-color: #ee902c;
             all_status['{}'.format(i+1)] = 1
             color_status['{}'.format(i+1)] = 'class=text-warning'#'bgcolor=#ee902c'
@@ -245,8 +249,22 @@ def import_file(request, id_conf):
 def send_beam(request, id_conf, id_beam):
 
     conf = get_object_or_404(ABSConfiguration, pk=id_conf)
+
+    abs = request.user.profile.abs_active
+    if abs<>conf:
+        url = '#' if abs is None else abs.get_absolute_url()
+        label = 'None' if abs is None else abs.label
+        messages.warning(
+            request, 
+            mark_safe('The current configuration has not been written in the modules, the active configuration is <a href="{}">{}</a>'.format(
+                url,
+                label
+                ))
+            )
+        return redirect(conf.get_absolute_url()) 
+
     beam = get_object_or_404(ABSBeam, pk=id_beam)
-    beams_list    = ABSBeam.objects.filter(abs_conf=conf)
+    beams_list = ABSBeam.objects.filter(abs_conf=conf)
     conf.active_beam = id_beam
 
     i = 0

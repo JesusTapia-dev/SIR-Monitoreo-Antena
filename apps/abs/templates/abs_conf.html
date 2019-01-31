@@ -34,6 +34,7 @@
   .legend td {
     padding: 2px;
     text-align: center;
+    font-weight: bold;
   }
 
 </style>
@@ -282,26 +283,19 @@
       {% if beam.id == active_beam %}
       <table class="legend">
         <tr>
-          <th colspan="2">Legend</th>
+          <th>Legend</th>
         </tr>
         <tr>
-          <td class="text-danger">
-            <i>RED</i>
-          </td>
-          <td>Disconnected</td>
+          <td class="text-warning">Connected</td>
         </tr>
         <tr>
-          <td class="text-warning">
-            <i>ORANGE</i>
-          </td>
-          <td>Connected</td>
+          <td class="text-success">Running</td>
         </tr>
         <tr>
-          <td class="text-success">
-            <i>GREEN</i>
-          </td>
-          <td>Running
-          </td>
+          <td class="text-info">Mismath</td>
+        </tr>
+        <tr>
+          <td class="text-danger">Disconnected</td>
         </tr>
       </table>
       {% else %}
