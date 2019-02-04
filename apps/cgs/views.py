@@ -25,7 +25,7 @@ def cgs_conf(request, id_conf):
     kwargs['status'] = conf.device.get_status_display()
 
     kwargs['dev_conf'] = conf
-    kwargs['dev_conf_keys'] = ['name',
+    kwargs['dev_conf_keys'] = ['label',
                                'freq0', 'freq1',
                                'freq2', 'freq3']
 
