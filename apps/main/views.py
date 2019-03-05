@@ -36,7 +36,7 @@ from apps.cgs.models import CGSConfiguration
 from apps.jars.models import JARSConfiguration, EXPERIMENT_TYPE
 from apps.usrp.models import USRPConfiguration
 from apps.abs.models import ABSConfiguration
-from apps.rc.models import RCConfiguration, RCLine, RCLineType
+from apps.rc.models import RCConfiguration, RCLine, RCLineType, RCClock
 from apps.dds.models import DDSConfiguration
 
 from radarsys.celery import app
@@ -1368,6 +1368,9 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
                             l.pk) for l in new_lines if l.get_name() == ref_line.get_name()][0]
                         line.params = json.dumps(line_params)
                         line.save()
+            elif conf.device.device_type.name == 'rc':
+                clk = RCClock(rc_configuration=conf)
+                clk.save()
 
             return redirect('url_dev_conf', id_conf=conf.pk)
 

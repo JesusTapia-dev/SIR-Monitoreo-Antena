@@ -9,8 +9,8 @@ from django.contrib.auth.decorators import login_required
 from apps.main.models import Experiment, Device
 from apps.main.views import sidebar
 
-from .models import RCConfiguration, RCLine, RCLineType, RCLineCode
-from .forms import RCConfigurationForm, RCLineForm, RCLineViewForm, RCLineEditForm, RCImportForm, RCLineCodesForm
+from .models import RCConfiguration, RCLine, RCLineType, RCLineCode, RCClock
+from .forms import RCConfigurationForm, RCLineForm, RCLineViewForm, RCLineEditForm, RCImportForm, RCLineCodesForm, RCClockForm
 
 
 def conf(request, conf_id):
@@ -18,6 +18,7 @@ def conf(request, conf_id):
     conf = get_object_or_404(RCConfiguration, pk=conf_id)
 
     lines = RCLine.objects.filter(rc_configuration=conf).order_by('channel')
+    clk = RCClock.objects.get(rc_configuration=conf)
 
     for line in lines:
         params = json.loads(line.params)
@@ -26,9 +27,10 @@ def conf(request, conf_id):
             line.subforms = [RCLineViewForm(extra_fields=fields, line=line, subform=True) for fields in params['params']]
 
     kwargs = {}
+    kwargs['clock'] = clk
     kwargs['dev_conf'] = conf
     kwargs['rc_lines'] = lines
-    kwargs['dev_conf_keys'] = ['ipp_unit', 'ntx', 'clock_in', 'clock_divider', 'clock',
+    kwargs['dev_conf_keys'] = ['ipp_unit', 'ntx', 'clock_divider', 'clock',
                                'time_before', 'time_after', 'sync', 'sampling_reference', 
                                'control_tx', 'control_sw']
 
@@ -45,7 +47,7 @@ def conf(request, conf_id):
 def conf_edit(request, conf_id):
 
     conf = get_object_or_404(RCConfiguration, pk=conf_id)
-
+    clock = RCClock.objects.get(rc_configuration=conf)
     lines = RCLine.objects.filter(rc_configuration=conf).order_by('channel')
 
     for line in lines:
@@ -60,11 +62,13 @@ def conf_edit(request, conf_id):
     if request.method=='GET':
 
         form = RCConfigurationForm(instance=conf)
+        form_clock = RCClockForm(instance=clock)
 
     elif request.method=='POST':
 
         line_data = {}
         conf_data = {}
+        clock_data = {}
         extras = []
 
         #classified post fields
@@ -73,7 +77,10 @@ def conf_edit(request, conf_id):
                 continue
 
             if label.count('|')==0:
-                conf_data[label] = value
+                if label in ('mode', 'multiplier', 'divisor', 'reference', 'frequency'):
+                    clock_data[label] = value
+                else:
+                    conf_data[label] = value
                 continue
 
             elif label.split('|')[0]!='-1':
@@ -91,10 +98,12 @@ def conf_edit(request, conf_id):
                 line_data[pk] = {name:value}
 
         #update conf
+        
+        form_clock = RCClockForm(clock_data, instance=clock)
         form = RCConfigurationForm(conf_data, instance=conf)
 
-        if form.is_valid():
-
+        if form_clock.is_valid() and form.is_valid():
+            form_clock.save()
             form.save()
 
             #update lines fields
@@ -127,6 +136,7 @@ def conf_edit(request, conf_id):
     kwargs = {}
     kwargs['dev_conf'] = conf
     kwargs['form'] = form
+    kwargs['form_clock'] = form_clock
     kwargs['rc_lines'] = lines
     kwargs['edit'] = True
 

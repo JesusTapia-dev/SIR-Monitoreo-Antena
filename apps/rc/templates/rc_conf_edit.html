@@ -14,9 +14,13 @@
 {% block content %}
 <form class="form" method="post">
   {% csrf_token %}
+  <h2>Clock</h2>
+  {% bootstrap_form form_clock layout='horizontal' size='medium' %}
+  <div style="clear: both;"></div>
+  <h2>RC</h2>
   {% bootstrap_form form layout='horizontal' size='medium' %}
   <div style="clear: both;"></div>
-  <h2>RC Lines</h2><hr>
+  <h2>RC Lines</h2>
   <div class="panel-group" id="div_lines" role="tablist" aria-multiselectable="true">
   {% include "rc_lines.html" %}
   </div>

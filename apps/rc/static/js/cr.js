@@ -107,14 +107,55 @@ function updateWindows(label) {
   }
 
 }
-  
-  $("#id_clock_in").change(function() {
-    $("#id_clock").val(parseFloat($('#id_clock_in').val())/parseFloat($('#id_clock_divider').val()));
+
+function updateClock() {
+  if ($("#id_reference").val()==0){
+    var ref = 25;
+  }else{
+    var ref = 10;
+  }
+  $("#id_frequency").val(parseFloat($('#id_multiplier').val())*ref/parseFloat($('#id_divisor').val()));
+  $("#id_clock").val(parseFloat($('#id_frequency').val())/parseFloat($('#id_clock_divider').val()));
+  updateUnits();
+}
+
+
+  $("#id_frequency").change(function() {
+    $("#id_clock").val(parseFloat($('#id_frequency').val())/parseFloat($('#id_clock_divider').val()));
     updateUnits();
   });
 
   $("#id_clock_divider").change(function() {
-    $("#id_clock").val(parseFloat($('#id_clock_in').val())/parseFloat($('#id_clock_divider').val()));
+    $("#id_clock").val(parseFloat($('#id_frequency').val())/parseFloat($('#id_clock_divider').val()));
     updateUnits();
   });
 
+  $("#id_mode").change(function() {
+    if ($("#id_mode").val()=="False"){
+      $('#id_multiplier').removeProp("readonly");
+      $('#id_divisor').removeProp("readonly");
+      $('#id_reference').removeProp("readonly");
+      $('#id_frequency').prop("readonly", true);
+      updateClock();
+    }else{
+      $('#id_frequency').removeProp("readonly");
+      $('#id_multiplier').prop("readonly", true);
+      $('#id_divisor').prop("readonly", true);
+      $('#id_reference').prop("readonly", true);
+      $('#id_reference').val(1)
+      $('#id_frequency').val(60);
+      $("#id_clock").val(parseFloat($('#id_frequency').val())/parseFloat($('#id_clock_divider').val()));
+    }
+  });
+
+  $("#id_multiplier").change(function() {
+    updateClock();
+  });
+
+  $("#id_divisor").change(function() {
+    updateClock();
+  });
+
+  $("#id_reference").change(function() {
+    updateClock();
+  });

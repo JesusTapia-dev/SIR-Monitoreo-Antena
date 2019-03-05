@@ -91,11 +91,11 @@ DATABASES = {
     # }
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('POSTGRES_DB_NAME', 'radarsys'),
-        'USER': os.environ.get('POSTGRES_USER', 'docker'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'docker'),
-        'HOST': os.environ.get('POSTGRES_PORT_5432_TCP_ADDR', 'postgres'),
-        'PORT': os.environ.get('POSTGRES_PORT_5432_TCP_PORT', ''),
+        'NAME': os.environ.get('DB_NAME', 'radarsys'),
+        'USER': os.environ.get('DB_USER', 'docker'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'docker'),
+        'HOST': os.environ.get('POSTGRES_PORT_5432_TCP_ADDR', 'localhost'),
+        'PORT': os.environ.get('POSTGRES_PORT_5432_TCP_PORT', '5400'),
     }
 }
 
@@ -104,7 +104,7 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = os.environ.get('TZ', 'UTC')
+TIME_ZONE = os.environ.get('TZ', 'America/Lima')
 
 USE_I18N = True
 
@@ -128,7 +128,7 @@ STATICFILES_FINDERS = (
 
 # Celery stuff
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
-REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
+REDIS_PORT = os.environ.get('REDIS_PORT', 6300)
 
 BROKER_TRANSPORT = 'redis'
 BROKER_URL = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)

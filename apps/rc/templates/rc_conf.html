@@ -7,6 +7,40 @@
 <li><a href="{{ dev_conf.get_absolute_url_plot }}" target="_blank"><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> View Pulses </a></li>
 {% endblock %}
 
+{% block content-detail %}
+
+<h2>Clock</h2>
+<table class="table table-bordered">
+  <tr>
+    <th>Mode</th>
+    <td>{{clock.get_mode_display}}</td>
+  </tr>
+  <tr>
+    <th>Reference</th>
+    <td>{{clock.get_reference_display}}</td>
+  </tr>
+  <tr>
+    <th>Frequency</th>
+    <td>{{clock.frequency}}</td>
+  </tr>
+</table>
+<div class="clearfix"></div>
+<h2>RC</h2>
+<table class="table table-bordered">
+	<tr>
+		<th>Status</th>
+		<td class="text-{{dev_conf.device.status_color}}"><strong>{{dev_conf.device.get_status_display}}</strong></td>
+	</tr>
+
+	{% for key in dev_conf_keys %}
+	<tr>
+		<th>{% get_verbose_field_name dev_conf key %}</th>
+		<td>{{dev_conf|attr:key}}</td>
+	</tr>
+	{% endfor %}
+</table>
+{% endblock %}
+
 {% block extra-content %}
 
 <div class="clearfix"></div>

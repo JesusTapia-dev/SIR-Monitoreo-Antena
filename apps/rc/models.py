@@ -547,6 +547,20 @@ class RCConfiguration(Configuration):
 
     def write_device(self, raw=False):        
 
+        if not raw:
+            clock = RCClock.objects.get(rc_configuration=self)
+            if clock.mode:
+                data = {'default': clock.frequency}
+            else:
+                data = {'manual': [clock.multiplier, clock.divisor, clock.reference]}
+            payload = self.request('setfreq', 'post', data=json.dumps(data))
+            if payload['command'] <> 'ok':
+                self.message = 'RC write: {}'.format(payload['command'])
+            else:
+                self.message = payload['programming']
+                if payload['programming'] == 'fail':
+                    self.message = 'RC write: error programming CGS chip'
+        
         values = []
         for pulse, delay in zip(self.get_pulses(), self.get_delays()):
             while delay>65536:
@@ -1002,3 +1016,12 @@ class RCLine(models.Model):
         Y = [(int(ipp*x+before+delay[x%delays]+sync), int(ipp*x+width+before+delay[x%delays]+after+sync)) for x in range(ntx)]
 
         return Y
+
+class RCClock(models.Model):
+
+    rc_configuration = models.ForeignKey(RCConfiguration, on_delete=models.CASCADE)
+    mode = models.BooleanField(default=True, choices=((True, 'Auto'), (False, 'Manual')))
+    multiplier = models.PositiveIntegerField(default=60)
+    divisor = models.PositiveIntegerField(default=10)
+    reference = models.PositiveSmallIntegerField(default=1, choices=((0, 'Internal (25MHz)'), (1, 'External (10MHz)')))
+    frequency = models.FloatField(default=60.0)

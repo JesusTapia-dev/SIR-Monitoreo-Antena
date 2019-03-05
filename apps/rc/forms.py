@@ -5,7 +5,7 @@ from django import forms
 from django.utils.safestring import mark_safe
 from apps.main.models import Device
 from apps.main.forms import add_empty_choice
-from .models import RCConfiguration, RCLine, RCLineType, RCLineCode
+from .models import RCConfiguration, RCLine, RCLineType, RCLineCode, RCClock
 from .widgets import KmUnitWidget, KmUnitHzWidget, KmUnitDcWidget, UnitKmWidget, DefaultWidget, CodesWidget, HiddenWidget, HCheckboxSelectMultiple
 
 def create_choices_from_model(model, conf_id, all_choice=False):
@@ -78,7 +78,7 @@ class RCConfigurationForm(forms.ModelForm):
 
     class Meta:
         model = RCConfiguration
-        exclude = ('type', 'parameters', 'status', 'total_units', 'mix', 'author', 'hash')
+        exclude = ('type', 'parameters', 'status', 'total_units', 'mix', 'author', 'hash', 'clock_in')
 
     def clean(self):
         form_data = super(RCConfigurationForm, self).clean()
@@ -382,3 +382,34 @@ class RCLineCodesForm(forms.ModelForm):
     class Meta:
         model = RCLineCode
         exclude = ('name',)
+
+class RCClockForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(RCClockForm, self).__init__(*args, **kwargs)
+
+        instance = getattr(self, 'instance', None)
+        
+        if instance is not None and instance.mode:
+            self.fields['multiplier'].widget.attrs['readonly'] = True
+            self.fields['divisor'].widget.attrs['readonly'] = True
+            self.fields['reference'].widget.attrs['readonly'] = True
+
+
+    class Meta:
+        model = RCClock
+        exclude = ('rc_configuration',)
+
+    def clean(self):
+
+        form_data = self.cleaned_data
+        
+        if form_data['mode'] is True and float(form_data['frequency']) not in (60., 55.):
+            self.add_error('frequency', 'Only 60 and 55 are valid values in auto mode')
+        elif form_data['mode'] is False:
+            if form_data['reference']==0 and not 24<=form_data['multiplier']<=36:
+                self.add_error('multiplier', 'For 25MHz, valid values are between 24 and 36')
+            elif form_data['reference']==1 and not 60<=form_data['multiplier']<=90:
+                self.add_error('multiplier', 'For 10MHz, valid values are between 60 and 90')
+        
+        return form_data
