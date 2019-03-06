@@ -250,7 +250,7 @@ def send_beam(request, id_conf, id_beam):
 
     conf = get_object_or_404(ABSConfiguration, pk=id_conf)
 
-    abs = request.user.profile.abs_active
+    abs = Configuration.objects.filter(pk=conf.device.conf_active).first()
     if abs<>conf:
         url = '#' if abs is None else abs.get_absolute_url()
         label = 'None' if abs is None else abs.label

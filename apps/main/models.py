@@ -75,10 +75,10 @@ DEV_TYPES = (
 
 EXP_STATES = (
                  (0,'Error'),                 #RED
-                 (1,'Configured'),            #BLUE
+                 (1,'Cancelled'),             #YELLOW
                  (2,'Running'),               #GREEN
-                 (3,'Scheduled'),             #YELLOW
-                 (4,'Not Configured'),        #WHITE
+                 (3,'Scheduled'),             #BLUE
+                 (4,'Unknown'),               #WHITE
              )
 
 CONF_TYPES = (
@@ -89,7 +89,6 @@ CONF_TYPES = (
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     theme = models.CharField(max_length=30, default='spacelab')
-    abs_active = models.ForeignKey('Configuration', null=True, blank=True, verbose_name='Current ABS')
 
 
 @receiver(post_save, sender=User)
@@ -137,6 +136,7 @@ class Device(models.Model):
     port_address = models.PositiveSmallIntegerField(default=2000)
     description = models.TextField(blank=True, null=True)
     status = models.PositiveSmallIntegerField(default=0, choices=DEV_STATES)
+    conf_active = models.PositiveIntegerField(default=0, verbose_name='Current configuration')
 
     class Meta:
         db_table = 'db_devices'
@@ -423,7 +423,6 @@ class Experiment(models.Model):
         ABS-CGS-DDS-RC-JARS
         '''
 
-        result = 2
         confs = []
         allconfs = Configuration.objects.filter(experiment=self, type = 0).order_by('-device__device_type__sequence')
         rc_mix = [conf for conf in allconfs if conf.device.device_type.name=='rc' and conf.mix]
@@ -434,18 +433,16 @@ class Experiment(models.Model):
                 confs.append(conf)
         else:
             confs = allconfs
-        #Only Configured Devices.
-        for conf in confs:
-            if conf.device.status in (0, 4):
-                result = 0
-                return result
-        for conf in confs:
-            conf.stop_device()
-            conf.write_device()
-            conf.start_device()
-            time.sleep(1)
-
-        return result
+        
+        try:
+            for conf in confs:
+                conf.stop_device()
+                conf.write_device()
+                conf.start_device()
+                time.sleep(0.1)
+        except:
+            return 0
+        return 2
 
 
     def stop(self):
@@ -454,18 +451,14 @@ class Experiment(models.Model):
         DDS-JARS-RC-CGS-ABS
         '''
 
-        result = 1
-
         confs = Configuration.objects.filter(experiment=self, type = 0).order_by('device__device_type__sequence')
         confs=confs.exclude(device__device_type__name='cgs')
-        for conf in confs:
-            if conf.device.status in (0, 4):
-                result = 0
-                continue
-            conf.stop_device()
-
-        return result
-
+        try:
+            for conf in confs:
+                conf.stop_device()
+        except:
+            return 0
+        return 1
 
     def get_status(self):
 
@@ -494,11 +487,11 @@ class Experiment(models.Model):
         if self.status == 0:
             color = "danger"
         elif self.status == 1:
-            color = "info"
+            color = "warning"
         elif self.status == 2:
             color = "success"
         elif self.status == 3:
-            color = "warning"
+            color = "info"
 
         return color
 

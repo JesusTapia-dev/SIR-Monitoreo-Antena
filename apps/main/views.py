@@ -1452,19 +1452,19 @@ def dev_conf_status(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
 
-    if conf.device.device_type.name == 'abs':
-        abs = request.user.profile.abs_active
-        if abs<>conf:
-            url = '#' if abs is None else abs.get_absolute_url()
-            label = 'None' if abs is None else abs.label
-            messages.warning(
-                request, 
-                mark_safe('The current configuration has not been written in the modules, the active configuration is <a href="{}">{}</a>'.format(
-                    url,
-                    label
-                    ))
-                )
-            return redirect(conf.get_absolute_url())
+    conf_active = Configuration.objects.filter(pk=conf.device.conf_active).first()
+    if conf_active<>conf:
+        url = '#' if conf_active is None else conf_active.get_absolute_url()
+        label = 'None' if conf_active is None else conf_active.label
+        messages.warning(
+            request, 
+            mark_safe('The current configuration has not been written to device, the active configuration is <a href="{}">{}</a>'.format(
+                url,
+                label
+                ))
+            )
+        
+        return redirect(conf.get_absolute_url())
 
     if conf.status_device():
         messages.success(request, conf.message)
@@ -1493,6 +1493,8 @@ def dev_conf_write(request, id_conf):
     conf = get_object_or_404(Configuration, pk=id_conf)
 
     if conf.write_device():
+        conf.device.conf_active = conf.pk
+        conf.device.save()
         messages.success(request, conf.message)
         if has_been_modified(conf):
             conf.clone(type=1, template=False)
@@ -1841,9 +1843,20 @@ def radar_refresh(request, id_camp, id_radar):
     campaign = get_object_or_404(Campaign, pk=id_camp)
     experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
 
-    for exp in experiments:
-        exp.get_status()
+    i = app.control.inspect()
+    scheduled = i.scheduled().values[0]
+    revoked = i.revoked().values[0]
 
+    for exp in experiments:
+        if exp.task in revoked:
+            exp.status = 1
+        elif exp.task in [t['request']['id'] for t in scheduled if 'task_start' in t['request']['name']]:
+            exp.status = 2
+        elif exp.task in [t['request']['id'] for t in scheduled if 'task_stop' in t['request']['name']]:
+            exp.status = 3
+        else:
+            exp.status = 4
+        exp.save()
     return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 
 

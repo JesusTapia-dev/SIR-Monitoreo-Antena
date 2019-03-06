@@ -413,9 +413,7 @@ class ABSConfiguration(Configuration):
         self.device.status = 3
         self.module_status = ''.join(status)
         self.save()
-        for u in User.objects.all():
-            u.profile.abs_active = self
-            u.save()
+        
         return True
 
 

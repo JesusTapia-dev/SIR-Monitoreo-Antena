@@ -36,9 +36,13 @@
 {% block content-detail %}
 <table class="table table-bordered">
 	<tr>
-		<th>Status</th>
-		<td class="text-{{dev_conf.device.status_color}}"><strong> {% if dev_conf.device.device_type.name == 'abs' %} {{connected_modules}} {% else %} {{dev_conf.device.get_status_display}}{% endif %}</strong></td>
-	</tr>
+    <th>Status</th>
+    {% if dev_conf.pk == dev_conf.device.conf_active %}
+      <td class="text-{{dev_conf.device.status_color}}"><strong> {% if dev_conf.device.device_type.name == 'abs' %} {{connected_modules}} {% else %} {{dev_conf.device.get_status_display}}{% endif %}</strong></td>
+    {% else %}
+      <td class="text-info"><strong> Connected </strong></td>
+    {% endif %}  
+    </tr>
 
 	{% for key in dev_conf_keys %}
 	<tr>

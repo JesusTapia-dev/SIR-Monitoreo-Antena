@@ -67,11 +67,11 @@
                 <i class="fa fa-3x fa-puzzle-piece"></i>
                {%endif%}
                    <h4>{{item}}<br><small>{{item.device.ip_address}}</small>
-		       {%if experiment.status == 3 %}
+		       {%if item.pk != item.device.conf_active %}
 		       <span class="label label-info">Configured</span>
 		       {%else%}
 		       <span class="label label-{{item.device.status_color}}">{{item.device.get_status_display}}</span>
-                       {%endif%}
+           {%endif%}
 		   </h4>
              </a>
         </div>
