@@ -1261,7 +1261,7 @@ def parse_mask(l):
 def dev_confs(request):
 
     page = request.GET.get('page')
-    order = ('programmed_date', )
+    order = ('-programmed_date', )
     filters = request.GET.copy()
     if 'my configurations' in filters:
         filters.pop('my configurations', None)
@@ -1795,10 +1795,10 @@ def radar_start(request, id_camp, id_radar):
         if start > campaign.end_date or start < campaign.start_date:
             messages.warning(request, 'Experiment {} out of date'.format(exp))
             continue
-
+        
+        app.control.revoke(exp.task)
+        
         if now > start and now <= end:
-            exp.status = 3
-            exp.save()
             task = task_start.delay(exp.id)
             exp.status = task.wait()
             if exp.status == 0:
@@ -1844,21 +1844,38 @@ def radar_refresh(request, id_camp, id_radar):
     experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
 
     i = app.control.inspect()
-    scheduled = i.scheduled().values[0]
-    revoked = i.revoked().values[0]
+    scheduled = i.scheduled().values()[0]
+    revoked = i.revoked().values()[0]
 
     for exp in experiments:
         if exp.task in revoked:
             exp.status = 1
-        elif exp.task in [t['request']['id'] for t in scheduled if 'task_start' in t['request']['name']]:
-            exp.status = 2
         elif exp.task in [t['request']['id'] for t in scheduled if 'task_stop' in t['request']['name']]:
+            exp.status = 2
+        elif exp.task in [t['request']['id'] for t in scheduled if 'task_start' in t['request']['name']]:
             exp.status = 3
         else:
             exp.status = 4
         exp.save()
     return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 
+@login_required
+def revoke_tasks(request, id_camp):
+
+    i = app.control.inspect()
+    scheduled = i.scheduled().values()[0]
+    revoked = i.revoked().values()[0]
+
+    for t in scheduled:
+        if t['request']['id'] in revoked:
+            continue
+        app.control.revoke(t['request']['id'])
+        exp = Experiment.objects.get(pk=eval(t['request']['args'])[0])
+        eta = t['eta']
+        task = t['request']['name'].split('.')[-1]
+        messages.warning(request, 'Scheduled {} at {} for experiment {} revoked'.format(task, eta, exp.name))
+
+    return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 
 def real_time(request):
 

@@ -18,7 +18,10 @@ def conf(request, conf_id):
     conf = get_object_or_404(RCConfiguration, pk=conf_id)
 
     lines = RCLine.objects.filter(rc_configuration=conf).order_by('channel')
-    clk = RCClock.objects.get(rc_configuration=conf)
+    clk = RCClock.objects.filter(rc_configuration=conf).first()
+    if clk is None:
+        clk = RCClock(rc_configuration=conf)
+        clk.save()
 
     for line in lines:
         params = json.loads(line.params)

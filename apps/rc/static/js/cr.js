@@ -10,7 +10,7 @@ function str2hz(s){
 
 
 function str2unit(s){
-  var km2unit = (20/3)*(parseFloat($('#id_clock_in').val())/parseFloat($('#id_clock_divider').val()));
+  var km2unit = (20/3)*(parseFloat($('#id_frequency').val())/parseFloat($('#id_clock_divider').val()));
   var ret = "";
   values = s.split(",");
   for (i=0; i<values.length; i++) {
@@ -33,7 +33,7 @@ function str2int(s){
 
 
 function str2km(s){
-  var km2unit = (20/3)*(parseFloat($('#id_clock_in').val())/parseFloat($('#id_clock_divider').val()));
+  var km2unit = (20/3)*(parseFloat($('#id_frequency').val())/parseFloat($('#id_clock_divider').val()));
   var ret = "";
   values = s.split(",");
   for (i=0; i<values.length; i++) {
