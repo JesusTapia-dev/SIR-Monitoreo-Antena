@@ -438,8 +438,10 @@ class Experiment(models.Model):
             for conf in confs:
                 conf.stop_device()
                 conf.write_device()
+                conf.device.conf_active = conf.pk
+                conf.device.save()
                 conf.start_device()
-                time.sleep(0.1)
+                time.sleep(1)
         except:
             return 0
         return 2

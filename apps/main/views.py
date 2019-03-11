@@ -1877,6 +1877,23 @@ def revoke_tasks(request, id_camp):
 
     return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 
+@login_required
+def show_tasks(request, id_camp):
+
+    i = app.control.inspect()
+    scheduled = i.scheduled().values()[0]
+    revoked = i.revoked().values()[0]
+
+    for t in scheduled:
+        if t['request']['id'] in revoked:
+            continue
+        exp = Experiment.objects.get(pk=eval(t['request']['args'])[0])
+        eta = t['eta']
+        task = t['request']['name'].split('.')[-1]
+        messages.success(request, 'Task {} scheduled at {} for experiment {}'.format(task, eta, exp.name))
+
+    return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
+
 def real_time(request):
 
     graphic_path = "/home/fiorella/Pictures/catwbeanie.jpg"
