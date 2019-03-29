@@ -94,6 +94,9 @@ class RCConfigurationForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         conf = super(RCConfigurationForm, self).save(*args, **kwargs)
+        clk = RCClock.objects.filter(rc_configuration=conf).first()
+        if clk:
+            conf.clock_in = clk.frequency
         conf.total_units = conf.ipp*conf.ntx*conf.km2unit
         conf.save()
         return conf

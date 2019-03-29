@@ -491,7 +491,7 @@ class ABSConfiguration(Configuration):
         # Create the datagram socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(1)
-        local_ip = os.environ.get('LOCAL_IP', '127.0.0.1')
+        local_ip = os.environ.get('LOCAL_IP', '192.168.1.128')
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(local_ip))
         sock.sendto(message, multicast_group)
         print('Sending ' + message)

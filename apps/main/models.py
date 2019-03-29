@@ -571,9 +571,9 @@ class Configuration(PolymorphicModel):
 
     template = models.BooleanField(default=False)
     # name = models.CharField(verbose_name="Configuration Name", max_length=40, default='')
-    label = models.CharField(verbose_name="Label", max_length=40, default='', blank=True, null=True)
-    experiment = models.ForeignKey('Experiment', verbose_name='Experiment', null=True, blank=True, on_delete=models.CASCADE)
     device = models.ForeignKey('Device', verbose_name='Device', null=True, on_delete=models.CASCADE)
+    label = models.CharField(verbose_name="Label", max_length=40, default='', blank=True, null=True)    
+    experiment = models.ForeignKey('Experiment', verbose_name='Experiment', null=True, blank=True, on_delete=models.CASCADE)
     type = models.PositiveSmallIntegerField(default=0, choices=CONF_TYPES)
     created_date = models.DateTimeField(auto_now_add=True)
     programmed_date = models.DateTimeField(auto_now=True)
