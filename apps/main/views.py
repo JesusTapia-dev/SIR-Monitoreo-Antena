@@ -1492,16 +1492,27 @@ def dev_conf_write(request, id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
 
-    if conf.write_device():
-        conf.device.conf_active = conf.pk
-        conf.device.save()
-        messages.success(request, conf.message)
-        if has_been_modified(conf):
-            conf.clone(type=1, template=False)
-    else:
-        messages.error(request, conf.message)
+    if request.method == 'POST':
+        if conf.write_device():
+            conf.device.conf_active = conf.pk
+            conf.device.save()
+            messages.success(request, conf.message)
+            if has_been_modified(conf):
+                conf.clone(type=1, template=False)
+        else:
+            messages.error(request, conf.message)
 
-    return redirect(get_object_or_404(Configuration, pk=id_conf).get_absolute_url())
+        return redirect(get_object_or_404(Configuration, pk=id_conf).get_absolute_url())
+    
+    kwargs = {
+        'title': 'Write Configuration',
+        'suptitle': conf.label,
+        'message': 'Are you sure yo want to write this {} configuration?'.format(conf.device),
+        'delete': False
+    }
+    kwargs['menu_configurations'] = 'active'
+
+    return render(request, 'confirm.html', kwargs)
 
 
 @login_required

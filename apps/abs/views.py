@@ -264,20 +264,33 @@ def send_beam(request, id_conf, id_beam):
         return redirect(conf.get_absolute_url()) 
 
     beam = get_object_or_404(ABSBeam, pk=id_beam)
-    beams_list = ABSBeam.objects.filter(abs_conf=conf)
-    conf.active_beam = id_beam
 
-    i = 0
-    for b in beams_list:
-        if b.id == int(id_beam):
-            break
-        else:
-            i += 1
-    beam_pos = i + 1 #Estandarizar
-    print '%s Position: %s' % (beam.name, str(beam_pos))
-    conf.send_beam(beam_pos)
+    if request.method == 'POST':
+        
+        beams_list = ABSBeam.objects.filter(abs_conf=conf)
+        conf.active_beam = id_beam
 
-    return redirect('url_abs_conf', conf.id)
+        i = 0
+        for b in beams_list:
+            if b.id == int(id_beam):
+                break
+            else:
+                i += 1
+        beam_pos = i + 1 #Estandarizar
+        print '%s Position: %s' % (beam.name, str(beam_pos))
+        conf.send_beam(beam_pos)
+
+        return redirect('url_abs_conf', conf.id)
+    
+    kwargs = {
+        'title': 'ABS',
+        'suptitle': conf.label,
+        'message': 'Are you sure you want to change ABS Beam to: {}?'.format(beam.name),
+        'delete': False
+    }
+    kwargs['menu_configurations'] = 'active'
+
+    return render(request, 'confirm.html', kwargs)
 
 
 def add_beam(request, id_conf):
