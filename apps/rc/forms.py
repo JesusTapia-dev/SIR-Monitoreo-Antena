@@ -105,6 +105,7 @@ class RCConfigurationForm(forms.ModelForm):
 class RCMixConfigurationForm(forms.Form):
 
     clock_in = forms.CharField(widget=forms.HiddenInput())
+    frequency = forms.CharField(widget=forms.HiddenInput())
     clock_divider = forms.CharField(widget=forms.HiddenInput())
     name = forms.CharField()
     experiment = forms.ChoiceField()
@@ -134,6 +135,7 @@ class RCMixConfigurationForm(forms.Form):
         self.fields['experiment'].choices = [(conf.pk, '{} | {}'.format(conf.pk, conf.name)) for conf in confs]
         self.fields['delay'].widget = KmUnitWidget(attrs = {'km2unit':km2unit})
         self.fields['clock_in'].initial = clock_in
+        self.fields['frequency'].initial = clock_in
         self.fields['clock_divider'].initial = clock_divider
 
 

@@ -74,14 +74,13 @@ def jars_conf_edit(request, id_conf):
         if filter_form.is_valid():
            jars_filter = filter_form.cleaned_data
            jars_filter['id'] = request.POST['filter_template']
+           if form.is_valid():
+               conf = form.save(commit=False)
+               conf.filter_parms = json.dumps(jars_filter)
+               conf.save()
+               return redirect('url_jars_conf', id_conf=conf.id)
         else:
            messages.error(request, filter_form.errors)
-
-        if form.is_valid():
-            conf = form.save(commit=False)
-            conf.filter_parms = json.dumps(jars_filter)
-            conf.save()
-            return redirect('url_jars_conf', id_conf=conf.id)
 
     kwargs = {}
 

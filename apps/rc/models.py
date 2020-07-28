@@ -553,14 +553,17 @@ class RCConfiguration(Configuration):
                 data = {'default': clock.frequency}
             else:
                 data = {'manual': [clock.multiplier, clock.divisor, clock.reference]}
-            payload = self.request('setfreq', 'post', data=json.dumps(data))
-            if payload['command'] <> 'ok':
-                self.message = 'RC write: {}'.format(payload['command'])
-            else:
-                self.message = payload['programming']
-                if payload['programming'] == 'fail':
-                    self.message = 'RC write: error programming CGS chip'
-        
+            try:
+                payload = self.request('setfreq', 'post', data=json.dumps(data))
+                if payload['command'] <> 'ok':
+                    self.message = 'RC write: {}'.format(payload['command'])
+                else:
+                    self.message = payload['programming']
+                    if payload['programming'] == 'fail':
+                        self.message = 'RC write: error programming CGS chip'
+            except Exception as e:
+                self.message = 'RC Write: No CGS found {}'.format(e)
+                # return False
         values = []
         for pulse, delay in zip(self.get_pulses(), self.get_delays()):
             while delay>65536:
@@ -867,7 +870,7 @@ class RCLine(models.Model):
             params = json.loads(self.params)
             n = ipp_u*ntx
             if params['invert'] in ('1', 1):
-                y = [(n-1, n)]
+                y = [(n-2, n)]
             else:
                 y = [(0, 1)]
 
@@ -927,7 +930,7 @@ class RCLine(models.Model):
                 if mask[self.channel] in ('0', '', ' '):
                     continue
                 Y = confs[i].get_lines(channel=self.channel)[0].pulses_as_array()
-                delay = float(delays[i])*km2unit
+                delay = int(float(delays[i])*km2unit)
 
                 if modes[i]=='P':
                     if delay>0:

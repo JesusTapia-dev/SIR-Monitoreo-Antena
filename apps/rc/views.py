@@ -111,14 +111,19 @@ def conf_edit(request, conf_id):
 
             #update lines fields
             extras.sort()
+            xxs = {}
             for label in extras:
                 x, pk, name = label.split('|')
                 if pk not in line_data:
                     line_data[pk] = {}
                 if 'params' not in line_data[pk]:
                     line_data[pk]['params'] = []
-                if len(line_data[pk]['params'])<int(x)+1:
+                    xxs[pk] = []
+                if x not in xxs[pk]:
                     line_data[pk]['params'].append({})
+                    xxs[pk].append(x)
+            for label in extras:
+                x, pk, name = label.split('|')
                 line_data[pk]['params'][int(x)][name] = float(request.POST[label])
 
             for pk, params in line_data.items():
