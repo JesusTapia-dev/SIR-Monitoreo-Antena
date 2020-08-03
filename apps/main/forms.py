@@ -33,29 +33,31 @@ def add_empty_choice(choices, pos=0, label='-----'):
         return [(0, label)]
 
 class DatepickerWidget(forms.widgets.TextInput):
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         input_html = super(DatepickerWidget, self).render(name, value, attrs)
-        html = '<div class="input-group date">'+input_html+'<span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span></div>'
+
+        html = '<div class="input-group date">'+input_html+'<span class="input-group-addon"><i class="far fa-calendar-alt"></i></span></div>'
         return mark_safe(html)
 
 class DateRangepickerWidget(forms.widgets.TextInput):
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         start = attrs['start_date']
         end = attrs['end_date']
         html = '''<div class="col-md-6 input-group date" style="float:inherit">
         <input class="form-control" id="id_start_date" name="start_date" placeholder="Start" title="" type="text" value="{}">
-        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+        <span class="input-group-addon"><i class="far fa-calendar-alt"></i></span>
         </div>
         <div class="col-md-6 input-group date" style="float:inherit">
         <input class="form-control" id="id_end_date" name="end_date" placeholder="End" title="" type="text" value="{}">
-        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+        <span class="input-group-addon"><i class="far fa-calendar-alt"></i></span>
         </div>'''.format(start, end)
         return mark_safe(html)
 
 class TimepickerWidget(forms.widgets.TextInput):
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         input_html = super(TimepickerWidget, self).render(name, value, attrs)
-        html = '<div class="input-group time">'+input_html+'<span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span></div>'
+
+        html = '<div class="input-group time">'+input_html+'<span class="input-group-addon"><i class="far fa-clock"></i></span></div>'
         return mark_safe(html)
 
 class CampaignForm(forms.ModelForm):
@@ -134,6 +136,9 @@ class DownloadFileForm(forms.Form):
         if device_type == 'dds':
             self.fields['format'].choices = DDS_FILE_FORMAT
 
+        if device_type == 'dds_rest':
+            self.fields['format'].choices = DDS_FILE_FORMAT
+
         if device_type == 'rc':
             self.fields['format'].choices = RC_FILE_FORMAT
 
@@ -199,4 +204,3 @@ class ChangeIpForm(forms.Form):
     mask = forms.GenericIPAddressField(initial='255.255.255.0')
     gateway = forms.GenericIPAddressField(initial='0.0.0.0')
     dns = forms.GenericIPAddressField(initial='0.0.0.0')
-    

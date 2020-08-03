@@ -1,9 +1,9 @@
-from django.conf.urls import url
+from django.urls import path
 
-from apps.dds import views
+from . import views
 
 urlpatterns = (
-    url(r'^(?P<id_conf>-?\d+)/$', views.dds_conf, name='url_dds_conf'),
-    url(r'^(?P<id_conf>-?\d+)/(?P<message>-?\d+)/$', views.dds_conf, name='url_dds_conf'),
-    url(r'^(?P<id_conf>-?\d+)/edit/$', views.dds_conf_edit, name='url_edit_dds_conf'),
+    path('<int:id_conf>/', views.dds_conf, name='url_dds_conf'),
+    path('<int:id_conf>/<int:message>/', views.dds_conf, name='url_dds_conf'),
+    path('<int:id_conf>/edit/', views.dds_conf_edit, name='url_edit_dds_conf'),
 )

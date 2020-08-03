@@ -1,0 +1,14 @@
+.page-head {
+    background: #fff;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-top: 8px solid #38b5e6;
+    border-bottom: 1px solid #e1e1e1;
+}
+
+.a-contactus {
+    color: #0088cc;
+    text-decoration: none;
+    font-family: Helvetica;
+    font-size: 0.8rem;
+}

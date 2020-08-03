@@ -22,7 +22,7 @@ class RCApi(object):
         
         self.params = json.load(open(filename))
         self.pk = self.params['configurations']['allIds'][0]      
-        print 'RC Configuration: {}'.format(self.params['configurations']['byId'][self.pk]['name'])
+        print ('RC Configuration: {}').format(self.params['configurations']['byId'][self.pk]['name'])
         
     def status(self):
         
@@ -71,7 +71,7 @@ class RCApi(object):
                             data={'divider':int(self.params['configurations']['byId'][self.pk]['clock_divider'])-1})
                 
         if 'ok' not in req.text:
-            print 'Error sending divider'
+            print ('Error sending divider')
             return False
 
         req = requests.post(url_write, 
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     # time.sleep(1)
     # print rc.stop()
     # time.sleep(1)
-    print rc.write()
+    print (rc.write())
     # time.sleep(1)
     # print rc.start()
     

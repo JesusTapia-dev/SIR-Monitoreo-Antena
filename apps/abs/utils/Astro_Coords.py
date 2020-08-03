@@ -16,8 +16,8 @@ import numpy
 import scipy.interpolate
 import os
 import sys
-import TimeTools
-import Misc_Routines
+from .TimeTools import Julian , Time
+from .Misc_Routines import CoFactors
 
 class EquatorialCorrections():
     def __init__(self):
@@ -81,21 +81,21 @@ class EquatorialCorrections():
         
         eps0 = (23.4392911*3600.) - (46.8150*T) - (0.00059*T**2) + (0.001813*T**3)
         # True obliquity of the ecliptic in radians
-        eps = (eps0 + d_eps)/3600.*Misc_Routines.CoFactors.d2r
+        eps = (eps0 + d_eps)/3600.*CoFactors.d2r
         
         # Useful numbers
         ce = numpy.cos(eps)
         se = numpy.sin(eps)
 
         # Convert Ra-Dec to equatorial rectangular coordinates
-        x = numpy.cos(ra*Misc_Routines.CoFactors.d2r)*numpy.cos(dec*Misc_Routines.CoFactors.d2r)
-        y = numpy.sin(ra*Misc_Routines.CoFactors.d2r)*numpy.cos(dec*Misc_Routines.CoFactors.d2r)
-        z = numpy.sin(dec*Misc_Routines.CoFactors.d2r)
+        x = numpy.cos(ra*CoFactors.d2r)*numpy.cos(dec*CoFactors.d2r)
+        y = numpy.sin(ra*CoFactors.d2r)*numpy.cos(dec*CoFactors.d2r)
+        z = numpy.sin(dec*CoFactors.d2r)
         
         # Apply corrections to each rectangular coordinate
-        x2 = x - (y*ce + z*se)*d_psi*Misc_Routines.CoFactors.s2r
-        y2 = y + (x*ce*d_psi - z*d_eps)*Misc_Routines.CoFactors.s2r
-        z2 = z + (x*se*d_psi + y*d_eps)*Misc_Routines.CoFactors.s2r
+        x2 = x - (y*ce + z*se)*d_psi*CoFactors.s2r
+        y2 = y + (x*ce*d_psi - z*d_eps)*CoFactors.s2r
+        z2 = z + (x*se*d_psi + y*d_eps)*CoFactors.s2r
         
         # Convert bask to equatorial spherical coordinates
         r = numpy.sqrt(x2**2. + y2**2. + z2**2.)
@@ -128,8 +128,8 @@ class EquatorialCorrections():
             dec2[w2] = numpy.arcsin(z2[w2]/r[w2])
 
         # Converting to degree
-        ra2 = ra2/Misc_Routines.CoFactors.d2r
-        dec2 = dec2/Misc_Routines.CoFactors.d2r
+        ra2 = ra2/CoFactors.d2r
+        dec2 = dec2/CoFactors.d2r
         
         w = numpy.where(ra2<0.)
         if w[0].size>0:
@@ -178,32 +178,32 @@ class EquatorialCorrections():
         # Mean elongation of the moon
         coeff1 = numpy.array([1/189474.0,-0.0019142,445267.111480,297.85036])
         d = numpy.poly1d(coeff1)
-        d = d(t)*Misc_Routines.CoFactors.d2r
+        d = d(t)*CoFactors.d2r
         d = self.cirrange(d,rad=1)
         
         # Sun's mean elongation
         coeff2 = numpy.array([-1./3e5,-0.0001603,35999.050340,357.52772])
         m = numpy.poly1d(coeff2)
-        m = m(t)*Misc_Routines.CoFactors.d2r
+        m = m(t)*CoFactors.d2r
         m = self.cirrange(m,rad=1)
         
         # Moon's mean elongation
         coeff3 = numpy.array([1.0/5.625e4,0.0086972,477198.867398,134.96298])
         mprime = numpy.poly1d(coeff3)
-        mprime = mprime(t)*Misc_Routines.CoFactors.d2r
+        mprime = mprime(t)*CoFactors.d2r
         mprime = self.cirrange(mprime,rad=1)
         
         # Moon's argument of latitude
         coeff4 = numpy.array([-1.0/3.27270e5,-0.0036825,483202.017538,93.27191])
         f = numpy.poly1d(coeff4)
-        f = f(t)*Misc_Routines.CoFactors.d2r
+        f = f(t)*CoFactors.d2r
         f = self.cirrange(f,rad=1)
         
         # Longitude fo the ascending node of the Moon's  mean orbit on the ecliptic, measu-
         # red from the mean equinox of the date.
         coeff5 = numpy.array([1.0/4.5e5,0.0020708,-1934.136261,125.04452])
         omega = numpy.poly1d(coeff5)
-        omega = omega(t)*Misc_Routines.CoFactors.d2r
+        omega = omega(t)*CoFactors.d2r
         omega = self.cirrange(omega,rad=1)
 
         d_lng = numpy.array([0,-2,0,0,0,0,-2,0,0,-2,-2,-2,0,2,0,2,0,0,-2,0,2,0,0,-2,0,-2,0,0,\
@@ -335,7 +335,7 @@ class EquatorialCorrections():
         coeff = 23 + 26/60. + 21.488/3600.
         eps0 = coeff*3600. - 46.8150*T - 0.00059*T**2. + 0.001813*T**3.
         # True obliquity of the ecliptic in radians
-        eps = (eps0 + d_epsilon)/3600*Misc_Routines.CoFactors.d2r
+        eps = (eps0 + d_epsilon)/3600*CoFactors.d2r
         
         celestialbodies = CelestialBodies()
         [sunra,sundec,sunlon,sunobliq] = celestialbodies.sunpos(jd)
@@ -349,11 +349,11 @@ class EquatorialCorrections():
         # Constant of aberration, in arcseconds
         k = 20.49552 
         
-        cd = numpy.cos(dec*Misc_Routines.CoFactors.d2r)    ; sd = numpy.sin(dec*Misc_Routines.CoFactors.d2r)
+        cd = numpy.cos(dec*CoFactors.d2r)    ; sd = numpy.sin(dec*CoFactors.d2r)
         ce = numpy.cos(eps)                  ; te = numpy.tan(eps)
-        cp = numpy.cos(pi*Misc_Routines.CoFactors.d2r)     ; sp = numpy.sin(pi*Misc_Routines.CoFactors.d2r)
-        cs = numpy.cos(sunlon*Misc_Routines.CoFactors.d2r) ; ss = numpy.sin(sunlon*Misc_Routines.CoFactors.d2r)
-        ca = numpy.cos(ra*Misc_Routines.CoFactors.d2r)     ; sa = numpy.sin(ra*Misc_Routines.CoFactors.d2r)
+        cp = numpy.cos(pi*CoFactors.d2r)     ; sp = numpy.sin(pi*CoFactors.d2r)
+        cs = numpy.cos(sunlon*CoFactors.d2r) ; ss = numpy.sin(sunlon*CoFactors.d2r)
+        ca = numpy.cos(ra*CoFactors.d2r)     ; sa = numpy.sin(ra*CoFactors.d2r)
         
         term1 = (ca*cs*ce + sa*ss)/cd
         term2 = (ca*cp*ce + sa*sp)/cd
@@ -407,8 +407,8 @@ class EquatorialCorrections():
         dec = numpy.atleast_1d(dec)
 
         if rad==0:
-            ra_rad = ra*Misc_Routines.CoFactors.d2r
-            dec_rad = dec*Misc_Routines.CoFactors.d2r
+            ra_rad = ra*CoFactors.d2r
+            dec_rad = dec*CoFactors.d2r
         else:
             ra_rad = ra
             dec_rad = dec
@@ -427,9 +427,9 @@ class EquatorialCorrections():
         dec_rad = numpy.arcsin(x2[2,:])
         
         if rad==0:
-            ra = ra_rad/Misc_Routines.CoFactors.d2r
+            ra = ra_rad/CoFactors.d2r
             ra = ra + (ra<0)*360.
-            dec = dec_rad/Misc_Routines.CoFactors.d2r
+            dec = dec_rad/CoFactors.d2r
         else:
             ra = ra_rad
             ra = ra + (ra<0)*numpy.pi*2.
@@ -472,15 +472,15 @@ class EquatorialCorrections():
         if FK4==0:
             st=0.001*(equinox1 - 2000.)            
             # Computing 3 rotation angles.
-            A=Misc_Routines.CoFactors.s2r*t*(23062.181+st*(139.656+0.0139*st)+t*(30.188-0.344*st+17.998*t))
-            B=Misc_Routines.CoFactors.s2r*t*t*(79.280+0.410*st+0.205*t)+A
-            C=Misc_Routines.CoFactors.s2r*t*(20043.109-st*(85.33+0.217*st)+ t*(-42.665-0.217*st-41.833*t))
+            A=CoFactors.s2r*t*(23062.181+st*(139.656+0.0139*st)+t*(30.188-0.344*st+17.998*t))
+            B=CoFactors.s2r*t*t*(79.280+0.410*st+0.205*t)+A
+            C=CoFactors.s2r*t*(20043.109-st*(85.33+0.217*st)+ t*(-42.665-0.217*st-41.833*t))
         else:
             st=0.001*(equinox1 - 1900)
             # Computing 3 rotation angles
-            A=Misc_Routines.CoFactors.s2r*t*(23042.53+st*(139.75+0.06*st)+t*(30.23-0.27*st+18.0*t))
-            B=Misc_Routines.CoFactors.s2r*t*t*(79.27+0.66*st+0.32*t)+A
-            C=Misc_Routines.CoFactors.s2r*t*(20046.85-st*(85.33+0.37*st)+t*(-42.67-0.37*st-41.8*t))
+            A=CoFactors.s2r*t*(23042.53+st*(139.75+0.06*st)+t*(30.23-0.27*st+18.0*t))
+            B=CoFactors.s2r*t*t*(79.27+0.66*st+0.32*t)+A
+            C=CoFactors.s2r*t*(20046.85-st*(85.33+0.37*st)+t*(-42.67-0.37*st-41.8*t))
 
         sina = numpy.sin(A); sinb = numpy.sin(B); sinc = numpy.sin(C)
         cosa = numpy.cos(A); cosb = numpy.cos(B); cosc = numpy.cos(C)
@@ -595,39 +595,39 @@ class CelestialBodies(EquatorialCorrections):
         # Allow for  ellipticity of the orbit  (equation of centre)  using the Earth's mean
         # anomoly ME
         me = 358.475844 + ((35999.049750*t) % 360.0)
-        ellcor = (6910.1 - 17.2*t)*numpy.sin(me*Misc_Routines.CoFactors.d2r) + 72.3*numpy.sin(2.0*me*Misc_Routines.CoFactors.d2r)
+        ellcor = (6910.1 - 17.2*t)*numpy.sin(me*CoFactors.d2r) + 72.3*numpy.sin(2.0*me*CoFactors.d2r)
         l = l + ellcor
         
         # Allow for the Venus perturbations using the mean anomaly of Venus MV
         mv = 212.603219 + ((58517.803875*t) % 360.0)
-        vencorr = 4.8*numpy.cos((299.1017 + mv - me)*Misc_Routines.CoFactors.d2r) + \
-            5.5*numpy.cos((148.3133 +  2.0*mv  -  2.0*me )*Misc_Routines.CoFactors.d2r) + \
-            2.5*numpy.cos((315.9433 +  2.0*mv  -  3.0*me )*Misc_Routines.CoFactors.d2r) + \
-            1.6*numpy.cos((345.2533 +  3.0*mv  -  4.0*me )*Misc_Routines.CoFactors.d2r) + \
-            1.0*numpy.cos((318.15   +  3.0*mv  -  5.0*me )*Misc_Routines.CoFactors.d2r)
+        vencorr = 4.8*numpy.cos((299.1017 + mv - me)*CoFactors.d2r) + \
+            5.5*numpy.cos((148.3133 +  2.0*mv  -  2.0*me )*CoFactors.d2r) + \
+            2.5*numpy.cos((315.9433 +  2.0*mv  -  3.0*me )*CoFactors.d2r) + \
+            1.6*numpy.cos((345.2533 +  3.0*mv  -  4.0*me )*CoFactors.d2r) + \
+            1.0*numpy.cos((318.15   +  3.0*mv  -  5.0*me )*CoFactors.d2r)
         l = l + vencorr
 
         # Allow for the Mars perturbations using the mean anomaly of Mars MM
         mm = 319.529425 + ((19139.858500*t) % 360.0)
-        marscorr = 2.0*numpy.cos((343.8883 - 2.0*mm + 2.0*me)*Misc_Routines.CoFactors.d2r ) + \
-            1.8*numpy.cos((200.4017 -  2.0*mm  + me)*Misc_Routines.CoFactors.d2r)
+        marscorr = 2.0*numpy.cos((343.8883 - 2.0*mm + 2.0*me)*CoFactors.d2r ) + \
+            1.8*numpy.cos((200.4017 -  2.0*mm  + me)*CoFactors.d2r)
         l = l + marscorr
 
         # Allow for the Jupiter perturbations using the mean anomaly of Jupiter MJ
         mj = 225.328328 + ((3034.6920239*t) % 360.0)
-        jupcorr = 7.2*numpy.cos((179.5317 - mj + me )*Misc_Routines.CoFactors.d2r) + \
-            2.6*numpy.cos((263.2167 - mj)*Misc_Routines.CoFactors.d2r) + \
-            2.7*numpy.cos((87.1450 - 2.0*mj + 2.0*me)*Misc_Routines.CoFactors.d2r) + \
-            1.6*numpy.cos((109.4933 - 2.0*mj + me)*Misc_Routines.CoFactors.d2r)
+        jupcorr = 7.2*numpy.cos((179.5317 - mj + me )*CoFactors.d2r) + \
+            2.6*numpy.cos((263.2167 - mj)*CoFactors.d2r) + \
+            2.7*numpy.cos((87.1450 - 2.0*mj + 2.0*me)*CoFactors.d2r) + \
+            1.6*numpy.cos((109.4933 - 2.0*mj + me)*CoFactors.d2r)
         l = l + jupcorr
 
         # Allow for Moons perturbations using mean elongation of the Moon from the Sun D
         d = 350.7376814 + ((445267.11422*t) % 360.0)
-        mooncorr  = 6.5*numpy.sin(d*Misc_Routines.CoFactors.d2r)
+        mooncorr  = 6.5*numpy.sin(d*CoFactors.d2r)
         l = l + mooncorr
         
         # Allow for long period terms
-        longterm  = + 6.4*numpy.sin((231.19 + 20.20*t)*Misc_Routines.CoFactors.d2r)
+        longterm  = + 6.4*numpy.sin((231.19 + 20.20*t)*CoFactors.d2r)
         l = l + longterm
         l = (l + 2592000.0) % 1296000.0
         longmed = l/3600.0
@@ -637,26 +637,26 @@ class CelestialBodies(EquatorialCorrections):
         
         # Allow for Nutation using the longitude of the Moons mean node OMEGA
         omega = 259.183275 - ((1934.142008*t) % 360.0)
-        l = l - 17.2*numpy.sin(omega*Misc_Routines.CoFactors.d2r)
+        l = l - 17.2*numpy.sin(omega*CoFactors.d2r)
 
         # Form the True Obliquity
-        oblt = 23.452294 - 0.0130125*t + (9.2*numpy.cos(omega*Misc_Routines.CoFactors.d2r))/3600.0
+        oblt = 23.452294 - 0.0130125*t + (9.2*numpy.cos(omega*CoFactors.d2r))/3600.0
         
         # Form Right Ascension and Declination
         l = l/3600.0
-        ra  = numpy.arctan2((numpy.sin(l*Misc_Routines.CoFactors.d2r)*numpy.cos(oblt*Misc_Routines.CoFactors.d2r)),numpy.cos(l*Misc_Routines.CoFactors.d2r))
+        ra  = numpy.arctan2((numpy.sin(l*CoFactors.d2r)*numpy.cos(oblt*CoFactors.d2r)),numpy.cos(l*CoFactors.d2r))
         
         neg = numpy.where(ra < 0.0)
         if neg[0].size > 0: ra[neg] = ra[neg] + 2.0*numpy.pi
         
-        dec = numpy.arcsin(numpy.sin(l*Misc_Routines.CoFactors.d2r)*numpy.sin(oblt*Misc_Routines.CoFactors.d2r))
+        dec = numpy.arcsin(numpy.sin(l*CoFactors.d2r)*numpy.sin(oblt*CoFactors.d2r))
         
         if rad==1:            
-            oblt = oblt*Misc_Routines.CoFactors.d2r
-            longmed = longmed*Misc_Routines.CoFactors.d2r
+            oblt = oblt*CoFactors.d2r
+            longmed = longmed*CoFactors.d2r
         else:
-            ra = ra/Misc_Routines.CoFactors.d2r
-            dec = dec/Misc_Routines.CoFactors.d2r
+            ra = ra/CoFactors.d2r
+            dec = dec/CoFactors.d2r
 
         return ra, dec, longmed, oblt
 
@@ -754,30 +754,30 @@ class CelestialBodies(EquatorialCorrections):
         lprimed = numpy.poly1d(coeff0)
         lprimed = lprimed(t)
         lprimed = self.cirrange(lprimed,rad=0)
-        lprime = lprimed*Misc_Routines.CoFactors.d2r
+        lprime = lprimed*CoFactors.d2r
     
         # Mean elongation of the moon
         coeff1 = numpy.array([-1./1.13065e8,1./545868.,-0.0018819,445267.1114034,297.8501921])
         d = numpy.poly1d(coeff1)
-        d = d(t)*Misc_Routines.CoFactors.d2r
+        d = d(t)*CoFactors.d2r
         d = self.cirrange(d,rad=1)
         
         # Sun's mean anomaly
         coeff2 = numpy.array([1.0/2.449e7,-0.0001536,35999.0502909,357.5291092])
         M = numpy.poly1d(coeff2)
-        M = M(t)*Misc_Routines.CoFactors.d2r
+        M = M(t)*CoFactors.d2r
         M = self.cirrange(M,rad=1)
         
         # Moon's mean anomaly
         coeff3 = numpy.array([-1.0/1.4712e7,1.0/6.9699e4,0.0087414,477198.8675055,134.9633964])
         Mprime = numpy.poly1d(coeff3)
-        Mprime = Mprime(t)*Misc_Routines.CoFactors.d2r
+        Mprime = Mprime(t)*CoFactors.d2r
         Mprime = self.cirrange(Mprime,rad=1)
         
         # Moon's argument of latitude
         coeff4 = numpy.array([1.0/8.6331e8,-1.0/3.526e7,-0.0036539,483202.0175233,93.2720950])
         F = numpy.poly1d(coeff4)
-        F = F(t)*Misc_Routines.CoFactors.d2r
+        F = F(t)*CoFactors.d2r
         F = self.cirrange(F,rad=1)
 
         # Eccentricity of Earth's orbit around the sun
@@ -790,9 +790,9 @@ class CelestialBodies(EquatorialCorrections):
         ecorr4 = numpy.where((numpy.abs(m_lat))==2)                
         
         # Additional arguments.
-        A1 = (119.75 + 131.849*t)*Misc_Routines.CoFactors.d2r
-        A2 = (53.09 + 479264.290*t)*Misc_Routines.CoFactors.d2r
-        A3 = (313.45 + 481266.484*t)*Misc_Routines.CoFactors.d2r
+        A1 = (119.75 + 131.849*t)*CoFactors.d2r
+        A2 = (53.09 + 479264.290*t)*CoFactors.d2r
+        A3 = (313.45 + 481266.484*t)*CoFactors.d2r
         suml_add = 3958.*numpy.sin(A1) + 1962.*numpy.sin(lprime - F) + 318*numpy.sin(A2)
         sumb_add = -2235.*numpy.sin(lprime) + 382.*numpy.sin(A3) + 175.*numpy.sin(A1-F) + \
             175.*numpy.sin(A1 + F) + 127.*numpy.sin(lprime - Mprime) - 115.*numpy.sin(lprime + Mprime)
@@ -823,8 +823,8 @@ class CelestialBodies(EquatorialCorrections):
         [nlon, elon] = self.nutate(jd)
         geolon =  geolon + nlon/3.6e3
         geolon = self.cirrange(geolon,rad=0)
-        lamb = geolon*Misc_Routines.CoFactors.d2r
-        beta = geolat*Misc_Routines.CoFactors.d2r    
+        lamb = geolon*CoFactors.d2r
+        beta = geolat*CoFactors.d2r    
         
         # Find mean obliquity and convert lamb, beta to RA, Dec
         c = numpy.array([2.45,5.79,27.87,7.12,-39.05,-249.67,-51.38,1999.25,-1.55,-4680.93, \
@@ -832,7 +832,7 @@ class CelestialBodies(EquatorialCorrections):
         junk = numpy.poly1d(c); 
         epsilon = 23. + (26./60.) + (junk(t/1.e2)/3600.)
         # True obliquity in radians
-        eps = (epsilon + elon/3600. )*Misc_Routines.CoFactors.d2r
+        eps = (epsilon + elon/3600. )*CoFactors.d2r
         
         ra = numpy.arctan2(numpy.sin(lamb)*numpy.cos(eps)-numpy.tan(beta)*numpy.sin(eps),numpy.cos(lamb))
         ra = self.cirrange(ra,rad=1)
@@ -843,8 +843,8 @@ class CelestialBodies(EquatorialCorrections):
             geolon = lamb
             geolat = beta
         else:
-            ra = ra/Misc_Routines.CoFactors.d2r
-            dec = dec/Misc_Routines.CoFactors.d2r
+            ra = ra/CoFactors.d2r
+            dec = dec/CoFactors.d2r
         
         return ra, dec, dist, geolon, geolat
 
@@ -962,11 +962,11 @@ class CelestialBodies(EquatorialCorrections):
         """
 
         # Defining date to compute SkyNoise.
-        [year, month, dom, hour, mis, secs] = TimeTools.Julian(jd).change2time()
+        [year, month, dom, hour, mis, secs] = Julian(jd).change2time()
         is_dom = (month==9) & (dom==21)
         if is_dom:
             tmp = jd
-            jd = TimeTools.Time(year,9,22).change2julian()
+            jd = Time(year,9,22).change2julian()
             dom = 22
 
         # Reading SkyNoise
@@ -990,9 +990,9 @@ class CelestialBodies(EquatorialCorrections):
         hour = numpy.array([0,23]);
         mins = numpy.array([0,59]);
         secs = numpy.array([0,59]);
-        LTrange = TimeTools.Time(year,month,dom,hour,mins,secs).change2julday()
+        LTrange = Time(year,month,dom,hour,mins,secs).change2julday()
         LTtime  = LTrange[0] + numpy.arange(1440)*((LTrange[1] - LTrange[0])/(1440.-1))
-        lst = TimeTools.Julian(LTtime + (-3600.*ut/86400.)).change2lst()
+        lst = Julian(LTtime + (-3600.*ut/86400.)).change2lst()
 
         ipowr = lst*0.0
         # Interpolating using scipy (inside max and min "x")
@@ -1098,8 +1098,8 @@ class AltAz(EquatorialCorrections):
         [dra1,ddec1,eps,d_psi,d_eps] = self.co_nutate(self.jd,ra_tmp, dec_tmp)
         
         # Getting local mean sidereal time (lmst)
-        lmst = TimeTools.Julian(self.jd[0]).change2lst()
-        lmst = lmst*Misc_Routines.CoFactors.h2d
+        lmst = Julian(self.jd[0]).change2lst()
+        lmst = lmst*CoFactors.h2d
         # Getting local apparent sidereal time (last)
         last = lmst + d_psi*numpy.cos(eps)/3600.
         
@@ -1165,16 +1165,16 @@ class AltAz(EquatorialCorrections):
         Converted to Python by Freddy R. Galindo, ROJ, 26 September 2009.
         """    
 
-        alt_r = numpy.atleast_1d(self.alt*Misc_Routines.CoFactors.d2r)
-        az_r = numpy.atleast_1d(self.az*Misc_Routines.CoFactors.d2r)
-        lat_r = numpy.atleast_1d(self.lat*Misc_Routines.CoFactors.d2r)
+        alt_r = numpy.atleast_1d(self.alt*CoFactors.d2r)
+        az_r = numpy.atleast_1d(self.az*CoFactors.d2r)
+        lat_r = numpy.atleast_1d(self.lat*CoFactors.d2r)
         
         # Find local hour angle (in degrees, from 0 to 360.)
         y_ha = -1*numpy.sin(az_r)*numpy.cos(alt_r)
         x_ha = -1*numpy.cos(az_r)*numpy.sin(lat_r)*numpy.cos(alt_r) +  numpy.sin(alt_r)*numpy.cos(lat_r)
         
         ha = numpy.arctan2(y_ha,x_ha)
-        ha = ha/Misc_Routines.CoFactors.d2r
+        ha = ha/CoFactors.d2r
         
         w = numpy.where(ha<0.)
         if w[0].size>0:ha[w] = ha[w] + 360.
@@ -1182,7 +1182,7 @@ class AltAz(EquatorialCorrections):
         
         # Find declination (positive if north of celestial equatorial, negative if south)
         sindec = numpy.sin(lat_r)*numpy.sin(alt_r) + numpy.cos(lat_r)*numpy.cos(alt_r)*numpy.cos(az_r)
-        dec = numpy.arcsin(sindec)/Misc_Routines.CoFactors.d2r
+        dec = numpy.arcsin(sindec)/CoFactors.d2r
         
         return ha, dec    
 
@@ -1289,9 +1289,9 @@ class Equatorial(EquatorialCorrections):
         dec = dec + (ddec1*self.nutate_ + ddec2*self.aberration_)/3600.
         
         # Getting local mean sidereal time (lmst)
-        lmst = TimeTools.Julian(self.jd).change2lst()
+        lmst = Julian(self.jd).change2lst()
         
-        lmst = lmst*Misc_Routines.CoFactors.h2d
+        lmst = lmst*CoFactors.h2d
         # Getting local apparent sidereal time (last)
         last = lmst + d_psi*numpy.cos(eps)/3600.
         
@@ -1327,17 +1327,17 @@ class Equatorial(EquatorialCorrections):
         Converted to Python by Freddy R. Galindo, ROJ, 26 September 2009.
         """
 
-        sh = numpy.sin(ha*Misc_Routines.CoFactors.d2r) ; ch = numpy.cos(ha*Misc_Routines.CoFactors.d2r)
-        sd = numpy.sin(dec*Misc_Routines.CoFactors.d2r) ; cd = numpy.cos(dec*Misc_Routines.CoFactors.d2r)
-        sl = numpy.sin(self.lat*Misc_Routines.CoFactors.d2r) ; cl = numpy.cos(self.lat*Misc_Routines.CoFactors.d2r)
+        sh = numpy.sin(ha*CoFactors.d2r) ; ch = numpy.cos(ha*CoFactors.d2r)
+        sd = numpy.sin(dec*CoFactors.d2r) ; cd = numpy.cos(dec*CoFactors.d2r)
+        sl = numpy.sin(self.lat*CoFactors.d2r) ; cl = numpy.cos(self.lat*CoFactors.d2r)
         
         x = -1*ch*cd*sl + sd*cl
         y = -1*sh*cd
         z = ch*cd*cl + sd*sl
         r = numpy.sqrt(x**2. + y**2.)
         
-        az = numpy.arctan2(y,x)/Misc_Routines.CoFactors.d2r
-        alt = numpy.arctan2(z,r)/Misc_Routines.CoFactors.d2r
+        az = numpy.arctan2(y,x)/CoFactors.d2r
+        alt = numpy.arctan2(z,r)/CoFactors.d2r
         
         # correct for negative az.
         w = numpy.where(az<0.)
@@ -1396,7 +1396,7 @@ class Geodetic():
         Converted to Python by Freddy R. Galindo, ROJ, 02 October 2009.        
         """
 
-        gdl = self.lat*Misc_Routines.CoFactors.d2r
+        gdl = self.lat*CoFactors.d2r
         slat = numpy.sin(gdl)
         clat = numpy.cos(gdl)
         slat2 = slat**2.
@@ -1414,6 +1414,6 @@ class Geodetic():
         y =  rgeoid*sbet + self.alt*slat
 
         gcalt = numpy.sqrt(x**2. + y**2.)
-        gclat = numpy.arctan2(y,x)/Misc_Routines.CoFactors.d2r
+        gclat = numpy.arctan2(y,x)/CoFactors.d2r
         
         return gclat, gcalt

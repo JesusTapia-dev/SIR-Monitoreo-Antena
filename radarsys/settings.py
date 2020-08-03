@@ -28,14 +28,14 @@ ALLOWED_HOSTS = ['*']
 
 # Application definition
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'bootstrap3',
+    'bootstrap4',
     'polymorphic',
     'apps.accounts',
     'apps.main',
@@ -46,25 +46,26 @@ INSTALLED_APPS = (
     'apps.usrp',
     'apps.abs',
     'apps.cgs',
-)
+    'apps.dds_rest',
+]
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-)
+
+]
 
 ROOT_URLCONF = 'radarsys.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, "templates").replace('\\', '/'),],
+        'DIRS': [os.path.join(BASE_DIR, "templates")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -85,18 +86,18 @@ WSGI_APPLICATION = 'radarsys.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': 'radarsys.sqlite',
-    # }
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('DB_NAME', 'radarsys'),
-        'USER': os.environ.get('DB_USER', 'docker'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'docker'),
-        'HOST': os.environ.get('POSTGRES_PORT_5432_TCP_ADDR', 'localhost'),
-        'PORT': os.environ.get('POSTGRES_PORT_5432_TCP_PORT', '5400'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'radarsys.sqlite',
     }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    #     'NAME': os.environ.get('DB_NAME', 'radarsys'),
+    #     'USER': os.environ.get('DB_USER', 'docker'),
+    #     'PASSWORD': os.environ.get('DB_PASSWORD', 'docker'),
+    #     'HOST': os.environ.get('POSTGRES_PORT_5432_TCP_ADDR', 'localhost'),
+    #     'PORT': os.environ.get('POSTGRES_PORT_5432_TCP_PORT', '5400'),
+    #}
 }
 
 # Internationalization

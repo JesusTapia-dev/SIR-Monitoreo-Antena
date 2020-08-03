@@ -1,10 +1,10 @@
 {% extends "dev_conf.html" %}
 {% load static %}
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 {% load main_tags %}
 
 {% block extra-menu-actions %}
-<li><a href="{{ dev_conf.get_absolute_url_plot }}" target="_blank"><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> View Pulses </a></li>
+<li><a href="{{ dev_conf.get_absolute_url_plot }}" target="_blank"><span class="far fa-image" aria-hidden="true"></span> View Pulses </a></li>
 {% endblock %}
 
 {% block content-detail %}

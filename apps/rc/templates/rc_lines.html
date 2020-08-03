@@ -1,4 +1,4 @@
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 <div class="pull-right"><button id="bt_toggle" type="button" class="btn btn-default btn-xs" >
 Expand/Collapse
 </button></div><br><br>
@@ -10,7 +10,7 @@ Expand/Collapse
           CH{{line.channel}} - {{line.get_name}}
         </a>
       {% if edit %}
-      <button type="button" class="btn-xs btn-default pull-right" name="bt_remove_line" value="{{line.pk}}"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+      <button type="button" class="btn-xs btn-default pull-right" name="bt_remove_line" value="{{line.pk}}"><span class="fas fa-times" aria-hidden="true"></span></button>
       {% endif %}
       </h4>
     </div>
@@ -21,7 +21,7 @@ Expand/Collapse
         {% for f in line.subforms %}
           <div class="form-group form-group-sm">
           <label class="col-md-3 control-label">{{line.line_type.name}}-{{ forloop.counter }}</label>
-          <div class="col-md-9">{% if edit %}<button type='button' name="bt_remove_subline" class="btn-xs btn-default" data-url="{% url 'url_remove_rc_subline' dev_conf.id line.id forloop.counter %}"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>{% endif %}</div>
+          <div class="col-md-9">{% if edit %}<button type='button' name="bt_remove_subline" class="btn-xs btn-default" data-url="{% url 'url_remove_rc_subline' dev_conf.id line.id forloop.counter %}"><span class="fas fa-times" aria-hidden="true"></span></button>{% endif %}</div>
           </div><div class="clearfix"></div>
           {% bootstrap_form f layout='horizontal' size='small' %}
           <div class="clearfix"></div>

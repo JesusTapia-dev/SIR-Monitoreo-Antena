@@ -8,7 +8,7 @@ from base64 import b64encode
 from struct import pack
 
 from django.db import models
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from apps.main.models import Configuration
@@ -554,7 +554,7 @@ class RCConfiguration(Configuration):
             else:
                 data = {'manual': [clock.multiplier, clock.divisor, clock.reference]}
             payload = self.request('setfreq', 'post', data=json.dumps(data))
-            if payload['command'] <> 'ok':
+            if payload['command'] != 'ok':
                 self.message = 'RC write: {}'.format(payload['command'])
             else:
                 self.message = payload['programming']
@@ -663,8 +663,8 @@ class RCLineType(models.Model):
 
 class RCLine(models.Model):
 
-    rc_configuration = models.ForeignKey(RCConfiguration, on_delete=models.CASCADE)
-    line_type = models.ForeignKey(RCLineType)
+    rc_configuration = models.ForeignKey('RCConfiguration', on_delete=models.CASCADE)
+    line_type = models.ForeignKey('RCLineType',on_delete=models.CASCADE)
     channel = models.PositiveIntegerField(default=0)
     position = models.PositiveIntegerField(default=0)
     params = models.TextField(default='{}')
@@ -1019,7 +1019,7 @@ class RCLine(models.Model):
 
 class RCClock(models.Model):
 
-    rc_configuration = models.ForeignKey(RCConfiguration, on_delete=models.CASCADE)
+    rc_configuration = models.ForeignKey('RCConfiguration', on_delete=models.CASCADE)
     mode = models.BooleanField(default=True, choices=((True, 'Auto'), (False, 'Manual')))
     multiplier = models.PositiveIntegerField(default=60)
     divisor = models.PositiveIntegerField(default=10)

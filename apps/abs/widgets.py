@@ -322,7 +322,7 @@ style = """<style>
 
 class EditUpDataWidget(forms.widgets.TextInput):
 
-    def render(self, label, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
 
         try:
             beam     = attrs.get('beam', value)
@@ -794,7 +794,7 @@ class EditUpDataWidget(forms.widgets.TextInput):
 
 class EditDownDataWidget(forms.widgets.TextInput):
 
-    def render(self, label, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
 
         try:
             beam     = attrs.get('beam', value)
@@ -1247,7 +1247,7 @@ class EditDownDataWidget(forms.widgets.TextInput):
 
 class UpDataWidget(forms.widgets.TextInput):
 
-    def render(self, label, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
 
 
         html = '''
@@ -1639,17 +1639,19 @@ class UpDataWidget(forms.widgets.TextInput):
 
                 <div id="id_ues_up" class="container">
                   <h5>Ues</h5>
-                    <div class="col-xs-2">
-                      <input name="ues_up1" value="0" class="form-control" id="input1" type="number" step="any">
-                    </div>
-                    <div class="col-xs-2">
-                      <input name="ues_up2" value="0" class="form-control" id="input2" type="number" step="any">
-                    </div>
-                    <div class="col-xs-2">
-                      <input name="ues_up3" value="0" class="form-control" id="input3" type="number" step="any">
-                    </div>
-                    <div class="col-xs-2">
-                      <input name="ues_up4" value="0" class="form-control" id="input4" type="number" step="any">
+                  <div class="row">
+                        <div class="col-xs-2">
+                          <input name="ues_up1" value="0" class="form-control" id="input1" type="number" step="any">
+                        </div>
+                        <div class="col-xs-2">
+                          <input name="ues_up2" value="0" class="form-control" id="input2" type="number" step="any">
+                        </div>
+                        <div class="col-xs-2">
+                          <input name="ues_up3" value="0" class="form-control" id="input3" type="number" step="any">
+                        </div>
+                        <div class="col-xs-2">
+                          <input name="ues_up4" value="0" class="form-control" id="input4" type="number" step="any">
+                        </div>
                     </div>
                     <div style="vertical-align:center; margin-top:20px;">
                       <label class="checkbox-inline"><input name="onlyrx" style="vertical-align:bottom" id="onlyrx_up"  type="checkbox" value=1>Only RX</label>
@@ -1673,7 +1675,7 @@ class UpDataWidget(forms.widgets.TextInput):
 
 class DownDataWidget(forms.widgets.TextInput):
 
-    def render(self, label, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
 
         html = '''
         <br>

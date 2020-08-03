@@ -1,23 +1,28 @@
 #!/usr/bin/python
-
-
 import sys, os, os.path
 import traceback
-import cgi, Cookie
+import cgi
+from http import cookies
+
 import time, datetime
 import types
 import numpy
 import numpy.fft
 import scipy.linalg
 import scipy.special
-from StringIO import StringIO
-#import Numeric
+from io import StringIO
 
-import Misc_Routines
-import TimeTools
-import JroAntSetup
-import Graphics_OverJro
-import Astro_Coords
+
+#import Misc_Routines
+from .Misc_Routines import CoFactors
+#import TimeTools
+from .TimeTools import Time , Julian ,Doy2Date
+#import JroAntSetup
+from .JroAntSetup import ReturnSetup
+#import Graphics_OverJro
+from .Graphics_OverJro import AntPatternPlot ,BFieldPlot,CelestialObjectsPlot,PatternCutPlot,SkyNoisePlot
+#import Astro_Coords
+from .Astro_Coords import Geodetic ,AltAz ,CelestialBodies
 
 class JroPattern():
     def __init__(self,pattern=0,path=None,filename=None,nptsx=101,nptsy=101,maxphi=5,fftopt=0, \
@@ -62,7 +67,7 @@ class JroPattern():
 
         # Getting antenna configuration.
         if filename:
-            setup = JroAntSetup.ReturnSetup(path=path,filename=filename,pattern=pattern)
+            setup = ReturnSetup(path=path,filename=filename,pattern=pattern)
     
             ues = setup["ues"]
             phase = setup["phase"]
@@ -98,7 +103,7 @@ class JroPattern():
         # To get a cut of the pattern.
         self.getcut = getcut
 
-        maxdcos = numpy.sin(maxphi*Misc_Routines.CoFactors.d2r)
+        maxdcos = numpy.sin(maxphi*CoFactors.d2r)
         if dcosx==None:dcosx = ((numpy.arange(nptsx,dtype=float)/(nptsx-1))-0.5)*2*maxdcos
         if dcosy==None:dcosy = ((numpy.arange(nptsy,dtype=float)/(nptsy-1))-0.5)*2*maxdcos
         self.dcosx = dcosx
@@ -283,7 +288,7 @@ class JroPattern():
                 fft_phase[ix1:ix1+ndx-1,iy1:iy1+ndy-1] = phase[ix,ny-1-iy]
 
 
-        fft_phase = fft_phase*Misc_Routines.CoFactors.d2r
+        fft_phase = fft_phase*CoFactors.d2r
 
         pattern = numpy.abs(numpy.fft.fft2(fft_gain*numpy.exp(numpy.complex(0,1)*fft_phase)))**2
         pattern = numpy.fft.fftshift(pattern)
@@ -310,16 +315,33 @@ class JroPattern():
         Converted to Python by Freddy R. Galindo, ROJ, 20 September 2009.
         """
 
-        attenuation = None
-#        foldr = sys.path[-1] + os.sep + "resource" + os.sep
-        base_path = os.path.dirname(os.path.abspath(__file__))
-        #foldr = './resource'
-        #filen = "attenuation.txt"
-        attenuationFile = os.path.join(base_path,"resource","attenuation.txt")
-        #ff = open(os.path.join(foldr,filen),'r')
-        ff = open(attenuationFile,'r')
-        exec(ff.read())
-        ff.close()
+#         attenuation = None
+# #        foldr = sys.path[-1] + os.sep + "resource" + os.sep
+#         base_path = os.path.dirname(os.path.abspath(__file__))
+#         #foldr = './resource'
+#         #filen = "attenuation.txt"
+#         attenuationFile = os.path.join(base_path,"resource","attenuation.txt")
+#         #ff = open(os.path.join(foldr,filen),'r')
+#         ff = open(attenuationFile,'r')
+#         print(ff.read())
+#         exec(ff.read())
+#         ff.close()
+        attenuation = numpy.array([[[-21.25,-15.25,-9.25,-3.25,03.25,09.25,15.25,21.25],
+		         [-21.25,-15.25,-9.25,-3.25,03.25,09.25,15.25,21.25],
+   		         [-21.25,-15.25,-9.25,-3.25,03.25,09.25,15.25,21.25],
+		         [-21.25,-15.25,-9.25,-3.25,03.25,09.25,15.25,21.25],
+		         [-21.25,-15.25,-9.25,-3.25,03.25,09.25,15.25,21.25],
+		         [-21.25,-15.25,-9.25,-3.25,03.25,09.25,15.25,21.25],
+		         [-21.25,-15.25,-9.25,-3.25,03.25,09.25,15.25,21.25],
+		         [-21.25,-15.25,-9.25,-3.25,03.25,09.25,15.25,21.25]],
+       		         [[21.25,21.25,21.25,21.25,21.25,21.25,21.25,21.25],
+		         [15.25,15.25,15.25,15.25,15.25,15.25,15.25,15.25],
+		         [09.25,09.25,09.25,09.25,09.25,09.25,09.25,09.25],
+		         [03.25,03.25,03.25,03.25,03.25,03.25,03.25,03.25],
+		         [-03.25,-03.25,-03.25,-03.25,-03.25,-03.25,-03.25,-03.25],
+		         [-09.25,-09.25,-09.25,-09.25,-09.25,-09.25,-09.25,-09.25],
+		         [-15.25,-15.25,-15.25,-15.25,-15.25,-15.25,-15.25,-15.25],
+    		         [-21.25,-21.25,-21.25,-21.25,-21.25,-21.25,-21.25,-21.25]]])
 
         return attenuation
 
@@ -396,11 +418,11 @@ class JroPattern():
         Converted to Python by Freddy R. Galindo, ROJ, 20 September 2009.
         """
 
-        pos = self.eomwl*self.__readAttenuation()
+        pos  = self.eomwl*self.__readAttenuation()
         posx = pos[0,:,:]
         posy = pos[1,:,:]
 
-        phase = phase*Misc_Routines.CoFactors.d2r
+        phase = phase*CoFactors.d2r
         module = numpy.zeros((self.nx,self.ny),dtype=complex)
         for iy in range(self.ny):
             for ix in range(self.nx):
@@ -452,8 +474,8 @@ class JroPattern():
         # Tranforming from indexes to axis' values
         xcenter = xx1[0] + (((xx1[xx1.size-1] - xx1[0])/(xx1.size -1))*(params[1]))
         ycenter = yy1[0] + (((yy1[yy1.size-1] - yy1[0])/(yy1.size -1))*(params[2]))
-        xwidth  = ((xx1[xx1.size-1] - xx1[0])/(xx1.size-1))*(params[3])*(1/Misc_Routines.CoFactors.d2r)
-        ywidth  = ((yy1[yy1.size-1] - yy1[0])/(yy1.size-1))*(params[4])*(1/Misc_Routines.CoFactors.d2r)
+        xwidth  = ((xx1[xx1.size-1] - xx1[0])/(xx1.size-1))*(params[3])*(1/CoFactors.d2r)
+        ywidth  = ((yy1[yy1.size-1] - yy1[0])/(yy1.size-1))*(params[4])*(1/CoFactors.d2r)
         meanwx = (xwidth*ywidth)
         meanpos = numpy.array([xcenter,ycenter])
 
@@ -1057,14 +1079,14 @@ class overJroShow:
                             self.path = self.madForm.getvalue('path') #path donde se encuentra el archivo: patron de radiacion del usuario
 
                     else:
-                        print "Content-Type: text/html\n"
-                        print '<h3> This cgi plot script was called without the proper arguments.</h3>'
-                        print '<p> This is a script used to plot Antenna Cuts over Jicamarca Antenna</p>'
-                        print '<p> Required arguments:</p>'
-                        print '<p>    pattern - chekbox indicating objects over jicamarca antenna</p>'
-                        print '<p> or'
-                        print '<p>    filename - The pattern defined by users is a file text'
-                        print '<p>    path - folder with pattern files'
+                        print ("Content-Type: text/html\n")
+                        print ('<h3> This cgi plot script was called without the proper arguments.</h3>')
+                        print ('<p> This is a script used to plot Antenna Cuts over Jicamarca Antenna</p>')
+                        print ('<p> Required arguments:</p>')
+                        print ('<p>    pattern - chekbox indicating objects over jicamarca antenna</p>')
+                        print ('<p> or')
+                        print ('<p>    filename - The pattern defined by users is a file text')
+                        print ('<p>    path - folder with pattern files')
                         sys.exit(0)
 
 
@@ -1094,12 +1116,12 @@ class overJroShow:
                     if self.showType == 1:
                         if numpy.sum(self.objects) == 0:
                             if  self.scriptHeaders == 0:
-                                print "Content-Type: text/html\n"
-                            print '<h3> This cgi plot script was called without the proper arguments.</h3>'
-                            print '<p> This is a script used to plot Antenna Cuts over Jicamarca Antenna</p>'
-                            print '<p> Required arguments:</p>'
-                            print '<p>    objects - chekbox indicating objects over jicamarca antenna</p>'
-                            print '<p> Please, options in "Select Object" must be checked'
+                                print ("Content-Type: text/html\n")
+                            print ('<h3> This cgi plot script was called without the proper arguments.</h3>')
+                            print ('<p> This is a script used to plot Antenna Cuts over Jicamarca Antenna</p>')
+                            print ('<p> Required arguments:</p>')
+                            print ('<p>    objects - chekbox indicating objects over jicamarca antenna</p>')
+                            print ('<p> Please, options in "Select Object" must be checked')
                             sys.exit(0)
 
                     #considerar para futura implementacion
@@ -1112,19 +1134,19 @@ class overJroShow:
 
             else:
                 if  self.scriptHeaders == 0:
-                    print "Content-Type: text/html\n"
+                    print ("Content-Type: text/html\n")
 
-                print '<h3> This cgi plot script was called without the proper arguments.</h3>'
-                print '<p> This is a script used to plot Pattern Field and Celestial Objects over Jicamarca Antenna</p>'
-                print '<p> Required arguments:</p>'
-                print '<p>    year - year of event</p>'
-                print '<p>    month - month of event</p>'
-                print '<p>    dom - day of month</p>'
-                print '<p>    pattern - pattern is defined by "Select an Experiment" list box</p>'
-                print '<p>    maxphi - maxphi is defined by "Max Angle" text box</p>'
-                print '<p>    objects - objects is a list defined by checkbox in "Select Object"</p>'
-                print '<p>    heights - heights is defined by "Heights" text box, for default heights=[100,500,1000]</p>'
-                print '<p>    showType - showType is a hidden element for show plot of Pattern&Object or Antenna Cuts or Sky Noise</p>'
+                print ('<h3> This cgi plot script was called without the proper arguments.</h3>')
+                print ('<p> This is a script used to plot Pattern Field and Celestial Objects over Jicamarca Antenna</p>')
+                print ('<p> Required arguments:</p>')
+                print ('<p>    year - year of event</p>')
+                print ('<p>    month - month of event</p>')
+                print ('<p>    dom - day of month</p>')
+                print ('<p>    pattern - pattern is defined by "Select an Experiment" list box</p>')
+                print ('<p>    maxphi - maxphi is defined by "Max Angle" text box</p>')
+                print ('<p>    objects - objects is a list defined by checkbox in "Select Object"</p>')
+                print ('<p>    heights - heights is defined by "Heights" text box, for default heights=[100,500,1000]</p>')
+                print ('<p>    showType - showType is a hidden element for show plot of Pattern&Object or Antenna Cuts or Sky Noise</p>')
 
                 sys.exit(0)
 
@@ -1139,13 +1161,13 @@ class overJroShow:
 
             else:
                 if  self.scriptHeaders == 0:
-                    print "Content-Type: text/html\n"
-                print '<h3> This cgi plot script was called without the proper arguments.</h3>'
-                print '<p> This is a script used to plot Sky Noise over Jicamarca Antenna</p>'
-                print '<p> Required arguments:</p>'
-                print '<p>    year - year of event</p>'
-                print '<p>    month - month of event</p>'
-                print '<p>    dom - day of month</p>'
+                    print ("Content-Type: text/html\n")
+                print ('<h3> This cgi plot script was called without the proper arguments.</h3>')
+                print ('<p> This is a script used to plot Sky Noise over Jicamarca Antenna</p>')
+                print ('<p> Required arguments:</p>')
+                print ('<p>    year - year of event</p>')
+                print ('<p>    month - month of event</p>')
+                print ('<p>    dom - day of month</p>')
 
                 sys.exit(0)
 
@@ -1193,11 +1215,11 @@ class overJroShow:
         self.glon = -76.874383
 
 
-        self.junkjd = TimeTools.Time(self.year,self.month,self.dom).change2julday()
-        self.junklst = TimeTools.Julian(self.junkjd).change2lst(longitude=self.glon)
+        self.junkjd = Time(self.year,self.month,self.dom).change2julday()
+        self.junklst = Julian(self.junkjd).change2lst(longitude=self.glon)
 
         # Finding RA of observatory for a specific date
-        self.ra_obs = self.junklst*Misc_Routines.CoFactors.h2d
+        self.ra_obs = self.junklst*CoFactors.h2d
 
     def initParameters(self):
 
@@ -1211,9 +1233,9 @@ class overJroShow:
 #        alfa = 1.46*Misc_Routines.CoFactors.d2r
 #        theta = 51.01*Misc_Routines.CoFactors.d2r
 
-        alfa = 1.488312*Misc_Routines.CoFactors.d2r
+        alfa = 1.488312*CoFactors.d2r
         th = 6.166710 + 45.0
-        theta = th*Misc_Routines.CoFactors.d2r
+        theta = th*CoFactors.d2r
 
         sina = numpy.sin(alfa)
         cosa = numpy.cos(alfa)
@@ -1232,11 +1254,11 @@ class overJroShow:
         
         self.initParameters()
         self.doy = datetime.datetime(date.year,date.month,date.day).timetuple().tm_yday
-        self.junkjd = TimeTools.Time(self.year,self.month,self.dom).change2julday()
-        self.junklst = TimeTools.Julian(self.junkjd).change2lst(longitude=self.glon)
-        self.ra_obs = self.junklst*Misc_Routines.CoFactors.h2d
+        self.junkjd = Time(self.year,self.month,self.dom).change2julday()
+        self.junklst = Julian(self.junkjd).change2lst(longitude=self.glon)
+        self.ra_obs = self.junklst*CoFactors.h2d
         
-        date = TimeTools.Time(date.year,date.month,date.day).change2strdate(mode=2)
+        date = Time(date.year,date.month,date.day).change2strdate(mode=2)
 
         mesg = 'Over Jicamarca: ' + date[0]
         
@@ -1254,7 +1276,7 @@ class overJroShow:
                             just_rx=just_rx
                             )        
         
-        dum = Graphics_OverJro.AntPatternPlot()
+        dum = AntPatternPlot()
         
         dum.contPattern(iplot=0,
                         gpath=self.path4plotname,
@@ -1317,7 +1339,7 @@ class overJroShow:
             # Plotting Contour Map
             
             self.path4plotname = '/home/jespinoza/workspace/radarsys/trunk/webapp/apps/abs/static/images'            
-            dum = Graphics_OverJro.AntPatternPlot()
+            dum = AntPatternPlot()
             dum.contPattern(iplot=ii,
                                                         gpath=self.path4plotname,
                                                         filename=self.plotname0,
@@ -1342,13 +1364,13 @@ class overJroShow:
 
             [ra,dec,ha] = Astro_Coords.AltAz(vect_polar[1],vect_polar[0],self.junkjd).change2equatorial()
 
-            print'Main beam position (HA(min), DEC(degrees)): %f %f'%(ha*4.,dec)
+            print('Main beam position (HA(min), DEC(degrees)): %f %f')%(ha*4.,dec)
 
             self.main_dec = dec
 
         self.ptitle = title
 
-        Graphics_OverJro.AntPatternPlot().plotRaDec(gpath=self.path4plotname,
+        AntPatternPlot().plotRaDec(gpath=self.path4plotname,
                                                     filename=self.plotname0,
                                                     jd=self.junkjd, 
                                                     ra_obs=self.ra_obs, 
@@ -1377,7 +1399,7 @@ class overJroShow:
             # Plotting B field.
 #            print "Drawing magnetic field over Observatory"
 
-            Obj = Graphics_OverJro.BFieldPlot()
+            Obj = BFieldPlot()
 
             Obj.plotBField(self.path4plotname,self.plotname0,dcos,alpha,nlon,nlat,self.dcosxrange,self.dcosyrange,ObjB.heights,ObjB.alpha_i)
 
@@ -1423,13 +1445,13 @@ class overJroShow:
 
         tod = numpy.arange(ntod)/ntod*24.
 
-        [month,dom] = TimeTools.Doy2Date(self.year,self.doy).change2date()
+        [month,dom] = Doy2Date(self.year,self.doy).change2date()
 
-        jd = TimeTools.Time(self.year,month,dom,tod+self.UT).change2julday()
+        jd = Time(self.year,month,dom,tod+self.UT).change2julday()
 
         if numpy.sum(self.show_object[1:]>0)!=0:
 
-            self.ObjC = Graphics_OverJro.CelestialObjectsPlot(jd,self.main_dec,tod,self.maxha_min,self.show_object)
+            self.ObjC = CelestialObjectsPlot(jd,self.main_dec,tod,self.maxha_min,self.show_object)
 
             self.ObjC.drawObject(self.glat,
                             self.glon,
@@ -1452,7 +1474,7 @@ class overJroShow:
         #Init ObjCut for PatternCutPlot()
         view_objects = numpy.where(self.show_object>0)
         subplots = len(view_objects[0])
-        ObjCut = Graphics_OverJro.PatternCutPlot(subplots)
+        ObjCut = PatternCutPlot(subplots)
 
         for io in (numpy.arange(5)):
             if self.show_object[io]==2:
@@ -1512,7 +1534,7 @@ class overJroShow:
                         m_distance = 404114.6  # distance to the Earth in km
                         m_diameter = 1734.4    # diameter in km.
                         width_star = numpy.arctan(m_distance/m_diameter)
-                        width_star = width_star/2./Misc_Routines.CoFactors.d2r*4.
+                        width_star = width_star/2./CoFactors.d2r*4.
                         otitle = 'Moon cut'
 #                    else:
 #                        print "Moon is not passing over Observatory"
@@ -1544,7 +1566,7 @@ class overJroShow:
                 mins = numpy.int32((time - hour)*60.)
                 secs = numpy.int32(((time - hour)*60. - mins)*60.)
 
-                ObjT = TimeTools.Time(self.year,self.month,self.dom,hour,mins,secs)
+                ObjT = Time(self.year,self.month,self.dom,hour,mins,secs)
                 subtitle = ObjT.change2strdate()
 
                 star_cut = numpy.exp(-(star_ha/width_star)**2./2.)
@@ -1585,46 +1607,45 @@ class overJroShow:
         month = self.month
         year = self.year
 
-        julian = TimeTools.Time(year,month,dom).change2julday()
+        julian = Time(year,month,dom).change2julday()
 
         [powr,time, lst] = Astro_Coords.CelestialBodies().skyNoise(julian)
 
-        Graphics_OverJro.SkyNoisePlot([year,month,dom],powr,time,lst).getPlot(self.path4plotname,self.plotname2)
+        SkyNoisePlot([year,month,dom],powr,time,lst).getPlot(self.path4plotname,self.plotname2)
 
 
     def outputHead(self,title):
-        print "Content-Type: text/html"
-        print
-        self.scriptHeaders = 1
-        print '<html>'
-        print '<head>'
-        print '\t<title>' + title + '</title>'
-        print '<style type="text/css">'
-        print 'body'
-        print '{'
-        print 'background-color:#ffffff;'
-        print '}'
-        print 'h1'
-        print '{'
-        print 'color:black;'
-        print 'font-size:18px;'
-        print 'text-align:center;'
-        print '}'
-        print 'p'
-        print '{'
-        print 'font-family:"Arial";'
-        print 'font-size:16px;'
-        print 'color:black;'
-        print '}'
-        print '</style>'
+        print ("Content-Type: text/html")
+        print (self).scriptHeaders = 1
+        print ('<html>')
+        print ('<head>')
+        print ('\t<title>' + title + '</title>')
+        print ('<style type="text/css">')
+        print ('body')
+        print ('{')
+        print ('background-color:#ffffff;')
+        print ('}')
+        print ('h1')
+        print ('{')
+        print ('color:black;')
+        print ('font-size:18px;')
+        print ('text-align:center;')
+        print ('}')
+        print ('p')
+        print ('{')
+        print ('font-family:"Arial";')
+        print ('font-size:16px;')
+        print ('color:black;')
+        print ('}')
+        print ('</style>')
 #        self.printJavaScript()
-        print '</head>'
+        print ('</head>')
 
     def printJavaScript(self):
         print
 
     def printBody(self):
-        print '<body>'
+        print ('<body>')
 #        print '<h1>Test Input Parms</h1>'
 #        for key in self.madForm.keys():
 #                #print '<p> name=' + str(key)
@@ -1636,25 +1657,25 @@ class overJroShow:
 #                    print '<p> name=' + str(key) + \
 #                              ' value=' + str(cgi.escape(self.madForm.getvalue(key))) + ''
 
-        print '<form name="form1" method="post" target="showFrame">'
-        print '    <div align="center">'
-        print '        <table width=98% border="1" cellpadding="1">'
-        print '            <tr>'
-        print '                <td colspan="2" align="center">'
+        print ('<form name="form1" method="post" target="showFrame">')
+        print ('    <div align="center">')
+        print ('        <table width=98% border="1" cellpadding="1">')
+        print ('            <tr>')
+        print ('                <td colspan="2" align="center">')
         if self.showType == 0:
-            print '                    <IMG SRC="%s" BORDER="0" >'%(os.path.join(os.sep + self.__tmpDir,self.plotname0))
+            print ('                    <IMG SRC="%s" BORDER="0" >')%(os.path.join(os.sep + self.__tmpDir,self.plotname0))
         if self.showType == 1:
-            print '                    <IMG SRC="%s" BORDER="0" >'%(os.path.join(os.sep + self.__tmpDir,self.plotname1))
+            print ('                    <IMG SRC="%s" BORDER="0" >')%(os.path.join(os.sep + self.__tmpDir,self.plotname1))
         if self.showType == 2:
-            print '                    <IMG SRC="%s" BORDER="0" >'%(os.path.join(os.sep + self.__tmpDir,self.plotname2))
-        print '                </td>'
-        print '            </tr>'
-        print '        </table>'
-        print '    </div>'
-        print '</form>'
+            print ('                    <IMG SRC="%s" BORDER="0" >')%(os.path.join(os.sep + self.__tmpDir,self.plotname2))
+        print ('                </td>')
+        print ('            </tr>')
+        print ('        </table>')
+        print ('    </div>')
+        print ('</form>')
 
-        print '</body>'
-        print '</html>'
+        print ('</body>')
+        print ('</html>')
 
     #def execute(self, serverdocspath, tmpdir, currentdate, finalpath, showType=0, maxphi=5.0, objects="[1,1]", heights="[150,500,1000]"):
     def setInputParameters(self, serverpath, currentdate, finalpath, showType=0, maxphi=5.0, objects="[1,1]", heights="[150,500,1000]"):

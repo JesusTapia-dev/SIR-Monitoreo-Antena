@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.utils.safestring import mark_safe
 from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
@@ -29,6 +29,7 @@ from apps.jars.forms import JARSConfigurationForm
 from apps.cgs.forms import CGSConfigurationForm
 from apps.abs.forms import ABSConfigurationForm
 from apps.usrp.forms import USRPConfigurationForm
+from apps.dds_rest.forms import DDSRestConfigurationForm
 from .utils import Params
 
 from .models import Campaign, Experiment, Device, Configuration, Location, RunningExperiment, DEV_STATES
@@ -38,6 +39,7 @@ from apps.usrp.models import USRPConfiguration
 from apps.abs.models import ABSConfiguration
 from apps.rc.models import RCConfiguration, RCLine, RCLineType, RCClock
 from apps.dds.models import DDSConfiguration
+from apps.dds_rest.models import DDSRestConfiguration
 
 from radarsys.celery import app
 
@@ -45,6 +47,7 @@ from radarsys.celery import app
 CONF_FORMS = {
     'rc': RCConfigurationForm,
     'dds': DDSConfigurationForm,
+    'dds_rest': DDSRestConfigurationForm,
     'jars': JARSConfigurationForm,
     'cgs': CGSConfigurationForm,
     'abs': ABSConfigurationForm,
@@ -54,6 +57,7 @@ CONF_FORMS = {
 CONF_MODELS = {
     'rc': RCConfiguration,
     'dds': DDSConfiguration,
+    'dds_rest': DDSRestConfiguration,
     'jars': JARSConfiguration,
     'cgs': CGSConfiguration,
     'abs': ABSConfiguration,
@@ -88,7 +92,7 @@ def is_operator(user):
 def has_been_modified(model):
 
     prev_hash = model.hash
-    new_hash = hashlib.sha256(str(model.parms_to_dict)).hexdigest()
+    new_hash = hashlib.sha256(str(model.parms_to_dict).encode()).hexdigest()
     if prev_hash != new_hash:
         model.hash = new_hash
         model.save()
@@ -255,7 +259,7 @@ def device_new(request):
     kwargs = {}
     kwargs['form'] = form
     kwargs['title'] = 'Device'
-    kwargs['suptitle'] = 'New'
+    kwargs['suptitle'] = 'New_2'
     kwargs['button'] = 'Create'
     kwargs['menu_devices'] = 'active'
 
@@ -1054,7 +1058,7 @@ def experiment_summary(request, id_exp):
             rate_bh = ((nsa-codes_num)*channels_number*2 *
                         bytes_/IPP_us)*(36*(10**8)/cohe_integr)
             rate_gh = rate_bh/(1024*1024*1024)
-    
+
             conf['Time per Block'] = IPP_s * profiles_block * cohe_integr
             conf['keys'].append('Time per Block')
             conf['Acq time'] = IPP_s * acq_profiles
@@ -1065,7 +1069,7 @@ def experiment_summary(request, id_exp):
             conf['keys'].append('Va (m/s)')
             conf['Vrange (m/s)'] = 3/(2*IPP_s*cohe_integr)
             conf['keys'].append('Vrange (m/s)')
-        
+
         kwargs['configurations'].append(conf)
     kwargs['menu_experiments'] = 'active'
 
@@ -1383,7 +1387,7 @@ def dev_conf_new(request, id_exp=0, id_dev=0):
     if id_dev != 0:
         device = Device.objects.get(pk=id_dev)
         kwargs['device'] = device.device_type.name
-
+    print(id_exp)
     return render(request, 'dev_conf_edit.html', kwargs)
 
 
@@ -1453,17 +1457,17 @@ def dev_conf_status(request, id_conf):
     conf = get_object_or_404(Configuration, pk=id_conf)
 
     conf_active = Configuration.objects.filter(pk=conf.device.conf_active).first()
-    if conf_active<>conf:
+    if conf_active!=conf:
         url = '#' if conf_active is None else conf_active.get_absolute_url()
         label = 'None' if conf_active is None else conf_active.label
         messages.warning(
-            request, 
+            request,
             mark_safe('The current configuration has not been written to device, the active configuration is <a href="{}">{}</a>'.format(
                 url,
                 label
                 ))
             )
-        
+
         return redirect(conf.get_absolute_url())
 
     if conf.status_device():
@@ -1503,7 +1507,7 @@ def dev_conf_write(request, id_conf):
             messages.error(request, conf.message)
 
         return redirect(get_object_or_404(Configuration, pk=id_conf).get_absolute_url())
-    
+
     kwargs = {
         'title': 'Write Configuration',
         'suptitle': conf.label,
@@ -1806,9 +1810,9 @@ def radar_start(request, id_camp, id_radar):
         if start > campaign.end_date or start < campaign.start_date:
             messages.warning(request, 'Experiment {} out of date'.format(exp))
             continue
-        
+
         app.control.revoke(exp.task)
-        
+
         if now > start and now <= end:
             task = task_start.delay(exp.id)
             exp.status = task.wait()
@@ -1919,7 +1923,7 @@ def real_time(request):
     return render(request, 'real_time.html', kwargs)
 
 def theme(request, theme):
-    
+
     user = request.user
     user.profile.theme = theme
     user.save()

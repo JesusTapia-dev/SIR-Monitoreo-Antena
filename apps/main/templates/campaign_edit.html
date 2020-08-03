@@ -1,5 +1,5 @@
 {% extends "base_edit.html" %}
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 {% load static %}
 {% load main_tags %}
 
@@ -8,15 +8,30 @@
 {% endblock %}
 
 {% block extra-js%}
-<script src="{% static 'js/moment.min.js' %}"></script>
 <script src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
 <script type="text/javascript">
 
-  $('.input-group.date').datetimepicker({"format": "YYYY-MM-DD HH:mm"});
-  
+  $('.input-group.date').datetimepicker({
+
+    format: "YYYY-MM-DD HH:mm",
+    icons: {
+      time: 'far fa-clock',
+      date: 'far fa-calendar-alt',
+      up: 'fas fa-arrow-up',
+      down: 'fas fa-arrow-down',
+      previous: 'fas fa-chevron-left',
+      next: 'fas fa-chevron-right',
+      today: 'far fa-calendar-check',
+      clear: 'far fa-trash-alt',
+      close: 'fas fa-times'
+    },
+    sideBySide: true,
+    allowInputToggle: true
+  });
+  console.log(12+3);
   $('#id_create_from').change(function() {
     var url = "{% url 'url_add_campaign' %}";
-    if ($(this).val()=="2"){      
+    if ($(this).val()=="2"){
       document.location = url+"?template=0";
     }else if ($(this).val()=="1"){
       document.location = url+"?blank=0";
@@ -24,11 +39,11 @@
       document.location = url;
     }
   });
-  
+
   $('#id_choose_template').change(function() {
-    var url = "{% url 'url_add_campaign' %}";          
-    document.location = url+"?template="+$(this).val();    
+    var url = "{% url 'url_add_campaign' %}";
+    document.location = url+"?template="+$(this).val();
   });
-  
+
 </script>
 {% endblock %}

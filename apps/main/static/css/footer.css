@@ -1,0 +1,55 @@
+footer {
+    background-color: var(--primary);
+    position: relative;
+    margin: 0;
+    padding-top: 20px;
+    padding-bottom: 10px;
+    border: 0;
+    display: block;
+    color: #fff;
+    margin-top: 20px;
+}
+
+.footer-contact{
+    padding-left: 0;
+    list-style: none;
+}
+
+.footer-contact li{
+    display: flex;
+}
+
+.footer-contact span{
+    margin-top: 3.5px;
+    margin-right: 8px;
+}
+
+.footer-contact p{
+    margin-bottom: 5px;
+}
+
+.social-footer{
+    margin-bottom: 5px;
+    padding-top: 10px;
+    padding-left: 0;
+    list-style: none;
+    display: flex;
+}
+
+.social-footer li{
+    padding-right: 1em;
+}
+
+iframe.map {
+    display: block;
+    width: 50%;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+@media (min-width: 480px){
+    .map {
+    display: none;
+    }
+}

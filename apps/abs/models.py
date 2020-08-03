@@ -1,6 +1,6 @@
 from django.db import models
-from apps.main.models import Configuration, User
-from django.core.urlresolvers import reverse
+from apps.main.models import Configuration , User
+from django.urls import reverse
 from celery.execute import send_task
 from datetime import datetime
 import ast
@@ -203,7 +203,6 @@ OPERATION_MODES = (
                  (1, 'Automatic'),
              )
 
-
 class ABSConfiguration(Configuration):
     active_beam     = models.PositiveSmallIntegerField(verbose_name='Active Beam', default=0)
     module_status   = models.CharField(verbose_name='Module Status', max_length=10000, default=status_default)
@@ -365,13 +364,45 @@ class ABSConfiguration(Configuration):
         This function sends the beams list to every abs module.
         It needs 'module_conf' function
         """
-
+        print("Write")
         beams = ABSBeam.objects.filter(abs_conf=self)
         nbeams = len(beams)
+
+        # Se manda a cero RC para poder realizar cambio de beam
+        if self.experiment is None:
+            confs = []
+        else:
+            confs = Configuration.objects.filter(experiment = self.experiment).filter(type=0)
+        confdds  = ''
+        confjars = ''
+        confrc   = ''
+        #TO STOP DEVICES: DDS-JARS-RC
+        for i in range(0,len(confs)):
+            if i==0:
+                for conf in confs:
+                    if conf.device.device_type.name == 'dds':
+                        confdds = conf
+                        confdds.stop_device()
+                        break
+            if i==1:
+                for conf in confs:
+                    if conf.device.device_type.name == 'jars':
+                        confjars = conf
+                        confjars.stop_device()
+                        break
+            if i==2:
+                for conf in confs:
+                    if conf.device.device_type.name == 'rc':
+                        confrc = conf
+                        confrc.stop_device()
+                        break
+
+        '''
         if self.connected_modules() == 0 :
+            print("No encuentra modulos")
             self.message = "No ABS Module detected."
             return False
-
+        '''
         #-------------Write each abs module-----------
 
         if beams:
@@ -381,23 +412,36 @@ class ABSConfiguration(Configuration):
                 message += ''.join([fromBinary2Char(beam.module_6bits(i)) for beam in beams])
             status = ['0'] * 64
             n = 0
-
+            print("Llega una antes entrar a multicast")
             sock = self.send_multicast(message)
 
-            for i in range(32):
+            while True:
+            #for i in range(32):
                 try:
                     data, address = sock.recvfrom(1024)
-                    print address, data
+                    print (address, data)
+
                     if data == '1':
                         status[int(address[0][10:])-1] = '3'
                     elif data == '0':
                         status[int(address[0][10:])-1] = '1'
+                except socket.timeout:
+                    print('Timeout')
+                    break
                 except Exception as e:
-                    print 'Error {}'.format(e)
+                    print ('Error {}'.format(e))
                     n += 1
             sock.close()
         else:
             self.message = "ABS Configuration does not have beams"
+            #Start DDS-RC-JARS
+            if confdds:
+                confdds.start_device()
+            if confrc:
+                #print confrc
+                confrc.start_device()
+            if confjars:
+                confjars.start_device()
             return False
 
         if n == 64:
@@ -405,15 +449,34 @@ class ABSConfiguration(Configuration):
             self.device.status = 0
             self.module_status = ''.join(status)
             self.save()
+            #Start DDS-RC-JARS
+            if confdds:
+                confdds.start_device()
+            if confrc:
+                #print confrc
+                confrc.start_device()
+            if confjars:
+                confjars.start_device()
             return False
         else:
             self.message = "ABS Beams List have been sent to ABS Modules"
             self.active_beam = beams[0].pk
 
+        #Start DDS-RC-JARS
+        if confdds:
+            confdds.start_device()
+        if confrc:
+            #print confrc
+            confrc.start_device()
+        if confjars:
+            confjars.start_device()
+
         self.device.status = 3
         self.module_status = ''.join(status)
         self.save()
-        
+        conf_active = ABSActive.objects.get(pk=1)
+        conf_active.conf = self
+        conf_active.save()
         return True
 
 
@@ -486,14 +549,14 @@ class ABSConfiguration(Configuration):
         return num
 
     def send_multicast(self, message):
-
+        #print("Send multicast")
         multicast_group = ('224.3.29.71', 10000)
         # Create the datagram socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(1)
-        local_ip = os.environ.get('LOCAL_IP', '192.168.1.128')
+        local_ip = os.environ.get('LOCAL_IP', '192.168.2.128')
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(local_ip))
-        sock.sendto(message, multicast_group)
+        sock.sendto(message.encode(), multicast_group)
         print('Sending ' + message)
         return sock
 
@@ -502,34 +565,72 @@ class ABSConfiguration(Configuration):
         This function returns the status of all abs-modules as one.
         If at least one module is connected, its answer is "1"
         """
-        
+        print ('Status device')
+        print (self.active_beam)
+        beams = ABSBeam.objects.filter(abs_conf=self)
+        #print beams[self.active_beam-1].module_6bits(0)
+        active = ABSActive.objects.get(pk=1)
+        if active.conf != self:
+            self.message = 'La configuracion actual es la del siguiente enlace %s.' % active.conf.get_absolute_url()
+            self.message +=  "\n"
+            self.message += 'Se debe realizar un write en esta configuracion para luego obtener un status valido.'
+
+            return False
+
         sock = self.send_multicast('MNTR')
-        
+
         n = 0
         status = ['0'] * 64
-        for i in range(32):
+
+        while True:
+        #for i in range(32):
             #if True:
             try:
+                print("Recibiendo")
                 address = None
-                data, address = sock.recvfrom(1024)
-                x = int(address[0][10:])-1
+                data, address = sock.recvfrom(2)
+                print (address, data)
+                print("!!!!")
+                data = data.decode()
+                aux_mon = "1"
+                aux_expected = aux_mon
+                if(len(data)==2):
+                    print ("data[1]: ")
+                    print (data[1])
+                    aux_mon = fromChar2Binary(data[1])
+                    print (aux_mon)
+                    aux_i = (str(address[0]).split('.'))[3]
+                    print (aux_i)
+                    print ('Active beam')
+                    beam_active = ABSBeam.objects.get(pk=self.active_beam)
+                    print (beam_active)
+                    aux_expected = beam_active.module_6bits(int(aux_i)-1)
+                    print (aux_expected)
+
+                print ("data[0]: ")
+                print (data[0])
+
                 if data[0] == '1':
-                    remote = fromChar2Binary(data[1])
-                    local = ABSBeam.objects.get(pk=self.active_beam).module_6bits(x)
-                    if local == remote:
-                        status[x] = '3'
-                        print('Module: {} connected...igual'.format(address))
+                    status[int(address[0][10:])-1] = '3'
+                    if aux_mon == aux_expected:
+                        print ('Es igual')
                     else:
-                        status[x] = '2'
-                        print('Module: {} connected...diferente'.format(address))
+                        print ('Es diferente')
+                        status[int(address[0][10:])-1] = '2'
+
                 elif data[0] == '0':
-                    status[x] = '1'
+                    status[int(address[0][10:])-1] = '1'
                 n += 1
+                print('Module: {} connected'.format(address))
+            except socket.timeout:
+                print('Timeout')
+                break
             except:
                 print('Module: {} error'.format(address))
                 pass
+
         sock.close()
-        
+
         if n > 0:
             self.message = 'ABS modules Status have been updated.'
             self.device.status = 1
@@ -547,6 +648,17 @@ class ABSConfiguration(Configuration):
         This function connects to a multicast group and sends the beam number
         to all abs modules.
         """
+        print ('Send beam')
+        print (self.active_beam)
+        beams = ABSBeam.objects.filter(abs_conf=self)
+        #print beams[self.active_beam-1].module_6bits(0)
+        active = ABSActive.objects.get(pk=1)
+        if active.conf != self:
+            self.message = 'La configuracion actual es la del siguiente enlace %s.' % active.conf.get_absolute_url()
+            self.message +=  "\n"
+            self.message += 'Se debe realizar un write en esta configuracion para luego obtener un status valido.'
+
+            return False
 
         # Se manda a cero RC para poder realizar cambio de beam
         if self.experiment is None:
@@ -584,18 +696,23 @@ class ABSConfiguration(Configuration):
         #El indice del apunte debe ser menor que el numero total de apuntes
         #El servidor tcp en el embebido comienza a contar desde 0
         status = ['0'] * 64
-        message = 'CHGB{}'.format(beam_pos) 
+        message = 'CHGB{}'.format(beam_pos)
         sock = self.send_multicast(message)
-        for i in range(32):
+        while True:
+        #for i in range(32):
             try:
                 data, address = sock.recvfrom(1024)
-                print address, data
+                print (address, data)
+                data = data.decode()
                 if data == '1':
                     status[int(address[0][10:])-1] = '3'
                 elif data == '0':
                     status[int(address[0][10:])-1] = '1'
+            except socket.timeout:
+                print('Timeout')
+                break
             except  Exception as e:
-                print 'Error {}'.format(e)
+                print ('Error {}'.format(e))
                 pass
 
         sock.close()
@@ -617,13 +734,15 @@ class ABSConfiguration(Configuration):
 
     def get_absolute_url_import(self):
         return reverse('url_import_abs_conf', args=[str(self.id)])
-
+class ABSActive(models.Model):
+    conf = models.ForeignKey(ABSConfiguration, null=True, verbose_name='ABS Configuration', on_delete=models.CASCADE)
 
 class ABSBeam(models.Model):
 
     name         = models.CharField(max_length=60, default='Beam')
     antenna      = models.CharField(verbose_name='Antenna', max_length=1000, default=antenna_default)
-    abs_conf     = models.ForeignKey(ABSConfiguration, null=True, verbose_name='ABS Configuration')
+    abs_conf     = models.ForeignKey('ABSConfiguration', null=True,
+    verbose_name='ABS Configuration', on_delete=models.CASCADE)
     tx           = models.CharField(verbose_name='Tx', max_length=1000, default=tx_default)
     rx           = models.CharField(verbose_name='Rx', max_length=1000, default=rx_default)
     s_time       = models.TimeField(verbose_name='Star Time', default='00:00:00')

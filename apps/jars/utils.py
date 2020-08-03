@@ -524,7 +524,7 @@ def create_jarsfiles(json_data):
         racp_text += 'Pulse selection_TR={}\n'.format(
             data['lines']['byId'][idTR]['name'][-1]
         )
-    print 'TR OK'
+    print ('TR OK')
 
     rangeTXA = data['lines']['byId'][rc['lines'][1]]['params']['range']
     if rangeTXA != '0':
@@ -532,7 +532,7 @@ def create_jarsfiles(json_data):
     rangeTXB = data['lines']['byId'][rc['lines'][2]]['params']['range']
     if rangeTXB != '0': #if rangeTXB == '0':
         racp_text += 'Pulse selection_TXB={}\n'.format(rangeTXB)
-    print 'Pulse selection OK'
+    print ('Pulse selection OK')
 
     for n in range(3, 6):
         racp_text += parse_line(n, data, rc['lines'])
@@ -543,7 +543,7 @@ def create_jarsfiles(json_data):
         racp_text += 'Number of Taus={}\n'.format(len(taus))
         for n, tau in enumerate(taus):
             racp_text += 'TAU({})={}\n'.format(n, tau)
-    print 'Taus OK'
+    print ('Taus OK')
 
     racp_text += parse_line(6, data, rc['lines'])
     racp_text += 'SAMPLING REFERENCE=MIDDLE OF FIRST SUB-BAUD\n'
@@ -564,7 +564,7 @@ def create_jarsfiles(json_data):
         racp_text += 'Number of Channels={}\n'.format(len(channels))
         for i, channel in enumerate(channels):
             racp_text += 'Channel({})={}\n'.format(i, channel)
-    print 'Channels OK'
+    print ('Channels OK')
 
     if exp_type == 'EXP_RAW_DATA':
         racp_text += 'RAW DATA DIRECTORY={}\n'.format(os.path.join(folder_name, 'DATA'))
@@ -616,7 +616,7 @@ def create_jarsfiles(json_data):
         racp_text += 'DATATYPE=SHORT\n'
     elif data_type == 1:
         racp_text += 'DATATYPE=FLOAT\n'
-    print 'Datatype OK'
+    print ('Datatype OK')
 
     racp_text += 'DATA ARRANGE=CONTIGUOUS_CH\n'
 
@@ -631,7 +631,7 @@ def create_jarsfiles(json_data):
         if jars['post_coh_int'] == True:
             decode_text += 'POST COHERENT INTEGRATIONS=YES\n'
         decode_text += '------------------------------------------\n'
-    print 'Decode OK'
+    print ('Decode OK')
 
     racp_text += 'COHERENT INTEGRATION STRIDE={}\n'.format(jars['cohe_integr_str'])
     racp_text += '------------------------------------------\n'
@@ -672,7 +672,7 @@ def create_jarsfiles(json_data):
         filter_parms = eval(filter_parms)
     if filter_parms.__class__.__name__ == 'str':
         filter_parms = eval(filter_parms)
-    print 'Filter loaded OK'
+    print ('Filter loaded OK')
     try:
         fclock = float(filter_parms['clock'])
         fch = float(filter_parms['fch'])
@@ -680,7 +680,7 @@ def create_jarsfiles(json_data):
         M_CIC2 = float(filter_parms['filter_2'])
         M_CIC5 = float(filter_parms['filter_5'])
         M_RCF = float(filter_parms['filter_fir'])
-        print 'Filter parameters float OK'
+        print ('Filter parameters float OK')
     except:
         fclock = eval(filter_parms['clock'])
         fch = eval(filter_parms['fch'])
@@ -688,7 +688,7 @@ def create_jarsfiles(json_data):
         M_CIC2 = eval(filter_parms['filter_2'])
         M_CIC5 = eval(filter_parms['filter_5'])
         M_RCF = eval(filter_parms['filter_fir'])
-        print 'Filter parameters eval OK'
+        print ('Filter parameters eval OK')
 
     filter_text = 'Loading\n'
     filter_text += 'Impulse file found -> C:\jars\F1MHZ_8_MATCH.imp\n'
@@ -773,7 +773,7 @@ def create_jarsfiles(json_data):
     #jars_file = open(os.path.join(folder_name, filter_name), 'wb')
     #jars_file.write(filter_text)
     #jars_file.close()
-    print 'Filter .jars has been created'
+    print ('Filter .jars has been created')
     racp_text += 'JARS_FILTER={}\n'.format(os.path.join(folder_name, filter_name))
     racp_text += 'MARK WIDTH=2\n'
     racp_text += 'GENERATE OWN SAMPLING WINDOW=NO\n'

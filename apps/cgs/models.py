@@ -160,7 +160,7 @@ class CGSConfiguration(Configuration):
                 post_data[data] = frequencies[data]
 
         route = "http://" + str(ip) + ":" + str(port) + "/write/"
-        print post_data
+        print (post_data)
         try:
             r = requests.post(route, post_data, timeout=0.7)
         except:

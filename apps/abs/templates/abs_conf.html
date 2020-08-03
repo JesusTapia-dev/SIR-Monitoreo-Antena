@@ -1,4 +1,4 @@
-{% extends "dev_conf.html" %} {% load static %} {% load bootstrap3 %} {% load main_tags %}
+{% extends "dev_conf.html" %} {% load static %} {% load bootstrap4 %} {% load main_tags %}
 {% block extra-head %}
 <style>
   .abs {
@@ -42,7 +42,7 @@
 {% block extra-menu-actions %}
 <li>
   <a href="{{ dev_conf.get_absolute_url_plot }}" target="_blank">
-    <span class="glyphicon glyphicon-picture" aria-hidden="true"></span> View Patterns </a>
+    <span class="far fa-image" aria-hidden="true"></span> View Patterns </a>
 </li>
 {% endblock %}
 {% block extra-content %}
@@ -51,15 +51,15 @@
 <div class="container">
   <ul class="nav nav-pills">
     {% for beam in beams %}
-    <li {%if beam.pk == active_beam %} class="active" {% endif %}>
-      <a data-toggle="pill" href="#menu{{forloop.counter}}">{{forloop.counter}}</a>
+    <li class="nav-item">
+        <a {%if beam.pk == active_beam %} class="nav-link active" {% else %} class="nav-link" {% endif %} data-toggle="pill" href="#menu{{forloop.counter}}">{{forloop.counter}}</a>
     </li>
     {% endfor %}
   </ul>
 
   <div class="tab-content">
     {% for beam in beams %}
-    <div id="menu{{forloop.counter}}" class="tab-pane fade {%if beam.pk == active_beam %}active in{% endif %}">
+    <div id="menu{{forloop.counter}}" class="tab-pane fade {%if beam.pk == active_beam %}in active show{% endif %}">
       <h3>{%if beam.pk == active_beam %}Active Beam: {%endif%}{{beam.name}}</h3>
       <table id="abs_pattern{{forloop.counter}}" class="abs">
         <tr>
@@ -301,7 +301,7 @@
       {% else %}
       <div style="vertical-align: top; display:inline-block;">
         <button id="send_beam{{forloop.counter}}" type="button" class="btn btn-default">
-          <span class="glyphicon glyphicon-export" aria-hidden="true"></span>
+          <span class="fas fa-external-link-square-alt" aria-hidden="true"></span>
           Change Beam</button>
       </div>
       {% endif %}
@@ -315,22 +315,25 @@
 <p style="color:#b4bcc2; margin-left: 5%;">
   <i>No Beams...</i>
 </p>
-{% endif %} {% endblock extra-content %} {% block extra-js%}
+{% endif %}
+{% endblock extra-content %}
+{% block extra-js%}
 <script>
   $(document).ready(function () {
 
     {% for beam in beams %}
 
-    {% if dev_conf.operation_mode == 1 %}
-    $("#send_beam{{forloop.counter}}").prop('disabled', true)
-    {% else %}
-    $("#send_beam{{forloop.counter}}").click(function () {
-      document.location = "{% url 'url_send_beam' dev_conf.id beam.id %}";
-    });
-    {% endif %}
+      {% if dev_conf.operation_mode == 1 %}
+        $("#send_beam{{forloop.counter}}").prop('disabled', true)
+      {% else %}
+        $("#send_beam{{forloop.counter}}").click(function () {
+          document.location = "{% url 'url_send_beam' dev_conf.id beam.id %}";
+        });
+      {% endif %}
 
     {% endfor %}
 
 
   });
-</script> {% endblock %}
+</script>
+{% endblock %}

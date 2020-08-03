@@ -60,7 +60,7 @@ def task_status(id_exp):
         now = datetime.utcnow()
         date = now + run_every
         task_status.apply_async((id_exp,), eta=date)
-        print "Monitoring..."
+        print ("Monitoring...")
         exp.get_status()
         return exp.status
 

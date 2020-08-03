@@ -1,0 +1,142 @@
+
+:root{
+    --primary: #0200AE;
+    --dark-primary: #000080;
+    --light-primary:  rgb(0, 0, 179, .7);
+    --secondary: #6F6F6F;
+    --tertiary: #0099FF;
+    --color-txt: #333;
+    --bg-main: rgba(80, 80, 80, .8);
+    --bg-invert: rgba(0, 0, 0, .2);
+    --bg-sections: #f9f9f9;
+    --bd-sections: 1px solid #D9D9D9;
+    --fs-nav: .875em;
+    --fs-trail: .87rem;
+    --hover-nav: rgba(0, 0, 0, 0.3);
+    --fg-nav: #2068A0;
+    --bs-nav: rgba(43, 43, 43, .4);
+    --bs-input: rgba(0, 113, 184, 0.5);
+    --bd-input: rgba(56, 181, 230, 0.75);
+    --bd-item: 1px solid #C9C9C9;
+    --bx-shadow: 0 2px 5px 0 var(--bs-nav);
+  }
+
+body {
+    color: #444;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+}
+
+main {
+    min-width: 100%;
+    min-height: 400px;
+}
+
+a:link { -webkit-tap-highlight-color: var(--tertiary); }
+
+.titulo {
+    color: #898989;
+    font-size: 2rem;
+    font-family: 'Dosis', Arial, Verdana, serif;
+}
+
+.titulo:after {
+    display: flex;
+    width: 60px;
+    border-bottom: 3px solid #48C7EC;
+    content: '';
+    padding-top: .5rem;
+    margin: 0;
+}
+
+#sidebar a {
+    color: gray;
+    padding: 0.1rem;
+}
+
+#sidebar h5 {
+    color:#333;
+}
+
+.text-blue {
+    color: #003A8E;
+}
+
+.text-skyblue {
+    color: #00addc;
+}
+
+.nopadding {
+    padding: 0px !important;
+}
+
+.nomargin {
+    margin: 0px !important;
+}
+
+.legend {
+    list-style: none;
+    padding-left: 1rem;
+    padding-top: 1rem;
+}
+
+.legend span {
+    padding-left: 1em;
+}
+
+#loader {
+    margin-top: 40px;
+    color: var(--tertiary);
+}
+
+#plot {
+    margin-top: 2em;
+    margin-bottom: 2em;
+}
+
+/* Change Buttons Bootstrap */
+.btn-primary {
+    color: #fff;
+    background-color: #00addc !important;
+    border-color: #00addc !important;
+}
+
+.btn-primary:hover {
+    color: #fff;
+    background-color: #23527c !important;
+    border-color: #23527c !important;
+}
+
+.card-text {
+    font-size: 0.8rem;
+}
+
+.tools-date {
+    font-size: 0.8rem;
+}
+
+/* cards */
+
+@media (min-width: 480px) {
+    .card-columns {
+        column-count: 2;
+    }
+}
+
+@media (min-width: 768px) {
+    .card-columns {
+        column-count: 3;
+    }
+}
+
+@media (min-width: 1180px) {
+    .card-columns {
+        column-count: 4;
+    }
+}
+
+@media (min-width: 1380px) {
+    .card-columns {
+        column-count: 5;
+    }
+}

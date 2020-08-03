@@ -3,7 +3,7 @@ import requests
 
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from apps.main.models import Configuration
 from apps.main.utils import Params

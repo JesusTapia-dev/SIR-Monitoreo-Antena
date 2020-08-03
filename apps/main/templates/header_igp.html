@@ -1,0 +1,119 @@
+{% load static %} {% load bootstrap4 %}
+
+<div id="igp-top">
+    <div class="container">
+        <nav class="navbar navbar-expand">
+            <div class="nav-social">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                <a target="_blank" href="https://www.facebook.com/igp.peru" class="nav-link">
+                    <i class="fab fa-facebook-f">
+                    </i></a></li>
+                    <li class="nav-item"><a target="_blank" href="https://twitter.com/igp_peru" class="nav-link">
+                    <i class="fab fa-twitter">
+                    </i></a></li>
+                    <li class="nav-item"><a target="_blank"
+                    href="https://www.linkedin.com/company/igpperu/" class="nav-link">
+                    <i class="fab fa-linkedin-in">
+                    </i></a></li>
+                    <li class="nav-item"><a target="_blank"
+                    href="https://www.instagram.com/igp.peru" class="nav-link">
+                    <i class="fab fa-instagram">
+                    </i></a></li>
+                    <li class="nav-item"><a target="_blank"
+                    href="https://www.youtube.com/igp_videos" class="nav-link">
+                    <i class="fab fa-youtube">
+                    </i></a></li>
+                </ul>
+            </div>
+            <div class="nav-contacto">
+                <ul class="navbar-nav ml-auto">
+                    <li class="d-none d-lg-inline nav-item">
+                        <span><i class="fa fa-phone"> </i> (511) 3172313</span>
+                    </li>
+                    <li class="d-none d-lg-inline nav-item">
+                        <a href="mailto:roj@igp.gob.pe">
+                            <span><i class="fa fa-envelope"> </i>&nbsp;roj@igp.gob.pe</span>
+                        </a>
+                    </li>
+                </ul>
+                </div>                
+            </nav>
+        </div>
+</div>
+
+<div class="container">
+    <nav class="navbar navbar-expand-md">
+        <ul class="navbar-nav mr-auto">
+        <a class="nav-link"
+            href="/">
+        <img class="logo img-fluid" src="{% static 'images/logo-minan.png' %}"
+            alt="Logo Minam IGP">
+            <img class="logo img-fluid" src="{% static 'images/logo_igp_normal.png' %}" alt="Logo IGP">
+        </a>
+    </ul>
+        <button class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbar-main"
+            aria-controls="navbar-main" aria-expanded="false"
+            aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon">
+                <i class="fas fa-ellipsis-v" style="color:#444"></i>
+            </span>
+        </button>
+        <div id="navbar-main" class="navbar-collapse collapse">
+            <div class="navbar-igp-1">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item  {{menu_operation}}">
+                    <a  class="nav-link" href="{% url 'url_operation'%}">Operation</a>
+                </li>
+                <li class="nav-item {{menu_campaigns}}">
+                    <a class="nav-link" href="{% url 'url_campaigns'%}">Campaigns</a>
+                </li>
+                <li class="nav-item {{menu_experiments}}">
+                    <a class="nav-link" href="{% url 'url_experiments'%}">Experiments</a>
+                </li>
+                <li class="nav-item {{menu_configurations}}">
+                    <a class="nav-link" href="{% url 'url_dev_confs'%}">Configurations</a>
+                </li>
+                <li class="nav-item {{menu_devices}}">
+                    <a class="nav-link" href="{% url 'url_devices'%}">Devices</a>
+                </li>
+            </ul>
+            
+            <ul class="nav navbar-nav navbar-right">
+                <li class="nav-divider"></li>
+                {% if user.is_authenticated %}
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ user.first_name }}<span class="caret"></span></a>
+                     <ul class="dropdown-menu" role="menu">
+                        <li><a href="/admin" target="_blank">Control Panel</a></li>
+                        <li><a href="{% url 'url_logout' %}">Logout</a></li>
+                     </ul>
+                </li>
+                {% else %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'url_login' %}?next={{request.get_full_path}}">Login</a></li>
+                {% endif %}
+            </ul>
+            </div>
+        </div>        
+
+    </nav>
+</div>
+
+<div id="igp-bottom">
+    <div class="container">
+        <nav class="navbar navbar-expand">
+        <div class="navbar-igp-2">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" 
+                    href="https://www.gob.pe/igp"><span><i class="fas fa-home"> </i>&nbsp; IGP portal</span></a>
+            </li>
+        </ul>
+        </div>
+    </nav>
+    </div>
+</div>
+<br>
+
+

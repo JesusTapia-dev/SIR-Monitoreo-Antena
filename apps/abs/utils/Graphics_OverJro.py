@@ -32,11 +32,10 @@ import matplotlib.pyplot
 #import scipy
 import scipy.interpolate
 
-import Astro_Coords
-import TimeTools
-import Graphics_Miscens
-
-import Misc_Routines
+from .Astro_Coords import Equatorial , CelestialBodies
+from .TimeTools import Time , Julian
+from .Graphics_Miscens import ColorTable
+from .Misc_Routines import CoFactors,Vector
 
 class AntPatternPlot:
     def __init__(self):
@@ -79,8 +78,8 @@ class AntPatternPlot:
 
         levels = numpy.array([1e-3,1e-2,1e-1,0.5,1.0])
         tmp = numpy.round(10*numpy.log10(levels),decimals=1)
-        labels = range(5)
-        for i in numpy.arange(5):labels[i] = str(numpy.int(tmp[i]))
+        labels = []
+        for i in numpy.arange(5):labels.append(str(numpy.int(tmp[i])))
 
 
         colors = ((0,0,1.),(0,170/255.,0),(127/255.,1.,0),(1.,109/255.,0),(128/255.,0,0))
@@ -156,11 +155,11 @@ class AntPatternPlot:
         dec_axes = numpy.dot(ones_ra,dec_axes.transpose())
         dec_axes2 = numpy.array(dec_axes)
 
-        ObjHor = Astro_Coords.Equatorial(ha_axes2,dec_axes2,jd)
+        ObjHor = Equatorial(ha_axes2,dec_axes2,jd)
         [alt,az,ha] = ObjHor.change2AltAz()
 
-        z = numpy.transpose(alt)*Misc_Routines.CoFactors.d2r  ; z = z.flatten()
-        az = numpy.transpose(az)*Misc_Routines.CoFactors.d2r  ; az = az.flatten()
+        z = numpy.transpose(alt)*CoFactors.d2r  ; z = z.flatten()
+        az = numpy.transpose(az)*CoFactors.d2r  ; az = az.flatten()
 
         vect = numpy.array([numpy.cos(z)*numpy.sin(az),numpy.cos(z)*numpy.cos(az),numpy.sin(z)])
 
@@ -400,11 +399,11 @@ class CelestialObjectsPlot:
         marker = ['--^','--s','--*','--o']
 
         # Getting RGB table to plot celestial object over Jicamarca
-        colortable = Graphics_Miscens.ColorTable(table=1).readTable()
+        colortable = ColorTable(table=1).readTable()
 
         for io in (numpy.arange(4)+1):
             if self.show_object[io]!=0:
-                ObjBodies = Astro_Coords.CelestialBodies()
+                ObjBodies = CelestialBodies()
                 if io==1:
                     [ra,dec,sunlon,sunobliq] = ObjBodies.sunpos(jd)
                 elif io==2:
@@ -416,10 +415,10 @@ class CelestialObjectsPlot:
                     ra = maxra*15.
                     dec = main_dec
 
-                ObjEq = Astro_Coords.Equatorial(ra,dec,jd,lat=glat,lon=glon)
+                ObjEq = Equatorial(ra,dec,jd,lat=glat,lon=glon)
                 [alt, az, ha] = ObjEq.change2AltAz()
                 vect = numpy.array([az,alt]).transpose()
-                vect = Misc_Routines.Vector(vect,direction=0).Polar2Rect()
+                vect = Vector(vect,direction=0).Polar2Rect()
 
                 dcosx = numpy.array(numpy.dot(vect,xg))
                 dcosy = numpy.array(numpy.dot(vect,yg))

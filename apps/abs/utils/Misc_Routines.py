@@ -12,7 +12,7 @@ Created by Ing. Freddy Galindo (frederickgalindo@gmail.com). ROJ, 21 October 200
 import numpy
 import sys
 
-class CoFactors():
+class CoFactors(object):
     """
     CoFactor class used to call pre-defined conversion factor (e.g. degree to radian).  The cu-
     The current available factor are:
@@ -28,14 +28,14 @@ class CoFactors():
     h2r = numpy.pi/12.
     h2d = 15.
     
-class Redirect:
-    def __init__(self,stdout):
+class Redirect(object):
+    def __init__(self,stdout=None):
         self.stdout = stdout
     
     def write(self,message):
         self.stdout.insertPlainText(message)
 
-class WidgetPrint:
+class WidgetPrint(object):
     """
     WidgetPrint class allows to define the standard output.  
     """
@@ -49,11 +49,11 @@ class WidgetPrint:
         if self.textid != None: sys.stdout = Redirect(self.textid)
         print ("")
     
-class Vector:
+class Vector(object):
     """
     direction = 0 Polar to rectangular; direction=1 rectangular to polar
     """
-    def __init__(self,vect,direction=0):
+    def __init__(self,vect=numpy.array([]),direction=0):
         nsize = numpy.size(vect)
         if nsize <= 3:
             vect = vect.reshape(1,nsize)
@@ -77,5 +77,10 @@ class Vector:
         
         return mm
         
-        
-        
+if __name__ == "__main__":
+    
+    a=CoFactors()
+    a=Redirect()
+    a=WidgetPrint()
+    a=WidgetPrint()
+    a=Vector()

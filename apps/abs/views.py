@@ -4,7 +4,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
 from django.conf import settings
 from django.http import HttpResponse
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.safestring import mark_safe
 
@@ -20,7 +20,7 @@ from .models import ABSConfiguration, ABSBeam
 from .forms import ABSConfigurationForm, ABSBeamEditForm, ABSBeamAddForm, ABSImportForm
 
 from .utils.overJroShow import overJroShow
-from .utils.OverJRO import OverJRO
+#from .utils.OverJRO import OverJRO
 # Create your views here.
 import json, ast
 
@@ -209,7 +209,7 @@ def abs_conf_edit(request, id_conf):
 def abs_conf_alert(request):
 
     if request.method == 'POST':
-        print request.POST
+        print (request.POST)
         return HttpResponse(json.dumps({'result':1}), content_type='application/json')
     else:
         return redirect('index')
@@ -251,7 +251,7 @@ def send_beam(request, id_conf, id_beam):
     conf = get_object_or_404(ABSConfiguration, pk=id_conf)
 
     abs = Configuration.objects.filter(pk=conf.device.conf_active).first()
-    if abs<>conf:
+    if abs!=conf:
         url = '#' if abs is None else abs.get_absolute_url()
         label = 'None' if abs is None else abs.label
         messages.warning(
@@ -277,7 +277,7 @@ def send_beam(request, id_conf, id_beam):
             else:
                 i += 1
         beam_pos = i + 1 #Estandarizar
-        print '%s Position: %s' % (beam.name, str(beam_pos))
+        print ('%s Position: %s') % (beam.name, str(beam_pos))
         conf.send_beam(beam_pos)
 
         return redirect('url_abs_conf', conf.id)

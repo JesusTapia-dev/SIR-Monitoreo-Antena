@@ -12,7 +12,7 @@ except:
 
 from django.template.base import kwarg_re
 from django.db import models
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
@@ -32,7 +32,8 @@ DEV_PORTS = {
                 'jars'  : 2000,
                 'usrp'  : 2000,
                 'cgs'   : 8080,
-                'abs'   : 8080
+                'abs'   : 8080,
+                'dds_rest': 80
             }
 
 RADAR_STATES = (
@@ -71,6 +72,7 @@ DEV_TYPES = (
                 ('usrp', 'Universal Software Radio Peripheral'),
                 ('cgs', 'Clock Generator System'),
                 ('abs', 'Automatic Beam Switching'),
+                ('dds_rest', 'Direct Digital Synthesizer_REST'),
             )
 
 EXP_STATES = (
@@ -118,8 +120,8 @@ class Location(models.Model):
 
 class DeviceType(models.Model):
 
-    name = models.CharField(max_length = 10, choices = DEV_TYPES, default = 'rc')
-    sequence = models.PositiveSmallIntegerField(default=1000)
+    name = models.CharField(max_length = 10, choices = DEV_TYPES, default = 'dds_rest')
+    sequence = models.PositiveSmallIntegerField(default=55)
     description = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -130,8 +132,8 @@ class DeviceType(models.Model):
 
 class Device(models.Model):
 
-    device_type = models.ForeignKey(DeviceType, on_delete=models.CASCADE)
-    location = models.ForeignKey(Location, on_delete=models.CASCADE)
+    device_type = models.ForeignKey('DeviceType', on_delete=models.CASCADE)
+    location = models.ForeignKey('Location', on_delete=models.CASCADE)
     ip_address = models.GenericIPAddressField(protocol='IPv4', default='0.0.0.0')
     port_address = models.PositiveSmallIntegerField(default=2000)
     description = models.TextField(blank=True, null=True)
@@ -143,7 +145,7 @@ class Device(models.Model):
 
     def __str__(self):
         ret = u'{} [{}]'.format(self.device_type.name.upper(), self.location.name)
-        
+
         return ret
 
     @property
@@ -246,8 +248,8 @@ class Campaign(models.Model):
     tags = models.CharField(max_length=40, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     experiments = models.ManyToManyField('Experiment', blank=True)
-    author = models.ForeignKey(User, null=True, blank=True)
-    
+    author = models.ForeignKey(User, null=True, blank=True,on_delete=models.CASCADE)
+
     class Meta:
         db_table = 'db_campaigns'
         ordering = ('name',)
@@ -366,7 +368,7 @@ class Experiment(models.Model):
     end_time = models.TimeField(default='23:59:59')
     task = models.CharField(max_length=36, default='', blank=True, null=True)
     status = models.PositiveSmallIntegerField(default=4, choices=EXP_STATES)
-    author = models.ForeignKey(User, null=True, blank=True)
+    author = models.ForeignKey(User, null=True, blank=True,on_delete=models.CASCADE)
     hash = models.CharField(default='', max_length=64, null=True, blank=True)
 
     class Meta:
@@ -433,7 +435,7 @@ class Experiment(models.Model):
                 confs.append(conf)
         else:
             confs = allconfs
-        
+
         try:
             for conf in confs:
                 conf.stop_device()
@@ -572,13 +574,13 @@ class Configuration(PolymorphicModel):
     template = models.BooleanField(default=False)
     # name = models.CharField(verbose_name="Configuration Name", max_length=40, default='')
     device = models.ForeignKey('Device', verbose_name='Device', null=True, on_delete=models.CASCADE)
-    label = models.CharField(verbose_name="Label", max_length=40, default='', blank=True, null=True)    
+    label = models.CharField(verbose_name="Label", max_length=40, default='', blank=True, null=True)
     experiment = models.ForeignKey('Experiment', verbose_name='Experiment', null=True, blank=True, on_delete=models.CASCADE)
     type = models.PositiveSmallIntegerField(default=0, choices=CONF_TYPES)
     created_date = models.DateTimeField(auto_now_add=True)
     programmed_date = models.DateTimeField(auto_now=True)
     parameters = models.TextField(default='{}')
-    author = models.ForeignKey(User, null=True, blank=True)
+    author = models.ForeignKey(User, null=True, blank=True,on_delete=models.CASCADE)
     hash = models.CharField(default='', max_length=64, null=True, blank=True)
     message = ""
 
@@ -593,13 +595,13 @@ class Configuration(PolymorphicModel):
         if 'mix' in [f.name for f in self._meta.get_fields()]:
             if self.mix:
                 ret = '{} MIX '.format(self.device.device_type.name.upper())
-        
+
         if 'label' in [f.name for f in self._meta.get_fields()]:
             ret += '{}'.format(self.label)
 
         if self.template:
             ret += ' (template)'
-        
+
         return ret
 
     @property
@@ -783,7 +785,7 @@ class Configuration(PolymorphicModel):
 
     def get_absolute_url_delete(self):
         return reverse('url_delete_dev_conf', args=[str(self.id)])
-    
+
     def get_absolute_url_import(self):
         return reverse('url_import_dev_conf', args=[str(self.id)])
 

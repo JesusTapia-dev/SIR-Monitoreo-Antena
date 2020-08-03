@@ -1,5 +1,5 @@
 {% extends "base_edit.html" %}
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 {% load static %}
 {% load main_tags %}
 {% block extra-head %}
@@ -7,16 +7,24 @@
 {% endblock %}
 
 {% block extra-js%}
-<script src="{% static 'js/moment.min.js' %}"></script>
 <script src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
 <script type="text/javascript">
-  
+
   $('.input-group.time').datetimepicker({
     format: 'HH:mm:ss',
-    pickDate: false,
-    pickSeconds: true
+    icons: {
+      time: 'far fa-clock',
+      date: 'far fa-calendar-alt',
+      up: 'fas fa-arrow-up',
+      down: 'fas fa-arrow-down',
+      previous: 'fas fa-chevron-left',
+      next: 'fas fa-chevron-right',
+      today: 'far fa-calendar-check',
+      clear: 'far fa-trash-alt',
+      close: 'fas fa-times'
+    }    
   });
-  
+
   $('#id_create_from').change(function() {
     var url = "{% url 'url_add_experiment' %}";
     if ($(this).val()=="2"){
@@ -27,11 +35,11 @@
       document.location = url;
     }
   });
-  
+
   $('#id_choose_template').change(function() {
-    var url = "{% url 'url_add_experiment' %}";          
-    document.location = url+"?template="+$(this).val();    
+    var url = "{% url 'url_add_experiment' %}";
+    document.location = url+"?template="+$(this).val();
   });
-  
+
 </script>
 {% endblock %}

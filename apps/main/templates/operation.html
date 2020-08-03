@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load bootstrap3 %}
+{% load bootstrap4 %}
 {% load static %}
 {% load main_tags %}
 {% block extra-head %}
@@ -54,13 +54,13 @@
 	      <h3 class="panel-title">	        
 	          {{location.name}} [{{campaign.start_date|date:"Y/m/d"}} - {{campaign.end_date|date:"Y/m/d"}}]	          
 	        <button type="button" name="bt_play" class="btn btn-primary pull-right btn-xs" data-url="{% url 'url_radar_start' campaign.id location.id %}" style="margin-left: 10px">
-                <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+                <span class="fas fa-play" aria-hidden="true"></span>
             </button>
             <button type="button" name="bt_stop" class="btn btn-primary pull-right btn-xs" data-url="{% url 'url_radar_stop' campaign.id location.id %}" aria-label="Left Align" style="margin-left: 10px">
-                <span class="glyphicon glyphicon-stop" aria-hidden="true"></span>
+                <span class="fas fa-stop" aria-hidden="true"></span>
             </button>
             <button type="button" name="bt_refresh" class="btn btn-primary pull-right btn-xs" data-url="{% url 'url_radar_refresh' campaign.id location.id %}" aria-label="Left Align" style="margin-left: 10px">
-                <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+                <span class="fas fa-sync-alt" aria-hidden="true"></span>
             </button>
 	      </h3>
 	    </div>	    

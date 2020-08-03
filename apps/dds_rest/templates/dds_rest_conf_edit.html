@@ -1,0 +1,93 @@
+{% extends "dev_conf_edit.html" %}
+{% load bootstrap4 %}
+{% load static %}
+{% load main_tags %}
+
+{% block extra-js%}
+<script src="{% static 'js/dds_conversion.js' %}"></script>
+<script type="text/javascript">
+
+    $("#id_clock").on('change', function() {
+    	updateFrequencies();
+    });
+
+    $("#id_multiplier").on('change', function() {
+    	updateFrequencies();
+    });
+
+    $("#id_frequencyA_Mhz").on('change', function() {
+    	updateBinaryFrequencies();
+    });
+
+    $("#id_frequencyA").on('change', function() {
+    	updateFrequencies();
+    });
+
+    $("#id_frequencyB_Mhz").on('change', function() {
+    	updateBinaryFrequencies();
+    });
+
+    $("#id_frequencyB").on('change', function() {
+    	updateFrequencies();
+    });
+
+    $("#id_delta_frequency").on('change', function() {
+    	updateFrequencyDelta();
+    });
+
+    function updateBinaryFrequencies() {
+
+    	var clock = $("#id_clock").val();
+    	var multiplier = $("#id_multiplier").val();
+    	var freq = $("#id_frequencyA_Mhz").val();
+    	var freq_mod = $("#id_frequencyB_Mhz").val();
+       
+    	var mclock = clock*multiplier;
+
+    	var freq_bin = freq2Binary(mclock, freq);
+    	var freq_mod_bin = freq2Binary(mclock, freq_mod);
+
+    	$("#id_frequencyA").val(freq_bin);
+    	$("#id_frequencyB").val(freq_mod_bin);
+
+    	freq = binary2Freq(mclock, freq_bin);
+    	freq_mod = binary2Freq(mclock, freq_mod_bin);
+
+    	$("#id_frequencyA_Mhz").val(freq);
+    	$("#id_frequencyB_Mhz").val(freq_mod);
+
+    }
+
+    function updateFrequencies() {
+        console.log("Ingreso a updateFrequencies");
+    	var clock = $("#id_clock").val();
+    	var multiplier = $("#id_multiplier").val();
+    	var freq_bin = $("#id_frequencyA").val();
+    	var freq_mod_bin = $("#id_frequencyB").val();
+
+    	var mclock = clock*multiplier;
+		
+    	var freq = binary2Freq(mclock, freq_bin);
+    	var freq_mod = binary2Freq(mclock, freq_mod_bin);
+
+    	$("#id_frequencyA_Mhz").val(freq);
+    	$("#id_frequencyB_Mhz").val(freq_mod);
+
+    }
+
+    function updateFrequencyDelta() {
+		console.log("Ingreso a updateFrequencyDelta");
+		var clock = $("#id_clock").val();
+		var multiplier = $("#id_multiplier").val();
+		var freq_bin = $("#id_delta_frequency").val();
+
+		var mclock = clock*multiplier;
+
+		var freq = binary2Freq(mclock, freq_bin);
+		console.log(freq);
+		$("#id_delta_frequency_Mhz").val(freq);
+	}
+
+
+</script>
+{% endblock %}
