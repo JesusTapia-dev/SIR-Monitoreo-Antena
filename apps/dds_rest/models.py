@@ -98,23 +98,26 @@ class DDSRestConfiguration(Configuration):
     def status_device(self):
         print("Status ")
         try:
-            answer = api.status(ip = self.device.ip_address,
-                                port = self.device.port_address)
-            if 'clock' in answer:
-                self.device.status = 1
-            else:
-                self.device.status = answer[0]
-            self.message = 'DDS - {}'.format(answer[2:])
-        except Exception as e:
-            self.message = str(e)
             self.device.status = 0
+            payload = self.request('status')
+            if payload['status']=='generating RF':
+                self.device.status = 3
+            elif payload['status']=='no generating RF':
+                self.device.status = 2
+            else:
+                self.device.status = 1
+                self.device.save()
+                self.message = 'DDS REST status: {}'.format(payload['status'])
+                return False
+        except Exception as e:
+            if 'No route to host' not in str(e):
+                self.device.status = 4
+            self.device.save()
+            self.message = 'DDS REST status: {}'.format(str(e))
+            return False
 
         self.device.save()
-
-        if self.device.status in (0, '0'):
-            return False
-        else:
-            return True
+        return True
 
     def reset_device(self):
 
@@ -189,12 +192,23 @@ class DDSRestConfiguration(Configuration):
         print(amplitudeI)
         amplitudeQ = self.amplitudeQ
         print(amplitudeQ)
+        delta_frequency = self.delta_frequency
+        print(delta_frequency)
+        update_clock = self.update_clock
+        print(update_clock)
+        ramp_rate_clock = self.ramp_rate_clock
+        print(ramp_rate_clock)
 
         cadena_json = {'clock': (b64encode(pack('<f',clock))).decode("UTF-8"),\
         'multiplier': (b64encode(pack('<B',multiplier))).decode("UTF-8"),\
-        'frequencyA': (b64encode(pack('<6B',frequencyA))).decode("UTF-8"),\
-        'frequencyB': (b64encode(pack('<6B',frequencyB))).decode("UTF-8")\
-        
+        'frequencyA': (b64encode((frequencyA).to_bytes(6,'little'))).decode("UTF-8"),\
+        'frequencyB': (b64encode((frequencyB).to_bytes(6,'little'))).decode("UTF-8"),\
+        'delta_frequency': (b64encode((delta_frequency).to_bytes(6,'little'))).decode("UTF-8"),\
+        'update_clock': (b64encode((update_clock).to_bytes(4,'little'))).decode("UTF-8"),\
+        'ramp_rate_clock': (b64encode((ramp_rate_clock).to_bytes(3,'little'))).decode("UTF-8"),\
+        'control': (b64encode((ramp_rate_clock).to_bytes(4,'little'))).decode("UTF-8"),\
+        'amplitudeI': (b64encode((amplitudeI).to_bytes(2,'little'))).decode("UTF-8"),\
+        'amplitudeQ': (b64encode((amplitudeQ).to_bytes(3,'little'))).decode("UTF-8")                
         }
         return cadena_json
 
@@ -206,8 +220,11 @@ class DDSRestConfiguration(Configuration):
                 data = self.arma_data_write()
                 print(data)
                 payload = self.request('write', 'post', data=json.dumps(data))
-                if payload['command'] != 'ok':
-                    self.message = 'DDS Rest write: {}'.format(payload['command'])
+                print(payload)
+                if payload['write'] == 'ok':
+                    self.device.status = 3
+                    self.device.save()
+                    self.message = 'DDS Rest write configured and started'
                 else:
                     self.message = payload['programming']
                     if payload['programming'] == 'fail':

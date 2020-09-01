@@ -7,6 +7,10 @@
     padding: 0 0;
 }
 
+.dropdown-menu a{
+    color: #000000 !important;
+}
+
 .nav-social a {
     text-align: center;
     line-height: 23px;

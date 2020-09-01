@@ -35,59 +35,124 @@
     	updateFrequencyDelta();
     });
 
+    $("#id_delta_frequency_Mhz").on('change', function() {
+    	updateBinaryFrequencyDelta();
+    });	
+
+    $("#id_ramp_rate_clock").on('change', function() {
+    	updateFrequencyRamp();
+    });
+
+    $("#id_ramp_rate_clock_Mhz").on('change', function() {
+    	updateBinaryFrequencyRamp();
+	});	
+		
     function updateBinaryFrequencies() {
 
-    	var clock = $("#id_clock").val();
+    	var clock      = $("#id_clock").val();
     	var multiplier = $("#id_multiplier").val();
-    	var freq = $("#id_frequencyA_Mhz").val();
-    	var freq_mod = $("#id_frequencyB_Mhz").val();
-       
+    	var freq       = $("#id_frequencyA_Mhz").val();
+    	var freq_mod   = $("#id_frequencyB_Mhz").val();
+    	//var freq_delta = $("#id_delta_frequency_Mhz").val();
+    	//var freq_ramp  = $("#id_ramp_rate_clock_Mhz").val();
+		
     	var mclock = clock*multiplier;
 
-    	var freq_bin = freq2Binary(mclock, freq);
-    	var freq_mod_bin = freq2Binary(mclock, freq_mod);
+    	var freq_bin      = freq2Binary(mclock, freq);
+    	var freq_mod_bin  = freq2Binary(mclock, freq_mod);
+    	//var freqdelta_bin = freqDelta2Binary(mclock, freq_delta);
+    	//var freqramp_bin  = freqRamp2Binary(mclock, freq_ramp);
 
     	$("#id_frequencyA").val(freq_bin);
     	$("#id_frequencyB").val(freq_mod_bin);
+    	//$("#id_delta_frequency").val(freqdelta_bin);
+    	//$("#id_ramp_rate_clock").val(freqramp_bin);
 
-    	freq = binary2Freq(mclock, freq_bin);
-    	freq_mod = binary2Freq(mclock, freq_mod_bin);
+    	freq      = binary2Freq(mclock, freq_bin);
+    	freq_mod  = binary2Freq(mclock, freq_mod_bin);
+    	//freqdelta = binary2FreqDelta(mclock, freqdelta_bin);
+    	//freq_ramp = binary2Ramp(mclock, freqramp_bin);
 
     	$("#id_frequencyA_Mhz").val(freq);
-    	$("#id_frequencyB_Mhz").val(freq_mod);
-
+		$("#id_frequencyB_Mhz").val(freq_mod);
+    	//$("#id_delta_frequency_Mhz").val(freqdelta);
+    	//$("#id_ramp_rate_clock_Mhz").val(freq_ramp);
+		
     }
 
     function updateFrequencies() {
         console.log("Ingreso a updateFrequencies");
-    	var clock = $("#id_clock").val();
-    	var multiplier = $("#id_multiplier").val();
-    	var freq_bin = $("#id_frequencyA").val();
-    	var freq_mod_bin = $("#id_frequencyB").val();
+    	var clock         = $("#id_clock").val();
+    	var multiplier    = $("#id_multiplier").val();
+    	var freq_bin      = $("#id_frequencyA").val();
+    	var freq_mod_bin  = $("#id_frequencyB").val();
+    	var freqdelta_bin = $("#id_delta_frequency").val();
+    	var freqramp_bin  = $("#id_ramp_rate_clock").val();
 
     	var mclock = clock*multiplier;
 		
-    	var freq = binary2Freq(mclock, freq_bin);
-    	var freq_mod = binary2Freq(mclock, freq_mod_bin);
-
+    	var freq      = binary2Freq(mclock, freq_bin);
+    	var freq_mod  = binary2Freq(mclock, freq_mod_bin);
+    	var freqdelta = binary2FreqDelta(mclock, freqdelta_bin);
+		var freq_ramp = binary2Ramp(mclock, freqramp_bin);
+		
     	$("#id_frequencyA_Mhz").val(freq);
     	$("#id_frequencyB_Mhz").val(freq_mod);
-
+    	$("#id_delta_frequency_Mhz").val(freqdelta);
+    	$("#id_ramp_rate_clock_Mhz").val(freq_ramp);
     }
 
     function updateFrequencyDelta() {
 		console.log("Ingreso a updateFrequencyDelta");
-		var clock = $("#id_clock").val();
+		var clock      = $("#id_clock").val();
 		var multiplier = $("#id_multiplier").val();
-		var freq_bin = $("#id_delta_frequency").val();
+		var freq_bin   = $("#id_delta_frequency").val();
 
 		var mclock = clock*multiplier;
 
-		var freq = binary2Freq(mclock, freq_bin);
+		var freq = binary2FreqDelta(mclock, freq_bin);
 		console.log(freq);
 		$("#id_delta_frequency_Mhz").val(freq);
 	}
 
+    function updateBinaryFrequencyDelta() {
+		console.log("Ingreso a updateBInaryFrequencyDelta");
+		var clock      = $("#id_clock").val();
+		var multiplier = $("#id_multiplier").val();
+		var freq       = $("#id_delta_frequency_MHz").val();
+
+		var mclock = clock*multiplier;
+
+		var freq_bin = freqDelta2Binary(mclock, freq);
+		console.log(freq_bin);
+		$("#id_delta_frequency").val(freq_bin);
+	}	
+
+    function updateFrequencyRamp() {
+		console.log("Ingreso a updateFrequencyRamp");
+		var clock      = $("#id_clock").val();
+		var multiplier = $("#id_multiplier").val();
+		var freq_bin   = $("#id_ramp_rate_clock").val();
+
+		var mclock = clock*multiplier;
+
+		var freq = binary2Ramp(mclock, freq_bin);
+		console.log(freq);
+		$("#id_ramp_rate_clock_Mhz").val(freq);
+	}
+
+    function updateBinaryFrequencyRamp() {
+		console.log("Ingreso a updateBInaryFrequencyRamp");
+		var clock      = $("#id_clock").val();
+		var multiplier = $("#id_multiplier").val();
+		var freq       = $("#id_ramp_rate_clock_MHz").val();
+
+		var mclock = clock*multiplier;
+
+		var freq_bin = freqRamp2Binary(mclock, freq);
+		console.log(freq_bin);
+		$("#id_ramp_rate_clock").val(freq_bin);
+	}	
 
 </script>
 {% endblock %}

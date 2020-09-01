@@ -36,6 +36,22 @@
                             <span><i class="fa fa-envelope"> </i>&nbsp;roj@igp.gob.pe</span>
                         </a>
                     </li>
+                    <li class="nav-divider"></li>
+                    {% if user.is_authenticated %}
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ user.first_name }}<span class="caret"></span></a>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <li><a class="dropdown-item" href="/admin">Control Panel</a></li>
+                            <li><a class="dropdown-item" href="{% url 'url_logout' %}">Logout</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a href="{% url 'url_login' %}?next={{request.get_full_path}}">
+                            <span><i class="fas fa-user"> </i>&nbsp;Login</span>
+                        </a>
+                    </li>                       
+                    {% endif %}                  
                 </ul>
                 </div>                
             </nav>
@@ -49,7 +65,7 @@
             href="/">
         <img class="logo img-fluid" src="{% static 'images/logo-minan.png' %}"
             alt="Logo Minam IGP">
-            <img class="logo img-fluid" src="{% static 'images/logo_igp_normal.png' %}" alt="Logo IGP">
+        <img class="logo img-fluid" src="{% static 'images/logo_igp_normal.png' %}" alt="Logo IGP">
         </a>
     </ul>
         <button class="navbar-toggler" type="button" data-toggle="collapse"
@@ -79,21 +95,6 @@
                     <a class="nav-link" href="{% url 'url_devices'%}">Devices</a>
                 </li>
             </ul>
-            
-            <ul class="nav navbar-nav navbar-right">
-                <li class="nav-divider"></li>
-                {% if user.is_authenticated %}
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ user.first_name }}<span class="caret"></span></a>
-                     <ul class="dropdown-menu" role="menu">
-                        <li><a href="/admin" target="_blank">Control Panel</a></li>
-                        <li><a href="{% url 'url_logout' %}">Logout</a></li>
-                     </ul>
-                </li>
-                {% else %}
-                <li class="nav-item"><a class="nav-link" href="{% url 'url_login' %}?next={{request.get_full_path}}">Login</a></li>
-                {% endif %}
-            </ul>
             </div>
         </div>        
 
@@ -109,6 +110,16 @@
                 <a class="nav-link" 
                     href="https://www.gob.pe/igp"><span><i class="fas fa-home"> </i>&nbsp; IGP portal</span></a>
             </li>
+            {% if tag %}
+            <li class="nav-item">
+                <a class="nav-link" href="/">{{tag | title}}</a>
+            </li>
+            {% endif %}
+            {% if title != 'Home' %}
+            <li class="nav-item">
+                <a class="nav-link">{{title}}</a>
+            </li>
+            {% endif %}            
         </ul>
         </div>
     </nav>

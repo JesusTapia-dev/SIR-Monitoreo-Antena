@@ -1,14 +1,120 @@
-.page-head {
-    background: #fff;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    border-top: 8px solid #38b5e6;
-    border-bottom: 1px solid #e1e1e1;
+#igp-top{
+    height:35px;
+    background-color: var(--primary);
 }
 
-.a-contactus {
-    color: #0088cc;
+#igp-top .navbar{
+    padding: 0 0;
+}
+
+.dropdown-menu a{
+    color: #000000 !important;
+}
+
+.nav-social a {
+    text-align: center;
+    line-height: 23px;
+    width: 25px;
+    margin-right: 10px;
+    color: #fff !important;
+}
+
+.nav-social a:hover{
+    background-color: #277ea0;
+}
+
+.navbar {
+    padding: 7px 0;
+}
+
+.navbar-toggler-icon {
+    font-size: 0.75em;
+    padding-top: 5px;    
+    }
+
+.nav-contacto{
+    margin-top: 5px;
+    display: contents;
+}
+
+.nav-contacto li{
+    font-size: 14px;
+    margin-left: 10px;
+    display: inline;
+    color: #fff;
+}
+
+.nav-contacto ul>li:last-of-type {
+    padding-left: 10px;
+    border-left: 1px solid white;
+}
+
+.nav-contacto li a{
+    color: #fff;
     text-decoration: none;
-    font-family: Helvetica;
-    font-size: 0.8rem;
+}
+
+.navbar-igp-1 {
+    display: contents;
+}
+.navbar-igp-1 .nav-link {
+    color: var(--secondary);
+    display: inline;
+    padding: 0;
+}
+
+.navbar-igp-1 li.active a,
+.navbar-igp-1 li a:hover {
+  color: var(--tertiary);
+}
+
+.navbar-igp-1 li:after {
+    content: '|';
+    margin: 0.2em;
+  }
+
+.navbar-igp-1 ul>li:last-of-type:after {
+    margin-right: 0;
+}   
+
+#igp-bottom {
+    background-color: var(--bg-sections);
+    border-bottom: var(--bd-sections);
+    border-top: var(--bd-sections);
+}
+#igp-bottom .navbar {
+    padding: 7px 0;
+}
+
+.navbar-igp-2 .nav-link{
+    color: var(--secondary);
+    display: inline;
+    padding: 0;
+}
+
+.navbar-igp-2 ul>li:not(:first-of-type) a:hover{
+    color: var(--secondary);
+}
+
+.navbar-igp-2 li.active a {
+    color: var(--tertiary);
+}
+
+.navbar-igp-2 ul>li:not(:first-of-type):before {
+    content: '|';
+    margin: 0.2em;
+}
+
+.logo{
+    height: 40px;
+    padding-right: 0.5em; 
+}
+
+@media (max-width: 768px){
+    .logo{
+        height: 30px;
+    }
+    .navbar-igp-1 li:after {
+        content: '';
+      }
 }

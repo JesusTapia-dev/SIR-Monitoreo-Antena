@@ -137,7 +137,7 @@ class Device(models.Model):
     ip_address = models.GenericIPAddressField(protocol='IPv4', default='0.0.0.0')
     port_address = models.PositiveSmallIntegerField(default=2000)
     description = models.TextField(blank=True, null=True)
-    status = models.PositiveSmallIntegerField(default=0, choices=DEV_STATES)
+    status = models.PositiveSmallIntegerField(default=4, choices=DEV_STATES)
     conf_active = models.PositiveIntegerField(default=0, verbose_name='Current configuration')
 
     class Meta:
