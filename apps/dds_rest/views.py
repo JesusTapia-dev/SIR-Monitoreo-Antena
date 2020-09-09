@@ -21,9 +21,9 @@ def dds_rest_conf(request, id_conf):
 
     kwargs['dev_conf'] = conf
     kwargs['dev_conf_keys'] = [
-                               'clock',
-                               'multiplier',
-                               'frequencyA_Mhz',
+                                'clock',
+                                'multiplier',
+                                'frequencyA_Mhz',
                                 'frequencyA',
                                 'frequencyB_Mhz',
                                 'frequencyB',
@@ -71,10 +71,10 @@ def dds_rest_conf_edit(request, id_conf):
             ##ERRORS
 
     kwargs = {}
-    kwargs['id_dev'] = conf.id
-    kwargs['form'] = form
-    kwargs['title'] = 'Device Configuration'
+    kwargs['id_dev']   = conf.id
+    kwargs['form']     = form
+    kwargs['title']    = 'Device Configuration'
     kwargs['suptitle'] = 'Edit'
-    kwargs['button'] = 'Save'
-
+    kwargs['button']   = 'Save'
+    kwargs['device_dds']   = 'dds_rest'
     return render(request, 'dds_rest_conf_edit.html', kwargs)

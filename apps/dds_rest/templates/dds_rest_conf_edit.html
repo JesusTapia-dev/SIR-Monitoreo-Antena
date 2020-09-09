@@ -3,10 +3,152 @@
 {% load static %}
 {% load main_tags %}
 
+{% block dds_rest%}
+
+	{% bootstrap_field form.template layout='horizontal' size='medium' %}
+	{% bootstrap_field form.device layout='horizontal' size='medium' %}
+	{% bootstrap_field form.label layout='horizontal' size='medium' %}
+	{% bootstrap_field form.experiment layout='horizontal' size='medium' %}
+
+	{% bootstrap_field form.clock layout='horizontal' size='medium' %}
+	{% bootstrap_field form.multiplier layout='horizontal' size='medium' %}
+
+	<div style="display: flex; justify-content: flex-end">
+		<div class="form-check">
+			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_fA" value=""  >Mostrar Decimal</label>
+		</div>
+	</div>
+	{% bootstrap_field form.frequencyA_Mhz layout='horizontal' size='medium' %}
+	<div id='id_row_fAbin'> 
+	{% bootstrap_field form.frequencyA layout='horizontal' size='medium' %}
+	<div style="display: flex; justify-content: flex-end">
+	<small type="text" id="id_aux_fAbin" class="form-text text-muted">1000 0000 </small>
+	</div>
+	<br>
+	</div>
+
+	<div style="display: flex; justify-content: flex-end">
+		<div class="form-check">
+			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_fB" value=""  >Mostrar Decimal</label>
+		</div>
+	</div>	
+	{% bootstrap_field form.frequencyB_Mhz layout='horizontal' size='medium' %}
+	<div id='id_row_fBbin'>
+	{% bootstrap_field form.frequencyB layout='horizontal' size='medium' %}
+	<div style="display: flex; justify-content: flex-end">
+		<small type="text" id="id_aux_fBbin" class="form-text text-muted">1000 0000 </small>
+	</div>
+	<br>	
+	</div>
+
+	<div style="display: flex; justify-content: flex-end">
+		<div class="form-check">
+			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_df" value=""  >Mostrar Decimal</label>
+		</div>
+	</div>	
+	{% bootstrap_field form.delta_frequency_Mhz layout='horizontal' size='medium' %}
+	<div id='id_row_dfbin'>
+	{% bootstrap_field form.delta_frequency layout='horizontal' size='medium' %}
+	<div style="display: flex; justify-content: flex-end">
+		<small type="text" id="id_aux_deltabin" class="form-text text-muted">1000 0000 </small>
+	</div>
+	<br>	
+	</div>
+
+	<div style="display: flex; justify-content: flex-end">
+		<div class="form-check">
+			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_ramp" value=""  >Mostrar Decimal</label>
+		</div>
+	</div>	
+	<div class="form-group row">
+		<label class="col-md-3 col-form-label" for="id_ramp_rate_clock_us">Ramp rate clock(us)</label>
+		<div class="col-md-9">
+			<input type="number" name="ramp_rate_clock_us" step="1e-16" class="form-control" placeHolder="Ramp rate clock(us)" title id="id_ramp_rate_clock_us">
+		</div>
+	</div>
+	<div id='id_row_rampbin'>
+		{% bootstrap_field form.ramp_rate_clock_Mhz layout='horizontal' size='medium' %}
+		{% bootstrap_field form.ramp_rate_clock layout='horizontal' size='medium' %}
+	<div style="display: flex; justify-content: flex-end">
+		<small type="text" id="id_aux_rampbin" class="form-text text-muted">1000 0000 </small>
+	</div>
+	<br>	
+	</div>
+
+	<div style="display: flex; justify-content: flex-end">
+		<div class="form-check">
+			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_phaseA" value=""  >Mostrar Decimal</label>
+		</div>
+	</div>
+	{% bootstrap_field form.phaseA_degrees layout='horizontal' size='medium' %}
+	<div id='id_row_phaseA'>
+		<div style="display: flex; justify-content: flex-end">
+			<small type="text" id="id_aux_phaseAdec" class="form-text text-muted">9282 </small>
+		</div>
+		<div style="display: flex; justify-content: flex-end">
+			<small type="text" id="id_aux_phaseAbin" class="form-text text-muted">1000 0000 </small>
+		</div>
+		<br>	
+	</div>
+
+	<div style="display: flex; justify-content: flex-end">
+		<div class="form-check">
+			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_phaseB" value=""  >Mostrar Decimal</label>
+		</div>
+	</div>	
+	{% bootstrap_field form.phaseB_degrees layout='horizontal' size='medium' %}
+	<div id='id_row_phaseB'>
+		<div style="display: flex; justify-content: flex-end">
+			<small type="text" id="id_aux_phaseBdec" class="form-text text-muted">9876 </small>
+		</div>
+		<div style="display: flex; justify-content: flex-end">
+			<small type="text" id="id_aux_phaseBbin" class="form-text text-muted">1000 0000 </small>
+		</div>
+		<br>	
+	</div>
+
+	{% bootstrap_field form.modulation layout='horizontal' size='medium' %}
+	{% bootstrap_field form.amplitude_enabled layout='horizontal' size='medium' %}
+
+	{% bootstrap_field form.amplitudeI layout='horizontal' size='medium' %}
+	{% bootstrap_field form.amplitudeQ layout='horizontal' size='medium' %}
+
+
+{% endblock %}
+
 {% block extra-js%}
 <script src="{% static 'js/dds_conversion.js' %}"></script>
 <script type="text/javascript">
+    $("#id_row_fAbin").hide();
+	$("#id_chkbin_fA").on('change', function() {
+    	hidefA();
+    });
 
+    $("#id_row_fBbin").hide();
+	$("#id_chkbin_fB").on('change', function() {
+    	hidefB();
+    });
+
+    $("#id_row_dfbin").hide();
+	$("#id_chkbin_df").on('change', function() {
+    	hidedf();
+    });
+
+    $("#id_row_rampbin").hide();
+	$("#id_chkbin_ramp").on('change', function() {
+    	hideramp();
+    });
+
+    $("#id_row_phaseA").hide();
+	$("#id_chkbin_phaseA").on('change', function() {
+    	hidephaseA();
+	});
+	
+    $("#id_row_phaseB").hide();
+	$("#id_chkbin_phaseB").on('change', function() {
+    	hidephaseB();
+	});
+		
     $("#id_clock").on('change', function() {
     	updateFrequencies();
     });
@@ -43,40 +185,42 @@
     	updateFrequencyRamp();
     });
 
+    $("#id_ramp_rate_clock_us").on('change', function() {
+    	updateFrequencyMhzRamp();
+	});	
+
     $("#id_ramp_rate_clock_Mhz").on('change', function() {
     	updateBinaryFrequencyRamp();
 	});	
-		
+
+    $("#id_phaseA_degrees").on('change', function() {
+    	updatephaseAbindec();
+	});	
+	
+    $("#id_phaseB_degrees").on('change', function() {
+    	updatephaseBbindec();
+	});	
+
     function updateBinaryFrequencies() {
 
     	var clock      = $("#id_clock").val();
     	var multiplier = $("#id_multiplier").val();
     	var freq       = $("#id_frequencyA_Mhz").val();
     	var freq_mod   = $("#id_frequencyB_Mhz").val();
-    	//var freq_delta = $("#id_delta_frequency_Mhz").val();
-    	//var freq_ramp  = $("#id_ramp_rate_clock_Mhz").val();
 		
     	var mclock = clock*multiplier;
 
     	var freq_bin      = freq2Binary(mclock, freq);
     	var freq_mod_bin  = freq2Binary(mclock, freq_mod);
-    	//var freqdelta_bin = freqDelta2Binary(mclock, freq_delta);
-    	//var freqramp_bin  = freqRamp2Binary(mclock, freq_ramp);
 
     	$("#id_frequencyA").val(freq_bin);
     	$("#id_frequencyB").val(freq_mod_bin);
-    	//$("#id_delta_frequency").val(freqdelta_bin);
-    	//$("#id_ramp_rate_clock").val(freqramp_bin);
 
     	freq      = binary2Freq(mclock, freq_bin);
     	freq_mod  = binary2Freq(mclock, freq_mod_bin);
-    	//freqdelta = binary2FreqDelta(mclock, freqdelta_bin);
-    	//freq_ramp = binary2Ramp(mclock, freqramp_bin);
 
     	$("#id_frequencyA_Mhz").val(freq);
 		$("#id_frequencyB_Mhz").val(freq_mod);
-    	//$("#id_delta_frequency_Mhz").val(freqdelta);
-    	//$("#id_ramp_rate_clock_Mhz").val(freq_ramp);
 		
     }
 
@@ -119,13 +263,20 @@
 		console.log("Ingreso a updateBInaryFrequencyDelta");
 		var clock      = $("#id_clock").val();
 		var multiplier = $("#id_multiplier").val();
-		var freq       = $("#id_delta_frequency_MHz").val();
+		var freq       = $("#id_delta_frequency_Mhz").val();
+		console.log(clock);
+		console.log(multiplier);
+		console.log(freq);
 
 		var mclock = clock*multiplier;
-
+		console.log(mclock);
+		
 		var freq_bin = freqDelta2Binary(mclock, freq);
+
 		console.log(freq_bin);
 		$("#id_delta_frequency").val(freq_bin);
+
+		document.getElementById("id_aux_deltabin").innerHTML = numToString(parseInt(freq_bin, 10), 2, 48).match(/.{1,4}/g).join(' ');	
 	}	
 
     function updateFrequencyRamp() {
@@ -145,7 +296,7 @@
 		console.log("Ingreso a updateBInaryFrequencyRamp");
 		var clock      = $("#id_clock").val();
 		var multiplier = $("#id_multiplier").val();
-		var freq       = $("#id_ramp_rate_clock_MHz").val();
+		var freq       = $("#id_ramp_rate_clock_Mhz").val();
 
 		var mclock = clock*multiplier;
 
@@ -154,5 +305,159 @@
 		$("#id_ramp_rate_clock").val(freq_bin);
 	}	
 
+    function updateFrequencyMhzRamp() {
+		console.log("Ingreso a updateFrequencyMhzRamp");
+		var step_us    = $("#id_ramp_rate_clock_us").val();
+
+		var freq = us2Ramp(step_us);
+		console.log(freq);
+		$("#id_ramp_rate_clock_Mhz").val(freq);
+		updateBinaryFrequencyRamp();
+	}
+
+	function hidefA() {
+		var checkbox = $("#id_chkbin_fA");
+		var freq_bin = $("#id_row_fAbin");
+		var val_freq = $("#id_frequencyA");
+		
+		console.log("Ingreso a hidefA");
+		if (checkbox.is(':checked')) {
+			freq_bin.show();
+			console.log(val_freq.val());
+			document.getElementById("id_aux_fAbin").innerHTML = numToString(parseInt(val_freq.val(), 10), 2, 48).match(/.{1,4}/g).join(' ');	
+		}
+		else{
+			freq_bin.hide();
+		}
+	}
+
+	function hidefB() {
+		var checkbox = $("#id_chkbin_fB");
+		var freq_bin = $("#id_row_fBbin");
+		var val_freq = $("#id_frequencyB");		
+
+		console.log("Ingreso a hidefB");
+		if (checkbox.is(':checked')) {
+			freq_bin.show();
+			console.log(val_freq.val());
+			document.getElementById("id_aux_fBbin").innerHTML = numToString(parseInt(val_freq.val(), 10), 2, 48).match(/.{1,4}/g).join(' ');			
+		}
+		else{
+			freq_bin.hide();
+		}
+	}
+
+	function hidedf() {
+		var checkbox = $("#id_chkbin_df");
+		var freq_bin = $("#id_row_dfbin");
+		var val_freq = $("#id_delta_frequency");
+
+		console.log("Ingreso a hidedf");
+		if (checkbox.is(':checked')) {
+			freq_bin.show();
+			console.log(val_freq.val());
+			document.getElementById("id_aux_deltabin").innerHTML = numToString(parseInt(val_freq.val(), 10), 2, 48).match(/.{1,4}/g).join(' ');			
+		}
+		else{
+			freq_bin.hide();
+		}
+	}
+
+	function hideramp() {
+		var checkbox = $("#id_chkbin_ramp");
+		var freq_bin = $("#id_row_rampbin");
+		var val_freq = $("#id_ramp_rate_clock");
+
+		console.log("Ingreso a hideramp");
+		if (checkbox.is(':checked')) {
+			freq_bin.show();
+			console.log(val_freq.val());
+			document.getElementById("id_aux_rampbin").innerHTML = numToString(parseInt(val_freq.val(), 10), 2, 20).match(/.{1,4}/g).join(' ');				
+		}
+		else{
+			freq_bin.hide();
+		}
+	}	
+
+	function hidephaseA() {
+		var checkbox     = $("#id_chkbin_phaseA");
+		var freq_bin     = $("#id_row_phaseA");
+		var phase_degree = $("#id_phaseA_degrees");
+
+		console.log("Ingreso a hidephaseA");
+		if (checkbox.is(':checked')) {
+			freq_bin.show();
+			console.log(phase_degree.val());
+			var phase_degree_dec = parseInt(phase_degree.val()*((2**14)/360.0),10);
+			console.log(phase_degree_dec);
+			document.getElementById("id_aux_phaseAdec").innerHTML = numToString(phase_degree_dec, 10, 5).match(/.{1,4}/g).join(' ');
+			document.getElementById("id_aux_phaseAbin").innerHTML = numToString(parseInt(phase_degree_dec, 10), 2, 14).match(/.{1,4}/g).join(' ');
+
+		}
+		else{
+			freq_bin.hide();
+		}
+	}	
+
+	function hidephaseB() {
+		var checkbox     = $("#id_chkbin_phaseB");
+		var freq_bin     = $("#id_row_phaseB");
+		var phase_degree = $("#id_phaseB_degrees");
+
+		console.log("Ingreso a hidephaseB");
+		if (checkbox.is(':checked')) {
+			freq_bin.show();
+			console.log(phase_degree.val());
+			var phase_degree_dec = parseInt(phase_degree.val()*((2**14)/360.0),10);
+			console.log(phase_degree_dec);
+			document.getElementById("id_aux_phaseBdec").innerHTML = numToString(phase_degree_dec, 10, 5).match(/.{1,4}/g).join(' ');
+			document.getElementById("id_aux_phaseBbin").innerHTML = numToString(parseInt(phase_degree_dec, 10), 2, 14).match(/.{1,4}/g).join(' ');
+
+		}
+		else{
+			freq_bin.hide();
+		}
+	}	
+
+	function updatephaseAbindec() {
+		var freq_bin     = $("#id_row_phaseA");
+		var phase_degree = $("#id_phaseA_degrees");
+
+		console.log("Ingreso a cupdatephaseAbindec");
+		console.log(phase_degree.val());
+		var phase_degree_dec = parseInt(phase_degree.val()*((2**14)/360.0),10);
+		console.log(phase_degree_dec);
+		document.getElementById("id_aux_phaseAdec").innerHTML = numToString(phase_degree_dec, 10, 5).match(/.{1,4}/g).join(' ');
+		document.getElementById("id_aux_phaseAbin").innerHTML = numToString(parseInt(phase_degree_dec, 10), 2, 14).match(/.{1,4}/g).join(' ');
+		
+	}		
+	
+	function updatephaseBbindec() {
+		var freq_bin     = $("#id_row_phaseB");
+		var phase_degree = $("#id_phaseB_degrees");
+
+		console.log("Ingreso a cupdatephaseBbindec");
+		console.log(phase_degree.val());
+		var phase_degree_dec = parseInt(phase_degree.val()*((2**14)/360.0),10);
+		console.log(phase_degree_dec);
+		document.getElementById("id_aux_phaseBdec").innerHTML = numToString(phase_degree_dec, 10, 5).match(/.{1,4}/g).join(' ');
+		document.getElementById("id_aux_phaseBbin").innerHTML = numToString(parseInt(phase_degree_dec, 10), 2, 14).match(/.{1,4}/g).join(' ');
+		
+	}
+
+	function padStart(string, length, char) {
+	return length > 0 ?
+		padStart(char + string, --length, char) :
+		string;
+	}
+
+	function numToString(num, radix, length = num.length) {
+	const numString = num.toString(radix);
+	return numString.length === length ?
+		numString :
+		padStart(numString, length - numString.length, "0")
+	}
+
+	console.log(numToString(parseInt("37529996894754", 10), 2, 48));	
 </script>
 {% endblock %}

@@ -36,3 +36,16 @@
     	var freq_bin = parseInt(mclock/frequency-1);
     	return freq_bin;
     }    
+
+    function us2Ramp(step_us) {
+        //periodo_delpaso = sysclockperiod x (N+1)
+        // freqsys/(N+1)=freq_ddelpaso=1/step
+    	var freq = (1.0/(step_us));
+    	return freq;
+    }        
+
+    function phase2Binary(phase) {
+    	
+    	var phase_bin = parseInt(phase*(Math.pow(2,48))/360);
+    	return phase_bin;
+    }    

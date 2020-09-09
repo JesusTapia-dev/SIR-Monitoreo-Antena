@@ -32,23 +32,23 @@ class DDSRestConfiguration(Configuration):
 
     DDS_NBITS = 48
 
-    clock = models.FloatField(verbose_name='Clock In (MHz)',validators=[MinValueValidator(5), MaxValueValidator(75)], null=True, default=60)
+    clock      = models.FloatField(verbose_name='Clock In (MHz)',validators=[MinValueValidator(5), MaxValueValidator(75)], null=True, default=60)
     multiplier = models.PositiveIntegerField(verbose_name='Multiplier',validators=[MinValueValidator(1), MaxValueValidator(20)], default=4)
 
     frequencyA_Mhz = models.DecimalField(verbose_name='Frequency A (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16, null=True, default=49.9200)
-    frequencyA = models.BigIntegerField(verbose_name='Frequency A (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**DDS_NBITS-1)], blank=True, null=True)
+    frequencyA     = models.BigIntegerField(verbose_name='Frequency A (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**DDS_NBITS-1)], blank=True, null=True)
 
     frequencyB_Mhz = models.DecimalField(verbose_name='Frequency B (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16, blank=True, null=True)
-    frequencyB = models.BigIntegerField(verbose_name='Frequency B (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**DDS_NBITS-1)], blank=True, null=True)
+    frequencyB     = models.BigIntegerField(verbose_name='Frequency B (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**DDS_NBITS-1)], blank=True, null=True)
 
     delta_frequency_Mhz = models.DecimalField(verbose_name='Delta frequency (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16, blank=True, null=True)
-    delta_frequency = models.BigIntegerField(verbose_name='Delta frequency (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**DDS_NBITS-1)], blank=True, null=True)
+    delta_frequency     = models.BigIntegerField(verbose_name='Delta frequency (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**DDS_NBITS-1)], blank=True, null=True)
 
     update_clock_Mhz = models.DecimalField(verbose_name='Update clock (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16, blank=True, null=True)
-    update_clock = models.BigIntegerField(verbose_name='Update clock (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**32-1)], blank=True, null=True)
+    update_clock     = models.BigIntegerField(verbose_name='Update clock (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**32-1)], blank=True, null=True)
 
     ramp_rate_clock_Mhz = models.DecimalField(verbose_name='Ramp rate clock (MHz)', validators=[MinValueValidator(0), MaxValueValidator(150)], max_digits=19, decimal_places=16, blank=True, null=True)
-    ramp_rate_clock = models.BigIntegerField(verbose_name='Ramp rate clock (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**18-1)], blank=True, null=True)
+    ramp_rate_clock     = models.BigIntegerField(verbose_name='Ramp rate clock (Decimal)',validators=[MinValueValidator(0), MaxValueValidator(2**18-1)], blank=True, null=True)
 
     phaseA_degrees = models.FloatField(verbose_name='Phase A (Degrees)', validators=[MinValueValidator(0), MaxValueValidator(360)], default=0)
 
@@ -166,6 +166,19 @@ class DDSRestConfiguration(Configuration):
         self.message = ""
         return parms
 
+    def arma_control(self,l_clock,l_multiplier,l_modulation):
+        sysclock  = l_clock*l_multiplier
+        pll_range = 0
+        if(sysclock>=200):
+             pll_range = 1
+        l_control = ((l_modulation<<9)+(pll_range<<22)+(l_multiplier<<16)).to_bytes(4,'little') 
+        return l_control
+
+    def conv_phase(self,l_phase):
+        
+        l_phase_2B = int((l_phase*(2**14)/360)).to_bytes(2,'little') 
+        return l_phase_2B
+
     def arma_data_write(self):
         #clock = RCClock.objects.get(rc_configuration=self)
         clock = self.clock
@@ -180,24 +193,28 @@ class DDSRestConfiguration(Configuration):
         print(frequencyB_Mhz)
         frequencyB = self.frequencyB
         print(frequencyB)
-        phaseA_degrees = self.phaseA_degrees
+        phaseA_degrees = self.phaseA_degrees or 0
         print(phaseA_degrees)
-        phaseB_degrees = self.phaseB_degrees
+        phaseB_degrees = self.phaseB_degrees or 0
         print(phaseB_degrees)
-        modulation = self.modulation
+        modulation = self.modulation or 0
         print(modulation)
-        amplitude_enabled = self.amplitude_enabled
+        amplitude_enabled = self.amplitude_enabled or 0
         print(amplitude_enabled)
-        amplitudeI = self.amplitudeI
+        amplitudeI = self.amplitudeI or 0
         print(amplitudeI)
-        amplitudeQ = self.amplitudeQ
+        amplitudeQ = self.amplitudeQ or 0
         print(amplitudeQ)
-        delta_frequency = self.delta_frequency
+        delta_frequency = self.delta_frequency or 0
         print(delta_frequency)
-        update_clock = self.update_clock
+        update_clock = self.update_clock or 0
         print(update_clock)
-        ramp_rate_clock = self.ramp_rate_clock
+        ramp_rate_clock = self.ramp_rate_clock or 0
         print(ramp_rate_clock)
+
+        control = self.arma_control(clock,multiplier,modulation)
+        phase1  = self.conv_phase(phaseA_degrees)
+        phase2  = self.conv_phase(phaseB_degrees)
 
         cadena_json = {'clock': (b64encode(pack('<f',clock))).decode("UTF-8"),\
         'multiplier': (b64encode(pack('<B',multiplier))).decode("UTF-8"),\
@@ -206,9 +223,11 @@ class DDSRestConfiguration(Configuration):
         'delta_frequency': (b64encode((delta_frequency).to_bytes(6,'little'))).decode("UTF-8"),\
         'update_clock': (b64encode((update_clock).to_bytes(4,'little'))).decode("UTF-8"),\
         'ramp_rate_clock': (b64encode((ramp_rate_clock).to_bytes(3,'little'))).decode("UTF-8"),\
-        'control': (b64encode((ramp_rate_clock).to_bytes(4,'little'))).decode("UTF-8"),\
+        'control': (b64encode(control)).decode("UTF-8"),\
         'amplitudeI': (b64encode((amplitudeI).to_bytes(2,'little'))).decode("UTF-8"),\
-        'amplitudeQ': (b64encode((amplitudeQ).to_bytes(3,'little'))).decode("UTF-8")                
+        'amplitudeQ': (b64encode((amplitudeQ).to_bytes(2,'little'))).decode("UTF-8"),\
+        '_phase1': (b64encode((phase1))).decode("UTF-8"),\
+        '_phase2': (b64encode((phase2))).decode("UTF-8")                        
         }
         return cadena_json
 

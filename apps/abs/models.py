@@ -434,6 +434,7 @@ class ABSConfiguration(Configuration):
             sock.close()
         else:
             self.message = "ABS Configuration does not have beams"
+            print('No beams')
             #Start DDS-RC-JARS
             if confdds:
                 confdds.start_device()
@@ -449,6 +450,7 @@ class ABSConfiguration(Configuration):
             self.device.status = 0
             self.module_status = ''.join(status)
             self.save()
+            print('Could not write ABS')
             #Start DDS-RC-JARS
             if confdds:
                 confdds.start_device()
@@ -460,6 +462,7 @@ class ABSConfiguration(Configuration):
             return False
         else:
             self.message = "ABS Beams List have been sent to ABS Modules"
+            print('ABS beams list sent')
             self.active_beam = beams[0].pk
 
         #Start DDS-RC-JARS
@@ -471,10 +474,12 @@ class ABSConfiguration(Configuration):
         if confjars:
             confjars.start_device()
 
+        print('Inicia intento de salvar device.status')
         self.device.status = 3
         self.module_status = ''.join(status)
         self.save()
-        conf_active = ABSActive.objects.get(pk=1)
+        print('Estatus salvado')
+        conf_active = ABSActive.objects.get_or_create(pk=1)
         conf_active.conf = self
         conf_active.save()
         return True
@@ -734,8 +739,12 @@ class ABSConfiguration(Configuration):
 
     def get_absolute_url_import(self):
         return reverse('url_import_abs_conf', args=[str(self.id)])
+
 class ABSActive(models.Model):
     conf = models.ForeignKey(ABSConfiguration, null=True, verbose_name='ABS Configuration', on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'abs_absactive'
 
 class ABSBeam(models.Model):
 

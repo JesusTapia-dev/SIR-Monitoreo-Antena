@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-{% load static %}{% load bootstrap4 %}
+{% load static %}
+{% load bootstrap4 %}
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -18,12 +19,12 @@
 
 
     <!--link href="{% static '' %}css/bootstrap-{{theme}}.min.css" media="all" rel="stylesheet"-->
-   <!-- <link href="{% static 'css/bootcards-desktop.min.css' %}" media="all" rel="stylesheet"> -->
+    <!-- <link href="{% static 'css/bootcards-desktop.min.css' %}" media="all" rel="stylesheet"> -->
     <link href="{% static 'css/font-awesome.min.css' %}" media="all" rel="stylesheet"-->
     <!--link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet"-->
 
     <!-- Bootcards CSS for iOS: >
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootcards/1.0.0/css/bootcards-ios.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootcards/1.0.0/css/bootcards-ios.min.css"-->
 
     <!-- Bootcards CSS for Android: >
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootcards/1.0.0/css/bootcards-android.min.css"-->
@@ -31,25 +32,23 @@
     <!-- Bootcards CSS for desktop: >
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootcards/1.0.0/css/bootcards-desktop.min.css"-->
 
-<style type="text/css">
-      .logo {padding-top: 5px; height: 50px}
-      .clickable-row {cursor: pointer;}
-      .col-no-padding { padding-left:0;}
-      .gi-2x{font-size: 2em;}
-      .gi-3x{font-size: 3em;}
-      .gi-4x{font-size: 4em;}
-      .gi-5x{font-size: 5em;}
-</style>
-    {% block extra-head %}{% endblock %}
+  <style type="text/css">
+        .logo {padding-top: 5px; height: 50px}
+        .clickable-row {cursor: pointer;}
+        .col-no-padding { padding-left:0;}
+        .gi-2x{font-size: 2em;}
+        .gi-3x{font-size: 3em;}
+        .gi-4x{font-size: 4em;}
+        .gi-5x{font-size: 5em;}
+  </style>
+  {% block extra-head %}{% endblock %}
 </head>
+
 <body>
-
-
 
   {% include "header_igp.html" %}
 
   <div style="clear: both;"></div>
-
 
   <div class="container">
       <div id="page" class="row" style="min-height:600px">
@@ -74,24 +73,25 @@
       {% else %}
        <div class="col-md-9 col-xs-12" role="main">
       {% endif %}
-       <div class="page-header">
-          <h1>{% block content-title %}{% endblock %} <small>{% block content-suptitle %}{% endblock %}</small></h1>
-         </div>
-         {% block messages %}
-           {% if messages %}
-             {% for message in messages %}
-             <div class="alert alert-{% if message.tags %}{% if 'error' in message.tags %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %} alert-dismissible" role="alert">
-               <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-               <strong>{{message.tags|title}}!</strong> {{ message }}
-             </div>
-             {% endfor %}
-           {% endif %}
-         {% endblock %}
+
+      <div class="page-header">
+        <h1>{% block content-title %}{% endblock %} <small>{% block content-suptitle %}{% endblock %}</small></h1>
+        </div>
+        {% block messages %}
+          {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags %}{% if 'error' in message.tags %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %} alert-dismissible" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <strong>{{message.tags|title}}!</strong> {{ message }}
+            </div>
+            {% endfor %}
+          {% endif %}
+        {% endblock %}
 
        {% block content %}
        {% endblock %}
 
-       </div>
+      </div>
 
 
     </div><!--/row-->

@@ -13,7 +13,14 @@
   <form class="form" method="post" action="{{action}}">
   {% endif %}
   {% csrf_token %}
-  {% bootstrap_form form layout='horizontal' size='medium' %}
+
+  {% if device_dds == 'dds_rest' %}
+    {% block dds_rest%}
+    {% endblock %}
+  {% else %}
+    {% bootstrap_form form layout='horizontal' size='medium' %}
+  {% endif %}
+  
   <div style="clear: both;"></div>
   <br>
   {% if extra_button %}
@@ -27,7 +34,7 @@
   <button type="submit" class="btn btn-primary">{{button}}</button>
   </div>
   {% endif %}
-</form>
+  </form>
 {% endblock %}
 
 {% block sidebar%}
