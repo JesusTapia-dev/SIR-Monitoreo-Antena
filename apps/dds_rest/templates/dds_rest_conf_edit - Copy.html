@@ -110,37 +110,8 @@
 	{% bootstrap_field form.modulation layout='horizontal' size='medium' %}
 	{% bootstrap_field form.amplitude_enabled layout='horizontal' size='medium' %}
 
-	<div style="display: flex; justify-content: flex-end">
-		<div class="form-check">
-			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_amplitudeI" value=""  >Mostrar Decimal</label>
-		</div>
-	</div>
 	{% bootstrap_field form.amplitudeI layout='horizontal' size='medium' %}
-	<div id='id_row_amplitudeI'>
-		<div style="display: flex; justify-content: flex-end">
-			<small type="text" id="id_aux_amplitudeIdec" class="form-text text-muted">35 </small>
-		</div>
-		<div style="display: flex; justify-content: flex-end">
-			<small type="text" id="id_aux_amplitudeIbin" class="form-text text-muted">0000 0000 0010 </small>
-		</div>
-		<br>	
-	</div>
-
-	<div style="display: flex; justify-content: flex-end">
-		<div class="form-check">
-			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_amplitudeQ" value=""  >Mostrar Decimal</label>
-		</div>
-	</div>
 	{% bootstrap_field form.amplitudeQ layout='horizontal' size='medium' %}
-	<div id='id_row_amplitudeQ'>
-		<div style="display: flex; justify-content: flex-end">
-			<small type="text" id="id_aux_amplitudeQdec" class="form-text text-muted">40 </small>
-		</div>
-		<div style="display: flex; justify-content: flex-end">
-			<small type="text" id="id_aux_amplitudeQbin" class="form-text text-muted">0000 1010 1000 </small>
-		</div>
-		<br>	
-	</div>
 
 
 {% endblock %}
@@ -176,16 +147,6 @@
     $("#id_row_phaseB").hide();
 	$("#id_chkbin_phaseB").on('change', function() {
     	hidephaseB();
-	});
-
-	$("#id_row_amplitudeI").hide();
-	$("#id_chkbin_amplitudeI").on('change', function() {
-    	hideamplitudeI();
-	});
-
-	$("#id_row_amplitudeQ").hide();
-	$("#id_chkbin_amplitudeQ").on('change', function() {
-    	hideamplitudeQ();
 	});
 		
     $("#id_clock").on('change', function() {
@@ -239,14 +200,6 @@
     $("#id_phaseB_degrees").on('change', function() {
     	updatephaseBbindec();
 	});	
-
-	$("#id_amplitudeI").on('change', function() {
-    	updateamplitudeIindec();
-	});
-
-	$("#id_amplitudeQ").on('change', function() {
-    	updateamplitudeQindec();
-	});
 
     function updateBinaryFrequencies() {
 
@@ -435,7 +388,7 @@
 		if (checkbox.is(':checked')) {
 			freq_bin.show();
 			console.log(phase_degree.val());
-			var phase_degree_dec = parseInt(phase_degree.val()*((2**14-1)/360.0),10);
+			var phase_degree_dec = parseInt(phase_degree.val()*((2**14)/360.0),10);
 			console.log(phase_degree_dec);
 			document.getElementById("id_aux_phaseAdec").innerHTML = numToString(phase_degree_dec, 10, 5).match(/.{1,4}/g).join(' ');
 			document.getElementById("id_aux_phaseAbin").innerHTML = numToString(parseInt(phase_degree_dec, 10), 2, 14).match(/.{1,4}/g).join(' ');
@@ -455,7 +408,7 @@
 		if (checkbox.is(':checked')) {
 			freq_bin.show();
 			console.log(phase_degree.val());
-			var phase_degree_dec = parseInt(phase_degree.val()*((2**14-1)/360.0),10);
+			var phase_degree_dec = parseInt(phase_degree.val()*((2**14)/360.0),10);
 			console.log(phase_degree_dec);
 			document.getElementById("id_aux_phaseBdec").innerHTML = numToString(phase_degree_dec, 10, 5).match(/.{1,4}/g).join(' ');
 			document.getElementById("id_aux_phaseBbin").innerHTML = numToString(parseInt(phase_degree_dec, 10), 2, 14).match(/.{1,4}/g).join(' ');
@@ -466,53 +419,13 @@
 		}
 	}	
 
-	function hideamplitudeI() {
-		var checkbox     = $("#id_chkbin_amplitudeI");
-		var freq_bin     = $("#id_row_amplitudeI");
-		var phase_degree = $("#id_amplitudeI");
-
-		console.log("Ingreso a hideamplitudeI");
-		if (checkbox.is(':checked')) {
-			freq_bin.show();
-			console.log(phase_degree.val());
-			var phase_degree_dec = parseInt(phase_degree.val()*((2**12-1)/100.0),10);
-			console.log(phase_degree_dec);
-			document.getElementById("id_aux_amplitudeIdec").innerHTML = numToString(phase_degree_dec, 10, 4).match(/.{1,4}/g).join(' ');
-			document.getElementById("id_aux_amplitudeIbin").innerHTML = numToString(parseInt(phase_degree_dec, 10), 2, 12).match(/.{1,4}/g).join(' ');
-
-		}
-		else{
-			freq_bin.hide();
-		}
-	}
-
-	function hideamplitudeQ() {
-		var checkbox     = $("#id_chkbin_amplitudeQ");
-		var freq_bin     = $("#id_row_amplitudeQ");
-		var phase_degree = $("#id_amplitudeQ");
-
-		console.log("Ingreso a hideamplitudeQ");
-		if (checkbox.is(':checked')) {
-			freq_bin.show();
-			console.log(phase_degree.val());
-			var phase_degree_dec = parseInt(phase_degree.val()*((2**12-1)/100.0),10);
-			console.log(phase_degree_dec);
-			document.getElementById("id_aux_amplitudeQdec").innerHTML = numToString(phase_degree_dec, 10, 4).match(/.{1,4}/g).join(' ');
-			document.getElementById("id_aux_amplitudeQbin").innerHTML = numToString(parseInt(phase_degree_dec, 10), 2, 12).match(/.{1,4}/g).join(' ');
-
-		}
-		else{
-			freq_bin.hide();
-		}
-	}
-
 	function updatephaseAbindec() {
 		var freq_bin     = $("#id_row_phaseA");
 		var phase_degree = $("#id_phaseA_degrees");
 
-		console.log("Ingreso a updatephaseAbindec");
+		console.log("Ingreso a cupdatephaseAbindec");
 		console.log(phase_degree.val());
-		var phase_degree_dec = parseInt(phase_degree.val()*((2**14-1)/360.0),10);
+		var phase_degree_dec = parseInt(phase_degree.val()*((2**14)/360.0),10);
 		console.log(phase_degree_dec);
 		document.getElementById("id_aux_phaseAdec").innerHTML = numToString(phase_degree_dec, 10, 5).match(/.{1,4}/g).join(' ');
 		document.getElementById("id_aux_phaseAbin").innerHTML = numToString(parseInt(phase_degree_dec, 10), 2, 14).match(/.{1,4}/g).join(' ');
@@ -523,39 +436,13 @@
 		var freq_bin     = $("#id_row_phaseB");
 		var phase_degree = $("#id_phaseB_degrees");
 
-		console.log("Ingreso a updatephaseBbindec");
+		console.log("Ingreso a cupdatephaseBbindec");
 		console.log(phase_degree.val());
-		var phase_degree_dec = parseInt(phase_degree.val()*((2**14-1)/360.0),10);
+		var phase_degree_dec = parseInt(phase_degree.val()*((2**14)/360.0),10);
 		console.log(phase_degree_dec);
 		document.getElementById("id_aux_phaseBdec").innerHTML = numToString(phase_degree_dec, 10, 5).match(/.{1,4}/g).join(' ');
 		document.getElementById("id_aux_phaseBbin").innerHTML = numToString(parseInt(phase_degree_dec, 10), 2, 14).match(/.{1,4}/g).join(' ');
 		
-	}
-
-	// Para ingresar amplitud CH1 como porcentaje y devuelve en decimal y binario
-	function updateamplitudeIindec() {
-		var freq_bin     = $("#id_row_amplitudeI");
-		var phase_degree = $("#id_amplitudeI");
-
-		console.log("Ingreso a updateamplitudeIindec");
-		console.log(phase_degree.val());
-		var phase_degree_dec = parseInt(phase_degree.val()*((2**12-1)/100.0),10);
-		console.log(phase_degree_dec);
-		document.getElementById("id_aux_amplitudeIdec").innerHTML = numToString(phase_degree_dec, 10, 4).match(/.{1,4}/g).join(' ');
-		document.getElementById("id_aux_amplitudeIbin").innerHTML = numToString(parseInt(phase_degree_dec, 10), 2, 12).match(/.{1,4}/g).join(' ');
-	}
-
-	// Para ingresar amplitud CH1 como porcentaje y devuelve en decimal y binario
-	function updateamplitudeQindec() {
-		var freq_bin     = $("#id_row_amplitudeQ");
-		var phase_degree = $("#id_amplitudeQ");
-
-		console.log("Ingreso a updateamplitudeQindec");
-		console.log(phase_degree.val());
-		var phase_degree_dec = parseInt(phase_degree.val()*((2**12-1)/100.0),10);
-		console.log(phase_degree_dec);
-		document.getElementById("id_aux_amplitudeQdec").innerHTML = numToString(phase_degree_dec, 10, 4).match(/.{1,4}/g).join(' ');
-		document.getElementById("id_aux_amplitudeQbin").innerHTML = numToString(parseInt(phase_degree_dec, 10), 2, 12).match(/.{1,4}/g).join(' ');
 	}
 
 	function padStart(string, length, char) {

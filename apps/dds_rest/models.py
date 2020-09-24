@@ -121,46 +121,74 @@ class DDSRestConfiguration(Configuration):
 
     def reset_device(self):
 
-        answer = api.reset(ip = self.device.ip_address,
-                           port = self.device.port_address)
+        try:
+            payload = self.request('reset', 'post')
+            if payload['reset']=='ok':
+                self.message = 'DDS REST restarted OK'
+                self.device.status = 2
+                self.device.save()
+            else:
+                self.message = 'DDS REST restart fail'
+                self.device.status = 4
+                self.device.save()
+        except Exception as e:
+            self.message = 'DDS REST reset: {}'.format(str(e))
+            return False
 
-        if answer[0] != "1":
-            self.message = 'DDS - {}'.format(answer[2:])
-            return 0
-
-        self.message = 'DDS - {}'.format(answer[2:])
-        return 1
+        return True
 
     def stop_device(self):
 
         try:
-            answer = api.disable_rf(ip = self.device.ip_address,
-                                    port = self.device.port_address)
-
-            return self.status_device()
-
+            payload = self.request('stop', 'post',data=json.dumps({'_rf_enable':0}))
+            self.message = 'DDS REST: {}'.format(payload['stop'])
+            if payload['stop']=='ok':
+                self.device.status = 2
+                self.device.save()
+            else:
+                self.device.status = 4
+                self.device.save()
+                return False
         except Exception as e:
-            self.message = str(e)
+            if 'No route to host' not in str(e):
+                self.device.status = 4
+            else:
+                self.device.status = 0
+            self.message = 'DDS REST stop: {}'.format(str(e))
+            self.device.save()
             return False
+
+        return True
 
     def start_device(self):
 
         try:
-            answer = api.enable_rf(ip = self.device.ip_address,
-                                    port = self.device.port_address)
-
-            return self.status_device()
-
+            payload = self.request('start', 'post',data=json.dumps({'_rf_enable':1}))
+            self.message = 'DDS REST start: {}'.format(payload['start'])
+            if payload['start']=='ok':
+                self.device.status = 3
+                self.device.save()
+            else:
+                self.device.status = 2
+                self.device.save()                
+                return False
         except Exception as e:
-            self.message = str(e)
+            if 'No route to host' not in str(e):
+                self.device.status = 4
+            else:
+                self.device.status = 0
+            self.message = 'DDS REST start: {}'.format(str(e))
+            self.device.save()
             return False
+
+        return True
 
     def read_device(self):
 
-        parms = api.read_config(ip = self.device.ip_address,
-                                port = self.device.port_address)
+        parms = self.request('read')
+        print(parms)
         if not parms:
-            self.message = "Could not read DDS parameters from this device"
+            self.message = "Could not read DDS REST parameters from this device"
             return parms
 
         self.message = ""
@@ -211,7 +239,8 @@ class DDSRestConfiguration(Configuration):
         print(update_clock)
         ramp_rate_clock = self.ramp_rate_clock or 0
         print(ramp_rate_clock)
-
+        osrr = 0
+        qdac = 0
         control = self.arma_control(clock,multiplier,modulation)
         phase1  = self.conv_phase(phaseA_degrees)
         phase2  = self.conv_phase(phaseB_degrees)
@@ -227,7 +256,9 @@ class DDSRestConfiguration(Configuration):
         'amplitudeI': (b64encode((amplitudeI).to_bytes(2,'little'))).decode("UTF-8"),\
         'amplitudeQ': (b64encode((amplitudeQ).to_bytes(2,'little'))).decode("UTF-8"),\
         '_phase1': (b64encode((phase1))).decode("UTF-8"),\
-        '_phase2': (b64encode((phase2))).decode("UTF-8")                        
+        '_phase2': (b64encode((phase2))).decode("UTF-8"),\
+        'osrr': (b64encode((osrr).to_bytes(1,'little'))).decode("UTF-8"),\
+        'qdac': (b64encode((qdac).to_bytes(2,'little'))).decode("UTF-8")                                
         }
         return cadena_json
 

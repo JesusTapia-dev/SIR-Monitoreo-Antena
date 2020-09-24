@@ -55,25 +55,30 @@ def conf_edit(request, conf_id):
 
     for line in lines:
         params = json.loads(line.params)
+        #print(params)
         line.form = RCLineEditForm(conf=conf, line=line, extra_fields=params)
         line.subform = False
 
         if 'params' in params:
             line.subforms = [RCLineEditForm(extra_fields=fields, line=line, subform=i) for i, fields in enumerate(params['params'])]
             line.subform = True
-
+        print(params)
+        print("fin de sub carga de params")
+    #print("fin de carga de params")
     if request.method=='GET':
-
+        print("GET case")
         form = RCConfigurationForm(instance=conf)
         form_clock = RCClockForm(instance=clock)
 
     elif request.method=='POST':
-
+        #print("ingreso a post conf edit")
         line_data = {}
         conf_data = {}
         clock_data = {}
         extras = []
-
+        print("Inicio impresion POST#####")
+        print(request.POST.items)
+        print("Fin impresion de POST items#####")
         #classified post fields
         for label,value in request.POST.items():
             if label=='csrfmiddlewaretoken':
@@ -89,7 +94,8 @@ def conf_edit(request, conf_id):
             elif label.split('|')[0]!='-1':
                 extras.append(label)
                 continue
-
+            
+            #print(label)
             x, pk, name = label.split('|')
 
             if name=='codes':
@@ -99,11 +105,13 @@ def conf_edit(request, conf_id):
                 line_data[pk][name] = value
             else:
                 line_data[pk] = {name:value}
-
+            #print(line_data[pk])
         #update conf
         
         form_clock = RCClockForm(clock_data, instance=clock)
         form = RCConfigurationForm(conf_data, instance=conf)
+
+        #print(request.POST.items())
 
         if form_clock.is_valid() and form.is_valid():
             form_clock.save()
@@ -111,6 +119,9 @@ def conf_edit(request, conf_id):
 
             #update lines fields
             extras.sort()
+            #print("Inicio extras")
+            #print(extras)
+            #print("Fin extras")
             for label in extras:
                 x, pk, name = label.split('|')
                 if pk not in line_data:
@@ -127,8 +138,10 @@ def conf_edit(request, conf_id):
                     if 'params' not in params:
                         params['params'] = []
                 line.params = json.dumps(params)
+                #print(line.params)
                 line.save()
 
+            
             #update pulses field
             conf.update_pulses()
 
@@ -311,7 +324,7 @@ def remove_subline(request, conf_id, line_id, subline_id):
 def update_lines_position(request, conf_id):
 
     conf = get_object_or_404(RCConfiguration, pk=conf_id)
-
+    print("ingreso a update_lines_position")
     if request.method=='POST':
         ch = 0
         for item in request.POST['items'].split('&'):
@@ -323,7 +336,10 @@ def update_lines_position(request, conf_id):
         lines = RCLine.objects.filter(rc_configuration=conf).order_by('channel')
 
         for line in lines:
+
             params = json.loads(line.params)
+            print(params)
+            print("Fin de impresion_lines_position")
             line.form = RCLineEditForm(conf=conf, line=line, extra_fields=params)
 
             if 'params' in params:

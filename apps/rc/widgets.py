@@ -18,8 +18,8 @@ except NameError:
 
 class KmUnitWidget(forms.widgets.TextInput):
 
-    def render(self, label, value, attrs=None):
-
+    def render(self, name, value, attrs=None,renderer=None):
+        label = name
         if isinstance(value, (int, float)):
             unit = int(value*attrs['km2unit'])
         elif isstr(value):
@@ -73,8 +73,8 @@ class KmUnitWidget(forms.widgets.TextInput):
 
 class UnitKmWidget(forms.widgets.TextInput):
 
-    def render(self, label, value, attrs=None):
-
+    def render(self, name, value, attrs=None,renderer=None):
+        label = name
         if isinstance(value, (int, float)):
             km = value/attrs['km2unit']
         elif isinstance(value, basestring):
@@ -120,8 +120,8 @@ class UnitKmWidget(forms.widgets.TextInput):
 
 class KmUnitHzWidget(forms.widgets.TextInput):
 
-    def render(self, label, value, attrs=None):
-
+    def render(self, name, value, attrs=None,renderer=None):
+        label = name
         unit = float(value)*attrs['km2unit']
         if unit%10==0:
             unit = int(unit)
@@ -174,8 +174,8 @@ class KmUnitHzWidget(forms.widgets.TextInput):
 
 class KmUnitDcWidget(forms.widgets.TextInput):
 
-    def render(self, label, value, attrs=None):
-
+    def render(self, name, value, attrs=None,renderer=None):
+        label = name
         unit = int(float(value)*attrs['km2unit'])
 
         disabled = 'disabled' if attrs.get('disabled', False) else ''
@@ -224,14 +224,17 @@ class KmUnitDcWidget(forms.widgets.TextInput):
 
 class DefaultWidget(forms.widgets.TextInput):
 
-    def render(self, label, value, attrs=None):
-
+    def render(self, name, value, attrs=None,renderer=None):
+        print("Default widget")
+        label = name
         disabled = 'disabled' if attrs.get('disabled', False) else ''
         itype = 'number' if label in ('number_of_samples', 'last_height') else 'text'
+        print(label)
         name = attrs.get('name', label)
+        print(name)
         if 'line' in attrs:
             label += '_{0}_{1}'.format(attrs['line'].pk, name.split('|')[0])
-
+        print(label)
         if itype=='number':
             html = '<div class="col-md-12 col-no-padding"><div class="col-md-5 col-no-padding"><input {0} type="{1}" step="any" class="form-control" id="id_{2}" name="{3}" value="{4}"></div></div>'.format(disabled, itype, label, name, value)
         else:
@@ -262,10 +265,10 @@ class DefaultWidget(forms.widgets.TextInput):
 
 class HiddenWidget(forms.widgets.HiddenInput):
 
-    def render(self, label, value, attrs=None):
-
+    def render(self, name, value, attrs=None,renderer=None):
+        label = name
         disabled = 'disabled' if attrs.get('disabled', False) else ''
-        name = self.attrs.get('name', label)
+        name = self.attrs.get('name', label) 
 
         html = '<input {0} type="hidden" class="form-control" id="id_{1}" name="{2}" value="{3}">'.format(disabled, label, name, value)
 
@@ -274,8 +277,8 @@ class HiddenWidget(forms.widgets.HiddenInput):
 
 class CodesWidget(forms.widgets.Textarea):
 
-    def render(self, label, value, attrs=None):
-
+    def render(self, name, value, attrs=None,renderer=None):
+        label = name
         disabled = 'disabled' if attrs.get('disabled', False) else ''
         name = attrs.get('name', label)
 
@@ -293,7 +296,7 @@ class CodesWidget(forms.widgets.Textarea):
 
 class HCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
 
-    def render(self, name, value, attrs=None, choices=()):
+    def render(self, name, value, attrs=None, choices=(),renderer=None):
 
         if value is None: value = []
         has_id = attrs and 'id' in attrs

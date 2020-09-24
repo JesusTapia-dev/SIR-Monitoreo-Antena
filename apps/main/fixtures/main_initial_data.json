@@ -89,6 +89,14 @@
     },
     {
         "fields": {
+            "name": "dds_rest",
+            "description": ""
+        },
+        "model": "main.devicetype",
+        "pk": 6
+    },    
+    {
+        "fields": {
             "name": "Operator"
         },
         "model": "auth.group",

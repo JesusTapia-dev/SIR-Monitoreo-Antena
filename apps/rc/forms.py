@@ -291,6 +291,7 @@ class RCLineViewForm(forms.Form):
 class RCLineEditForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
+        print("RCLineEditForm")
 
         extra_fields = kwargs.pop('extra_fields', [])
         conf = kwargs.pop('conf', False)
@@ -320,9 +321,16 @@ class RCLineEditForm(forms.ModelForm):
                     all_choice = True
                 else:
                     all_choice = False
-                self.fields[label] = forms.ChoiceField(choices=create_choices_from_model(params[label]['model'], conf.id, all_choice=all_choice),
+                #print("'name':'%s|%s|%s'" % (count, line.id, label))
+                aux_name = '%s|%s|%s' % (count, line.id, label)
+                print(aux_name)
+                print(label)
+
+                self.fields[aux_name] = forms.ChoiceField(choices=create_choices_from_model(params[label]['model'], conf.id, all_choice=all_choice),
                                             initial=value,
-                                            widget=forms.Select(attrs={'name':'%s|%s|%s' % (count, line.id, label)}),
+                                            label=label,
+                                            widget=forms.Select(attrs={'name':'%s|%s|%s' % (count, line.id, label)}), #No trabaja con attrs esta versión de django 2.0 hacia adelante
+                                            #widget=forms.Select(attrs={'name':'HOLA'}), #No trabaja con attrs esta versión de django 2.0 hacia adelante
                                             help_text=help_text)
 
             else:
@@ -353,6 +361,7 @@ class RCLineEditForm(forms.ModelForm):
 class RCSubLineEditForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
+        print("RCSubLineEditForm")
         extra_fields = kwargs.pop('extra_fields')
         count = kwargs.pop('count')
         line = kwargs.pop('line')
@@ -360,7 +369,7 @@ class RCSubLineEditForm(forms.Form):
         for label, value in extra_fields.items():
             self.fields[label] = forms.CharField(initial=value,
                                                  widget=forms.TextInput(attrs={'name':'%s|%s|%s' % (count, line, label)}))
-
+        
 
 class RCImportForm(forms.Form):
 

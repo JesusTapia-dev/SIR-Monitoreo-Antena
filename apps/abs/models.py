@@ -365,7 +365,7 @@ class ABSConfiguration(Configuration):
         It needs 'module_conf' function
         """
         print("Write")
-        beams = ABSBeam.objects.filter(abs_conf=self)
+        beams  = ABSBeam.objects.filter(abs_conf=self)
         nbeams = len(beams)
 
         # Se manda a cero RC para poder realizar cambio de beam
@@ -479,7 +479,7 @@ class ABSConfiguration(Configuration):
         self.module_status = ''.join(status)
         self.save()
         print('Estatus salvado')
-        conf_active = ABSActive.objects.get_or_create(pk=1)
+        conf_active, __ = ABSActive.objects.get_or_create(pk=1)
         conf_active.conf = self
         conf_active.save()
         return True

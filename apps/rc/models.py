@@ -158,6 +158,7 @@ class RCConfiguration(Configuration):
         else:
             data = Params(params).get_conf(dtype='rc')
 
+        #print(data)
         # self.name = data['name']
         self.ipp = data['ipp']
         self.ntx = data['ntx']
@@ -171,6 +172,8 @@ class RCConfiguration(Configuration):
         self.total_units = self.ipp*self.ntx*self.km2unit
         self.save()
         self.clean_lines()
+
+        #print(params)
 
         positions = {'tx':0, 'tr':0}
         for i, id in enumerate(data['lines']):
@@ -210,8 +213,9 @@ class RCConfiguration(Configuration):
                         params=json.dumps(ref_line['params'])
                         ).pk
                 line.params = json.dumps(line_params)
+                print(line.params)
                 line.save()
-
+        print("Fin de dict to param")
 
     def get_delays(self):
 
@@ -384,7 +388,7 @@ class RCConfiguration(Configuration):
         ax.set_yticklabels(labels)
         ax.set_xlabel = 'Units'
         plot = to_bokeh(fig, use_pandas=False)
-        plot.tools = [PanTool(dimensions=['width']), WheelZoomTool(dimensions=['width']), ResetTool(), SaveTool()]
+        plot.tools = [PanTool(dimensions="width"), WheelZoomTool(dimensions="width"), ResetTool(), SaveTool()]
         plot.toolbar_location="above"
 
         return components(plot, CDN)
@@ -408,8 +412,8 @@ class RCConfiguration(Configuration):
                                     ("IPP", "@ipp"),
                                     ("X", "@left")])
 
-        tools = [PanTool(dimensions=['width']),
-                 WheelZoomTool(dimensions=['width']),
+        tools = [PanTool(dimensions="width"),
+                 WheelZoomTool(dimensions="width"),
                  hover, SaveTool()]
 
         plot = figure(width=1000,
@@ -777,10 +781,11 @@ class RCLine(models.Model):
         ipp_u = int(ipp*km2unit)
         total = ipp_u*ntx if self.rc_configuration.total_units==0 else self.rc_configuration.total_units
         y = []
-
+        
         if self.line_type.name=='tr':
             tr_params = json.loads(self.params)
-
+            #print(tr_params)
+            #print(tr_params['TX_ref'])
             if tr_params['TX_ref'] in ('0', 0):
                 txs = self.get_lines(line_type__name='tx')
             else:
