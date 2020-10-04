@@ -347,8 +347,10 @@ class RCConfiguration(Configuration):
         return '\n'.join(['{}'.format(x) for x in data])
 
     def update_pulses(self):
-
+        contador = 0
         for line in self.get_lines():
+            contador=contador+1
+            print(contador)
             line.update_pulses()
 
     def plot_pulses2(self, km=False):
@@ -918,8 +920,15 @@ class RCLine(models.Model):
             ops = [value.split('|')[2] for value in values]
             delays = [value.split('|')[3] for value in values]
             masks = [value.split('|')[4] for value in values]
+            print("masks")
+            print(masks)
+            print('{:8b}'.format(int(masks[0])))
             mask = list('{:8b}'.format(int(masks[0])))
+            print("mask")
+            print(mask)
             mask.reverse()
+            print("mask reverse")
+            print(mask)
             if mask[self.channel] in ('0', '', ' '):
                 y = np.zeros(confs[0].total_units, dtype=np.int8)
             else:

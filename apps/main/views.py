@@ -849,6 +849,8 @@ def experiment_mix(request, id_exp):
         mix.save()
 
         line_type = RCLineType.objects.get(name='mix')
+        print("VIew obteniendo len getlines")
+        print(len(rc_confs[0].get_lines()))
         for i in range(len(rc_confs[0].get_lines())):
             line = RCLine(rc_configuration=mix, line_type=line_type, channel=i)
             line.save()
