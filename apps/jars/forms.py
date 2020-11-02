@@ -10,7 +10,7 @@ def create_choices_from_model(model, filter_id=None):
 
     #instance = globals()[model]
     choices = model.objects.all().values_list('pk', 'name')
-    choices = add_empty_choice(choices)
+    choices = add_empty_choice(choices,label="New Choice")
     return choices
 
 class JARSConfigurationForm(forms.ModelForm):
@@ -37,7 +37,7 @@ class JARSFilterForm(forms.ModelForm):
 
         if 'initial' in kwargs:
             self.fields['filter_template'] = forms.ChoiceField(
-                choices=create_choices_from_model(JARSFilter),
+                choices = create_choices_from_model(JARSFilter),
                 initial = kwargs['initial']['id']
             )
             # self.fields['name'].initial = kwargs['initial']['id']
@@ -65,6 +65,15 @@ class JARSFilterForm(forms.ModelForm):
         model = JARSFilter
         exclude = ('name', )
 
+class JARSFilterFormNew(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(JARSFilterFormNew, self).__init__(*args, **kwargs)
+
+        self.fields['f_decimal'].widget.attrs['readonly'] = True
+
+    class Meta:
+        model = JARSFilter
+        exclude = ()
 
 class ExtFileField(forms.FileField):
     """

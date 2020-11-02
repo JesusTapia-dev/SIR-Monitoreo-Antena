@@ -10,8 +10,8 @@ from django.utils.html import conditional_escape
 
 class SpectralWidget(forms.widgets.TextInput):
 
-    def render(self, label, value, attrs=None):
-
+    def render(self, name, value, attrs=None, renderer=None):
+        label = name
         readonly = 'readonly' if attrs.get('readonly', False) else ''
         name = attrs.get('name', label)
         if value == None:

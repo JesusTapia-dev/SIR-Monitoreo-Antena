@@ -21,7 +21,7 @@ from .forms import ABSConfigurationForm, ABSBeamEditForm, ABSBeamAddForm, ABSImp
 
 from .utils.overJroShow import overJroShow
 #from .utils.OverJRO import OverJRO
-# Create your views here.
+#Create your views here.
 import json, ast
 
 
@@ -307,13 +307,13 @@ def add_beam(request, id_conf):
         beam_data = get_values_from_form(request.POST)
 
         new_beam = ABSBeam(
-                   name = beam_data['name'],
-                   antenna = json.dumps(beam_data['antenna']),
+                   name     = beam_data['name'],
+                   antenna  = json.dumps(beam_data['antenna']),
                    abs_conf = conf,
-                   tx = json.dumps(beam_data['tx']),
-                   rx = json.dumps(beam_data['rx']),
-                   ues = json.dumps(beam_data['ues']),
-                   only_rx = json.dumps(beam_data['only_rx'])
+                   tx       = json.dumps(beam_data['tx']),
+                   rx       = json.dumps(beam_data['rx']),
+                   ues      = json.dumps(beam_data['ues']),
+                   only_rx  = json.dumps(beam_data['only_rx'])
                    )
         new_beam.save()
         messages.success(request, 'Beam: "%s" has been added.'  % new_beam.name)
@@ -323,17 +323,16 @@ def add_beam(request, id_conf):
     ###### SIDEBAR ######
     kwargs = {}
 
-    #kwargs['dev_conf'] = conf.device
-    #kwargs['id_dev'] = conf.device
-    kwargs['id_conf'] = conf.id
-    kwargs['form'] = form
-    kwargs['title'] = 'ABS Beams'
-    kwargs['suptitle'] = 'Add Beam'
-    kwargs['button'] = 'Add'
+    #kwargs['dev_conf']  = conf.device
+    #kwargs['id_dev']    = conf.device
+    #kwargs['previous']  = conf.get_absolute_url_edit()
+    kwargs['id_conf']    = conf.id
+    kwargs['form']       = form
+    kwargs['title']      = 'ABS Beams'
+    kwargs['suptitle']   = 'Add Beam'
+    kwargs['button']     = 'Add'
     kwargs['no_sidebar'] = True
-
-    #kwargs['previous'] = conf.get_absolute_url_edit()
-    kwargs['edit'] = True
+    kwargs['edit']       = True
 
     return render(request, 'abs_add_beam.html', kwargs)
 

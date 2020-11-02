@@ -8,7 +8,7 @@ from apps.main.models import Device
 from apps.main.views import sidebar
 
 from .models import JARSConfiguration, JARSFilter
-from .forms import JARSConfigurationForm, JARSFilterForm, JARSImportForm
+from .forms import JARSConfigurationForm, JARSFilterForm, JARSImportForm,JARSFilterFormNew
 
 import json
 # Create your views here.
@@ -20,19 +20,19 @@ def jars_conf(request, id_conf):
     filter_parms = json.loads(conf.filter_parms)
 
     kwargs = {}
-    kwargs['filter'] = filter_parms
-    kwargs['filter_obj'] = JARSFilter.objects.get(pk=1)
+    kwargs['filter']       = filter_parms
+    kwargs['filter_obj']   = JARSFilter.objects.get(pk=1)
     kwargs['filter_keys']  = ['clock', 'multiplier', 'frequency', 'f_decimal',
                               'cic_2', 'scale_cic_2', 'cic_5', 'scale_cic_5', 'fir', 
                               'scale_fir', 'number_taps', 'taps']
 
-    filter_resolution = conf.filter_resolution()
-    kwargs['resolution'] = '{} (MHz)'.format(filter_resolution)
+    filter_resolution      = conf.filter_resolution()
+    kwargs['resolution']   = '{} (MHz)'.format(filter_resolution)
     if filter_resolution < 1:
         kwargs['resolution'] = '{} (kHz)'.format(filter_resolution*1000)
 
-    kwargs['status'] = conf.device.get_status_display()
-    kwargs['dev_conf'] = conf
+    kwargs['status']        = conf.device.get_status_display()
+    kwargs['dev_conf']      = conf
     kwargs['dev_conf_keys'] = ['cards_number', 'channels_number', 'channels',
                                'ftp_interval', 'data_type','acq_profiles',
                                'profiles_block', 'raw_data_blocks', 'ftp_interval',
@@ -59,39 +59,38 @@ def jars_conf(request, id_conf):
 
 def jars_conf_edit(request, id_conf):
 
-    conf = get_object_or_404(JARSConfiguration, pk=id_conf)
-
+    conf         = get_object_or_404(JARSConfiguration, pk=id_conf)
     filter_parms = json.loads(conf.filter_parms)
     
     if request.method=='GET':
-        form = JARSConfigurationForm(instance=conf)
+        form        = JARSConfigurationForm(instance=conf)
         filter_form = JARSFilterForm(initial=filter_parms)
 
     if request.method=='POST':
-        form = JARSConfigurationForm(request.POST, instance=conf)
+        form        = JARSConfigurationForm(request.POST, instance=conf)
         filter_form = JARSFilterForm(request.POST)
 
         if filter_form.is_valid():
-           jars_filter = filter_form.cleaned_data
+           jars_filter       = filter_form.cleaned_data
            jars_filter['id'] = request.POST['filter_template']
         else:
            messages.error(request, filter_form.errors)
 
         if form.is_valid():
-            conf = form.save(commit=False)
+            conf              = form.save(commit=False)
             conf.filter_parms = json.dumps(jars_filter)
             conf.save()
             return redirect('url_jars_conf', id_conf=conf.id)
 
     kwargs = {}
 
-    kwargs['id_dev'] = conf.id
-    kwargs['form'] = form
+    kwargs['id_dev']      = conf.id
+    kwargs['form']        = form
     kwargs['filter_form'] = filter_form
     kwargs['filter_name'] = JARSFilter.objects.get(pk=filter_parms['id']).name
-    kwargs['title'] = 'Device Configuration'
-    kwargs['suptitle'] = 'Edit'
-    kwargs['button'] = 'Save'
+    kwargs['title']       = 'Device Configuration'
+    kwargs['suptitle']    = 'Edit'
+    kwargs['button']      = 'Save'
 
     return render(request, 'jars_conf_edit.html', kwargs)
 
@@ -114,10 +113,10 @@ def import_file(request, conf_id):
         form = JARSImportForm()
 
     kwargs = {}
-    kwargs['form'] = form
-    kwargs['title'] = 'JARS Configuration'
+    kwargs['form']     = form
+    kwargs['title']    = 'JARS Configuration'
     kwargs['suptitle'] = 'Import file'
-    kwargs['button'] = 'Upload'
+    kwargs['button']   = 'Upload'
     kwargs['previous'] = conf.get_absolute_url()
 
     return render(request, 'jars_import.html', kwargs)
@@ -148,22 +147,50 @@ def read_conf(request, conf_id):
         messages.error(request, "Parameters could not be saved")
 
     kwargs = {}
-    kwargs['id_dev'] = conf.id
+    kwargs['id_dev']    = conf.id
     kwargs['filter_id'] = conf.filter.id
-    kwargs['form'] = form
-    kwargs['title'] = 'Device Configuration'
-    kwargs['suptitle'] = 'Parameters read from device'
-    kwargs['button'] = 'Save'
+    kwargs['form']      = form
+    kwargs['title']     = 'Device Configuration'
+    kwargs['suptitle']  = 'Parameters read from device'
+    kwargs['button']    = 'Save'
 
     ###### SIDEBAR ######
     kwargs.update(sidebar(conf=conf))
 
     return render(request, 'jars_conf_edit.html', kwargs)
 
+def new_filter(request, conf_id):
+    conf         = get_object_or_404(JARSConfiguration, pk=conf_id)   
+    form         = JARSFilterFormNew()
+
+    if request.method=='POST':
+        filter_form = JARSFilterFormNew(request.POST)
+
+        if filter_form.is_valid():
+           jars_filter       = filter_form.cleaned_data
+           jars_filter['id'] = request.POST['name']
+        else:
+           messages.error(request, filter_form.errors)
+        
+        #print(json.dumps(jars_filter))
+        jars_filter_obj       = JARSFilter()
+        jars_filter_obj.dict_to_parms_new(request.POST)      
+        jars_filter_obj.save()
+        return redirect('url_edit_jars_conf', id_conf=conf.id)
+
+    kwargs = {}
+    kwargs['id_dev']    = conf.id
+    kwargs['form']      = form
+    kwargs['title']     = 'New JARS Filter'
+    kwargs['suptitle']  = 'Parameters'
+    kwargs['button']    = 'Save'
+
+    return render(request, 'jars_new_filter.html', kwargs)
+
 def change_filter(request, conf_id, filter_id):
 
-    conf = get_object_or_404(JARSConfiguration, pk=conf_id)
-    filter = get_object_or_404(JARSFilter, pk=filter_id)
+    conf              = get_object_or_404(JARSConfiguration, pk=conf_id)
+    filter            = get_object_or_404(JARSFilter, pk=filter_id)
     conf.filter_parms = json.dumps(filter.jsonify())
     conf.save()
 
@@ -184,7 +211,7 @@ def get_log(request, conf_id):
         messages.error(request, message)
         return redirect('url_jars_conf', id_conf=conf.id)
     except Exception as e:
-        message = 'Restarting Report.txt has been downloaded successfully.'
+        message = 'Restarting Report.txt has been downloaded successfully.'+e
 
     content = response
     filename     =  'Log_%s_%s.txt' %(conf.experiment.name, conf.experiment.id)

@@ -2,8 +2,7 @@
 
 The Integrated Radar System (SIR) is a web application that allows the configuration of the radar devices as required by the experiment,
 This app allows the creation of Campaigns, Experiment and Device Configurations.
-For the python3.0 update please check the requeriments vrsion for each package. It depends on the python 3.7 or 3.8 version. 
-Special attention with the bokeh version.
+For the python3.0 update please check the requeriments vrsion for each package. It depends on the python 3.7 or 3.8 version. Special attention with the bokeh version.
 For more information visit: http://jro-dev.igp.gob.pe:3000/projects/sistema-integrado-de-radar/wiki
 
 ## Installation

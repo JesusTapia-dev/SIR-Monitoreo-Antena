@@ -638,6 +638,14 @@ class Configuration(PolymorphicModel):
             data['phaseA'] = dds_data.phase_to_binary(data['phaseA_degrees'])
             data['phaseB'] = dds_data.phase_to_binary(data['phaseB_degrees'])
 
+        elif self.device.device_type.name == 'dds_rest':
+            data['frequencyA_Mhz'] = float(data['frequencyA_Mhz'])
+            data['frequencyB_Mhz'] = float(data['frequencyB_Mhz'])
+            data['phaseA'] = dds_data.phase_to_binary(data['phaseA_degrees'])
+            data['phaseB'] = dds_data.phase_to_binary(data['phaseB_degrees'])
+            data['delta_frequency_Mhz'] = float(data['delta_frequency_Mhz'] or 0.00) 
+            data['update_clock_Mhz']    = float(data['update_clock_Mhz'] or 0.00) 
+            data['ramp_rate_clock_Mhz'] = float(data['ramp_rate_clock_Mhz'] or 0.0) 
         return data
 
     def clone(self, **kwargs):

@@ -258,8 +258,6 @@ class DefaultWidget(forms.widgets.TextInput):
         else:
             return mark_safe(html+script)
 
-
-
         return mark_safe(html)
 
 
