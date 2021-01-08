@@ -46,6 +46,7 @@ urlpatterns = (
 
     path('experiment/<int:id_exp>/new_dev_conf/', views.dev_conf_new, name='url_add_dev_conf'),
     path('experiment/<int:id_exp>/new_dev_conf/<int:id_dev>/', views.dev_conf_new, name='url_add_dev_conf'),
+    
     path('dev_conf/', views.dev_confs, name='url_dev_confs'),
     path('dev_conf/<int:id_conf>/', views.dev_conf, name='url_dev_conf'),
     path('dev_conf/<int:id_conf>/edit/', views.dev_conf_edit, name='url_edit_dev_conf'),

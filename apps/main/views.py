@@ -13,6 +13,8 @@ from django.contrib import messages
 from django.http.request import QueryDict
 from django.contrib.auth.decorators import login_required, user_passes_test
 
+from django.utils.timezone import is_aware
+
 try:
     from urllib.parse import urlencode
 except ImportError:
@@ -20,8 +22,6 @@ except ImportError:
 
 from .forms import CampaignForm, ExperimentForm, DeviceForm, ConfigurationForm, LocationForm, UploadFileForm, DownloadFileForm, OperationForm, NewForm
 from .forms import OperationSearchForm, FilterForm, ChangeIpForm
-
-from .tasks import task_start
 
 from apps.rc.forms import RCConfigurationForm, RCLineCode, RCMixConfigurationForm
 from apps.dds.forms import DDSConfigurationForm
@@ -32,18 +32,19 @@ from apps.usrp.forms import USRPConfigurationForm
 from apps.dds_rest.forms import DDSRestConfigurationForm
 from .utils import Params
 
-from .models import Campaign, Experiment, Device, Configuration, Location, RunningExperiment, DEV_STATES
-from apps.cgs.models import CGSConfiguration
-from apps.jars.models import JARSConfiguration, EXPERIMENT_TYPE
-from apps.usrp.models import USRPConfiguration
-from apps.abs.models import ABSConfiguration
-from apps.rc.models import RCConfiguration, RCLine, RCLineType, RCClock
-from apps.dds.models import DDSConfiguration
+from .models              import Campaign, Experiment, Device, Configuration, Location, RunningExperiment, DEV_STATES
+from apps.cgs.models      import CGSConfiguration
+from apps.jars.models     import JARSConfiguration, EXPERIMENT_TYPE
+from apps.usrp.models     import USRPConfiguration
+from apps.abs.models      import ABSConfiguration
+from apps.rc.models       import RCConfiguration, RCLine, RCLineType, RCClock
+from apps.dds.models      import DDSConfiguration
 from apps.dds_rest.models import DDSRestConfiguration
 
+from .tasks import task_start
 from radarsys.celery import app
 
-
+#comentario test
 CONF_FORMS = {
     'rc': RCConfigurationForm,
     'dds': DDSConfigurationForm,
@@ -442,9 +443,9 @@ def campaign_new(request):
             campaign.save()
             return redirect('url_campaign', id_camp=campaign.id)
 
-    kwargs['form'] = form
-    kwargs['title'] = 'Campaign'
-    kwargs['suptitle'] = 'New'
+    kwargs['form']           = form
+    kwargs['title']          = 'Campaign'
+    kwargs['suptitle']       = 'New'
     kwargs['menu_campaigns'] = 'active'
 
     return render(request, 'campaign_edit.html', kwargs)
@@ -459,11 +460,11 @@ def campaign_edit(request, id_camp):
         form = CampaignForm(instance=campaign)
 
     if request.method == 'POST':
-        exps = campaign.experiments.all().values_list('pk', flat=True)
-        post = request.POST.copy()
+        exps     = campaign.experiments.all().values_list('pk', flat=True)
+        post     = request.POST.copy()
         new_exps = post.getlist('experiments')
         post.setlist('experiments', [])
-        form = CampaignForm(post, instance=campaign)
+        form     = CampaignForm(post, instance=campaign)
 
         if form.is_valid():
             camp = form.save()
@@ -482,11 +483,11 @@ def campaign_edit(request, id_camp):
 
             return redirect('url_campaign', id_camp=id_camp)
 
-    kwargs = {}
-    kwargs['form'] = form
-    kwargs['title'] = 'Campaign'
-    kwargs['suptitle'] = 'Edit'
-    kwargs['button'] = 'Update'
+    kwargs                   = {}
+    kwargs['form']           = form
+    kwargs['title']          = 'Campaign'
+    kwargs['suptitle']       = 'Edit'
+    kwargs['button']         = 'Update'
     kwargs['menu_campaigns'] = 'active'
 
     return render(request, 'campaign_edit.html', kwargs)
@@ -694,11 +695,11 @@ def experiment_edit(request, id_exp):
             experiment = form.save()
             return redirect('url_experiment', id_exp=experiment.id)
 
-    kwargs = {}
-    kwargs['form'] = form
-    kwargs['title'] = 'Experiment'
-    kwargs['suptitle'] = 'Edit'
-    kwargs['button'] = 'Update'
+    kwargs                     = {}
+    kwargs['form']             = form
+    kwargs['title']            = 'Experiment'
+    kwargs['suptitle']         = 'Edit'
+    kwargs['button']           = 'Update'
     kwargs['menu_experiments'] = 'active'
 
     return render(request, 'experiment_edit.html', kwargs)
@@ -1790,12 +1791,24 @@ def operation(request, id_camp=None):
 @login_required
 def radar_start(request, id_camp, id_radar):
 
-    campaign = get_object_or_404(Campaign, pk=id_camp)
+    campaign    = get_object_or_404(Campaign, pk=id_camp)
     experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
-    now = datetime.now()
+    now         = datetime.now()
+    
     for exp in experiments:
+        #app.control.revoke(exp.task)
+        print(exp.status)
         start = datetime.combine(datetime.now().date(), exp.start_time)
-        end = datetime.combine(datetime.now().date(), exp.end_time)
+        end   = datetime.combine(datetime.now().date(), exp.end_time)
+        print(exp.start_time)
+        print(exp.end_time)
+        
+        print(start)
+        print(end)
+        print(is_aware(start))
+        print(campaign.start_date)
+        print(campaign.end_date)
+        print(is_aware(campaign.start_date))
         if end < start:
             end += timedelta(1)
 
@@ -1814,8 +1827,9 @@ def radar_start(request, id_camp, id_radar):
             continue
 
         app.control.revoke(exp.task)
-
+        print("Llego luego del revoke")
         if now > start and now <= end:
+            print("Caso now >start and <end")
             task = task_start.delay(exp.id)
             exp.status = task.wait()
             if exp.status == 0:
@@ -1823,12 +1837,11 @@ def radar_start(request, id_camp, id_radar):
             if exp.status == 2:
                 messages.success(request, 'Experiment {} started'.format(exp))
         else:
-            task = task_start.apply_async(
-                (exp.pk, ), eta=start+timedelta(hours=5))
-            exp.task = task.id
+            print("Caso now < start o >end")
+            task = task_start.apply_async((exp.pk, ), eta=start)#start+timedelta(hours=5))
+            exp.task   = task.id
             exp.status = 3
-            messages.success(
-                request, 'Experiment {} programmed to start at {}'.format(exp, start))
+            messages.success(request, 'Experiment {} programmed to start at {}'.format(exp, start))
 
         exp.save()
 
@@ -1838,14 +1851,18 @@ def radar_start(request, id_camp, id_radar):
 @login_required
 def radar_stop(request, id_camp, id_radar):
 
-    campaign = get_object_or_404(Campaign, pk=id_camp)
+    campaign    = get_object_or_404(Campaign, pk=id_camp)
     experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
-
+    print("Ingreso en stop radar_stop")
     for exp in experiments:
 
         if exp.task:
+            print("Ingreso antes de revoke stop")
             app.control.revoke(exp.task)
-        if exp.status == 2:
+
+            
+        if exp.status == 2: #status 2 es started
+            print("llama a exp.stop")
             exp.stop()
             messages.warning(request, 'Experiment {} stopped'.format(exp))
         exp.status = 1
@@ -1857,12 +1874,15 @@ def radar_stop(request, id_camp, id_radar):
 @login_required
 def radar_refresh(request, id_camp, id_radar):
 
-    campaign = get_object_or_404(Campaign, pk=id_camp)
+    campaign    = get_object_or_404(Campaign, pk=id_camp)
     experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
 
-    i = app.control.inspect()
-    scheduled = i.scheduled().values()[0]
-    revoked = i.revoked().values()[0]
+    i         = app.control.inspect()
+    print(i)
+    print(i.scheduled())
+    print(i.scheduled().values())
+    scheduled = list(i.scheduled().values())[0]
+    revoked   = list(i.revoked().values())[0]
 
     for exp in experiments:
         if exp.task in revoked:
@@ -1879,16 +1899,16 @@ def radar_refresh(request, id_camp, id_radar):
 @login_required
 def revoke_tasks(request, id_camp):
 
-    i = app.control.inspect()
-    scheduled = i.scheduled().values()[0]
-    revoked = i.revoked().values()[0]
+    i         = app.control.inspect()
+    scheduled = list(i.scheduled().values())[0]
+    revoked   = list(i.revoked().values())[0]
 
     for t in scheduled:
         if t['request']['id'] in revoked:
             continue
         app.control.revoke(t['request']['id'])
-        exp = Experiment.objects.get(pk=eval(t['request']['args'])[0])
-        eta = t['eta']
+        exp  = Experiment.objects.get(pk=eval(str(t['request']['args']))[0])
+        eta  = t['eta']
         task = t['request']['name'].split('.')[-1]
         messages.warning(request, 'Scheduled {} at {} for experiment {} revoked'.format(task, eta, exp.name))
 
@@ -1897,14 +1917,14 @@ def revoke_tasks(request, id_camp):
 @login_required
 def show_tasks(request, id_camp):
 
-    i = app.control.inspect()
-    scheduled = i.scheduled().values()[0]
-    revoked = i.revoked().values()[0]
+    i         = app.control.inspect()
+    scheduled = list(i.scheduled().values())[0]
+    revoked   = list(i.revoked().values())[0]
 
     for t in scheduled:
         if t['request']['id'] in revoked:
             continue
-        exp = Experiment.objects.get(pk=eval(t['request']['args'])[0])
+        exp = Experiment.objects.get(pk=eval(str(t['request']['args']))[0])
         eta = t['eta']
         task = t['request']['name'].split('.')[-1]
         messages.success(request, 'Task {} scheduled at {} for experiment {}'.format(task, eta, exp.name))

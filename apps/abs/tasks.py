@@ -6,6 +6,9 @@ import json
 from datetime import timedelta, datetime
 from celery.task import task
 
+from celery.utils.log import get_task_logger
+logger = get_task_logger(__name__)
+
 @task(name='task_change_beam')
 def task_change_beam(id_conf):
 
@@ -37,12 +40,12 @@ def task_change_beam(id_conf):
             abs_conf.send_beam_num(i+1)
             next_beam.set_as_activebeam()
             task = task_change_beam.apply_async((abs_conf.pk,), eta=date)
-            print next_beam
+            print (next_beam)
         else:
             abs_conf.send_beam_num(1)
             beams_list[0].set_as_activebeam()
             task = task_change_beam.apply_async((abs_conf.pk,), eta=date)
-            print beams_list[0]
+            print (beams_list[0])
             i=0
 
     else:

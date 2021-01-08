@@ -69,7 +69,7 @@ class CampaignForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(CampaignForm, self).__init__(*args, **kwargs)
         self.fields['start_date'].widget = DatepickerWidget(self.fields['start_date'].widget.attrs)
-        self.fields['end_date'].widget = DatepickerWidget(self.fields['end_date'].widget.attrs)
+        self.fields['end_date'].widget   = DatepickerWidget(self.fields['end_date'].widget.attrs)
         self.fields['description'].widget.attrs = {'rows': 2}
 
         if self.instance.pk:
@@ -85,10 +85,10 @@ class ExperimentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ExperimentForm, self).__init__(*args, **kwargs)
         self.fields['start_time'].widget = TimepickerWidget(self.fields['start_time'].widget.attrs)
-        self.fields['end_time'].widget = TimepickerWidget(self.fields['end_time'].widget.attrs)
+        self.fields['end_time'].widget   = TimepickerWidget(self.fields['end_time'].widget.attrs)
 
     def save(self, *args, **kwargs):
-        exp = super(ExperimentForm, self).save(*args, **kwargs)
+        exp      = super(ExperimentForm, self).save(*args, **kwargs)
         exp.name = exp.name.replace(' ', '')
         exp.save()
         return exp
@@ -153,7 +153,7 @@ class OperationForm(forms.Form):
 
         campaigns = kwargs.pop('campaigns')
         super(OperationForm, self).__init__(*args, **kwargs)
-        self.fields['campaign'].label = 'Current Campaigns'
+        self.fields['campaign'].label   = 'Current Campaigns'
         self.fields['campaign'].choices = add_empty_choice(campaigns.values_list('id', 'name'))
 
 
@@ -201,6 +201,6 @@ class FilterForm(forms.Form):
 class ChangeIpForm(forms.Form):
 
     ip_address = forms.GenericIPAddressField()
-    mask = forms.GenericIPAddressField(initial='255.255.255.0')
-    gateway = forms.GenericIPAddressField(initial='0.0.0.0')
-    dns = forms.GenericIPAddressField(initial='0.0.0.0')
+    mask       = forms.GenericIPAddressField(initial='255.255.255.0')
+    gateway    = forms.GenericIPAddressField(initial='0.0.0.0')
+    dns        = forms.GenericIPAddressField(initial='0.0.0.0')

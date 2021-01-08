@@ -105,13 +105,13 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
+USE_TZ   = False
+
 TIME_ZONE = os.environ.get('TZ', 'America/Lima')
 
 USE_I18N = True
 
 USE_L10N = True
-
-USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
@@ -129,7 +129,7 @@ STATICFILES_FINDERS = (
 
 # Celery stuff
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
-REDIS_PORT = os.environ.get('REDIS_PORT', 6300)
+REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
 
 BROKER_TRANSPORT = 'redis'
 BROKER_URL       = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
@@ -140,3 +140,4 @@ CELERY_ACCEPT_CONTENT    = ['application/json']
 CELERY_TASK_SERIALIZER   = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ENABLE_UTC        = False
+CELERY_TIMEZONE          = 'America/Lima'

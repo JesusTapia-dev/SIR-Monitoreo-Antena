@@ -5,18 +5,28 @@ from celery import task
 from datetime import timedelta, datetime
 
 from .models import Experiment
+from celery import Celery
+
+from celery.utils.log import get_task_logger
+
+from django.utils import timezone
+
+logger = get_task_logger(__name__)
 
 @task
 def task_start(id_exp):
-    exp = Experiment.objects.get(pk=id_exp)
+    exp    = Experiment.objects.get(pk=id_exp)
     status = exp.status
     if exp.status == 2:
         print('Experiment {} already running start task not executed'.format(exp))
         return 2
     if status == 3:
-        now = datetime.now()
+        now   = datetime.now()
         start = datetime.combine(now.date(), exp.start_time)
-        end = datetime.combine(now.date(), exp.end_time)
+        end   = datetime.combine(now.date(), exp.end_time)
+        print(now)
+        print(start)
+        print(end)
         if end < start:
             end += timedelta(1)
         try:
@@ -26,7 +36,7 @@ def task_start(id_exp):
             print('Error')
             exp.status = 0
         if exp.status == 2:
-            task = task_stop.apply_async((id_exp,), eta=end+timedelta(hours=5))
+            task = task_stop.apply_async((id_exp,),eta=end) #Antiguo eta=end+timedelta(hours=5))
             exp.task = task.id
     exp.save()
     return exp.status
@@ -42,10 +52,10 @@ def task_stop(id_exp):
             print('Error')
             exp.status = 0
 
-    now = datetime.now()
-    start = datetime.combine(now.date()+timedelta(1), exp.start_time)
-    task = task_start.apply_async((id_exp, ), eta=start+timedelta(hours=5))
-    exp.task = task.id
+    now        = datetime.now()
+    start      = datetime.combine(now.date()+timedelta(1), exp.start_time)
+    task       = task_start.apply_async((id_exp, ), eta=start) #Antiguo eta=start+timedelta(hours=5))
+    exp.task   = task.id
     exp.status = 3
     exp.save()
     return exp.status
@@ -53,12 +63,12 @@ def task_stop(id_exp):
 #Task to get status
 @task
 def task_status(id_exp):
-
+    print ("task status"+str(id_exp))
     exp = Experiment.objects.get(pk=id_exp)
     if exp.status==2:
         run_every = timedelta(minutes=1)
-        now = datetime.utcnow()
-        date = now + run_every
+        now       = datetime.utcnow()
+        date      = now + run_every
         task_status.apply_async((id_exp,), eta=date)
         print ("Monitoring...")
         exp.get_status()

@@ -132,13 +132,13 @@ class DeviceType(models.Model):
 
 class Device(models.Model):
 
-    device_type = models.ForeignKey('DeviceType', on_delete=models.CASCADE)
-    location = models.ForeignKey('Location', on_delete=models.CASCADE)
-    ip_address = models.GenericIPAddressField(protocol='IPv4', default='0.0.0.0')
+    device_type  = models.ForeignKey('DeviceType', on_delete=models.CASCADE)
+    location     = models.ForeignKey('Location', on_delete=models.CASCADE)
+    ip_address   = models.GenericIPAddressField(protocol='IPv4', default='0.0.0.0')
     port_address = models.PositiveSmallIntegerField(default=2000)
-    description = models.TextField(blank=True, null=True)
-    status = models.PositiveSmallIntegerField(default=4, choices=DEV_STATES)
-    conf_active = models.PositiveIntegerField(default=0, verbose_name='Current configuration')
+    description  = models.TextField(blank=True, null=True)
+    status       = models.PositiveSmallIntegerField(default=4, choices=DEV_STATES)
+    conf_active  = models.PositiveIntegerField(default=0, verbose_name='Current configuration')
 
     class Meta:
         db_table = 'db_devices'
@@ -209,10 +209,10 @@ class Device(models.Model):
             headers = {'content-type': "application/json",
                        'cache-control': "no-cache"}
 
-            ip = [int(x) for x in ip_address.split('.')]
-            dns = [int(x) for x in dns.split('.')]
+            ip      = [int(x) for x in ip_address.split('.')]
+            dns     = [int(x) for x in dns.split('.')]
             gateway = [int(x) for x in gateway.split('.')]
-            subnet = [int(x) for x in mask.split('.')]
+            subnet  = [int(x) for x in mask.split('.')]
 
             payload = {
                 "ip": ip,
@@ -225,7 +225,7 @@ class Device(models.Model):
             try:
                 answer = req.json()
                 if answer['changeip']=='ok':
-                    self.message = '25|IP succesfully changed'
+                    self.message    = '25|IP succesfully changed'
                     self.ip_address = ip_address
                     self.save()
                 else:
@@ -241,14 +241,14 @@ class Device(models.Model):
 
 class Campaign(models.Model):
 
-    template = models.BooleanField(default=False)
-    name = models.CharField(max_length=60, unique=True)
-    start_date = models.DateTimeField(blank=True, null=True)
-    end_date = models.DateTimeField(blank=True, null=True)
-    tags = models.CharField(max_length=40, blank=True, null=True)
+    template    = models.BooleanField(default=False)
+    name        = models.CharField(max_length=60, unique=True)
+    start_date  = models.DateTimeField(blank=True, null=True)
+    end_date    = models.DateTimeField(blank=True, null=True)
+    tags        = models.CharField(max_length=40, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     experiments = models.ManyToManyField('Experiment', blank=True)
-    author = models.ForeignKey(User, null=True, blank=True,on_delete=models.CASCADE)
+    author      = models.ForeignKey(User, null=True, blank=True,on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'db_campaigns'
@@ -272,7 +272,7 @@ class Campaign(models.Model):
             data[field.name] = field.value_from_object(self)
 
         data['start_date'] = data['start_date'].strftime('%Y-%m-%d')
-        data['end_date'] = data['end_date'].strftime('%Y-%m-%d')
+        data['end_date']   = data['end_date'].strftime('%Y-%m-%d')
 
         return data
 
@@ -311,10 +311,10 @@ class Campaign(models.Model):
 
         camp_parms = parms['campaigns']['byId'][parms['campaigns']['allIds'][0]]
 
-        self.name = '{}-{}'.format(camp_parms['name'], datetime.now().strftime('%y%m%d'))
+        self.name       = '{}-{}'.format(camp_parms['name'], datetime.now().strftime('%y%m%d'))
         self.start_date = camp_parms['start_date']
-        self.end_date = camp_parms['end_date']
-        self.tags = camp_parms['tags']
+        self.end_date   = camp_parms['end_date']
+        self.tags       = camp_parms['tags']
         self.save()
 
         return self
@@ -329,8 +329,8 @@ class Campaign(models.Model):
 
         for loc in locations:
             dum = {}
-            dum['name'] = loc.name
-            dum['id'] = loc.pk
+            dum['name']        = loc.name
+            dum['id']          = loc.pk
             dum['experiments'] = [e for e in self.experiments.all() if e.location==loc]
             ret.append(dum)
 
@@ -353,23 +353,23 @@ class Campaign(models.Model):
 
 
 class RunningExperiment(models.Model):
-    radar = models.OneToOneField('Location', on_delete=models.CASCADE)
+    radar              = models.OneToOneField('Location', on_delete=models.CASCADE)
     running_experiment = models.ManyToManyField('Experiment', blank = True)
-    status = models.PositiveSmallIntegerField(default=0, choices=RADAR_STATES)
+    status             = models.PositiveSmallIntegerField(default=0, choices=RADAR_STATES)
 
 
 class Experiment(models.Model):
 
-    template = models.BooleanField(default=False)
-    name = models.CharField(max_length=40, default='', unique=True)
-    location = models.ForeignKey('Location', null=True, blank=True, on_delete=models.CASCADE)
-    freq = models.FloatField(verbose_name='Operating Freq. (MHz)', validators=[MinValueValidator(1), MaxValueValidator(10000)], default=49.9200)
+    template   = models.BooleanField(default=False)
+    name       = models.CharField(max_length=40, default='', unique=True)
+    location   = models.ForeignKey('Location', null=True, blank=True, on_delete=models.CASCADE)
+    freq       = models.FloatField(verbose_name='Operating Freq. (MHz)', validators=[MinValueValidator(1), MaxValueValidator(10000)], default=49.9200)
     start_time = models.TimeField(default='00:00:00')
-    end_time = models.TimeField(default='23:59:59')
-    task = models.CharField(max_length=36, default='', blank=True, null=True)
-    status = models.PositiveSmallIntegerField(default=4, choices=EXP_STATES)
-    author = models.ForeignKey(User, null=True, blank=True,on_delete=models.CASCADE)
-    hash = models.CharField(default='', max_length=64, null=True, blank=True)
+    end_time   = models.TimeField(default='23:59:59')
+    task       = models.CharField(max_length=36, default='', blank=True, null=True)
+    status     = models.PositiveSmallIntegerField(default=4, choices=EXP_STATES)
+    author     = models.ForeignKey(User, null=True, blank=True,on_delete=models.CASCADE)
+    hash       = models.CharField(default='', max_length=64, null=True, blank=True)
 
     class Meta:
         db_table = 'db_experiments'
@@ -393,8 +393,8 @@ class Experiment(models.Model):
             data[field.name] = field.value_from_object(self)
 
         data['start_time'] = data['start_time'].strftime('%H:%M:%S')
-        data['end_time'] = data['end_time'].strftime('%H:%M:%S')
-        data['location'] = self.location.name
+        data['end_time']   = data['end_time'].strftime('%H:%M:%S')
+        data['location']   = self.location.name
         data['configurations'] = ['{}'.format(conf.pk) for
             conf in Configuration.objects.filter(experiment=self, type=0)]
 
@@ -427,7 +427,7 @@ class Experiment(models.Model):
 
         confs = []
         allconfs = Configuration.objects.filter(experiment=self, type = 0).order_by('-device__device_type__sequence')
-        rc_mix = [conf for conf in allconfs if conf.device.device_type.name=='rc' and conf.mix]
+        rc_mix   = [conf for conf in allconfs if conf.device.device_type.name=='rc' and conf.mix]
         if rc_mix:
             for conf in allconfs:
                 if conf.device.device_type.name == 'rc' and  not conf.mix:
@@ -456,7 +456,7 @@ class Experiment(models.Model):
         '''
 
         confs = Configuration.objects.filter(experiment=self, type = 0).order_by('device__device_type__sequence')
-        confs=confs.exclude(device__device_type__name='cgs')
+        confs = confs.exclude(device__device_type__name='cgs')
         try:
             for conf in confs:
                 conf.stop_device()
@@ -529,8 +529,8 @@ class Experiment(models.Model):
 
         for id_conf in exp_parms['configurations']:
             conf_parms = parms['configurations']['byId'][id_conf]
-            device = Device.objects.filter(device_type__name=conf_parms['device_type'])[0]
-            model = CONF_MODELS[conf_parms['device_type']]
+            device     = Device.objects.filter(device_type__name=conf_parms['device_type'])[0]
+            model      = CONF_MODELS[conf_parms['device_type']]
             conf = model(
                 experiment = self,
                 device = device,
@@ -540,9 +540,9 @@ class Experiment(models.Model):
 
         location, created = Location.objects.get_or_create(name=exp_parms['location'])
         self.name = '{}-{}'.format(exp_parms['name'], datetime.now().strftime('%y%m%d'))
-        self.location = location
+        self.location   = location
         self.start_time = exp_parms['start_time']
-        self.end_time = exp_parms['end_time']
+        self.end_time   = exp_parms['end_time']
         self.save()
 
         return self
@@ -571,17 +571,17 @@ class Experiment(models.Model):
 
 class Configuration(PolymorphicModel):
 
-    template = models.BooleanField(default=False)
-    # name = models.CharField(verbose_name="Configuration Name", max_length=40, default='')
-    device = models.ForeignKey('Device', verbose_name='Device', null=True, on_delete=models.CASCADE)
-    label = models.CharField(verbose_name="Label", max_length=40, default='', blank=True, null=True)
-    experiment = models.ForeignKey('Experiment', verbose_name='Experiment', null=True, blank=True, on_delete=models.CASCADE)
-    type = models.PositiveSmallIntegerField(default=0, choices=CONF_TYPES)
-    created_date = models.DateTimeField(auto_now_add=True)
+    template        = models.BooleanField(default=False)
+    # name          = models.CharField(verbose_name="Configuration Name", max_length=40, default='')
+    device          = models.ForeignKey('Device', verbose_name='Device', null=True, on_delete=models.CASCADE)
+    label           = models.CharField(verbose_name="Label", max_length=40, default='', blank=True, null=True)
+    experiment      = models.ForeignKey('Experiment', verbose_name='Experiment', null=True, blank=True, on_delete=models.CASCADE)
+    type            = models.PositiveSmallIntegerField(default=0, choices=CONF_TYPES)
+    created_date    = models.DateTimeField(auto_now_add=True)
     programmed_date = models.DateTimeField(auto_now=True)
-    parameters = models.TextField(default='{}')
-    author = models.ForeignKey(User, null=True, blank=True,on_delete=models.CASCADE)
-    hash = models.CharField(default='', max_length=64, null=True, blank=True)
+    parameters      = models.TextField(default='{}')
+    author          = models.ForeignKey(User, null=True, blank=True,on_delete=models.CASCADE)
+    hash            = models.CharField(default='', max_length=64, null=True, blank=True)
     message = ""
 
     class Meta:

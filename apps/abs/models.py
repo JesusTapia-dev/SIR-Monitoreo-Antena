@@ -420,9 +420,10 @@ class ABSConfiguration(Configuration):
                 try:
                     data, address = sock.recvfrom(1024)
                     print (address, data)
-
+                    data = data.decode("utf-8")
                     if data == '1':
                         status[int(address[0][10:])-1] = '3'
+                        #print (int(address[0][10:])-1)
                     elif data == '0':
                         status[int(address[0][10:])-1] = '1'
                 except socket.timeout:
@@ -477,6 +478,7 @@ class ABSConfiguration(Configuration):
         print('Inicia intento de salvar device.status')
         self.device.status = 3
         self.module_status = ''.join(status)
+        #print(status)
         self.save()
         print('Estatus salvado')
         conf_active, __ = ABSActive.objects.get_or_create(pk=1)
