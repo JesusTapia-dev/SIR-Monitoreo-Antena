@@ -326,6 +326,9 @@ def device_change_ip(request, id_dev):
 
         if is_developer(request.user):
             device.change_ip(**request.POST.dict())
+
+            print(device.ip_address, device.message)
+
             level, message = device.message.split('|')
             messages.add_message(request, level, message)
         else:
@@ -1797,17 +1800,18 @@ def radar_start(request, id_camp, id_radar):
     
     for exp in experiments:
         #app.control.revoke(exp.task)
-        print(exp.status)
+        print("----------------------")
+        print("status:->", exp.status)
         start = datetime.combine(datetime.now().date(), exp.start_time)
         end   = datetime.combine(datetime.now().date(), exp.end_time)
-        print(exp.start_time)
-        print(exp.end_time)
+        print("start exp: ",exp.start_time)
+        print("end exp: ",exp.end_time)
         
-        print(start)
-        print(end)
+        print("start comb: ",start)
+        print("end comb: ",end)
         print(is_aware(start))
-        print(campaign.start_date)
-        print(campaign.end_date)
+        print("start camp",campaign.start_date)
+        print("end camp",campaign.end_date)
         print(is_aware(campaign.start_date))
         if end < start:
             end += timedelta(1)
@@ -1815,33 +1819,53 @@ def radar_start(request, id_camp, id_radar):
         if exp.status == 2:
             messages.warning(
                 request, 'Experiment {} already running'.format(exp))
-            continue
+            #continue
 
         if exp.status == 3:
             messages.warning(
                 request, 'Experiment {} already programmed'.format(exp))
-            continue
+            #continue
 
-        if start > campaign.end_date or start < campaign.start_date:
-            messages.warning(request, 'Experiment {} out of date'.format(exp))
-            continue
+        if exp.status == 1:
+            messages.warning(
+                request, 'Experiment {} stopped'.format(exp))
+            #continue
 
-        app.control.revoke(exp.task)
+        if start > campaign.end_date:
+            messages.warning(
+                request, 'Experiment {} out of date'.format(exp))
+
+        #app.control.revoke(exp.task)
         print("Llego luego del revoke")
-        if now > start and now <= end:
-            print("Caso now >start and <end")
+        if now >= start and now <= end:
+
+            print("Caso now > start and < end -- (1)")
+
+            # -------------------------------------------
+            
             task = task_start.delay(exp.id)
-            exp.status = task.wait()
+            exp.task   = task.id
+            exp.status = task.get()
+            # -------------------------------------------
+
+            #exp.status = task.wait()
+
             if exp.status == 0:
                 messages.error(request, 'Experiment {} not start'.format(exp))
             if exp.status == 2:
                 messages.success(request, 'Experiment {} started'.format(exp))
-        else:
-            print("Caso now < start o >end")
-            task = task_start.apply_async((exp.pk, ), eta=start)#start+timedelta(hours=5))
+        elif now < start:
+            print("Caso now <= start -- (2)",exp.pk)
+            #task = task_start.apply_async((exp.pk, ), eta=start)#start+timedelta(hours=5))
+            task = task_start.apply_async((exp.pk, ), eta=start+timedelta(hours=5))#)
             exp.task   = task.id
             exp.status = 3
             messages.success(request, 'Experiment {} programmed to start at {}'.format(exp, start))
+        else:
+            print("Caso now > end -- (3)")
+            exp.status = 4
+            messages.warning(
+                request, 'Experiment {} out of date'.format(exp))
 
         exp.save()
 
@@ -1878,7 +1902,7 @@ def radar_refresh(request, id_camp, id_radar):
     experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
 
     i         = app.control.inspect()
-    print(i)
+    print("inspect",i)
     print(i.scheduled())
     print(i.scheduled().values())
     scheduled = list(i.scheduled().values())[0]

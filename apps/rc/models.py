@@ -551,7 +551,8 @@ class RCConfiguration(Configuration):
 
         return True
 
-    def write_device(self, raw=False):        
+    def write_device(self, raw=False):
+        print("write device")        
 
         if not raw:
             clock = RCClock.objects.get(rc_configuration=self)
@@ -560,16 +561,16 @@ class RCConfiguration(Configuration):
             else:
                 data = {'manual': [clock.multiplier, clock.divisor, clock.reference]}
             payload = self.request('setfreq', 'post', data=json.dumps(data))
-            if payload['command'] != 'ok':
-                self.message = 'RC write: {}'.format(payload['command'])
+            if payload['setfreq'] != 'ok':
+                self.message = 'RC write: {}'.format(payload['setfreq'])
             else:
-                self.message = payload['programming']
-                if payload['programming'] == 'fail':
+                self.message = payload['setfreq']
+                if payload['setfreq'] == 'fail':
                     self.message = 'RC write: error programming CGS chip'
         
         values = []
         for pulse, delay in zip(self.get_pulses(), self.get_delays()):
-            while delay>65536:
+            while delay > 65536:
                 values.append((pulse, 65535))
                 delay -= 65536
             values.append((pulse, delay-1))
@@ -600,37 +601,37 @@ class RCConfiguration(Configuration):
         if raw:
             return b64encode(data)
 
-        try:
-            payload = self.request('stop', 'post')
-            payload = self.request('reset', 'post')
-            #payload = self.request('divider', 'post', data={'divider': self.clock_divider-1})
-            #payload = self.request('write', 'post', data=b64encode(bytearray((139, 62))), timeout=20)
-            n = len(data)
-            x = 0
-            #while x < n:
-            payload = self.request('write', 'post', data=b64encode(data))
-            #    x += 1024
-            
-            if payload['write']=='ok':
-                self.device.status = 3
-                self.device.save()
-                self.message = 'RC configured and started'
-            else:
-                self.device.status = 1
-                self.device.save()
-                self.message = 'RC write: {}'.format(payload['write'])
-                return False
+        #try:
+        payload = self.request('stop', 'post')
+        payload = self.request('reset', 'post')
+        #payload = self.request('divider', 'post', data={'divider': self.clock_divider-1})
+        #payload = self.request('write', 'post', data=b64encode(bytearray((139, 62))), timeout=20)
+        n = len(data)
+        x = 0
+        #while x < n:
+        payload = self.request('write', 'post', data=b64encode(data))
+        #    x += 1024
+        
+        if payload['write']=='ok':
+            self.device.status = 3
+            self.device.save()
+            self.message = 'RC configured and started'
+        else:
+            self.device.status = 1
+            self.device.save()
+            self.message = 'RC write: {}'.format(payload['write'])
+            return False
 
             #payload = self.request('start', 'post')
 
-        except Exception as e:
-            if 'No route to host' not in str(e):
-                self.device.status = 4
-            else:
-                self.device.status = 0
-            self.message = 'RC write: {}'.format(str(e))
-            self.device.save()
-            return False
+        #except Exception as e:
+        #    if 'No route to host' not in str(e):
+        #        self.device.status = 4
+        #    else:
+        #        self.device.status = 0
+        #    self.message = 'RC write: {}'.format(str(e))
+        #    self.device.save()
+        #    return False
 
         return True
 

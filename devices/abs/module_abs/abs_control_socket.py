@@ -13,8 +13,8 @@ import sys
 
 import json
 
-module_ip  = '192.168.1.xx'
-module_num = 'xx'
+module_ip  = '192.168.100.7'
+module_num = '7'
 module_port = 5500
 module = (module_ip,5500)
 

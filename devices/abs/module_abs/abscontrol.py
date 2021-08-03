@@ -3,6 +3,10 @@ This script should run in the abs module embedded system
 It creates a Web Application with API Restful Bottle to connect to SIR server.
 It needs the following scripts: abs_gpio.py and bottle.py
 """
+
+#descontinuado
+
+
 from bottle import route, run, request
 from bottle import error
 from abs_gpio import abs_read
@@ -13,8 +17,9 @@ import sys
 
 import json
 
-module_ip  = '192.168.1.xx'
-module_num = 'xx'
+#module_ip  = '192.168.1.xx'
+module_ip  = '192.168.100.7'
+module_num = '7'
 module_port = 5500
 module = (module_ip,5500)
 

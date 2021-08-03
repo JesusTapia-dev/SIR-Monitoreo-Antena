@@ -436,16 +436,18 @@ class Experiment(models.Model):
         else:
             confs = allconfs
 
-        try:
-            for conf in confs:
-                conf.stop_device()
-                conf.write_device()
-                conf.device.conf_active = conf.pk
-                conf.device.save()
-                conf.start_device()
-                time.sleep(1)
-        except:
-            return 0
+        print("confs: ",confs)
+        #try:
+        for conf in confs:
+            print("conf->",conf)
+            conf.stop_device()
+            conf.write_device()
+            conf.device.conf_active = conf.pk
+            conf.device.save()
+            conf.start_device()
+            time.sleep(1)
+        #except:
+            #return 0
         return 2
 
 
