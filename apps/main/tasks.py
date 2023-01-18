@@ -13,7 +13,7 @@ from django.utils import timezone
 
 logger = get_task_logger(__name__)
 
-@task
+@Task
 def task_start(id_exp):
     print("exp.id", id_exp)
     exp    = Experiment.objects.get(pk=id_exp)
@@ -58,7 +58,7 @@ def task_start(id_exp):
     exp.save()
     return exp.status
     
-@task
+@Task
 def task_stop(id_exp):
     exp = Experiment.objects.get(pk=id_exp)
     if exp.status == 2:
@@ -78,7 +78,7 @@ def task_stop(id_exp):
     return exp.status
 
 #Task to get status
-@task
+@Task
 def task_status(id_exp):
     print ("task status"+str(id_exp))
     exp = Experiment.objects.get(pk=id_exp)
@@ -95,7 +95,7 @@ def task_status(id_exp):
         return exp.status
 
 
-@task
+@Task
 def task_test(id_exp):
     print("mm",id_exp)
     exp    = Experiment.objects.get(pk=id_exp)
