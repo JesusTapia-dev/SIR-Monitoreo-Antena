@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django-bootstrap5',
+    "django_bootstrap5",
     'polymorphic',
     'apps.accounts',
     'apps.main',
@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'apps.abs',
     'apps.cgs',
     'apps.dds_rest',
+    'graphene_django',
 ]
 
 MIDDLEWARE = [
@@ -144,3 +145,7 @@ CELERY_TASK_SERIALIZER   = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ENABLE_UTC        = False
 CELERY_TIMEZONE          = 'America/Lima'
+
+import django
+from django.utils.encoding import force_str
+django.utils.encoding.force_text = force_str

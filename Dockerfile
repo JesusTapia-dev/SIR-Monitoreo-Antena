@@ -25,6 +25,7 @@ RUN apt-get clean && apt-get update && apt-get install -y --no-install-recommend
     && pip install -v --timeout 120 --no-cache-dir ./gunicorn-20.1.0-py3-none-any.whl \
     && pip install -v --timeout 120 --no-cache-dir ./requests-2.28.2-py3-none-any.whl \
     && pip install -v --timeout 120 --no-cache-dir ./redis-4.4.2-py3-none-any.whl \
+    && pip install -v --timeout 120 --no-cache-dir ./graphene_django-3.0.0-py2.py3-none-any.whl \
 #&& pip install -v --timeout 120 -r requirements.txt --no-cache-dir \
     && apt-get purge -y --auto-remove gcc g++\
 	&& rm -rf /var/lib/apt/lists/*
