@@ -28,15 +28,15 @@ services:
     volumes:
       - '${DOCKER_DATA}/redis:/data'
 
-  celery_worker:
-    container_name: 'radarsys-celery'
-    image: radarsys
-    env_file: .env
-    command: celery -A radarsys worker -l info
-    volumes_from:
-      - web
-    depends_on:
-      - web
+  # celery_worker:
+  #   container_name: 'radarsys-celery'
+  #   image: radarsys
+  #   env_file: .env
+  #   command: celery -A radarsys worker -l info
+  #   volumes_from:
+  #     - web
+  #   depends_on:
+  #     - web
 
   # PostgreSQL
   postgres:

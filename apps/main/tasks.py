@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from radarsys.celery import app
-from celery import task
+from celery import Task
 from datetime import timedelta, datetime
 
 from .models import Experiment
