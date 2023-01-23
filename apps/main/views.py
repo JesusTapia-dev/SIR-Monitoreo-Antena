@@ -1705,31 +1705,30 @@ def sidebar(**kwargs):
 
     return side_data
 
-
 def get_paginator(model, page, order, filters={}, n=8):
-
     kwargs = {}
     query = Q()
     if isinstance(filters, QueryDict):
         filters = filters.dict()
-    [filters.pop(key) for key in filters.keys() if filters[key] in ('', ' ')]
+    copy_filters=filters.copy()
+    [filters.pop(key) for key in copy_filters.keys() if copy_filters[key] in ('    ', ' ')]
     filters.pop('page', None)
 
     fields = [f.name for f in model._meta.get_fields()]
 
-    if 'template' in filters:
+    if 'template' in copy_filters:
         filters['template'] = True
-    if 'historical' in filters:
+    if 'historical' in copy_filters:
         filters.pop('historical')
         filters['type'] = 1
     elif 'type' in fields:
-        filters['type'] = 0
-    if 'start_date' in filters:
-        filters['start_date__gte'] = filters.pop('start_date')
-    if 'end_date' in filters:
-        filters['start_date__lte'] = filters.pop('end_date')
-    if 'tags' in filters:
-        tags = filters.pop('tags')
+       filters['type'] = 0
+    if 'start_date' in copy_filters:
+       filters['start_date__gte'] =filters.pop('start_date')
+    if 'end_date' in copy_filters:
+       filters['start_date__lte'] =filters.pop('end_date')
+    if 'tags' in copy_filters:
+        tags =filters.pop('tags')
         if 'tags' in fields:
             query = query | Q(tags__icontains=tags)
         if 'label' in fields:
@@ -1742,9 +1741,9 @@ def get_paginator(model, page, order, filters={}, n=8):
         if 'device_type' in fields:
             query = query | Q(device_type__name__icontains=tags)
 
-    if 'mine' in filters:
-        filters['author_id'] = filters['mine']
-        filters.pop('mine')
+    if 'mine' in copy_filters:
+       filters['author_id'] =filters['mine']
+       filters.pop('mine')
     object_list = model.objects.filter(query, **filters).order_by(*order)
     paginator = Paginator(object_list, n)
 
@@ -1759,6 +1758,59 @@ def get_paginator(model, page, order, filters={}, n=8):
     kwargs['offset'] = (int(page)-1)*n if page else 0
 
     return kwargs
+
+# def get_paginator(model, page, order, filters={}, n=8):
+#     kwargs = {}
+#     query = Q()
+#     if isinstance(filters, QueryDict):
+#         filters = filters.dict()
+#     [filters.pop(key) for key in filters.keys() if filters[key] in ('', ' ')]
+#     filters.pop('page', None)
+
+#     fields = [f.name for f in model._meta.get_fields()]
+
+#     if 'template' in filters:
+#         filters['template'] = True
+#     if 'historical' in filters:
+#         filters.pop('historical')
+#         filters['type'] = 1
+#     elif 'type' in fields:
+#         filters['type'] = 0
+#     if 'start_date' in filters:
+#         filters['start_date__gte'] = filters.pop('start_date')
+#     if 'end_date' in filters:
+#         filters['start_date__lte'] = filters.pop('end_date')
+#     if 'tags' in filters:
+#         tags = filters.pop('tags')
+#         if 'tags' in fields:
+#             query = query | Q(tags__icontains=tags)
+#         if 'label' in fields:
+#             query = query | Q(label__icontains=tags)
+#         if 'location' in fields:
+#             query = query | Q(location__name__icontains=tags)
+#         if 'device' in fields:
+#             query = query | Q(device__device_type__name__icontains=tags)
+#             query = query | Q(device__location__name__icontains=tags)
+#         if 'device_type' in fields:
+#             query = query | Q(device_type__name__icontains=tags)
+
+#     if 'mine' in filters:
+#         filters['author_id'] = filters['mine']
+#         filters.pop('mine')
+#     object_list = model.objects.filter(query, **filters).order_by(*order)
+#     paginator = Paginator(object_list, n)
+
+#     try:
+#         objects = paginator.page(page)
+#     except PageNotAnInteger:
+#         objects = paginator.page(1)
+#     except EmptyPage:
+#         objects = paginator.page(paginator.num_pages)
+
+#     kwargs['objects'] = objects
+#     kwargs['offset'] = (int(page)-1)*n if page else 0
+
+#     return kwargs
 
 
 def operation(request, id_camp=None):
