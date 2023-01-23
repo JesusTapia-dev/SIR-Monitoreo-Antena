@@ -5,22 +5,22 @@
 
 {% block dds_rest%}
 
-	{% bootstrap_field form.template layout='horizontal' size='medium' %}
-	{% bootstrap_field form.device layout='horizontal' size='medium' %}
-	{% bootstrap_field form.label layout='horizontal' size='medium' %}
-	{% bootstrap_field form.experiment layout='horizontal' size='medium' %}
+	{% bootstrap_field form.template layout='horizontal' size='md' %}
+	{% bootstrap_field form.device layout='horizontal' size='md' %}
+	{% bootstrap_field form.label layout='horizontal' size='md' %}
+	{% bootstrap_field form.experiment layout='horizontal' size='md' %}
 
-	{% bootstrap_field form.clock layout='horizontal' size='medium' %}
-	{% bootstrap_field form.multiplier layout='horizontal' size='medium' %}
+	{% bootstrap_field form.clock layout='horizontal' size='md' %}
+	{% bootstrap_field form.multiplier layout='horizontal' size='md' %}
 
 	<div style="display: flex; justify-content: flex-end">
 		<div class="form-check">
 			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_fA" value=""  >Mostrar Decimal</label>
 		</div>
 	</div>
-	{% bootstrap_field form.frequencyA_Mhz layout='horizontal' size='medium' %}
+	{% bootstrap_field form.frequencyA_Mhz layout='horizontal' size='md' %}
 	<div id='id_row_fAbin'> 
-	{% bootstrap_field form.frequencyA layout='horizontal' size='medium' %}
+	{% bootstrap_field form.frequencyA layout='horizontal' size='md' %}
 	<div style="display: flex; justify-content: flex-end">
 	<small type="text" id="id_aux_fAbin" class="form-text text-muted">1000 0000 </small>
 	</div>
@@ -32,9 +32,9 @@
 			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_fB" value=""  >Mostrar Decimal</label>
 		</div>
 	</div>	
-	{% bootstrap_field form.frequencyB_Mhz layout='horizontal' size='medium' %}
+	{% bootstrap_field form.frequencyB_Mhz layout='horizontal' size='md' %}
 	<div id='id_row_fBbin'>
-	{% bootstrap_field form.frequencyB layout='horizontal' size='medium' %}
+	{% bootstrap_field form.frequencyB layout='horizontal' size='md' %}
 	<div style="display: flex; justify-content: flex-end">
 		<small type="text" id="id_aux_fBbin" class="form-text text-muted">1000 0000 </small>
 	</div>
@@ -46,9 +46,9 @@
 			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_df" value=""  >Mostrar Decimal</label>
 		</div>
 	</div>	
-	{% bootstrap_field form.delta_frequency_Mhz layout='horizontal' size='medium' %}
+	{% bootstrap_field form.delta_frequency_Mhz layout='horizontal' size='md' %}
 	<div id='id_row_dfbin'>
-	{% bootstrap_field form.delta_frequency layout='horizontal' size='medium' %}
+	{% bootstrap_field form.delta_frequency layout='horizontal' size='md' %}
 	<div style="display: flex; justify-content: flex-end">
 		<small type="text" id="id_aux_deltabin" class="form-text text-muted">1000 0000 </small>
 	</div>
@@ -67,8 +67,8 @@
 		</div>
 	</div>
 	<div id='id_row_rampbin'>
-		{% bootstrap_field form.ramp_rate_clock_Mhz layout='horizontal' size='medium' %}
-		{% bootstrap_field form.ramp_rate_clock layout='horizontal' size='medium' %}
+		{% bootstrap_field form.ramp_rate_clock_Mhz layout='horizontal' size='md' %}
+		{% bootstrap_field form.ramp_rate_clock layout='horizontal' size='md' %}
 	<div style="display: flex; justify-content: flex-end">
 		<small type="text" id="id_aux_rampbin" class="form-text text-muted">1000 0000 </small>
 	</div>
@@ -80,7 +80,7 @@
 			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_phaseA" value=""  >Mostrar Decimal</label>
 		</div>
 	</div>
-	{% bootstrap_field form.phaseA_degrees layout='horizontal' size='medium' %}
+	{% bootstrap_field form.phaseA_degrees layout='horizontal' size='md' %}
 	<div id='id_row_phaseA'>
 		<div style="display: flex; justify-content: flex-end">
 			<small type="text" id="id_aux_phaseAdec" class="form-text text-muted">9282 </small>
@@ -96,7 +96,7 @@
 			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_phaseB" value=""  >Mostrar Decimal</label>
 		</div>
 	</div>	
-	{% bootstrap_field form.phaseB_degrees layout='horizontal' size='medium' %}
+	{% bootstrap_field form.phaseB_degrees layout='horizontal' size='md' %}
 	<div id='id_row_phaseB'>
 		<div style="display: flex; justify-content: flex-end">
 			<small type="text" id="id_aux_phaseBdec" class="form-text text-muted">9876 </small>
@@ -107,15 +107,15 @@
 		<br>	
 	</div>
 
-	{% bootstrap_field form.modulation layout='horizontal' size='medium' %}
-	{% bootstrap_field form.amplitude_enabled layout='horizontal' size='medium' %}
+	{% bootstrap_field form.modulation layout='horizontal' size='md' %}
+	{% bootstrap_field form.amplitude_enabled layout='horizontal' size='md' %}
 
 	<div style="display: flex; justify-content: flex-end">
 		<div class="form-check">
 			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_amplitudeI" value=""  >Mostrar Decimal</label>
 		</div>
 	</div>
-	{% bootstrap_field form.amplitudeI layout='horizontal' size='medium' %}
+	{% bootstrap_field form.amplitudeI layout='horizontal' size='md' %}
 	<div id='id_row_amplitudeI'>
 		<div style="display: flex; justify-content: flex-end">
 			<small type="text" id="id_aux_amplitudeIdec" class="form-text text-muted">35 </small>
@@ -131,7 +131,7 @@
 			<label class="form-check-label" ><input type="checkbox" class="form-check-input" id="id_chkbin_amplitudeQ" value=""  >Mostrar Decimal</label>
 		</div>
 	</div>
-	{% bootstrap_field form.amplitudeQ layout='horizontal' size='medium' %}
+	{% bootstrap_field form.amplitudeQ layout='horizontal' size='md' %}
 	<div id='id_row_amplitudeQ'>
 		<div style="display: flex; justify-content: flex-end">
 			<small type="text" id="id_aux_amplitudeQdec" class="form-text text-muted">40 </small>

@@ -6,11 +6,11 @@
 {% block content %}
 <form class="form" method="post">
   {% csrf_token %}
-  {% bootstrap_form form layout='horizontal' size='medium' %}
+  {% bootstrap_form form layout='horizontal' size='md' %}
   <div style="clear: both;"></div>
   <h2>Filter <small>{{filter_name}}</small></h2>
   <br>
-  {% bootstrap_form filter_form layout='horizontal' size='medium' %}
+  {% bootstrap_form filter_form layout='horizontal' size='md' %}
   <div style="clear: both;"></div>
   <br>
   <div class="pull-right">

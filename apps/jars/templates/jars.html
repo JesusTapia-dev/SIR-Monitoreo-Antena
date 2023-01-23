@@ -8,7 +8,7 @@
 {% block content %}
 <form class="form" method="post" action="">
 {% csrf_token %}
-{% bootstrap_form form layout='horizontal' size='medium' %}
+{% bootstrap_form form layout='horizontal' size='md' %}
 <div style="clear: both;"></div>
 <br>
 <button type="submit" class="btn btn-primary pull-right" id="bt_update">Update</button>
