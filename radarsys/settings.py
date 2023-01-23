@@ -35,7 +35,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "django_bootstrap5",
+    'django_bootstrap5',
+    'graphene_django',
     'polymorphic',
     'apps.accounts',
     'apps.main',
@@ -47,7 +48,6 @@ INSTALLED_APPS = [
     'apps.abs',
     'apps.cgs',
     'apps.dds_rest',
-    'graphene_django',
 ]
 
 MIDDLEWARE = [

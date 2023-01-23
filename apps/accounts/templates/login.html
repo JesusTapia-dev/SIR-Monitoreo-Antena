@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load bootstrap4 %}
+{% load django_bootstrap5 %}
 {% block mainactive %}active{% endblock %}
 
 {% block content-title %}SIR{% endblock %}
@@ -11,9 +11,7 @@
   {% csrf_token %}
   {% bootstrap_form form %}
   <input type="hidden" name="next" value="{{ next }}" />
-  {% buttons %}
-    <button type="submit" class="btn btn-primary">Login</button>
-  {% endbuttons %}
+  {% bootstrap_button "Login" button_type="submit" button_class="btn-primary" %}
   </form>
 </div>
 {% endblock %}

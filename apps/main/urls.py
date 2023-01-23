@@ -62,8 +62,8 @@ urlpatterns = (
 
     path('operation/', views.operation, name='url_operation'),
     path('operation/<int:id_camp>/', views.operation, name='url_operation'),
-    path('operation/<int:id_camp>/revoke', views.revoke_tasks, name='url_operation_revoke'),
-    path('operation/<int:id_camp>/show', views.show_tasks, name='url_operation_show'),
+    #path('operation/<int:id_camp>/revoke', views.revoke_tasks, name='url_operation_revoke'),
+    #path('operation/<int:id_camp>/show', views.show_tasks, name='url_operation_show'),
     path('operation/<int:id_camp>/radar/<int:id_radar>/start/', views.radar_start, name='url_radar_start'),
     path('operation/<int:id_camp>/radar/<int:id_radar>/stop/', views.radar_stop, name='url_radar_stop'),
     path('operation/<int:id_camp>/radar/<int:id_radar>/refresh/', views.radar_refresh, name='url_radar_refresh'),

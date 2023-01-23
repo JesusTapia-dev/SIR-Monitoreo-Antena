@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load bootstrap4 %}
+{% load django_bootstrap5 %}
 {% load static %}
 {% load main_tags %}
 
@@ -14,7 +14,7 @@
 {% block content-filter %}
 {% if form %}
 <form class="form" method="get">
-  {% bootstrap_form form layout='horizontal' size='medium' %}
+  {% bootstrap_form form layout='horizontal' size='md' %}
   <div class="pull-right">
     <br>
   <button type="button" class="btn btn-primary btn-sm" onclick="window.location.replace('?');"><span class="fas fa-sync-alt" aria-hidden="true"></span></button>

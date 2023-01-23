@@ -41,7 +41,7 @@ from apps.rc.models       import RCConfiguration, RCLine, RCLineType, RCClock
 from apps.dds.models      import DDSConfiguration
 from apps.dds_rest.models import DDSRestConfiguration
 
-from .tasks import task_start
+#from .tasks import task_start
 from radarsys.celery import app
 
 #comentario test
@@ -1843,9 +1843,9 @@ def radar_start(request, id_camp, id_radar):
 
             # -------------------------------------------
             
-            task = task_start.delay(exp.id)
-            exp.task   = task.id
-            exp.status = task.get()
+            # task = task_start.delay(exp.id)
+            # exp.task   = task.id
+            # exp.status = task.get()
             # -------------------------------------------
 
             #exp.status = task.wait()
@@ -1857,9 +1857,9 @@ def radar_start(request, id_camp, id_radar):
         elif now < start:
             print("Caso now <= start -- (2)",exp.pk)
             #task = task_start.apply_async((exp.pk, ), eta=start)#start+timedelta(hours=5))
-            task = task_start.apply_async((exp.pk, ), eta=start+timedelta(hours=5))#)
-            exp.task   = task.id
-            exp.status = 3
+            # task = task_start.apply_async((exp.pk, ), eta=start+timedelta(hours=5))#)
+            # exp.task   = task.id
+            # exp.status = 3
             messages.success(request, 'Experiment {} programmed to start at {}'.format(exp, start))
         else:
             print("Caso now > end -- (3)")
@@ -1878,21 +1878,21 @@ def radar_stop(request, id_camp, id_radar):
     campaign    = get_object_or_404(Campaign, pk=id_camp)
     experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
     print("Ingreso en stop radar_stop")
-    for exp in experiments:
+    #for exp in experiments:
 
-        if exp.task:
-            print("Ingreso antes de revoke stop")
-            app.control.revoke(exp.task)
+        # if exp.task:
+        #     print("Ingreso antes de revoke stop")
+        #     app.control.revoke(exp.task)
 
             
-        if exp.status == 2: #status 2 es started
-            print("llama a exp.stop")
-            exp.stop()
-            messages.warning(request, 'Experiment {} stopped'.format(exp))
-        exp.status = 1
-        exp.save()
+        # if exp.status == 2: #status 2 es started
+        #     print("llama a exp.stop")
+        #     exp.stop()
+        #     messages.warning(request, 'Experiment {} stopped'.format(exp))
+        # exp.status = 1
+        # exp.save()
 
-    return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
+    #return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 
 
 @login_required
@@ -1908,52 +1908,52 @@ def radar_refresh(request, id_camp, id_radar):
     scheduled = list(i.scheduled().values())[0]
     revoked   = list(i.revoked().values())[0]
 
-    for exp in experiments:
-        if exp.task in revoked:
-            exp.status = 1
-        elif exp.task in [t['request']['id'] for t in scheduled if 'task_stop' in t['request']['name']]:
-            exp.status = 2
-        elif exp.task in [t['request']['id'] for t in scheduled if 'task_start' in t['request']['name']]:
-            exp.status = 3
-        else:
-            exp.status = 4
-        exp.save()
-    return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
+    # for exp in experiments:
+    #     if exp.task in revoked:
+    #         exp.status = 1
+    #     elif exp.task in [t['request']['id'] for t in scheduled if 'task_stop' in t['request']['name']]:
+    #         exp.status = 2
+    #     elif exp.task in [t['request']['id'] for t in scheduled if 'task_start' in t['request']['name']]:
+    #         exp.status = 3
+    #     else:
+    #         exp.status = 4
+    #     exp.save()
+    # return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 
-@login_required
-def revoke_tasks(request, id_camp):
+#@login_required
+# def revoke_tasks(request, id_camp):
 
-    i         = app.control.inspect()
-    scheduled = list(i.scheduled().values())[0]
-    revoked   = list(i.revoked().values())[0]
+#     i         = app.control.inspect()
+#     scheduled = list(i.scheduled().values())[0]
+#     revoked   = list(i.revoked().values())[0]
 
-    for t in scheduled:
-        if t['request']['id'] in revoked:
-            continue
-        app.control.revoke(t['request']['id'])
-        exp  = Experiment.objects.get(pk=eval(str(t['request']['args']))[0])
-        eta  = t['eta']
-        task = t['request']['name'].split('.')[-1]
-        messages.warning(request, 'Scheduled {} at {} for experiment {} revoked'.format(task, eta, exp.name))
+#     for t in scheduled:
+#         if t['request']['id'] in revoked:
+#             continue
+#         app.control.revoke(t['request']['id'])
+#         exp  = Experiment.objects.get(pk=eval(str(t['request']['args']))[0])
+#         eta  = t['eta']
+#         #task = t['request']['name'].split('.')[-1]
+#         messages.warning(request, 'Scheduled {} at {} for experiment {} revoked'.format(task, eta, exp.name))
 
-    return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
+#     return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 
-@login_required
-def show_tasks(request, id_camp):
+# @login_required
+# def show_tasks(request, id_camp):
 
-    i         = app.control.inspect()
-    scheduled = list(i.scheduled().values())[0]
-    revoked   = list(i.revoked().values())[0]
+#     i         = app.control.inspect()
+#     scheduled = list(i.scheduled().values())[0]
+#     revoked   = list(i.revoked().values())[0]
 
-    for t in scheduled:
-        if t['request']['id'] in revoked:
-            continue
-        exp = Experiment.objects.get(pk=eval(str(t['request']['args']))[0])
-        eta = t['eta']
-        task = t['request']['name'].split('.')[-1]
-        messages.success(request, 'Task {} scheduled at {} for experiment {}'.format(task, eta, exp.name))
+#     for t in scheduled:
+#         if t['request']['id'] in revoked:
+#             continue
+#         exp = Experiment.objects.get(pk=eval(str(t['request']['args']))[0])
+#         eta = t['eta']
+#         #task = t['request']['name'].split('.')[-1]
+#         #messages.success(request, 'Task {} scheduled at {} for experiment {}'.format(task, eta, exp.name))
 
-    return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
+#     return HttpResponseRedirect(reverse('url_operation', args=[id_camp]))
 
 def real_time(request):
 
