@@ -148,3 +148,6 @@ CELERY_TIMEZONE          = 'America/Lima'
 import django
 from django.utils.encoding import force_str
 django.utils.encoding.force_text = force_str
+
+# choose of auto-created primary keys
+DEFAULT_AUTO_FIELD='django.db.models.AutoField'
