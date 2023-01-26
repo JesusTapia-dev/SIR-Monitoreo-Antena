@@ -364,10 +364,11 @@ class ABSConfiguration(Configuration):
         This function sends the beams list to every abs module.
         It needs 'module_conf' function
         """
-        print("Write")
+        print("Write 3")
+        
         beams  = ABSBeam.objects.filter(abs_conf=self)
         nbeams = len(beams)
-
+        
         # Se manda a cero RC para poder realizar cambio de beam
         if self.experiment is None:
             confs = []
@@ -412,7 +413,9 @@ class ABSConfiguration(Configuration):
                 message += ''.join([fromBinary2Char(beam.module_6bits(i)) for beam in beams])
             status = ['0'] * 64
             n = 0
-            print("Llega una antes entrar a multicast")
+            
+            print("Llega una antes entrar a multicast4")
+            
             sock = self.send_multicast(message)
 
             while True:
@@ -561,7 +564,10 @@ class ABSConfiguration(Configuration):
         # Create the datagram socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(1)
-        local_ip = os.environ.get('LOCAL_IP', '192.168.2.128')
+        local_ip = os.environ.get('LOCAL_IP', '0.0.0.0')
+        local_ip = '0.0.0.0'
+        print("He llegado a IP local")
+        
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(local_ip))
         sock.sendto(message.encode(), multicast_group)
         print('Sending ' + message)
