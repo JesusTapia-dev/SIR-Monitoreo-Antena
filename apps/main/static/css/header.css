@@ -1,6 +1,22 @@
-#igp-top{
-    height:35px;
-    background-color: var(--primary);
+.igp-top {
+    padding-bottom: 9px;
+}
+
+.igp-menu {
+    background-color: #F9F9F9;
+    top:69px;
+    border-bottom: 1px solid rgb(204, 204, 204);
+    border-top: 1px solid rgb(204, 204, 204);
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.navbar-title {
+    font-size: 18pt;
+    /*text-align: right;*/
+    color: var(--primary);
+    margin-bottom: 0px;
+    margin-top: 0px;
 }
 
 #igp-top .navbar{
@@ -116,5 +132,35 @@
     }
     .navbar-igp-1 li:after {
         content: '';
-      }
+    }
+    .logo-igp-md {
+        display: none;
+    }
+    .igp-menu {
+        padding-top: 0px;
+        padding-bottom: 0px;
+        border-bottom: 0px;
+    }
+    body {
+        padding-top: 70px;
+    }
 }
+
+@media (max-width: 420px){
+    .logo {
+        height: 30px;
+    }
+}
+
+
+@media (min-width: 768px){
+    .logo-igp-sm {
+        display: none;
+    }
+}
+
+@media(min-width: 990px) {
+    .navbar-title:after {
+      content: ' JICAMARCA'
+    }
+  }

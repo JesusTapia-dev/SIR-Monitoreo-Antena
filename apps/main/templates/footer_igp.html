@@ -1,45 +1,37 @@
 {% load static %} {% load django_bootstrap5 %}
 <footer>
     <div class="container">
+      <div class="row">
+        <div class="col-12 col-lg-6">
+            <div class="footer-tittle">RADIO OBSERVATORIO DE JICAMARCA</div>
         <ul class="footer-contact">
-            <li>
-                <span class="fa fa-fax"></span><div><p>Atención al ciudadano</p>
-                <p>Lunes a Viernes de 8:30 a 16:30</p></div>
-            </li>
-            <li>
-                <span class="fa fa-map-marker"></span><div>
-                <p>Calle Badajoz Nº 169 Urb. Mayorazgo</p>
-                <p>I Etapa Ate, Lima 15012 - Perú</p></div>
-            </li>
-            <li>
-                <span class="fa fa-envelope"></span>
-                roj@igp.gob.pe
-            </li>
-            <li>
-                <span class="fa fa-phone"></span>
-                (511)317-2313
-            </li>
+            <li>Lunes a Jueves de 7:50 a 17:50</li>
+            <li>Lurigancho-Chosica S/N, Lima 15464 – Perú</li>
+            <li>roj@igp.gob.pe</li>
+            <li>+51 1317-2313</li>
         </ul>
-        <ul class="nav-social social-footer">
-            <li>
-                <a href="https://www.facebook.com/igp.peru"><i class="fab fa-facebook-f"></i></a>
-            </li>
-            <li>
-                <a href="https://twitter.com/igp_peru"><i class="fab fa-twitter"></i></a>
-            </li>
-            <li>
-                <a href="https://www.linkedin.com/company/igpperu/"><i class="fab fa-linkedin-in"></i></a>
-            </li>
-            <li>
-                <a href="https://www.instagram.com/igp.peru"><i class="fab fa-instagram"></i></a>
-            </li>
-            <li>
-                <a href="https://www.youtube.com/igp_videos"><i class="fab fa-youtube"></i></a>
-            </li>
-        </ul>
+        </div>
+        <div class="col-12 col-lg-6">
+            <div class="footer-tittle">SOCIAL</div>
+            <div class="row">
+                <div class="col-6">
+                    <ul class="footer-social">
+                        <li><a href="https://www.facebook.com/igp.peru" target="_blank"><i class="fab fa-facebook-square fa-lg" aria-hidden="true"></i> Facebook</a></li>
+                        <li><a href="https://twitter.com/igp_peru" target="_blank"><i class="fab fa-twitter-square fa-lg" aria-hidden="true"></i> Twitter</a></li>
+                        <li><a href="https://www.instagram.com/igp.peru" target="_blank"><i class="fab fa-instagram fa-lg" aria-hidden="true"></i> Instagram</a></li>
+                    </ul>
+                </div>
+                <div class="col-6">
+                    <ul class="footer-social">
+                        <li><a href="https://www.youtube.com/igp_videos" target="_blank"><i class="fab fa-youtube fa-lg" aria-hidden="true"></i> YouTube</a></li>
+                        <li><a href="https://www.linkedin.com/company/igpperu/" target="_blank"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i> Linkedin</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- div class="col-12 col-lg-2">
+        <img src="{% static 'images/siempre-con-el-pueblo-bn-small.png' %}" class="img-fluid">
+        </div -->
+      </div>
     </div>
-    <iframe class="map d-none d-sm-block"
-        src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3901.828012758223!2d-76.94633793139629!3d-12.055351713347235!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x7ea774b6fa66a3c6!2sInstituto+Geof%C3%ADsico+del+Per%C3%BA!5e0!3m2!1ses-419!2spe!4v1545658855595"
-        width="100%" height="100%" frameborder="0" allowfullscreen="false">&#160;
-    </iframe>
 </footer>

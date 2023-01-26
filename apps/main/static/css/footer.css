@@ -3,11 +3,18 @@ footer {
     position: relative;
     margin: 0;
     padding-top: 20px;
-    padding-bottom: 10px;
+    padding-bottom: 15px;
     border: 0;
     display: block;
     color: #fff;
     margin-top: 20px;
+    font-family: "Futura_Std";
+}
+
+.footer-tittle{
+    padding-top: 20px;
+    padding-bottom: 20px;
+    font-size: 1.65rem;
 }
 
 .footer-contact{
@@ -18,6 +25,21 @@ footer {
 .footer-contact li{
     display: flex;
 }
+
+.footer-social{
+    padding-left: 0;
+    list-style: none;
+}
+
+.footer-social li{
+    margin-bottom: 15px;
+}
+
+.footer-social a{
+    color: white;
+    text-decoration: none;
+}
+
 
 .footer-contact span{
     margin-top: 3.5px;
