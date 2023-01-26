@@ -6,12 +6,12 @@ services:
     build: .
     restart: always
     image: radarsys
-    #command: gunicorn radarsys.wsgi:application -w 2 -b :8000
-    command: python manage.py runserver 0.0.0.0:8030
-    #ports:
-    #  - 8000:8000
+    command: gunicorn radarsys.wsgi:application -w 2 -b :8000
+    #command: python manage.py runserver 0.0.0.0:8030
     ports:
-      - 8030:8030
+      - 8000:8000
+    #ports:
+    #  - 8030:8030
     env_file: .env
 
     links:
@@ -51,19 +51,19 @@ services:
     #   - 5432:5432
     env_file: .env      
 
-  # Web Server
-  # nginx:
-  #   container_name: 'radarsys-nginx'
-  #   restart: always
-  #   build: ./nginx/
-  #   ports:
-  #     - '8030:8030'
-  #   volumes_from:
-  #     - web
-  #   links:
-  #     - web:web
-  #   depends_on:
-  #     - web
+  #Web Server
+  nginx:
+    container_name: 'radarsys-nginx'
+    restart: always
+    build: ./nginx/
+    ports:
+      - '8030:8030'
+    volumes_from:
+      - web
+    links:
+      - web:web
+    depends_on:
+      - web
 
 volumes:
   pgdata:
