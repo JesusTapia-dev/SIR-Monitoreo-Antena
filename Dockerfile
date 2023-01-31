@@ -15,7 +15,7 @@ RUN apt-get clean && apt-get update && apt-get install -y --no-install-recommend
     g++ \
     && pip install -v --timeout 120 --no-cache-dir ./Django-4.1.5-py3-none-any.whl \
     && pip install -v --timeout 120 --no-cache-dir ./django-bootstrap5-22.2.tar.gz \
-    && pip install -v --timeout 120 --no-cache-dir ./psycopg_binary-3.1.8-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl \
+    && pip install -v --timeout 120 --no-cache-dir ./psycopg2_binary-2.9.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl \
     && pip install -v --timeout 120 --no-cache-dir ./django-polymorphic-3.1.0.tar.gz \
     && pip install -v --timeout 120 --no-cache-dir ./numpy-1.24.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl \
     && pip install -v --timeout 120 --no-cache-dir ./bokeh-3.0.3-py3-none-any.whl\
