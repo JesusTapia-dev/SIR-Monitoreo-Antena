@@ -86,18 +86,18 @@ WSGI_APPLICATION = 'radarsys.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'radarsys.sqlite',
-    }
     # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
-    #     'NAME': os.environ.get('DB_NAME', 'radarsys'),
-    #     'USER': os.environ.get('DB_USER', 'docker'),
-    #     'PASSWORD': os.environ.get('DB_PASSWORD', 'docker'),
-    #     'HOST': os.environ.get('POSTGRES_PORT_5432_TCP_ADDR', 'localhost'),
-    #     'PORT': os.environ.get('POSTGRES_PORT_5432_TCP_PORT', '5400'),
-    #}
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': 'radarsys.sqlite',
+    # }
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get('DB_NAME', 'radarsys'),
+        'USER': os.environ.get('DB_USER', 'docker'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'docker'),
+        'HOST': os.environ.get('POSTGRES_PORT_5432_TCP_ADDR', 'localhost'),
+        'PORT': os.environ.get('POSTGRES_PORT_5432_TCP_PORT', '5432'),
+    }
 }
 
 # Internationalization
@@ -132,23 +132,23 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-# Celery stuff
+# # Celery stuff
 
-REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
-#REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
-REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
+# REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+# #REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
+# REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
 
-BROKER_TRANSPORT = 'redis'
-#BROKER_URL       = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
-BROKER_URL       = 'redis://{}:{}'.format(REDIS_HOST, REDIS_PORT)
+# BROKER_TRANSPORT = 'redis'
+# #BROKER_URL       = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
+# BROKER_URL       = 'redis://{}:{}'.format(REDIS_HOST, REDIS_PORT)
 
-CELERY_RESULT_BACKEND    = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
-CELERY_BROKER_TRANSPORT  = BROKER_URL
-CELERY_ACCEPT_CONTENT    = ['application/json']
-CELERY_TASK_SERIALIZER   = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_ENABLE_UTC        = False
-CELERY_TIMEZONE          = 'America/Lima'
+# CELERY_RESULT_BACKEND    = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
+# CELERY_BROKER_TRANSPORT  = BROKER_URL
+# CELERY_ACCEPT_CONTENT    = ['application/json']
+# CELERY_TASK_SERIALIZER   = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_ENABLE_UTC        = False
+# CELERY_TIMEZONE          = 'America/Lima'
 
 import django
 from django.utils.encoding import force_str
