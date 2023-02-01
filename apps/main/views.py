@@ -416,7 +416,7 @@ def campaign_new(request):
                 kwargs['experiment_keys'] = ['name', 'start_time', 'end_time']
                 camp = Campaign.objects.get(pk=request.GET['template'])
                 form = CampaignForm(instance=camp,
-                                    initial={'name': '{}_{:%Y%m%d}'.format(camp.name, datetime.now()),
+                                    initial={'name': '{}_{:%Y%m%d%H%M%S}'.format(camp.name, datetime.now()),
                                              'template': False})
         elif 'blank' in request.GET:
             kwargs['button'] = 'Create'

@@ -408,7 +408,7 @@ class Experiment(models.Model):
 
         confs = Configuration.objects.filter(experiment=self, type=0)
         self.pk = None
-        self.name = '{}_{:%y%m%d}'.format(self.name, datetime.now())
+        self.name = '{}_{:%y%m%d%H%M%S}'.format(self.name, datetime.now())
         for attr, value in kwargs.items():
             setattr(self, attr, value)
 
