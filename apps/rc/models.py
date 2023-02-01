@@ -561,11 +561,11 @@ class RCConfiguration(Configuration):
             else:
                 data = {'manual': [clock.multiplier, clock.divisor, clock.reference]}
             payload = self.request('setfreq', 'post', data=json.dumps(data))
-            if payload['setfreq'] != 'ok':
-                self.message = 'RC write: {}'.format(payload['setfreq'])
+            if payload['command'] != 'ok':
+                self.message = 'RC write: {}'.format(payload['command'])
             else:
-                self.message = payload['setfreq']
-                if payload['setfreq'] == 'fail':
+                self.message = payload['programming']
+                if payload['programming'] == 'fail':
                     self.message = 'RC write: error programming CGS chip'
         
         values = []

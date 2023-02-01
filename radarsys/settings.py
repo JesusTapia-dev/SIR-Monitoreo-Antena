@@ -26,6 +26,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+CSRF_TRUSTED_ORIGINS=[
+    "http://*.localhost:8030"
+]
+#Si se requiere que la aplicación salga de este entorno, para otros usuarios es necesario hacer una API request https://fractalideas.com/blog/making-react-and-django-play-well-together-single-page-app-model/
+
 # Application definition
 
 INSTALLED_APPS = [
