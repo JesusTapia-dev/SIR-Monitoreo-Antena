@@ -441,9 +441,10 @@ def campaign_new(request):
         if form.is_valid():
             campaign = form.save(commit=False)
             campaign.author = request.user
+            campaign.save()
             for exp in experiments:
                 campaign.experiments.add(exp)
-            campaign.save()
+            
             return redirect('url_campaign', id_camp=campaign.id)
 
     kwargs['form']           = form

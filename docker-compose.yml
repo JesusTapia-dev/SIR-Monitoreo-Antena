@@ -1,28 +1,28 @@
 version: '2'
 services:
  # Django app
-  web:
-    container_name: 'radarsys'
-    build: .
-    restart: always
-    image: radarsys
-    command: gunicorn radarsys.wsgi:application -w 2 -b :8000
-    #command: python manage.py runserver 0.0.0.0:8030
-    ports:
-      - 8000:8000
-    #ports:
-    #  - 8030:8030
-    env_file: .env
+  # web:
+  #   container_name: 'radarsys'
+  #   build: .
+  #   restart: always
+  #   image: radarsys
+  #   command: gunicorn radarsys.wsgi:application -w 2 -b :8000
+  #   #command: python manage.py runserver 0.0.0.0:8030
+  #   ports:
+  #     - 8000:8000
+  #   #ports:
+  #   #  - 8030:8030
+  #   env_file: .env
 
-    links:
-  #    - redis
-      - postgres
-    volumes:
-      - './:/radarsys'
-      - '${DOCKER_DATA}/static:/radarsys/static'
-    depends_on:
-  #    - redis
-      - postgres
+  #   links:
+  # #    - redis
+  #     - postgres
+  #   volumes:
+  #     - './:/radarsys'
+  #     - '${DOCKER_DATA}/static:/radarsys/static'
+  #   depends_on:
+  # #    - redis
+  #     - postgres
 
   # redis:
   #   container_name: 'radarsys-redis'
@@ -47,23 +47,27 @@ services:
     volumes:
       - ./postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
       - pgdata:/var/lib/postgresql/data
-    # ports:
-    #   - 5432:5432
+    ports:
+     - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=docker
+      - POSTGRES_USER=docker
+      - POSTGRES_DB=radarsys
     env_file: .env      
 
-  #Web Server
-  nginx:
-    container_name: 'radarsys-nginx'
-    restart: always
-    build: ./nginx/
-    ports:
-      - '8030:8030'
-    volumes_from:
-      - web
-    links:
-      - web:web
-    depends_on:
-      - web
+  # #Web Server
+  # nginx:
+  #   container_name: 'radarsys-nginx'
+  #   restart: always
+  #   build: ./nginx/
+  #   ports:
+  #     - '8030:8030'
+  #   volumes_from:
+  #     - web
+  #   links:
+  #     - web:web
+  #   depends_on:
+  #     - web
 
 volumes:
   pgdata:

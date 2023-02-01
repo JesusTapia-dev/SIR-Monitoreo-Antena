@@ -2,8 +2,8 @@
 set -e
 
 echo "Creating database & user"
-psql -v --username "postgres" --dbname "postgres" <<-EOSQL
-	CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';
-	CREATE DATABASE $DB_NAME;
-	GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;
+psql -v --username "docker" --dbname "radarsys" <<-EOSQL
+	CREATE USER docker WITH PASSWORD 'docker';
+	CREATE DATABASE radarsys;
+	GRANT ALL PRIVILEGES ON DATABASE radarsys TO docker;
 EOSQL
