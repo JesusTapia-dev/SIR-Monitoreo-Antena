@@ -347,6 +347,7 @@ def update_lines_position(request, conf_id):
                 line.subforms = [RCLineEditForm(extra_fields=fields, line=line, subform=i) for i, fields in enumerate(params['params'])]
 
         html = render(request, 'rc_lines.html', {'dev_conf':conf, 'rc_lines':lines, 'edit':True})
+        #html = render('rc_lines.html', {'dev_conf':conf, 'rc_lines':lines, 'edit':True},request)
         data = {'html': html.content.decode('utf8')}
 
         return HttpResponse(json.dumps(data), content_type="application/json")
