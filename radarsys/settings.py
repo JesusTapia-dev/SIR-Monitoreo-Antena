@@ -85,7 +85,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'radarsys.wsgi.application'
-
+ASGI_APPLICATION = 'radarsys.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
