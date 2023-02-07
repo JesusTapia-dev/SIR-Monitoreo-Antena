@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 services:
  # Django app
   web:
@@ -49,10 +49,11 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
      - 5432:5432
-    environment:
-      - POSTGRES_PASSWORD=docker
-      - POSTGRES_USER=docker
-      - POSTGRES_DB=radarsys
+    #TEMPORAL, NO DEBE HARDCODEARSE
+    # environment:
+    #   - POSTGRES_PASSWORD=docker
+    #   - POSTGRES_USER=docker
+    #   - POSTGRES_DB=radarsys
     env_file: .env      
 
   #Web Server

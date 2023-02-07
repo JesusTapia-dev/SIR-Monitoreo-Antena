@@ -5,3 +5,4 @@ pipLibraries/
 *.pyc
 .env
 remove_migrations.py
+migrations/
