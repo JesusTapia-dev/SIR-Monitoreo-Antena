@@ -51,9 +51,9 @@ services:
      - 5432:5432
     #TEMPORAL, NO DEBE HARDCODEARSE
     # environment:
-    #   - POSTGRES_PASSWORD=docker
-    #   - POSTGRES_USER=docker
-    #   - POSTGRES_DB=radarsys
+      # - POSTGRES_PASSWORD=docker
+      # - POSTGRES_USER=docker
+      # - POSTGRES_DB=radarsys
     env_file: .env      
 
   #Web Server
