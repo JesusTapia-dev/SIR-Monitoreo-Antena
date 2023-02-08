@@ -16,5 +16,9 @@ RUN apt-get clean && apt-get update && apt-get install -y --no-install-recommend
 # Copy the main application.
 COPY . ./
 
+# Copy the entrypoint to collectstatic and load data automatically
+COPY ./entrypoint.sh /
+ENTRYPOINT ["sh", "/entrypoint.sh"]
+
 EXPOSE 8000
 

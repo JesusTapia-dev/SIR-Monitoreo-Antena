@@ -1,12 +1,12 @@
 version: '3'
 services:
  # Django app
-  web:
+  radarsys:
     container_name: 'radarsys'
     build: .
     restart: always
     image: radarsys
-    command: gunicorn radarsys.wsgi:application -w 2 -b :8000
+    #command: gunicorn radarsys.wsgi:application -w 2 -b :8000
     #command: python manage.py runserver 0.0.0.0:8000
     ports:
       - 8000:8000
@@ -49,11 +49,6 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
      - 5432:5432
-    #TEMPORAL, NO DEBE HARDCODEARSE
-    # environment:
-      # - POSTGRES_PASSWORD=docker
-      # - POSTGRES_USER=docker
-      # - POSTGRES_DB=radarsys
     env_file: .env      
 
   #Web Server
@@ -64,11 +59,11 @@ services:
     ports:
       - '8030:8030'
     volumes_from:
-      - web
+      - radarsys
     links:
-      - web:web
+      - radarsys:radarsys
     depends_on:
-      - web
+      - radarsys
 
 volumes:
   pgdata:
