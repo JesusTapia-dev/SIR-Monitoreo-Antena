@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'apps.dds_rest',
     "django_bootstrap5",
     'polymorphic',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -133,7 +134,7 @@ STATICFILES_DIRS = [
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-LOGIN_URL = 'login' 
+LOGIN_URL = '/accounts/login' 
 LOGOUT_URL = 'logout'
 LOGIN_REDIRECT_URL = '/admin'
 LOGOUT_REDIRECT_URL = '/'
