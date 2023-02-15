@@ -52,12 +52,12 @@ services:
     env_file: .env      
 
   #Web Server
-  nginx:
+  radarsys-nginx:
     container_name: 'radarsys-nginx'
     restart: always
     build: ./nginx/
     ports:
-      - '8030:8030'
+      - '0.0.0.0:80:80'
     volumes_from:
       - radarsys
     links:

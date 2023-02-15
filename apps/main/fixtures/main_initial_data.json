@@ -94,6 +94,14 @@
         },
         "model": "main.devicetype",
         "pk": 6
+    },
+    {
+        "fields": {
+            "name": "atrad",
+            "description": ""
+        },
+        "model": "main.devicetype",
+        "pk": 7
     },    
     {
         "fields": {

@@ -73,6 +73,7 @@ DEV_TYPES = (
                 ('cgs', 'Clock Generator System'),
                 ('abs', 'Automatic Beam Switching'),
                 ('dds_rest', 'Direct Digital Synthesizer_REST'),
+                ('atrad', 'Transmitter ATRAD'),
             )
 
 EXP_STATES = (

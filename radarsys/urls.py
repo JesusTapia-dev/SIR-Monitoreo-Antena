@@ -14,7 +14,7 @@ urlpatterns = [
     path('abs/', include('apps.abs.urls')),
     path('misc/',include('apps.misc.urls')),
     path('dds_rest/', include('apps.dds_rest.urls')),
-
+    path('atrad/', include('apps.atrad.urls')),
 ]
 
 #urlpatterns += staticfiles_urlpatterns()

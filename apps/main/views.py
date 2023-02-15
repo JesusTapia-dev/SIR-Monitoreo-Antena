@@ -30,6 +30,7 @@ from apps.cgs.forms import CGSConfigurationForm
 from apps.abs.forms import ABSConfigurationForm
 from apps.usrp.forms import USRPConfigurationForm
 from apps.dds_rest.forms import DDSRestConfigurationForm
+from apps.atrad.forms import ATRADConfigurationForm
 from .utils import Params
 
 from .models              import Campaign, Experiment, Device, Configuration, Location, RunningExperiment, DEV_STATES
@@ -40,6 +41,7 @@ from apps.abs.models      import ABSConfiguration
 from apps.rc.models       import RCConfiguration, RCLine, RCLineType, RCClock
 from apps.dds.models      import DDSConfiguration
 from apps.dds_rest.models import DDSRestConfiguration
+from apps.atrad.models import ATRADConfiguration
 
 #from .tasks import task_start
 from radarsys.celery import app
@@ -53,6 +55,7 @@ CONF_FORMS = {
     'cgs': CGSConfigurationForm,
     'abs': ABSConfigurationForm,
     'usrp': USRPConfigurationForm,
+    'atrad': ATRADConfigurationForm,
 }
 
 CONF_MODELS = {
@@ -63,6 +66,7 @@ CONF_MODELS = {
     'cgs': CGSConfiguration,
     'abs': ABSConfiguration,
     'usrp': USRPConfiguration,
+    'atrad': ATRADConfiguration,
 }
 
 MIX_MODES = {

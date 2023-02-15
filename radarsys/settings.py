@@ -52,9 +52,10 @@ INSTALLED_APPS = [
     'apps.abs',
     'apps.cgs',
     'apps.dds_rest',
+    'apps.atrad',
     "django_bootstrap5",
     'polymorphic',
-    'channels',
+    'radarsys',
 ]
 
 MIDDLEWARE = [
@@ -168,3 +169,9 @@ django.utils.encoding.force_text = force_str
 
 # choose of auto-created primary keys
 DEFAULT_AUTO_FIELD='django.db.models.AutoField'
+
+MQTT_SERVER = '10.10.10.99' 
+MQTT_PORT = 1883 
+MQTT_KEEPALIVE = 60 
+MQTT_USER = '' 
+MQTT_PASSWORD = ''

@@ -1,0 +1,288 @@
+{% extends "dev_conf.html" %}
+{% block extra-head %}
+<style>
+  .dot {
+    height: 25px;
+    width: 25px;
+    background-color: #b0b3af;
+    border-radius: 50%;
+    display: inline-block;
+  }
+</style>
+{% endblock %}
+
+{% block extra-content %}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-xs-12">
+      <h1>Atrad Monitor</h1>
+    </div>
+  </div>
+
+  <div class="row ">
+    <!-- Potencia -->
+    <div class="col col-xs-12">
+      <div class="row">
+        <div class="panel panel-default" style="width:100%;">
+          <div class="panel-heading">
+            <h3 class="panel-title">Potencia</h3>
+          </div>
+          <div class="panel-body">
+            <div class="col-xs-12">
+              <div class="row">
+                <div id="plot-pot"></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel-footer">
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot1">T1</button>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot2">T2</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col col-xs-12">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Status</h3>
+        </div>
+        <div class="panel-body">
+          <table class="table table-borderless" style="max-width: 300px;">
+            <tbody>
+              <tr>
+                <th scope="row">Tx1</th>
+                <td><span id="status1" class="dot"></span></td>
+                <td><p id="status-text1" class="font-weight-bold">Sin envio de datos</p></td>
+              </tr>
+              <tr>
+                <th scope="row">Tx2</th>
+                <td><span id="status2" class="dot"></span></td>
+                <td><p id="status-text2" class="font-weight-bold">Sin envio de datos</p></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Temperatura -->
+  <div class="row">
+    <div class="col-xs-12">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Temperatura</h3>
+        </div>
+        <div class="panel-body">
+          <div class="col-xs-12">
+            <div class="row">
+              <div id="plot-temp"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Controles -->
+    <div class="col-xs-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Control</h3>
+        </div>
+        <div class="panel-body">
+          <div class="col-xs-12">
+            <div class="form-row">
+              <div class="form-group col-xs-6">
+                <form id="controlON" method="POST" action=''>
+                  <button type="summit" class="btn btn-secondary btn-lg">Prender</button>
+                </form>
+              </div>
+              <div class="form-group col-xs-6">
+                <form id="controlOFF" method="POST" action=''>
+                  <button type="summit" class="btn btn-secondary btn-lg">Apagar</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xs-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+        </div>        
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--Modales-->
+<div class="modal fade" id="Pot1" role="dialog">
+  <div class="modal-dialog modal-md" style="min-width:760px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Potencia incidente - Transmisor 1</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="col-xs-12">
+          <div id="plot-pot-t1"></div>
+        </div>
+        <div clas="col-xs-12">
+          <table class="table table-borderless">
+            <tbody>
+              <tr>
+                <th scope="row">P1</th>
+                <td>e</td>
+                <td>e</td>
+              </tr>
+              <tr>
+                <th scope="row">P2</th>
+                <td>e</td>
+                <td>e</td>
+              </tr>
+              <tr>
+                <th scope="row">P3</th>
+                <td>e</td>
+                <td>e</td>
+              </tr>
+              <tr>
+                <th scope="row">P4</th>
+                <td>e</td>
+                <td>e</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="Pot2" role="dialog">
+  <div class="modal-dialog modal-md" style="min-width:760px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Potencia incidente - Transmisor 2</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="col-xs-12">
+          <div id="plot-pot-t2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript" charset="utf-8">
+  $(document).ready(function() {
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+    socket.on('connect', function(data) {
+      console.log('Connecting... OK');
+      makePlot("plot-temp",2,["T1","T2"],[14, 45])
+      makePlot("plot-pot",2,["T1","T2"],[70,100])
+      makePlot("plot-pot-t1",4,["P1","P2","P3","P4"],[0,26])
+      makePlot("plot-pot-t2",4,["P1","P2","P3","P4"],[0,26])
+    })
+
+    socket.on('test', function(data) {
+      let total = data.pow.reduce((a, b) => a + b, 0);
+      var id = (data.num/4)>>0;
+      streamPlot("plot-pot",data.time,total/1000.0,id,81);
+      streamPlot("plot-temp",data.time,data.tmax,id>>0,40);
+      if(id == 0){streamPlot2("plot-pot-t1",data.time,data.pow);ligthStatus('status1','status-text1',data.status);}
+      if(id == 1){streamPlot2("plot-pot-t2",data.time,data.pow);ligthStatus('status2','status-text2',data.status);}
+    })
+    $('form#controlON').submit(function(event) {
+      socket.emit('control_event', {data: 1});
+      return false;
+    });
+    $('form#controlOFF').submit(function(event) {
+      socket.emit('control_event', {data: 0});
+      return false;
+    });
+    $("#btn1").click(function(){
+      $("#box").animate({height: "300px"});
+    });
+    $("#btn2").click(function(){
+      $("#box").animate({height: "100px"});
+    });
+  });
+
+  function makePlot(div, n=1, names=["", ""],ranges){
+    var plotDiv = document.getElementById(div);
+    var traces = [];
+    for (let i = 0; i < n; i++) {
+      traces.push({x: [], y: [],mode: 'lines', name: names[i]});
+    }
+    traces.push({x: [], y: [],mode: 'lines',line: {color:'rgb(219, 64, 82)',dash: 'dot',width: 2},name:"nominal",showlegend: false});
+    var yrange = ranges;
+    var layout = {
+      height: 350,
+      font: {size: 12},
+      margin: { t: 10, b:50},
+      xaxis: {
+        type: 'date'
+      },
+      yaxis: {
+        range: yrange,
+      },
+    };
+
+      Plotly.plot(plotDiv, traces, layout);
+  };
+
+  function streamPlot(div,x,y,ind,val){
+    var plotDiv = document.getElementById(div);
+    if (plotDiv.data[ind].x.length > 8){
+      plotDiv.data[2].x = plotDiv.data[2].x.slice(-23)
+      plotDiv.data[2].y = plotDiv.data[2].y.slice(-23)
+      plotDiv.data[ind].x = plotDiv.data[ind].x.slice(-11)
+      plotDiv.data[ind].y = plotDiv.data[ind].y.slice(-11)
+    }
+    var tm = [x];
+    var values = [y];
+    var data_update = {x: [tm,tm], y: [values,[val]]}
+    Plotly.extendTraces(plotDiv, data_update,[ind,2])
+  };
+  function streamPlot2(div,x,y){
+    var plotDiv = document.getElementById(div);
+    if (plotDiv.data[0].x.length > 8){
+      for(let i=0;i<4;i++){
+        plotDiv.data[i].x = plotDiv.data[i].x.slice(-11)
+        plotDiv.data[i].y = plotDiv.data[i].y.slice(-11)
+      }
+    }
+    var tm = [x];
+    var values = [];
+    for(let i=0;i<4;i++){
+      values[i]=[y[i]/1000.0];
+    }    
+    var data_update = {x: [tm,tm,tm,tm], y: values}
+    Plotly.extendTraces(plotDiv, data_update,[0,1,2,3])
+  };
+  function ligthStatus(div1,div2,status){
+    if(status==='0000'){
+      document.getElementById(div1).style.backgroundColor = "green";
+      document.getElementById(div2).innerHTML = "Desabilitado";
+    }
+    else if(status==='1111'){
+      document.getElementById(div1).style.backgroundColor = "green";
+      document.getElementById(div2).innerHTML = "Habilitado";
+    }
+    else{
+      document.getElementById(div1).style.backgroundColor = "yellow";
+      document.getElementById(div2).innerHTML = "Incompleto";
+    }
+  }
+
+</script>
+{% endblock %}

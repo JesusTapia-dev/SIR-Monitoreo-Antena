@@ -10,7 +10,10 @@ https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/
 import os
 
 from django.core.wsgi import get_wsgi_application
+from .socketconfig import sio
+import socketio
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "radarsys.settings")
 
 application = get_wsgi_application()
+application = socketio.WSGIApp(sio, application)
