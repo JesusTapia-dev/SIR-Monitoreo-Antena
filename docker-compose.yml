@@ -6,42 +6,19 @@ services:
     build: .
     restart: always
     image: radarsys
-    #command: gunicorn radarsys.wsgi:application -w 2 -b :8000
-    #command: python manage.py runserver 0.0.0.0:8000
     ports:
       - 8000:8000
-    #ports:
-    #  - 8030:8030
     env_file: .env
-
     links:
-  #    - redis
       - postgres
     volumes:
       - './:/radarsys'
       - '${DOCKER_DATA}/static:/radarsys/static'
     depends_on:
-  #    - redis
       - postgres
 
-  # redis:
-  #   container_name: 'radarsys-redis'
-  #   image: 'redis:3.2-alpine'
-  #   volumes:
-  #     - '${DOCKER_DATA}/redis:/data'
-
-  # celery_worker:
-  #   container_name: 'radarsys-celery'
-  #   image: radarsys
-  #   env_file: .env
-  #   command: celery -A radarsys worker -l info
-  #   volumes_from:
-  #     - web
-  #   depends_on:
-  #     - web
-
   # PostgreSQL
-  postgres:
+  radarsys-postgres:
     container_name: 'radarsys-postgres'
     build: ./postgres/
     volumes:
@@ -49,7 +26,7 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
      - 5432:5432
-    env_file: .env      
+    env_file: .env
 
   #Web Server
   radarsys-nginx:
