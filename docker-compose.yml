@@ -10,12 +10,12 @@ services:
       - 8000:8000
     env_file: .env
     links:
-      - postgres
+      - radarsys-postgres
     volumes:
       - './:/radarsys'
       - '${DOCKER_DATA}/static:/radarsys/static'
     depends_on:
-      - postgres
+      - radarsys-postgres
 
   # PostgreSQL
   radarsys-postgres:
