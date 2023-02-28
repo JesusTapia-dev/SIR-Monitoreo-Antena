@@ -33,7 +33,7 @@ client.on_connect = on_connect
 client.on_message = on_message
 client.username_pw_set(os.environ.get('MQTT_USER_ATRAD', 'atrad'), os.environ.get('MQTT_PASSWORD_ATRAD', 'atrad'))
 client.connect(
-    host=os.environ.get('MQTT_SERVER', '0.0.0.0'),
+    host=os.environ.get('MQTT_SERVER', '10.10.10.200'),
     port=int(settings.os.environ.get('MQTT_PORT', 1883)),
     keepalive=int(os.environ.get('MQTT_KEEPALIVE', 36000))
 )

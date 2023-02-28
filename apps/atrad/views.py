@@ -88,15 +88,15 @@ def prueba(request):
     return render(request, 'prueba.html', kwargs)
 
 @sio.on('connection-bind')
-def connection_bind(sid, data):
+def atrad_connection_bind(sid, data):
     print("sid:",sid,"data",data)
 
 @sio.on('disconnect')
-def test_disconnect(sid):
+def atrad_disconnect(sid):
     print("Disconnected")
 
 @sio.event
-def control_event(sid,message):
+def atrad_control_event(sid,message):
     mqtt_client.publish('test/data2',message['data'])
 
 def hello(data):

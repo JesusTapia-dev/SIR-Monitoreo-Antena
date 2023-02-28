@@ -805,6 +805,9 @@ class Configuration(PolymorphicModel):
 
     def get_absolute_url_write(self):
         return reverse('url_write_dev_conf', args=[str(self.id)])
+    
+    def get_absolute_url_write_mqtt(self):
+        return reverse('url_write_mqtt_dev_conf', args=[str(self.id)])
 
     def get_absolute_url_read(self):
         return reverse('url_read_dev_conf', args=[str(self.id)])

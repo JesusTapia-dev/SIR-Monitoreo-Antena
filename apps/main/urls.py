@@ -53,6 +53,7 @@ urlpatterns = (
     path('dev_conf/<int:id_conf>/delete/', views.dev_conf_delete, name='url_delete_dev_conf'),
 
     path('dev_conf/<int:id_conf>/write/', views.dev_conf_write, name='url_write_dev_conf'),
+    path('dev_conf/<int:id_conf>/write_mqtt/', views.dev_conf_write_mqtt, name='url_write_mqtt_dev_conf'),
     path('dev_conf/<int:id_conf>/read/', views.dev_conf_read, name='url_read_dev_conf'),
     path('dev_conf/<int:id_conf>/import/', views.dev_conf_import, name='url_import_dev_conf'),
     path('dev_conf/<int:id_conf>/export/', views.dev_conf_export, name='url_export_dev_conf'),

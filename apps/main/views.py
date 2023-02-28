@@ -46,6 +46,10 @@ from apps.atrad.models import ATRADConfiguration
 #from .tasks import task_start
 from radarsys.celery import app
 
+
+from .mqtt import client as mqtt_client
+from radarsys.socketconfig import sio as sio
+
 #comentario test
 CONF_FORMS = {
     'rc': RCConfigurationForm,
@@ -1509,6 +1513,7 @@ def dev_conf_write(request, id_conf):
 
     if request.method == 'POST':
         if conf.write_device():
+            mqtt_client.publish('abs/beams_up', 'Write normal')
             conf.device.conf_active = conf.pk
             conf.device.save()
             messages.success(request, conf.message)
@@ -1523,6 +1528,37 @@ def dev_conf_write(request, id_conf):
         'title': 'Write Configuration',
         'suptitle': conf.label,
         'message': 'Are you sure yo want to write this {} configuration?'.format(conf.device),
+        'delete': False
+    }
+    kwargs['menu_configurations'] = 'active'
+
+    return render(request, 'confirm.html', kwargs)
+
+
+@login_required
+def dev_conf_write_mqtt(request,id_conf):
+
+    conf = get_object_or_404(Configuration, pk=id_conf)
+    
+    if request.method == 'POST':
+        if conf.write_device_mqtt():
+            mqtt_client.publish('abs/beams_up', 'Mqtt')
+            #mqtt_client.publish('abs/beams_down', 'Hola down')
+
+            conf.device.conf_active = conf.pk
+            conf.device.save()
+            messages.success(request, conf.message)
+            if has_been_modified(conf):
+                conf.clone(type=1, template=False)
+        else:
+            messages.error(request, conf.message)
+
+        return redirect(get_object_or_404(Configuration, pk=id_conf).get_absolute_url())
+
+    kwargs = {
+        'title': 'MQTT Write Configuration',
+        'suptitle': conf.label,
+        'message': 'Are you sure yo want to write through MQTT this {} configuration?'.format(conf.device),
         'delete': False
     }
     kwargs['menu_configurations'] = 'active'
