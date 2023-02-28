@@ -10,6 +10,10 @@ import requests
 import struct
 import os, sys, time
 
+from .mqtt import client as mqtt_client
+from radarsys.socketconfig import sio as sio
+import json
+
 antenna_default = json.dumps({
                     "antenna_up": [[0.0,0.0,0.0,0.0,0.5,0.5,0.5,0.5],
                                     [0.0,0.0,0.0,0.0,0.5,0.5,0.5,0.5],
@@ -488,7 +492,28 @@ class ABSConfiguration(Configuration):
         conf_active.conf = self
         conf_active.save()
         return True
+    
+    def write_device_mqtt(self):
+        apuntes_up_down=''
+        beams  = ABSBeam.objects.filter(abs_conf=self)
 
+        inicializacion="{\"beams\":["
+        finalizacion="]}"
+
+        for beam in beams:
+            beam.antenna=beam.antenna[1:]
+            info="{\"id\":"+str(beam.id)+","+beam.antenna + ","
+            apuntes_up_down=apuntes_up_down+info
+        
+        apuntes_up_down=apuntes_up_down[:len(apuntes_up_down)-1]
+
+        apuntes_up_down=inicializacion+ apuntes_up_down+finalizacion
+        
+        #print(apuntes_up_down,flush=True)
+
+        mqtt_client.publish(os.environ.get('TOPIC_ABS', 'abs/beams'),apuntes_up_down)
+
+        return True
 
     def read_module(self, module):
 

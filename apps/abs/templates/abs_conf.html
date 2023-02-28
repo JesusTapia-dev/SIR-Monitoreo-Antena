@@ -39,13 +39,22 @@
 
 </style>
 {% endblock %}
+
+
 {% block extra-menu-actions %}
 <li>
   <a href="{{ dev_conf.get_absolute_url_plot }}" target="_blank">
     <span class="far fa-image" aria-hidden="true"></span> View Patterns </a>
 </li>
 {% endblock %}
+
+
 {% block extra-content %}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js">
+</script>
+
+
 {% if beams %}
 <h4>Beams:</h4>
 <div class="container">
@@ -280,6 +289,10 @@
         </tr>
       </table>
 
+      <!-- <meta id="configuraciones_down" data-playlist="{{ beam.get_downvalues }}">
+      <meta id="configuraciones_up" data-playlist="{{ beam.get_upvalues }}">
+      <meta id="sda" data-toggle="" -->
+
       {% if beam.id == active_beam %}
       <table class="legend">
         <tr>
@@ -301,8 +314,12 @@
       {% else %}
       <div style="vertical-align: top; display:inline-block;">
         <button id="send_beam{{forloop.counter}}" type="button" class="btn btn-default">
-          <span class="fas fa-external-link-square-alt" aria-hidden="true"></span>
-          Change Beam</button>
+        <span class="fas fa-external-link-square-alt" aria-hidden="true"></span>
+        Change Beam</button>
+        <br><br><br>
+        <button id="change_beam_mqtt{{forloop.counter}}" type="button" class="btn btn-default">
+        <span class="fas fa-external-link-square-alt" aria-hidden="true"></span>
+        Change Beam MQTT</button>
       </div>
       {% endif %}
     </div>
@@ -317,23 +334,51 @@
 </p>
 {% endif %}
 {% endblock extra-content %}
+
 {% block extra-js%}
 <script>
   $(document).ready(function () {
+    
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
 
-    {% for beam in beams %}
+    socket.on('connect', function(data) {
+        console.log('Connecting... OK');
+    })
 
-      {% if dev_conf.operation_mode == 1 %}
-        $("#send_beam{{forloop.counter}}").prop('disabled', true)
-      {% else %}
-        $("#send_beam{{forloop.counter}}").click(function () {
-          document.location = "{% url 'url_send_beam' dev_conf.id beam.id %}";
-        });
-      {% endif %}
+    socket.on('abs_ws', function(data) {
+        console.log('ingresamos');
+        console.log(data.msg);
+        var text = data['msg'];
+        // $('#chatLog').val(text);
 
-    {% endfor %}
+        if(data.msg=="b\'Hola\'"){console.log('Hola_amigo')};
+    })
 
 
-  });
+  {% for beam in beams %}
+
+    {% if dev_conf.operation_mode == 1 %}
+      $("#send_beam{{forloop.counter}}").prop('disabled', true)
+      $("#change_beam_mqtt{{forloop.counter}}").prop('disabled', true)
+    {% else %}
+      $("#send_beam{{forloop.counter}}").click(function () {
+        document.location = "{% url 'url_send_beam' dev_conf.id beam.id %}";
+      });
+      
+      a=$("#change_beam_mqtt{{forloop.counter}}")
+      a.click(function () {
+        info="change_beam_mqtt{{forloop.counter}}"
+        socket.emit('change_beam',{data:info})
+      });
+
+    {% endif %}
+
+  {% endfor %}
+
+
+});
+
 </script>
+
+
 {% endblock %}

@@ -24,6 +24,8 @@ from .utils.overJroShow import overJroShow
 #Create your views here.
 import json, ast
 
+from .mqtt import client as mqtt_client
+from radarsys.socketconfig import sio as sio
 
 def get_values_from_form(form_data):
 
@@ -246,6 +248,41 @@ def import_file(request, id_conf):
     return render(request, 'abs_import.html', kwargs)
 
 
+# def send_mqtt(request,id_conf):
+
+#     # conf = get_object_or_404(ABSConfiguration, pk=id_conf)
+
+#     # abs_mqtt = Configuration.objects.filter(pk=conf.device.conf_active).first()
+#     # if abs_mqtt!=conf:
+#     #     url_mqtt = '#' if abs is None else abs.get_absolute_url()
+#     #     label_mqtt = 'None' if abs is None else abs.label
+#     #     messages.warning(
+#     #         request, 
+#     #         mark_safe('The current configuration has not been written in the modules, the active configuration is <a href="{}">{}</a>'.format(
+#     #             url_mqtt,
+#     #             label_mqtt
+#     #             ))
+#     #         )
+#     #     return redirect(conf.get_absolute_url()) 
+    
+#     # beam = get_object_or_404(ABSBeam, pk=id_beam)
+
+#     conf = get_object_or_404(ABSConfiguration, pk=id_conf)
+
+#     mqtt_client.publish('abs/beams_up', 'Hola up')
+#     mqtt_client.publish('abs/beams_down', 'Hola down')
+
+#     kwargs = {
+#         'title': 'ABS',
+#         'suptitle': conf.label,
+#         'message': 'Are you sure you want to write ABS Beam?',
+#         'delete': False
+#     }
+#     kwargs['menu_configurations'] = 'active'
+
+#     return render(request, 'confirm.html', kwargs)
+    
+
 def send_beam(request, id_conf, id_beam):
 
     conf = get_object_or_404(ABSConfiguration, pk=id_conf)
@@ -443,3 +480,33 @@ def plot_pattern(request, id_conf, id_beam, antenna):
     response = HttpResponse(buf.getvalue(), content_type='image/png')
     return response
     
+import os
+from django.http import HttpResponse
+
+@sio.on('connection-bind')
+def abs_connection_bind(sid, data):
+    print("sid:",sid,"data",data)
+
+@sio.on('disconnect')
+def abs_test_disconnect(sid):
+    print("Disconnected")
+
+@sio.event
+def abs_send_beam_up(sid, message):
+    mqtt_client.publish('abs/beams_up', message['data'])
+
+@sio.event
+def abs_send_beam_down(sid, message):
+    mqtt_client.publish('abs/beams_down', message['data'])
+
+@sio.event
+def change_beam(sid,message):
+    data=str(message['data'])
+    data=data[16]
+    mqtt_client.publish('abs/change_beam',data)
+
+
+
+
+
+
