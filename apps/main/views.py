@@ -37,7 +37,7 @@ from .models              import Campaign, Experiment, Device, Configuration, Lo
 from apps.cgs.models      import CGSConfiguration
 from apps.jars.models     import JARSConfiguration, EXPERIMENT_TYPE
 from apps.usrp.models     import USRPConfiguration
-from apps.abs.models      import ABSConfiguration
+from apps.abs.models      import ABSConfiguration, ABSBeam
 from apps.rc.models       import RCConfiguration, RCLine, RCLineType, RCClock
 from apps.dds.models      import DDSConfiguration
 from apps.dds_rest.models import DDSRestConfiguration
@@ -1551,7 +1551,8 @@ def dev_conf_write(request, id_conf):
 def dev_conf_write_mqtt(request,id_conf):
 
     conf = get_object_or_404(Configuration, pk=id_conf)
-    
+    beams = ABSBeam.objects.filter(abs_conf=conf)
+
     if request.method == 'POST':
         if conf.write_device_mqtt():
             conf.device.conf_active = conf.pk
@@ -1562,7 +1563,38 @@ def dev_conf_write_mqtt(request,id_conf):
         else:
             messages.error(request, conf.message)
         print("return",flush=True)
-        return redirect(get_object_or_404(Configuration, pk=id_conf).get_absolute_url())
+        #return redirect(get_object_or_404(Configuration, pk=id_conf).get_absolute_url())
+        
+        module_messages = json.loads(conf.module_messages)
+        kwargs = {}
+        kwargs['connected_modules'] = str(conf.connected_modules())+'/64'
+        kwargs['dev_conf'] = conf
+        
+        if conf.operation_mode == 0:
+            kwargs['dev_conf_keys'] = ['label', 'operation_mode']
+        else:
+            kwargs['dev_conf_keys'] = ['label', 'operation_mode', 'operation_value']
+
+        kwargs['title'] = 'ABS Configuration'
+        kwargs['suptitle'] = 'Details'
+        kwargs['button'] = 'Edit Configuration'
+        
+        if conf.active_beam != 0:
+            kwargs['active_beam'] = int(conf.active_beam)
+
+
+        kwargs['beams'] = beams
+        # kwargs['modules_status'] = all_status
+        # kwargs['color_status']   = color_status
+
+
+        kwargs['module_messages'] = module_messages
+
+        ###### SIDEBAR ######
+        kwargs.update(sidebar(conf=conf))
+
+    
+        return render(request, 'abs_conf_mqtt.html',kwargs)
 
     kwargs = {
         'title': 'MQTT Write Configuration',
