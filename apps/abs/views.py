@@ -174,6 +174,14 @@ def abs_conf(request, id_conf):
     return render(request, 'abs_conf.html', kwargs)
 
 
+# def abs_conf_mqtt(request, id_conf):
+#     # socket.on('beams_ack',function(data){
+    #   ack=data;
+    #   console.log("ack")
+    #   console.log(ack)
+    # })
+
+
 def abs_conf_edit(request, id_conf):
 
     conf     = get_object_or_404(ABSConfiguration, pk=id_conf)
@@ -247,41 +255,6 @@ def import_file(request, id_conf):
 
     return render(request, 'abs_import.html', kwargs)
 
-
-# def send_mqtt(request,id_conf):
-
-#     # conf = get_object_or_404(ABSConfiguration, pk=id_conf)
-
-#     # abs_mqtt = Configuration.objects.filter(pk=conf.device.conf_active).first()
-#     # if abs_mqtt!=conf:
-#     #     url_mqtt = '#' if abs is None else abs.get_absolute_url()
-#     #     label_mqtt = 'None' if abs is None else abs.label
-#     #     messages.warning(
-#     #         request, 
-#     #         mark_safe('The current configuration has not been written in the modules, the active configuration is <a href="{}">{}</a>'.format(
-#     #             url_mqtt,
-#     #             label_mqtt
-#     #             ))
-#     #         )
-#     #     return redirect(conf.get_absolute_url()) 
-    
-#     # beam = get_object_or_404(ABSBeam, pk=id_beam)
-
-#     conf = get_object_or_404(ABSConfiguration, pk=id_conf)
-
-#     mqtt_client.publish('abs/beams_up', 'Hola up')
-#     mqtt_client.publish('abs/beams_down', 'Hola down')
-
-#     kwargs = {
-#         'title': 'ABS',
-#         'suptitle': conf.label,
-#         'message': 'Are you sure you want to write ABS Beam?',
-#         'delete': False
-#     }
-#     kwargs['menu_configurations'] = 'active'
-
-#     return render(request, 'confirm.html', kwargs)
-    
 
 def send_beam(request, id_conf, id_beam):
 

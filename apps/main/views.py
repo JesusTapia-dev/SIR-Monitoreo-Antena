@@ -1465,6 +1465,19 @@ def dev_conf_stop(request, id_conf):
 
     return redirect(conf.get_absolute_url())
 
+@login_required
+def dev_conf_stop_mqtt(request, id_conf):
+
+    conf = get_object_or_404(Configuration, pk=id_conf)
+
+    if conf.stop_device_mqtt():
+        messages.success(request, conf.message)
+    else:
+        messages.error(request, conf.message)
+
+    #conf.status_device()
+
+    return redirect(conf.get_absolute_url())
 
 @login_required
 def dev_conf_status(request, id_conf):
@@ -1513,7 +1526,6 @@ def dev_conf_write(request, id_conf):
 
     if request.method == 'POST':
         if conf.write_device():
-            mqtt_client.publish('abs/beams_up', 'Write normal')
             conf.device.conf_active = conf.pk
             conf.device.save()
             messages.success(request, conf.message)
@@ -1542,9 +1554,6 @@ def dev_conf_write_mqtt(request,id_conf):
     
     if request.method == 'POST':
         if conf.write_device_mqtt():
-            mqtt_client.publish('abs/beams_up', 'Mqtt')
-            #mqtt_client.publish('abs/beams_down', 'Hola down')
-
             conf.device.conf_active = conf.pk
             conf.device.save()
             messages.success(request, conf.message)
@@ -1552,7 +1561,7 @@ def dev_conf_write_mqtt(request,id_conf):
                 conf.clone(type=1, template=False)
         else:
             messages.error(request, conf.message)
-
+        print("return",flush=True)
         return redirect(get_object_or_404(Configuration, pk=id_conf).get_absolute_url())
 
     kwargs = {
@@ -1562,7 +1571,7 @@ def dev_conf_write_mqtt(request,id_conf):
         'delete': False
     }
     kwargs['menu_configurations'] = 'active'
-
+    print("Confirm",flush=True)
     return render(request, 'confirm.html', kwargs)
 
 

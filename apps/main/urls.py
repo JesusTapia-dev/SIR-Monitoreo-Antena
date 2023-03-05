@@ -59,6 +59,7 @@ urlpatterns = (
     path('dev_conf/<int:id_conf>/export/', views.dev_conf_export, name='url_export_dev_conf'),
     path('dev_conf/<int:id_conf>/start/', views.dev_conf_start, name='url_start_dev_conf'),
     path('dev_conf/<int:id_conf>/stop/', views.dev_conf_stop, name='url_stop_dev_conf'),
+    path('dev_conf/<int:id_conf>/stop_mqtt/', views.dev_conf_stop_mqtt, name='url_stop_mqtt_dev_conf'),
     path('dev_conf/<int:id_conf>/status/', views.dev_conf_status, name='url_status_dev_conf'),
 
     path('operation/', views.operation, name='url_operation'),

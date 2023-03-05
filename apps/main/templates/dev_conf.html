@@ -28,6 +28,7 @@
     <li><a href="{{ dev_conf.get_absolute_url_write }}"><span class="fas fa-arrow-circle-down" aria-hidden="true"></span> Write</a></li>
     {% if dev_conf.device.device_type.name == 'abs' %}
     <li><a href="{{ dev_conf.get_absolute_url_write_mqtt }}"><span class="fas fa-arrow-circle-down" aria-hidden="true"></span> Write MQTT</a></li>
+    <li><a href="{{ dev_conf.get_absolute_url_stop_mqtt }}"><span class="fas fa-stop" aria-hidden="true"></span> Stop MQTT</a></li>
     {% endif %}
     {% if dev_conf.device.device_type.name != 'abs' %}
     <li><a href="{{ dev_conf.get_absolute_url_read }}"><span class="fas fa-arrow-circle-up" aria-hidden="true"></span> Read</a></li>

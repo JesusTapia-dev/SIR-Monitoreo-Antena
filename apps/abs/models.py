@@ -361,6 +361,16 @@ class ABSConfiguration(Configuration):
 
         return True
 
+    def stop_device_mqtt(self):
+
+        self.device.status = 2
+        self.device.save()
+        self.message = 'ABS has been stopped.'
+        self.save()
+
+        mqtt_client.publish(os.environ.get('TOPIC_ABS', 'abs/beams'),"STOP")
+
+        return True
 
     def write_device(self):
 
@@ -494,6 +504,35 @@ class ABSConfiguration(Configuration):
         return True
     
     def write_device_mqtt(self):
+
+        if self.experiment is None:
+            confs = []
+        else:
+            confs = Configuration.objects.filter(experiment = self.experiment).filter(type=0)
+        confdds  = ''
+        confjars = ''
+        confrc   = ''
+        #TO STOP DEVICES: DDS-JARS-RC
+        for i in range(0,len(confs)):
+            if i==0:
+                for conf in confs:
+                    if conf.device.device_type.name == 'dds':
+                        confdds = conf
+                        confdds.stop_device()
+                        break
+            if i==1:
+                for conf in confs:
+                    if conf.device.device_type.name == 'jars':
+                        confjars = conf
+                        confjars.stop_device()
+                        break
+            if i==2:
+                for conf in confs:
+                    if conf.device.device_type.name == 'rc':
+                        confrc = conf
+                        confrc.stop_device()
+                        break
+
         apuntes_up_down=''
         beams  = ABSBeam.objects.filter(abs_conf=self)
 
@@ -506,12 +545,17 @@ class ABSConfiguration(Configuration):
             apuntes_up_down=apuntes_up_down+info
         
         apuntes_up_down=apuntes_up_down[:len(apuntes_up_down)-1]
-
         apuntes_up_down=inicializacion+ apuntes_up_down+finalizacion
-        
-        #print(apuntes_up_down,flush=True)
-
         mqtt_client.publish(os.environ.get('TOPIC_ABS', 'abs/beams'),apuntes_up_down)
+
+        #Start DDS-RC-JARS
+        if confdds:
+            confdds.start_device()
+        if confrc:
+            #print confrc
+            confrc.start_device()
+        if confjars:
+            confjars.start_device()
 
         return True
 

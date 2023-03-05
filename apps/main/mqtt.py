@@ -5,12 +5,8 @@ from radarsys.socketconfig import sio as sio
 
 
 lista_ack=[
-    chr( 33 ), chr( 34 ), chr( 35 ), chr( 36 ), chr( 37 ), chr( 38 ), chr( 39 ), chr( 40 ), chr( 41 ), chr( 42 ), chr( 43 ), chr( 44 ), chr( 45 ), chr( 46 ), chr( 47 ), chr( 48 ), chr( 49 ), chr( 50 ), chr( 51 ), chr( 52 ), chr( 53 ), chr( 54 ), chr( 55 ), chr( 56 ), chr( 57 ), chr( 58 ), chr( 59 ), chr( 60 ), chr( 61 ), chr( 62 ), chr( 63 ), chr( 64 ), chr( 65 ), chr( 66 ), chr( 67 ), chr( 68 ), chr( 69 ), chr( 70 ), chr( 71 ), chr( 72 ), chr( 73 ), chr( 74 ), chr( 75 ), chr( 76 ), chr( 77 ), chr( 78 ), chr( 79 ), chr( 80 ), chr( 81 ), chr( 82 ), chr( 83 ), chr( 84 ), chr( 85 ), chr( 86 ), chr( 87 ), chr( 88 ), chr( 89 ), chr( 90 ), chr( 91 ), chr( 92 ), chr( 93 ), chr( 94 ), chr( 95 ), chr( 96 )
-    ]
-
-lista_ack_dismatching=[
-    chr( 97 ), chr( 98 ), chr( 99 ), chr( 100 ), chr( 101 ), chr( 102 ), chr( 103 ), chr( 104 ), chr( 105 ), chr( 106 ), chr( 107 ), chr( 108 ), chr( 109 ), chr( 110 ), chr( 111 ), chr( 112 ), chr( 113 ), chr( 114 ), chr( 115 ), chr( 116 ), chr( 117 ), chr( 118 ), chr( 119 ), chr( 120 ), chr( 121 ), chr( 122 ), chr( 123 ), chr( 124 ), chr( 125 ), chr( 126 ), chr( 127 ), chr( 128 ), chr( 129 ), chr( 130 ), chr( 131 ), chr( 132 ), chr( 133 ), chr( 134 ), chr( 135 ), chr( 136 ), chr( 137 ), chr( 138 ), chr( 139 ), chr( 140 ), chr( 141 ), chr( 142 ), chr( 143 ), chr( 144 ), chr( 145 ), chr( 146 ), chr( 147 ), chr( 148 ), chr( 149 ), chr( 150 ), chr( 151 ), chr( 152 ), chr( 153 ), chr( 154 ), chr( 155 ), chr( 156 ), chr( 157 ), chr( 158 ), chr( 159 ), chr(160)
-]
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128
+        ]
 
 
 
@@ -25,11 +21,33 @@ def on_message(mqtt_client, userdata, msg):
     # print(f'Received message on topic: {msg.topic} with payload: {msg.payload}', flush=True)
     # message= str(msg.payload)
     # sio.emit('abs_ws',data={'msg':message})
-    print("HOLA",flush=True)
+    #print("HOLA",flush=True)
     # message=msg.payload[1]
     # print("HOLAAA ",message,flush=True)
     # #lista_ack.remove(msg.payload)
     # print("LISTA     ",lista_ack)
+    global lista_ack
+    global lista_ack_dismatching
+    message= str(msg.payload)
+    message=message[2:len(message)-1]
+    if(message=="UPDATE"):
+        print("UUPDATE")
+        sio.emit('beams_ack',data={'msg':lista_ack})
+        print(lista_ack,flush=True)
+        lista_ack=[
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128
+        ]
+    else:
+        message=int(message)
+        if(message<=64):
+            # print(message,"\t MATCH",flush=True)
+            lista_ack.remove(message+64)
+            
+        elif(message>64):
+            # print(message,"\t DISMATCH",flush=True)
+            lista_ack.remove(message-64)
+        else:
+            print(len(message))
 
 
 

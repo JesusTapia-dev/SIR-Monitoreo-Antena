@@ -781,6 +781,10 @@ class Configuration(PolymorphicModel):
         self.message = 'Function not implemented'
         return False
 
+    def write_device_mqtt(self, parms):
+
+        self.message = 'Function not implemented'
+        return False
 
     def read_device(self):
 
@@ -817,6 +821,9 @@ class Configuration(PolymorphicModel):
 
     def get_absolute_url_stop(self):
         return reverse('url_stop_dev_conf', args=[str(self.id)])
+    
+    def get_absolute_url_stop_mqtt(self):
+        return reverse('url_stop_mqtt_dev_conf', args=[str(self.id)])
 
     def get_absolute_url_status(self):
         return reverse('url_status_dev_conf', args=[str(self.id)])
