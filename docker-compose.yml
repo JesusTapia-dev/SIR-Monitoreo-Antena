@@ -14,6 +14,15 @@ services:
     volumes:
       - './:/radarsys'
       - '${DOCKER_DATA}/static:/radarsys/static'
+    labels:
+      ofelia.enabled: "true"
+      # ofelia.job-exec.restart-reception.schedule: "0 1/5 * * * *"
+      ofelia.job-exec.test.schedule: "@every 5s"
+      ofelia.job-exec.test.command: "python manage.py hello"
+      # ofelia.job-exec.restart-pedestal.schedule: "0 2/10 * * * *"
+      # ofelia.job-exec.restart-pedestal.command: "python manage.py restart_pedestal"
+      # ofelia.job-exec.restart-experiment.schedule: "@midnight"
+      # ofelia.job-exec.restart-experiment.command: "python manage.py restart_experiment"
     depends_on:
       - radarsys-postgres
 
@@ -41,6 +50,22 @@ services:
       - radarsys:radarsys
     depends_on:
       - radarsys
+
+  #Ofelia Scheduler    
+  radarsys-job:
+    container_name: 'radarsys-job'
+    image: mcuadros/ofelia:v0.3.6
+    depends_on:
+      - radarsys
+    # networks:
+    #   - backend_sirm
+    command: daemon --docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "12m"
 
 volumes:
   pgdata:

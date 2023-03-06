@@ -145,23 +145,6 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-# # Celery stuff
-
-# REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
-# #REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
-# REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
-
-# BROKER_TRANSPORT = 'redis'
-# #BROKER_URL       = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
-# BROKER_URL       = 'redis://{}:{}'.format(REDIS_HOST, REDIS_PORT)
-
-# CELERY_RESULT_BACKEND    = 'redis://{}:{}/0'.format(REDIS_HOST, REDIS_PORT)
-# CELERY_BROKER_TRANSPORT  = BROKER_URL
-# CELERY_ACCEPT_CONTENT    = ['application/json']
-# CELERY_TASK_SERIALIZER   = 'json'
-# CELERY_RESULT_SERIALIZER = 'json'
-# CELERY_ENABLE_UTC        = False
-# CELERY_TIMEZONE          = 'America/Lima'
 
 import django
 from django.utils.encoding import force_str
