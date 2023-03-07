@@ -6,7 +6,7 @@ import numpy as np
 
 def on_connect(mqtt_client, userdata, flags, rc):
    if rc == 0:
-       print('Connected successfully')
+    #    print('Connected successfully')
        mqtt_client.subscribe('atrad/test3')
    else:
        print('Bad connection. Code:', rc)

@@ -353,7 +353,7 @@ class ABSConfiguration(Configuration):
 
 
     def stop_device(self):
-
+        print("estoy en ABS models")
         self.device.status = 2
         self.device.save()
         self.message = 'ABS has been stopped.'

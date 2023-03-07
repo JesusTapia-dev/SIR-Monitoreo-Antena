@@ -334,7 +334,6 @@ class Campaign(models.Model):
             dum['id']          = loc.pk
             dum['experiments'] = [e for e in self.experiments.all() if e.location==loc]
             ret.append(dum)
-
         return ret
 
     def get_absolute_url(self):

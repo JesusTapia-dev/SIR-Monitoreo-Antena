@@ -1927,7 +1927,7 @@ def operation(request, id_camp=None):
 
 @login_required
 def radar_start(request, id_camp, id_radar):
-
+    print("Boton presionados",flush=True)
     campaign    = get_object_or_404(Campaign, pk=id_camp)
     experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
     now         = datetime.now()
@@ -1935,18 +1935,18 @@ def radar_start(request, id_camp, id_radar):
     for exp in experiments:
         #app.control.revoke(exp.task)
         print("----------------------")
-        print("status:->", exp.status)
+        print("status:->", exp.status,flush=True)
         start = datetime.combine(datetime.now().date(), exp.start_time)
         end   = datetime.combine(datetime.now().date(), exp.end_time)
-        print("start exp: ",exp.start_time)
-        print("end exp: ",exp.end_time)
+        print("start exp: ",exp.start_time,flush=True)
+        print("end exp: ",exp.end_time,flush=True)
         
-        print("start comb: ",start)
-        print("end comb: ",end)
-        print(is_aware(start))
-        print("start camp",campaign.start_date)
-        print("end camp",campaign.end_date)
-        print(is_aware(campaign.start_date))
+        print("start comb: ",start,flush=True)
+        print("end comb: ",end,flush=True)
+        print(is_aware(start),flush=True)
+        print("start camp",campaign.start_date,flush=True)
+        print("end camp",campaign.end_date,flush=True)
+        print(is_aware(campaign.start_date),flush=True)
         if end < start:
             end += timedelta(1)
 
@@ -1970,10 +1970,10 @@ def radar_start(request, id_camp, id_radar):
                 request, 'Experiment {} out of date'.format(exp))
 
         #app.control.revoke(exp.task)
-        print("Llego luego del revoke")
+        print("Llego luego del revoke",flush=True)
         if now >= start and now <= end:
 
-            print("Caso now > start and < end -- (1)")
+            print("Caso now > start and < end -- (1)",flush=True)
 
             # -------------------------------------------
             

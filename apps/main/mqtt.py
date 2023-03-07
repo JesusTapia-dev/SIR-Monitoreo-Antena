@@ -12,7 +12,7 @@ lista_ack=[
 
 def on_connect(mqtt_client, userdata, flags, rc):
    if rc == 0:
-       print('Connected successfully')
+       #print('Connected successfully')
        mqtt_client.subscribe(os.environ.get('TOPIC_ABS_ACK','abs/beams_ack'))
    else:
        print('Bad connection. Code:', rc)
