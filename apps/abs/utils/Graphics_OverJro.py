@@ -79,7 +79,7 @@ class AntPatternPlot:
         levels = numpy.array([1e-3,1e-2,1e-1,0.5,1.0])
         tmp = numpy.round(10*numpy.log10(levels),decimals=1)
         labels = []
-        for i in numpy.arange(5):labels.append(str(numpy.int(tmp[i])))
+        for i in numpy.arange(5):labels.append(str(int(tmp[i])))
 
 
         colors = ((0,0,1.),(0,170/255.,0),(127/255.,1.,0),(1.,109/255.,0),(128/255.,0,0))
@@ -137,10 +137,10 @@ class AntPatternPlot:
 
         # Getting HA and DEC axes
         mindec = -28; maxdec = 4; incdec = 2.
-        ndec = numpy.int((maxdec - mindec)/incdec) + 1
+        ndec = int((maxdec - mindec)/incdec) + 1
 
         minha = -20; maxha = 20; incha = 2.
-        nha = numpy.int((maxha - minha)/incha) + 1
+        nha = int((maxha - minha)/incha) + 1
 
         #mcosx = numpy.zeros((nha,ndec))
         #mcosy = numpy.zeros((nha,ndec))
@@ -184,8 +184,8 @@ class AntPatternPlot:
         if noval[0].size>0:mcosy[noval] = numpy.nan
 
         # Plotting HA and declination grid.
-        iha0 = numpy.int((0 - minha)/incha)
-        idec0 = numpy.int((-14 - mindec)/incdec)
+        iha0 = int((0 - minha)/incha)
+        idec0 = int((-14 - mindec)/incdec)
 
         colorgrid = (1.,109/255.,0)
         self.ax.plot(mcosx.transpose(),mcosy.transpose(),color=colorgrid,linestyle='--')
@@ -194,7 +194,7 @@ class AntPatternPlot:
                 valx = (mcosx[idec,iha0]<=xmax) & (mcosx[idec,iha0]>=xmin)
                 valy = (mcosy[idec,iha0]<=ymax) & (mcosy[idec,iha0]>=ymin)
                 if valx & valy:
-                    text = str(numpy.int(mindec + incdec*idec))+'$^o$'
+                    text = str(int(mindec + incdec*idec))+'$^o$'
                     self.ax.text(mcosx[idec,iha0],mcosy[idec,iha0],text)
 
         matplotlib.pyplot.plot(mcosx,mcosy,color=colorgrid,linestyle='--')
@@ -203,7 +203,7 @@ class AntPatternPlot:
                 valx = (mcosx[idec0,iha]<=xmax) & (mcosx[idec0,iha]>=xmin)
                 valy = (mcosy[idec0,iha]<=ymax) & (mcosy[idec0,iha]>=ymin)
                 if valx & valy:
-                    text = str(4*numpy.int(minha + incha*iha))+"'"
+                    text = str(4*int(minha + incha*iha))+"'"
                     self.ax.text(mcosx[idec0,iha],mcosy[idec0,iha],text)
         
         if save:
@@ -257,9 +257,9 @@ class AntPatternPlot:
 
 
             ObjFig, = self.ax.plot(alpha_location[:,0,ih],alpha_location[:,1,ih],
-                marker[ih % 8],color=colors[numpy.int(ih/8)],ms=4.5,lw=0.5)
+                marker[ih % 8],color=colors[int(ih/8)],ms=4.5,lw=0.5)
             handles.append(ObjFig)
-            objects.append(numpy.str(heights[ih]) + ' km')        
+            objects.append(str(heights[ih]) + ' km')        
 
         self.ax.legend(handles,objects,loc="lower right", numpoints=1, handlelength=0.3,
                        handletextpad=0.02, borderpad=0.3, labelspacing=0.1)                
@@ -329,9 +329,9 @@ class BFieldPlot:
 
 
             ObjFig, = matplotlib.pyplot.plot(alpha_location[:,0,ih],alpha_location[:,1,ih], \
-                marker[ih % 8],color=colors[numpy.int(ih/8)],ms=4.5,lw=0.5)
+                marker[ih % 8],color=colors[int(ih/8)],ms=4.5,lw=0.5)
             handles.append(ObjFig)
-            objects.append(numpy.str(heights[ih]) + ' km')
+            objects.append(str(heights[ih]) + ' km')
 
         matplotlib.pyplot.xlim(dcosxrange[0],dcosxrange[1])
         matplotlib.pyplot.ylim(dcosyrange[0],dcosyrange[1])
@@ -468,7 +468,7 @@ class CelestialObjectsPlot:
 
                     index = numpy.mean(tod_0[val]) - minlev
                     index = (index*(maxcol - mincol)/(maxlev - minlev)) + mincol
-                    index = numpy.int(index)
+                    index = int(index)
                     figobjects, = matplotlib.pyplot.plot(dcosx[val],dcosy[val],marker[io-1],\
                       lw=1,ms=7,mew=0,color=tuple(colortable[:,index]))
                     handles.append(figobjects)

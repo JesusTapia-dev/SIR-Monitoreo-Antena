@@ -30,7 +30,7 @@ class Command(BaseCommand):
                     # print("RADR", rad)
                     radar_id=rad["id"]
                     # print("RADR_",radar_id)
-                    radar_start_scheduler(campaign.id,radar_id)
+                    radar_write_start_scheduler(campaign.id,radar_id)
                 print(campaign.name, "\t\t Campaign already running")    
 
             else:
@@ -43,10 +43,9 @@ class Command(BaseCommand):
                 else:
                     print(campaign.name,"\t\t\t Campaign already stooped")
 
-def radar_start_scheduler(id_camp,id_radar):
+def radar_write_start_scheduler(id_camp,id_radar):
     campaign    = get_object_or_404(Campaign, pk=id_camp)
     experiments = campaign.get_experiments_by_radar(id_radar)[0]['experiments']
-    now         = datetime.now()
     # print(campaign)
     # print(experiments)
     for exp in experiments:
@@ -62,7 +61,7 @@ def radar_start_scheduler(id_camp,id_radar):
             if exp.status == 2:
                 print('\t\t\t {} \t\tExperiment started'.format(exp))
             if exp.status == 4:
-                print('\t\t\t {} \t\tExperiment with state uknown, please reset'.format(exp))
+                print('\t\t\t {} \t\tExperiment with state uknown, please reset (Stop and start manually)'.format(exp))
             exp.save()
 
 def radar_stop_scheduler(id_camp,id_radar,id_experiment):

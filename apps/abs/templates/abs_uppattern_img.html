@@ -2,10 +2,4 @@
 {% load django_bootstrap5 %}
 {% load main_tags %}
 
-{% block content %}
-
-<div id="PictureOverJROUp" style="float: right">
-  <img id="imgMain" src="{% url 'url_plot_beam' beam.abs_conf.id beam.id 'up' %}" alt="Error ploting..." style="width:340px;height:340px; background-image: url({% static 'images/loader.gif' %});background-repeat: no-repeat;background-position: 50% 50%;">  
-</div>
-
-{% endblock %}
+<img id="imgMainUp" src="{% url 'url_plot_beam' beam.abs_conf.id beam.id 'up' %}" alt="Error ploting..." style="width: 250px;height:250px; background-image: url({% static 'images/loader.gif' %});background-repeat: no-repeat;background-position: 50% 50%;">

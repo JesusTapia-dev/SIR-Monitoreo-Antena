@@ -339,6 +339,7 @@ class ABSConfiguration(Configuration):
             try:
                 #self.write_device()
                 send_task('task_change_beam', [self.id],)
+                print("*************************RUNNING ABS**************************",flush=True)
                 self.message = 'ABS running'
 
             except Exception as e:
@@ -356,6 +357,7 @@ class ABSConfiguration(Configuration):
         self.device.status = 2
         self.device.save()
         self.message = 'ABS has been stopped.'
+        print("*************************STOPPED ABS**************************",flush=True)
         self.save()
 
         return True

@@ -122,7 +122,12 @@
     font-size: 95%;
 }
 
-
+.image_plot {
+  border: 2px solid #00334d;
+  display: inline-block;
+  vertical-align: 50px;
+  margin-left: 10px;
+}
 
 .abs_rx tr:nth-last-child(1){
     border-bottom: 0px solid #00334d;
@@ -373,9 +378,16 @@
         </tr>
       </table>
 
-      {% if not edit %}
-        {% include "abs_uppattern_img.html" %}
-      {% endif %}
+      <table class="image_plot">
+        <tr>
+          <td>
+            {% if not edit %}
+              {% include "abs_uppattern_img.html" %}
+            {% endif %}
+            <!-- <img id="imgMains" src="{% url 'url_plot_beam' beam.abs_conf.id beam.id 'up' %}" alt="Error ploting..." style="width: 250px;height:250px; background-image: url({% static 'images/loader.gif' %});background-repeat: no-repeat;background-position: 50% 50%;">   -->
+          </td>
+        </tr>
+      </table>
 
       <br>
 
@@ -597,9 +609,15 @@
         </tr>
       </table>
 
-      {% if not edit %}
-        {% include "abs_downpattern_img.html" %}
-      {% endif %}
+      <table class="image_plot">
+        <tr>
+          <td>
+            {% if not edit %}
+              {% include "abs_downpattern_img.html" %}
+            {% endif %}
+          </td>
+        </tr>
+      </table>
 
       <br>
 

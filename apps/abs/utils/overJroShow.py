@@ -235,6 +235,7 @@ class JroPattern():
         --------------------
         Developed by Jorge L. Chau.
         Converted to Python by Freddy R. Galindo, ROJ, 20 September 2009.
+        Updated to Django 4.1.5 and Python 3.9.16 by Renato Huallpa M. March 2023.
         """
 
         if rx==1:
@@ -290,7 +291,7 @@ class JroPattern():
 
         fft_phase = fft_phase*CoFactors.d2r
 
-        pattern = numpy.abs(numpy.fft.fft2(fft_gain*numpy.exp(numpy.complex(0,1)*fft_phase)))**2
+        pattern = numpy.abs(numpy.fft.fft2(fft_gain*numpy.exp(complex(0,1)*fft_phase)))**2
         pattern = numpy.fft.fftshift(pattern)
 
         xvals = numpy.where((dcosx>=(numpy.min(self.dcosx))) & (dcosx<=(numpy.max(self.dcosx))))
@@ -416,6 +417,7 @@ class JroPattern():
         --------------------
         Developed by Jorge L. Chau.
         Converted to Python by Freddy R. Galindo, ROJ, 20 September 2009.
+        Updated to Django 4.1.5 and Python 3.9.16 by Renato Huallpa M. March 2023.
         """
 
         pos  = self.eomwl*self.__readAttenuation()
@@ -429,7 +431,7 @@ class JroPattern():
                 yindex = iy*(self.getcut==0) + ix*(self.getcut==1)
                 phasex = posx*self.dcosx[ix]
                 phasey = posy*self.dcosy[yindex]
-                tmp = gain*numpy.exp(numpy.complex(0,1.)*(self.kk*(phasex+phasey)+phase))
+                tmp = gain*numpy.exp(complex(0,1.)*(self.kk*(phasex+phasey)+phase))
                 module[ix,iy] = tmp.sum()
 
         return module
@@ -468,8 +470,9 @@ class JroPattern():
         yy1 = self.dcosy[numpy.min(nny):numpy.max(nny)+1]
 
         # fitting data into the main beam.
-        import gaussfit
-        params = gaussfit.fitgaussian(mm1)
+        #import apps.abs.utils.gaussfit as gaussfit
+        from .gaussfit import fitgaussian
+        params = fitgaussian(mm1)
 
         # Tranforming from indexes to axis' values
         xcenter = xx1[0] + (((xx1[xx1.size-1] - xx1[0])/(xx1.size -1))*(params[1]))
@@ -569,8 +572,8 @@ class BField():
         nfields = 1
 
         grid_res = 0.5
-        nlon = int(numpy.int(maglimits[2] - maglimits[0])/grid_res + 1)
-        nlat = int(numpy.int(maglimits[3] - maglimits[1])/grid_res + 1)
+        nlon = int(int(maglimits[2] - maglimits[0])/grid_res + 1)
+        nlat = int(int(maglimits[3] - maglimits[1])/grid_res + 1)
 
         location = numpy.zeros((nlon,nlat,2))
         mlon = numpy.atleast_2d(numpy.arange(nlon)*grid_res + maglimits[0])
@@ -629,7 +632,7 @@ class BField():
         rr = numpy.zeros((heights.size,3))
         rgc = numpy.zeros((heights.size,3))
 
-        ObjGeodetic = Astro_Coords.Geodetic(gdlat,gdalt)
+        ObjGeodetic = Geodetic(gdlat,gdalt)
         [gclat,gcalt] = ObjGeodetic.change2geocentric()
 
         gclat = gclat*numpy.pi/180.
@@ -1362,7 +1365,7 @@ class overJroShow:
 
             vect_polar = Misc_Routines.Vector(numpy.array(vect_geo),direction=1).Polar2Rect()
 
-            [ra,dec,ha] = Astro_Coords.AltAz(vect_polar[1],vect_polar[0],self.junkjd).change2equatorial()
+            [ra,dec,ha] = AltAz(vect_polar[1],vect_polar[0],self.junkjd).change2equatorial()
 
             print('Main beam position (HA(min), DEC(degrees)): %f %f')%(ha*4.,dec)
 
@@ -1421,7 +1424,7 @@ class overJroShow:
 
                 vect_polar = Misc_Routines.Vector(vect_geo,direction=1).Polar2Rect()
 
-                [ra,dec,ha] = Astro_Coords.AltAz(vect_polar[1,:],vect_polar[0,:],self.junkjd).change2equatorial()
+                [ra,dec,ha] = AltAz(vect_polar[1,:],vect_polar[0,:],self.junkjd).change2equatorial()
 
                 val = numpy.where(ha>=180)
 
@@ -1609,7 +1612,7 @@ class overJroShow:
 
         julian = Time(year,month,dom).change2julday()
 
-        [powr,time, lst] = Astro_Coords.CelestialBodies().skyNoise(julian)
+        [powr,time, lst] = CelestialBodies().skyNoise(julian)
 
         SkyNoisePlot([year,month,dom],powr,time,lst).getPlot(self.path4plotname,self.plotname2)
 
