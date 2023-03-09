@@ -339,7 +339,7 @@ class ABSConfiguration(Configuration):
             try:
                 #self.write_device()
                 send_task('task_change_beam', [self.id],)
-                print("*************************RUNNING ABS**************************",flush=True)
+                # print("*************************RUNNING ABS**************************",flush=True)
                 self.message = 'ABS running'
 
             except Exception as e:
@@ -357,7 +357,6 @@ class ABSConfiguration(Configuration):
         self.device.status = 2
         self.device.save()
         self.message = 'ABS has been stopped.'
-        print("*************************STOPPED ABS**************************",flush=True)
         self.save()
 
         return True
@@ -379,7 +378,6 @@ class ABSConfiguration(Configuration):
         This function sends the beams list to every abs module.
         It needs 'module_conf' function
         """
-        print("Write 3")
         
         beams  = ABSBeam.objects.filter(abs_conf=self)
         nbeams = len(beams)
@@ -429,8 +427,6 @@ class ABSConfiguration(Configuration):
             status = ['0'] * 64
             n = 0
             
-            print("Llega una antes entrar a multicast4")
-            
             sock = self.send_multicast(message)
 
             while True:
@@ -453,7 +449,7 @@ class ABSConfiguration(Configuration):
             sock.close()
         else:
             self.message = "ABS Configuration does not have beams"
-            print('No beams')
+            # print('No beams')
             #Start DDS-RC-JARS
             if confdds:
                 confdds.start_device()
@@ -469,7 +465,7 @@ class ABSConfiguration(Configuration):
             self.device.status = 0
             self.module_status = ''.join(status)
             self.save()
-            print('Could not write ABS')
+            # print('Could not write ABS')
             #Start DDS-RC-JARS
             if confdds:
                 confdds.start_device()
@@ -493,12 +489,12 @@ class ABSConfiguration(Configuration):
         if confjars:
             confjars.start_device()
 
-        print('Inicia intento de salvar device.status')
+        # print('Inicia intento de salvar device.status')
         self.device.status = 3
         self.module_status = ''.join(status)
         #print(status)
         self.save()
-        print('Estatus salvado')
+        # print('Estatus salvado')
         conf_active, __ = ABSActive.objects.get_or_create(pk=1)
         conf_active.conf = self
         conf_active.save()

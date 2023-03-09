@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}ATRAD Tx{{id_tx}} Temperatures{% endblock %}
+{% block content-title %}{{title}}{% endblock %}
+{% block content-suptitle %}Tx {{id_tx}}{% endblock %}
+
+{% block extra-head %}
+<style>
+  .panel-body { 
+    background:#ffffff;}
+  .panel-footer { 
+    background:#ffffff;}
+  .card-body {
+    padding-top: 1px;
+    padding-bottom: 1px;
+  }
+</style>
+{% endblock %}
+
+{% block content-graph %}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
+
+<div class="container-fluid">
+    <!-- Temperatura generales -->
+    <div class="row ">
+      <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Amplifiers</h3>
+          </div>
+          <div class="panel-body">
+            <div class="card border-0">
+              <div class="row">
+                <div class="card-body">
+                  <h5 class="card-title">Amplifier 1</h5>
+                  <div id="plot-temp-1"></div>
+                </div>
+                <div class="card-body">
+                  <h5 class="card-title">Amplifier 2</h5>
+                  <div id="plot-temp-2"></div>
+                </div>
+                <div class="card-body">
+                  <h5 class="card-title">Amplifier 3</h5>
+                  <div id="plot-temp-3"></div>
+                </div>
+                <div class="card-body">
+                  <h5 class="card-title">Amplifier 4</h5>
+                  <div id="plot-temp-4"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="panel panel-default">
+          <div class="panel-heading">
+          <h3 class="panel-title">Controllers and combiners</h3>
+          </div>
+          <div class="panel-body">
+            <div id="plot-temp-0"></div>
+          </div>
+      </div>
+  </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+      var socket = io.connect('http://' + document.domain + ':' + location.port);
+      socket.on('connect', function(data) {
+        console.log('Connecting... OK');
+        var data = '{{data|safe}}'.split(',')
+        console.log(data);
+        makePlot("plot-temp-0",4,["PC1","PC2","PC3","PC4"],[0,40]);
+        makePlot("plot-temp-1",6,["PA1","PA2","PA3","PA4","PA5","PA6"],[0,40])
+        makePlot("plot-temp-2",6,["PA1","PA2","PA3","PA4","PA5","PA6"],[0,40])
+        makePlot("plot-temp-3",6,["PA1","PA2","PA3","PA4","PA5","PA6"],[0,40])
+        makePlot("plot-temp-4",6,["PA1","PA2","PA3","PA4","PA5","PA6"],[0,40])
+    })
+      socket.on("temptx"+"{{id_tx}}", function(data) {
+        var controllers = [data.temp[0][1],data.temp[1][1],data.temp[2][1],data.temp[3][1]]
+        streamPlot2("plot-temp-0",data.time,controllers,4);
+        streamPlot2("plot-temp-1",data.time,data.temp[0].slice(1,7),6);
+        streamPlot2("plot-temp-2",data.time,data.temp[1].slice(1,7),6);
+        streamPlot2("plot-temp-3",data.time,data.temp[2].slice(1,7),6);
+        streamPlot2("plot-temp-4",data.time,data.temp[3].slice(1,7),6);
+      })
+    });
+  
+    function makePlot(div, n=1, names=["", ""],ranges){
+      var plotDiv = document.getElementById(div);
+      var traces = [];
+      for (let i = 0; i < n; i++) {
+        traces.push({x: [], y: [],mode: 'lines', name: names[i]});
+      }
+      traces.push({x: [], y: [],mode: 'lines',line: {color:'rgb(219, 64, 82)',dash: 'dot',width: 2},name:"nominal",showlegend: false});
+      var yrange = ranges;
+      var layout = {
+        width: 505,
+        height: 400,
+        font: {size: 12},
+        margin: { t: 10, b:50, r:15 ,l:15},
+        xaxis: {
+          type: 'date'
+        },
+        yaxis: {
+          range: yrange,
+        },
+        legend: {"orientation": "h"},
+      };
+      var config = {responsive: true}
+      Plotly.newPlot(plotDiv, traces, layout,config);
+    };
+
+    function streamPlot2(div,x,y,cant){
+      var plotDiv = document.getElementById(div);
+      if (plotDiv.data[0].x.length > 8){
+        for(let i=0;i<cant;i++){
+          plotDiv.data[i].x = plotDiv.data[i].x.slice(-11)
+          plotDiv.data[i].y = plotDiv.data[i].y.slice(-11)
+        }
+      }
+      var tm = [];
+      var values = [];
+      var index = []
+      for(let i=0;i<cant;i++){
+        values[i]=[y[i]];
+        tm[i] = [x];
+        index[i] = i;
+      }    
+      var data_update = {x: tm, y: values}
+      Plotly.extendTraces(plotDiv, data_update,index)
+    };
+  
+  </script>
+{% endblock %}

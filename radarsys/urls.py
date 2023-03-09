@@ -1,6 +1,5 @@
 from django.urls import include, path
 from django.contrib import admin
-#from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
     path('admin/',admin.site.urls),
@@ -16,5 +15,3 @@ urlpatterns = [
     path('dds_rest/', include('apps.dds_rest.urls')),
     path('atrad/', include('apps.atrad.urls')),
 ]
-
-#urlpatterns += staticfiles_urlpatterns()

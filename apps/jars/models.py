@@ -291,7 +291,6 @@ class JARSConfiguration(Configuration):
             self.device.status = payload['status']
             self.device.save()
             self.message = payload['message']
-            print("------STOP JARS------",flush=True)
         except Exception as e:
             self.device.status = 0
             self.message = str(e)
@@ -318,11 +317,8 @@ class JARSConfiguration(Configuration):
 
         if self.device.status == 3:
             self.message = 'Could not configure device. Software Acquisition is running'
+            print('Could not configure device. Software Acquisition is running')
             return False
-        
-        print("------ JARS WRITING ------",flush=True)
-        self.device.status = 5  #Busy
-        print("STATUS:", self.device.status,flush=True)
 
         data = self.experiment.parms_to_dict()
         #print(data)
@@ -349,14 +345,12 @@ class JARSConfiguration(Configuration):
             self.device.save()
             if self.device.status == 1:
                 return False
-            print("------ JARS WRITED ------",flush=True)
 
         except Exception as e:
             self.device.status = 0
             self.message = str(e)
             self.device.save()
             return False
-        print("FINAL STATUS:", self.device.status,flush=True)
         return True
 
     def start_device(self):
@@ -375,7 +369,6 @@ class JARSConfiguration(Configuration):
             self.message = str(e)
             self.device.save()
             return False
-        print("------START JARS------",flush=True)
         return True
 
     def get_log(self):

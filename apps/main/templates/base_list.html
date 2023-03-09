@@ -40,6 +40,8 @@
     {% endfor%}
   </tr>
   {% for object in objects %}
+    <p>{{ object }}</p>
+    <p>{{ objects }}</p>
     <tr class="clickable-row" data-href="{{object.get_absolute_url}}">
       <td>{{ forloop.counter|add:offset }}</td>
       {% for key in keys %}

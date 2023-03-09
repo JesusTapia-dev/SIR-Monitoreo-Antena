@@ -6,3 +6,4 @@ pipLibraries/
 .env
 remove_migrations.py
 migrations/
+builder

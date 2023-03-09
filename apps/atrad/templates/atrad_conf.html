@@ -1,4 +1,5 @@
 {% extends "dev_conf.html" %}
+{% load static %}
 {% block extra-head %}
 <style>
   .dot {
@@ -8,281 +9,391 @@
     border-radius: 50%;
     display: inline-block;
   }
+  .row{
+    margin-top: 3px;
+    margin-bottom: 3px;
+  }
+  .th {
+    vertical-align: middle;
+  }
 </style>
+<link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">
 {% endblock %}
 
-{% block extra-content %}
+{% block content-graph %}
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
 
 <div class="container-fluid">
-  <div class="row">
-    <div class="col-xs-12">
-      <h1>Atrad Monitor</h1>
+  <h1 class="py-4 text-center" >ATRAD Monitoring</h1>
+
+   <!-- First row : Control-->
+   <div class="row">
+    <div class="card border-light">
+      <div class="card-body">
+        <h3 class="card-title">Control</h3>
+        <table class="table table-borderless">
+          <tbody>
+            <tr>
+              <th class="align-middle">Tx1</th>
+              <td>
+                <button type="button" class="btn btn-outline-success" id="ONBtn1"> ON </button>
+                <button type="button" class="btn btn-outline-danger" id="OFFBtn1"> OFF </button>
+              </td>
+            </tr>
+            <tr>
+              <th class="align-middle">Tx2</th>
+              <td>
+                <button type="button" class="btn btn-outline-success" id="ONBtn2"> ON </button>
+                <button type="button" class="btn btn-outline-danger" id="OFFBtn2"> OFF </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <div class="row ">
-    <!-- Potencia -->
-    <div class="col col-xs-12">
-      <div class="row">
-        <div class="panel panel-default" style="width:100%;">
-          <div class="panel-heading">
-            <h3 class="panel-title">Potencia</h3>
-          </div>
-          <div class="panel-body">
-            <div class="col-xs-12">
-              <div class="row">
-                <div id="plot-pot"></div>
-              </div>
-            </div>
-          </div>
-          <div class="panel-footer">
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot1">T1</button>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot2">T2</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col col-xs-12">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <h3 class="panel-title">Status</h3>
-        </div>
-        <div class="panel-body">
-          <table class="table table-borderless" style="max-width: 300px;">
+  <!-- Second row : Status and alerts -->
+  <div class="row">
+    <div class="card-deck">
+      <div class="card border-light">
+        <div class="card-body">
+          <h4 class="card-title">Status</h4>
+          <table class="table table-borderless">
             <tbody>
               <tr>
                 <th scope="row">Tx1</th>
                 <td><span id="status1" class="dot"></span></td>
-                <td><p id="status-text1" class="font-weight-bold">Sin envio de datos</p></td>
+                <td><p id="status-text1" class="font-weight-bold">No data</p></td>
               </tr>
               <tr>
                 <th scope="row">Tx2</th>
                 <td><span id="status2" class="dot"></span></td>
-                <td><p id="status-text2" class="font-weight-bold">Sin envio de datos</p></td>
+                <td><p id="status-text2" class="font-weight-bold">No data</p></td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
+      <div class="card border-light">
+        <div class="card-body">
+          <h4 class="card-title">High Temperature Alerts</h4>
+          <table class="table table-borderless">
+            <tbody>
+              <tr>
+                <th scope="row"><p id="alert-time1" class="font-weight-bold"></p></th>
+                <td><p id="alert-temp1" class="font-weight-bold"></p></td>
+                <td><p id="alert-loc1" class="font-weight-bold"></p></td>
+              </tr>
+              <tr>
+                <th scope="row"><p id="alert-time2" class="font-weight-bold"></p></th>
+                <td><p id="alert-temp2" class="font-weight-bold"></p></td>
+                <td><p id="alert-loc2" class="font-weight-bold"></p></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card border-light">
+        <div class="card-body">
+          <h4 class="card-title">Power Alerts</h4>
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Tempora quisquam cupiditate sunt eaque distinctio explicabo aliquam blanditiis illo eligendi eveniet culpa, vel laboriosam! Facilis dolores assumenda autem. Maiores, quibusdam eum.
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Temperatura -->
-  <div class="row">
-    <div class="col-xs-12">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <h3 class="panel-title">Temperatura</h3>
-        </div>
-        <div class="panel-body">
-          <div class="col-xs-12">
-            <div class="row">
-              <div id="plot-temp"></div>
+  <!-- Third row : power graph-->
+  <div class="row ">
+    <div class="card border-light">
+      <div class="card-body">
+        <h3 class="card-title">Power graph</h3>
+        <div class="row justify-content-md-center">
+          <div class="col-md-9">
+            <div id="plot-pot"></div>
+          </div>
+          <div class="col-md-3 text-end">
+            <div class="card-body">
+              <table class="table" style="max-width:170px;">
+                <tbody>
+                  <tr>
+                    <th scope="col"># Tx</th>
+                    <th scope="col">Power (kW)</th>
+                  </tr>
+                  <tr>
+                    <th scope="row">1</th>
+                    <td><p id="pot1"></p></td>
+                  </tr>
+                  <tr>
+                    <th scope="row">2</th>
+                    <td><p id="pot2"></p></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card-body">
+              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot-1">T1</button>
+              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot-2">T2</button>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-
-  <div class="row">
-    <!-- Controles -->
-    <div class="col-xs-6">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <h3 class="panel-title">Control</h3>
-        </div>
-        <div class="panel-body">
-          <div class="col-xs-12">
-            <div class="form-row">
-              <div class="form-group col-xs-6">
-                <form id="controlON" method="POST" action=''>
-                  <button type="summit" class="btn btn-secondary btn-lg">Prender</button>
-                </form>
-              </div>
-              <div class="form-group col-xs-6">
-                <form id="controlOFF" method="POST" action=''>
-                  <button type="summit" class="btn btn-secondary btn-lg">Apagar</button>
-                </form>
-              </div>
+  <!--Temperature Graph-->
+  <div class="row ">
+    <div class="card border-light">
+      <div class="card-body">
+        <h3 class="card-title">Temperature graph</h3>
+        <div class="row justify-content-md-center">
+          <div class="col-md-9">
+            <div id="plot-temp"></div>
+          </div>
+          <div class="col-md-3 text-end">
+            <div class="card-body">
+              <table class="table table-hover" style="max-width:170px;">
+                <tbody>
+                  <tr>
+                    <th scope="col"># Tx</th>
+                    <th scope="col">Temperature (°C)</th>
+                  </tr>
+                  <tr class="clickable-row" data-href="{% url 'url_tx_atrad' dev_conf.id 'tx1' %}">
+                    <th scope="row">1</th>
+                    <td><p id="temp1"></p></td>
+                  </tr>
+                  <tr class="clickable-row" data-href="{% url 'url_tx_atrad' dev_conf.id 'tx2' %}">
+                    <th scope="row">2</th>
+                    <td><p id="temp2"></p></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <div class="col-xs-6">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-        </div>        
       </div>
     </div>
   </div>
 </div>
 
 <!--Modales-->
-<div class="modal fade" id="Pot1" role="dialog">
-  <div class="modal-dialog modal-md" style="min-width:760px">
+<div class="modal fade" id="Pot-1" role="dialog">
+  <div class="modal-dialog modal-lg" style="max-width:50%;min-width:750px">
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="modal-title">Potencia incidente - Transmisor 1</h4>
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="col-xs-12">
-          <div id="plot-pot-t1"></div>
-        </div>
-        <div clas="col-xs-12">
-          <table class="table table-borderless">
-            <tbody>
-              <tr>
-                <th scope="row">P1</th>
-                <td>e</td>
-                <td>e</td>
-              </tr>
-              <tr>
-                <th scope="row">P2</th>
-                <td>e</td>
-                <td>e</td>
-              </tr>
-              <tr>
-                <th scope="row">P3</th>
-                <td>e</td>
-                <td>e</td>
-              </tr>
-              <tr>
-                <th scope="row">P4</th>
-                <td>e</td>
-                <td>e</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="row">
+          <div class="col">
+            <div id="plot-pot-t1"></div>
+          </div>
+          <div class="col">
+            <table class="table" style="max-width: 150px;">
+              <tbody>
+                <tr>
+                  <th scope="col"># Amp</th>
+                  <th scope="col">Potencia (kW)</th>
+                </tr>
+                <tr>
+                  <th scope="row">P1</th>
+                  <td><p id="pot1-1"></p></td>
+                </tr>
+                <tr>
+                  <th scope="row">P2</th>
+                  <td><p id="pot1-2"></p></td>
+                </tr>
+                <tr>
+                  <th scope="row">P3</th>
+                  <td><p id="pot1-3"></p></td>
+                </tr>
+                <tr>
+                  <th scope="row">P4</th>
+                  <td><p id="pot1-4"></p></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="Pot2" role="dialog">
-  <div class="modal-dialog modal-md" style="min-width:760px">
+<div class="modal fade" id="Pot-2" role="dialog">
+  <div class="modal-dialog modal-lg" style="max-width:50%;min-width:750px">
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="modal-title">Potencia incidente - Transmisor 2</h4>
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="col-xs-12">
-          <div id="plot-pot-t2"></div>
+        <div class="row">
+          <div class="col">
+            <div id="plot-pot-t2"></div>
+          </div>
+          <div class="col">
+            <table class="table" style="max-width: 150px;">
+              <tbody>
+                <tr>
+                  <th scope="col"># Amp</th>
+                  <th scope="col">Potencia (kW)</th>
+                </tr>
+                <tr>
+                  <th scope="row">P1</th>
+                  <td><p id="pot2-1"></p></td>
+                </tr>
+                <tr>
+                  <th scope="row">P2</th>
+                  <td><p id="pot2-2"></p></td>
+                </tr>
+                <tr>
+                  <th scope="row">P3</th>
+                  <td><p id="pot2-3"></p></td>
+                </tr>
+                <tr>
+                  <th scope="row">P4</th>
+                  <td><p id="pot2-4"></p></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<script type="text/javascript" charset="utf-8">
+<script>
   $(document).ready(function() {
     var socket = io.connect('http://' + document.domain + ':' + location.port);
 
     socket.on('connect', function(data) {
-      console.log('Connecting... OK');
-      makePlot("plot-temp",2,["T1","T2"],[14, 45])
-      makePlot("plot-pot",2,["T1","T2"],[70,100])
-      makePlot("plot-pot-t1",4,["P1","P2","P3","P4"],[0,26])
-      makePlot("plot-pot-t2",4,["P1","P2","P3","P4"],[0,26])
+        console.log('Connecting OK');
+        makePlot("plot-temp",2,["Tx1","Tx2"],[14, 45])
+        makePlot("plot-pot",2,["Tx1","Tx2"],[70,100])
+        makePlot("plot-pot-t1",4,["P1","P2","P3","P4"],[0,25])
+        makePlot("plot-pot-t2",4,["P1","P2","P3","P4"],[0,25])
     })
 
     socket.on('test', function(data) {
-      let total = data.pow.reduce((a, b) => a + b, 0);
-      var id = (data.num/4)>>0;
-      streamPlot("plot-pot",data.time,total/1000.0,id,81);
-      streamPlot("plot-temp",data.time,data.tmax,id>>0,40);
-      if(id == 0){streamPlot2("plot-pot-t1",data.time,data.pow);ligthStatus('status1','status-text1',data.status);}
-      if(id == 1){streamPlot2("plot-pot-t2",data.time,data.pow);ligthStatus('status2','status-text2',data.status);}
+        console.log(data)
+        UpdateData(data.num,data);
     })
-    $('form#controlON').submit(function(event) {
-      socket.emit('control_event', {data: 1});
-      return false;
+    $('#ONBtn1').click(function() {
+      console.log("holaa")
+      socket.emit('atrad_control_event', '11');
     });
-    $('form#controlOFF').submit(function(event) {
-      socket.emit('control_event', {data: 0});
-      return false;
+    $('#ONBtn2').click(function(){
+      console.log("holaa2")
+      socket.emit('atrad_control_event', '21');
     });
-    $("#btn1").click(function(){
-      $("#box").animate({height: "300px"});
+    $('#OFFBtn1').click(function() {
+      socket.emit('atrad_control_event','10');
     });
-    $("#btn2").click(function(){
-      $("#box").animate({height: "100px"});
+    $('#OFFBtn2').click(function(){
+      socket.emit('atrad_control_event', '20');
     });
-  });
+});
 
-  function makePlot(div, n=1, names=["", ""],ranges){
+function UpdateData(id,data){
+    let total = data.pow.reduce((a, b) => a + b, 0)/1000.0;
+    streamPlot("plot-pot",data.time,total,id,81);
+    streamPlot("plot-temp",data.time,data.tmax[0],id,40);
+    streamPlot2("plot-pot-t"+(id+1),data.time,data.pow);
+    ligthStatus(id,data.status);
+    PotenciaAmplificador(id,data.pow,total);
+    $('#temp'+(id+1)).text(data.tmax[0]);
+    if(eval(data.tmax[0])>20){
+        $('#alert-time'+(id+1)).text(data.time.slice(-8,));
+        $('#alert-temp'+(id+1)).text(data.tmax[0]);
+        $('#alert-loc'+(id+1)).text('Tx'+(id+1)+' '+data.tmax[1]);
+    }
+}
+
+function makePlot(div, n=1, names=["", ""],ranges){
     var plotDiv = document.getElementById(div);
     var traces = [];
     for (let i = 0; i < n; i++) {
-      traces.push({x: [], y: [],mode: 'lines', name: names[i]});
+        traces.push({x: [], y: [],mode: 'lines', name: names[i]});
     }
     traces.push({x: [], y: [],mode: 'lines',line: {color:'rgb(219, 64, 82)',dash: 'dot',width: 2},name:"nominal",showlegend: false});
     var yrange = ranges;
     var layout = {
-      height: 350,
-      font: {size: 12},
-      margin: { t: 10, b:50},
-      xaxis: {
+        width: 700,
+        height: 350,
+        font: {size: 12},
+        margin: { t: 10, b:40,},
+        xaxis: {
         type: 'date'
-      },
-      yaxis: {
+        },
+        yaxis: {
         range: yrange,
-      },
+        },
     };
+    var config = {responsive: true}
+    Plotly.newPlot(plotDiv, traces, layout,config);
+};
 
-      Plotly.plot(plotDiv, traces, layout);
-  };
-
-  function streamPlot(div,x,y,ind,val){
+function streamPlot(div,x,y,ind,val){
     var plotDiv = document.getElementById(div);
     if (plotDiv.data[ind].x.length > 8){
-      plotDiv.data[2].x = plotDiv.data[2].x.slice(-23)
-      plotDiv.data[2].y = plotDiv.data[2].y.slice(-23)
-      plotDiv.data[ind].x = plotDiv.data[ind].x.slice(-11)
-      plotDiv.data[ind].y = plotDiv.data[ind].y.slice(-11)
+        plotDiv.data[2].x = plotDiv.data[2].x.slice(-23)
+        plotDiv.data[2].y = plotDiv.data[2].y.slice(-23)
+        plotDiv.data[ind].x = plotDiv.data[ind].x.slice(-11)
+        plotDiv.data[ind].y = plotDiv.data[ind].y.slice(-11)
     }
     var tm = [x];
     var values = [y];
     var data_update = {x: [tm,tm], y: [values,[val]]}
     Plotly.extendTraces(plotDiv, data_update,[ind,2])
-  };
-  function streamPlot2(div,x,y){
+};
+function streamPlot2(div,x,y){
     var plotDiv = document.getElementById(div);
     if (plotDiv.data[0].x.length > 8){
-      for(let i=0;i<4;i++){
+        for(let i=0;i<4;i++){
         plotDiv.data[i].x = plotDiv.data[i].x.slice(-11)
         plotDiv.data[i].y = plotDiv.data[i].y.slice(-11)
-      }
+        }
     }
     var tm = [x];
     var values = [];
     for(let i=0;i<4;i++){
-      values[i]=[y[i]/1000.0];
+        values[i]=[y[i]/1000.0];
     }    
     var data_update = {x: [tm,tm,tm,tm], y: values}
     Plotly.extendTraces(plotDiv, data_update,[0,1,2,3])
-  };
-  function ligthStatus(div1,div2,status){
+};
+
+function ligthStatus(id,status){
+    let div1 = 'status'+(id+1);
+    let div2 = 'status-text'+(id+1);
+
     if(status==='0000'){
-      document.getElementById(div1).style.backgroundColor = "green";
-      document.getElementById(div2).innerHTML = "Deshabilitado";
+        document.getElementById(div1).style.backgroundColor = "red";
+        document.getElementById(div2).innerHTML = "Disable";
     }
     else if(status==='1111'){
-      document.getElementById(div1).style.backgroundColor = "green";
-      document.getElementById(div2).innerHTML = "Habilitado";
+        document.getElementById(div1).style.backgroundColor = "green";
+        document.getElementById(div2).innerHTML = "Fully enable";
     }
     else{
-      document.getElementById(div1).style.backgroundColor = "yellow";
-      document.getElementById(div2).innerHTML = "Incompleto";
+        document.getElementById(div1).style.backgroundColor = "yellow";
+        document.getElementById(div2).innerHTML = "Not fully enable";
     }
-  }
+};
 
+function PotenciaAmplificador(id,data1,data2){
+    let div = '#pot'+(id+1);
+    for(let i=1; i<5; i++){
+        $(div+'-'+i).text(data1[i-1]/1000.0);
+    }
+    $(div).text(data2);
+    }
+    $(".clickable-row").click(function() {
+    window.open($(this).data("href"),);
+});
 </script>
+
 {% endblock %}

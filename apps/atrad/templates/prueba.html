@@ -1,0 +1,28 @@
+{% extends "dev_conf.html" %}
+{% load static %}
+
+
+{% block content-graph %}
+
+<p>The queryset object:</p>
+{{ mymembers }}
+
+<p>Last time {{last}}</p>
+
+
+<table>
+  <tr>
+    {% for key in keys %}
+    <th>{{key}}</th>
+    {% endfor %}
+  </tr>
+  {% for data in temps %}
+    <tr>
+      {% for key in keys %}
+      <td>{{data|attr:key }}</td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+</table>
+{% endblock %}            
+

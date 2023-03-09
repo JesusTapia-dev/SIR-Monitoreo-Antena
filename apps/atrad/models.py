@@ -5,16 +5,49 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 from .files import read_json_file
 import requests
-# Create your models here. validators=[MinValueValidator(62.5e6), MaxValueValidator(450e6)]
+
+class ATRADData(models.Model):
+    datetime = models.DateTimeField()
+
+    nstx = models.SmallIntegerField()
+    status = models.SmallIntegerField()
+    temp_cll = models.SmallIntegerField()
+    nboards = models.SmallIntegerField()
+
+    tempdvr = models.SmallIntegerField()
+    potincdvr = models.SmallIntegerField()
+    potretdvr = models.SmallIntegerField()
+    
+    temp1 = models.SmallIntegerField()
+    potinc1 = models.SmallIntegerField()
+    potret1 = models.SmallIntegerField()
+    temp2 = models.SmallIntegerField()
+    potinc2 = models.SmallIntegerField()
+    potret2 = models.SmallIntegerField()
+    temp3 = models.SmallIntegerField()
+    potinc3 = models.SmallIntegerField()
+    potret3 = models.SmallIntegerField()
+    temp4 = models.SmallIntegerField()
+    potinc4 = models.SmallIntegerField()
+    potret4 = models.SmallIntegerField()
+    temp5 = models.SmallIntegerField()
+    potinc5 = models.SmallIntegerField()
+    potret5 = models.SmallIntegerField()
+    temp6 = models.SmallIntegerField()
+    potinc6 = models.SmallIntegerField()
+    potret6 = models.SmallIntegerField()
+
+
+
+    class Meta:
+        db_table = 'atrad_datas'
+    
+    def __unicode__(self):
+        return u'%s' % (self.name)
 
 class ATRADConfiguration(Configuration):
 
     topic = models.PositiveIntegerField(verbose_name='Topic',validators=[MaxValueValidator(10)], default = 0)
-
-    def verify_frequencies(self):
-
-        return True
-
 
     def status_device(self):
 

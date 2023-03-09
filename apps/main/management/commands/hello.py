@@ -12,7 +12,7 @@ from apps.main.models import Experiment, Configuration
 
 class Command(BaseCommand):
     """
-    Restart experiment every night at 05:00 am.
+    Restart experiment_number every night at 05:00 am.
     Example:
         manage.py restart_experiment
     """
@@ -35,13 +35,38 @@ class Command(BaseCommand):
 
             else:
                 radar=campaign.get_experiments_by_radar(radar=None)
-                radar_id=radar[0]["id"]
-                if campaign.experiments.all()[0].status !=1:
-                    print(campaign.name, "\t\t Stopping Campaign...")
-                    a=radar_stop_scheduler(campaign.id,radar_id,campaign.experiments.all()[0].id)
-                    print("New Status: ", a)
-                else:
-                    print(campaign.name,"\t\t\t Campaign already stooped")
+                # print(campaign.name)
+                for rad in radar:
+                    radar_id=rad["id"]
+                    # print(radar_id, " ", rad["name"])
+                    for exp in range(len(rad["experiments"])):
+                        experiment=rad["experiments"][exp]
+                        experiment_id= experiment.id
+                        if experiment.status!=1:
+                            print("Stopping Campaign {}, located on {}, the experiment {} with ID {}".format(campaign.name,rad["name"],experiment.name,experiment.id))
+                            status=radar_stop_scheduler(campaign.id,radar_id,experiment.id)
+                            if status == 0:
+                                print("ERROR, status= {}".format(status))
+                            # print("New Status: ", status)
+                        else:
+                            print("{} Experiment of the Campaign {} already stooped".format(experiment.name,campaign.name))
+                print("\n")
+
+                # radar_id=radar[0]["id"]
+                # if campaign.experiments.all()[0].status !=1:
+                #     print(campaign.name, "\t\t Stopping Campaign...")
+                #     a=radar_stop_scheduler(campaign.id,radar_id,campaign.experiments.all()[0].id)
+                #     print("New Status: ", a)
+                # else:
+                #     print(campaign.name,"\t\t\t Campaign already stooped")
+
+
+# EXP_STATES = (
+#                  (0,'Error'),                 #RED
+#                  (1,'Cancelled'),             #YELLOW
+#                  (2,'Running'),               #GREEN
+#                  (3,'Scheduled'),             #BLUE
+#                  (4,'Unknown'),               #WHITE
 
 def radar_write_start_scheduler(id_camp,id_radar):
     campaign    = get_object_or_404(Campaign, pk=id_camp)
@@ -54,6 +79,8 @@ def radar_write_start_scheduler(id_camp,id_radar):
         # print(exp)
         if exp.status == 2:
             print('\t\t\t {} \t\t  Experiment already runnnig'.format(exp))
+        elif exp.status==5:
+            print('Experiment {} busy'.format(exp))
         else:
             exp.status = exp.start()
             if exp.status == 0:

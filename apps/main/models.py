@@ -425,6 +425,9 @@ class Experiment(models.Model):
         Configure and start experiments's devices
         ABS-CGS-DDS-RC-JARS
         '''
+        self.status=5 #Busy
+        self.save()
+        # print("Guardando STATUS: {}".format(self.status))
 
         confs = []
         allconfs = Configuration.objects.filter(experiment=self, type = 0).order_by('-device__device_type__sequence')
@@ -437,18 +440,32 @@ class Experiment(models.Model):
         else:
             confs = allconfs
 
-        print("confs: ",confs)
-        #try:
+
         for conf in confs:
-            print("conf->",conf)
-            conf.stop_device()
-            conf.write_device()
+            print(conf.device)
+            print(conf.device.status)
+            print("--------------",flush=True)
+            print("Stop ",conf.name,flush=True)
+            if conf.stop_device() ==False:
+                print("Falló Stop ",conf.name)
+                print("Cancelando Campaña...",flush=True)
+                return 0
+            print("Write ",conf.name,flush=True)
+            if conf.write_device() ==False:
+                print("Falló Write ",conf.name)
+                print("Cancelando Campaña...",flush=True)
+                return 0
+            print("Save",conf.name,flush=True)
             conf.device.conf_active = conf.pk
             conf.device.save()
-            conf.start_device()
+            print("Start",conf.name,flush=True)
+            if conf.start_device()==False:
+                print("Falló Start ",conf.name)
+                print("Cancelando Campaña...",flush=True)
+                return 0
+            print("--- CONFIGURACIÓN EXITOSA ---",flush=True)
             time.sleep(1)
-        #except:
-            #return 0
+
         return 2
 
 

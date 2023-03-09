@@ -29,7 +29,10 @@ ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS=[
     "http://*.localhost:8030",
     "http://localhost:8030",
-    "http://127.0.0.1:8030"
+    "http://127.0.0.1:8030",
+    "http://*.localhost:8086",
+    "http://localhost:8086",
+    "http://127.0.0.1:8086"
 ]
 #Si se requiere que la aplicación salga de este entorno, para otros usuarios es necesario hacer una API request https://fractalideas.com/blog/making-react-and-django-play-well-together-single-page-app-model/
 
