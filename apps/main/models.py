@@ -442,6 +442,7 @@ class Experiment(models.Model):
 
 
         for conf in confs:
+            print("conf->",conf)
             print(conf.device)
             print(conf.device.status)
             print("--------------",flush=True)

@@ -406,10 +406,11 @@
         document.location = "{% url 'url_send_beam' dev_conf.id beam.id %}";
       });
       
-      a=$("#change_beam_mqtt{{forloop.counter}}")
-      a.click(function () {
+      change_beam_mqtt_btn=$("#change_beam_mqtt{{forloop.counter}}")
+      change_beam_mqtt_btn.click(function () {
         info="change_beam_mqtt{{forloop.counter}}"
-        socket.emit('change_beam',{data:info})
+        socket.emit('change_beam',{data:info});
+        document.location = "{% url 'url_send_beam_mqtt' dev_conf.id beam.id %}";
       });
 
     {% endif %}

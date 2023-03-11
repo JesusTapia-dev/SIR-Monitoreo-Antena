@@ -1579,6 +1579,7 @@ def dev_conf_write_mqtt(request,id_conf):
         kwargs['suptitle'] = 'Details'
         kwargs['button'] = 'Edit Configuration'
         
+        print("conf.active_beam: {}".format(conf.active_beam)) 
         if conf.active_beam != 0:
             kwargs['active_beam'] = int(conf.active_beam)
 

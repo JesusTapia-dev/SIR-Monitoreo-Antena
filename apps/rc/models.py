@@ -199,7 +199,7 @@ class RCConfiguration(Configuration):
                     'params': json.dumps(line_data['params'])
                     }
                 )
-            print(line,flush=True)
+            # print(line,flush=True)
 
         for i, line in enumerate(self.get_lines()):
             line_params = json.loads(line.params)
@@ -563,10 +563,10 @@ class RCConfiguration(Configuration):
             else:
                 data = {'manual': [clock.multiplier, clock.divisor, clock.reference]}
             payload = self.request('setfreq', 'post', data=json.dumps(data))
-            print(payload)
+            # print(payload)
             if payload['command'] != 'ok':
                 self.message = 'RC write: {}'.format(payload['command'])
-                print('RC write: {}'.format(payload['command']))
+                # print('RC write: {}'.format(payload['command']))
             else:
                 self.message = payload['programming']
                 if payload['programming'] == 'fail':
@@ -620,12 +620,12 @@ class RCConfiguration(Configuration):
             self.device.status = 3
             self.device.save()
             self.message = 'RC configured and started'
-            print('RC configured and started')
+            # print('RC configured and started')
         else:
             self.device.status = 1
             self.device.save()
             self.message = 'RC write: {}'.format(payload['write'])
-            print('RC write: {}'.format(payload['write']))
+            # print('RC write: {}'.format(payload['write']))
             return False
 
             #payload = self.request('start', 'post')
@@ -688,11 +688,11 @@ class RCLine(models.Model):
         ordering = ['channel']
 
     def __str__(self):
-        print("AAAA: ",self.rc_configuration,flush=True)
-        ret = u'{}|{} - {}'.format(self.pk, self.get_name(),self.rc_configuration.name)
-        return ret
-        # if self.rc_configuration:
-        #     return u'{}|{} - {}'.format(self.pk, self.get_name(), self.rc_configuration.name)
+        # print("AAAA: ",self.rc_configuration,flush=True)
+        # ret = u'{}|{} - {}'.format(self.pk, self.get_name(),self.rc_configuration.name)
+        # return ret
+        if self.rc_configuration:
+            return u'{}|{} - {}'.format(self.pk, self.get_name(), self.rc_configuration.name)
 
     def jsonify(self):
 

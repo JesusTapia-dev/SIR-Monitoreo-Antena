@@ -60,9 +60,9 @@
       {% else %}
        <div class="col-md-3 hidden-xs hidden-sm" role="complementary">
          <br><br>
-            <div id="sidebar">
-            {% block sidebar%}
-              {% include "sidebar_devices.html" %}
+             <div id="sidebar">
+             {% block sidebar%}
+                 {% include "sidebar_devices.html" %}
             {% endblock %}
              </div>
          </div>
@@ -88,8 +88,10 @@
             {% endfor %}
           {% endif %}
         {% endblock %}
-        {% block content %}
-        {% endblock %}
+
+         {% block content %}
+         {% endblock %}
+
       </div>
       {% block content-graph %}
       {% endblock %}

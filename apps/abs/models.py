@@ -355,6 +355,7 @@ class ABSConfiguration(Configuration):
 
     def stop_device(self):
         self.device.status = 2
+        self.active_beam = 0
         self.device.save()
         self.message = 'ABS has been stopped.'
         self.save()
@@ -364,6 +365,9 @@ class ABSConfiguration(Configuration):
     def stop_device_mqtt(self):
 
         self.device.status = 2
+        self.active_beam = 0
+        # conf_active = None
+        # conf_active.save()
         self.device.save()
         self.message = 'ABS has been stopped.'
         self.save()
@@ -426,7 +430,7 @@ class ABSConfiguration(Configuration):
                 message += ''.join([fromBinary2Char(beam.module_6bits(i)) for beam in beams])
             status = ['0'] * 64
             n = 0
-            
+            print("Estoy en write_device normal",flush=True)
             sock = self.send_multicast(message)
 
             while True:
@@ -500,6 +504,16 @@ class ABSConfiguration(Configuration):
         conf_active.save()
         return True
     
+
+# DEV_STATES = (
+#                  (0, 'No connected'),
+#                  (1, 'Connected'),
+#                  (2, 'Configured'),
+#                  (3, 'Running'),
+#                  (4, 'Unknown'),
+#                  (5, 'Busy')
+#              )
+    
     def write_device_mqtt(self):
 
         if self.experiment is None:
@@ -545,6 +559,8 @@ class ABSConfiguration(Configuration):
         apuntes_up_down=inicializacion+ apuntes_up_down+finalizacion
         mqtt_client.publish(os.environ.get('TOPIC_ABS', 'abs/beams'),apuntes_up_down)
 
+        self.active_beam = beams[0].pk
+
         #Start DDS-RC-JARS
         if confdds:
             confdds.start_device()
@@ -554,6 +570,12 @@ class ABSConfiguration(Configuration):
         if confjars:
             confjars.start_device()
 
+        self.device.status = 3
+        self.save()
+
+        conf_active, __ = ABSActive.objects.get_or_create(pk=1)
+        conf_active.conf = self
+        conf_active.save()
         return True
 
     def read_module(self, module):
@@ -657,6 +679,7 @@ class ABSConfiguration(Configuration):
             return False
 
         sock = self.send_multicast('MNTR')
+        print("Estoy en status_deice",flush=True)
 
         n = 0
         status = ['0'] * 64
@@ -777,6 +800,7 @@ class ABSConfiguration(Configuration):
         status = ['0'] * 64
         message = 'CHGB{}'.format(beam_pos)
         sock = self.send_multicast(message)
+        print("Estoy en send_beam ",flush=True)
         while True:
         #for i in range(32):
             try:
@@ -810,6 +834,93 @@ class ABSConfiguration(Configuration):
         self.save()
         return True
 
+    def change_beam_mqtt(self, beam_pos):
+        """
+        This function connects to a multicast group and sends the beam number
+        to all abs modules.
+        """
+        print ('Send beam')
+        print (self.active_beam)
+        beams = ABSBeam.objects.filter(abs_conf=self)
+        #print beams[self.active_beam-1].module_6bits(0)
+        active = ABSActive.objects.get(pk=1)
+        if active.conf != self:
+            self.message = 'La configuracion actual es la del siguiente enlace %s.' % active.conf.get_absolute_url()
+            self.message +=  "\n"
+            self.message += 'Se debe realizar un write en esta configuracion para luego obtener un status valido.'
+
+            return False
+
+        # Se manda a cero RC para poder realizar cambio de beam
+        if self.experiment is None:
+            confs = []
+        else:
+            confs = Configuration.objects.filter(experiment = self.experiment).filter(type=0)
+        confdds  = ''
+        confjars = ''
+        confrc   = ''
+        #TO STOP DEVICES: DDS-JARS-RC
+        for i in range(0,len(confs)):
+            if i==0:
+                for conf in confs:
+                    if conf.device.device_type.name == 'dds':
+                        confdds = conf
+                        confdds.stop_device()
+                        break
+            if i==1:
+                for conf in confs:
+                    if conf.device.device_type.name == 'jars':
+                        confjars = conf
+                        confjars.stop_device()
+                        break
+            if i==2:
+                for conf in confs:
+                    if conf.device.device_type.name == 'rc':
+                        confrc = conf
+                        confrc.stop_device()
+                        break
+        if beam_pos > 0:
+            beam_pos = beam_pos - 1
+        else:
+            beam_pos = 0
+
+        #El indice del apunte debe ser menor que el numero total de apuntes
+        #El servidor tcp en el embebido comienza a contar desde 0
+        # status = ['0'] * 64
+        # message = 'CHGB{}'.format(beam_pos)
+        # sock = self.send_multicast(message)
+        # while True:
+        # #for i in range(32):
+        #     try:
+        #         data, address = sock.recvfrom(1024)
+        #         print (address, data)
+        #         data = data.decode()
+        #         if data == '1':
+        #             status[int(address[0][10:])-1] = '3'
+        #         elif data == '0':
+        #             status[int(address[0][10:])-1] = '1'
+        #     except socket.timeout:
+        #         print('Timeout')
+        #         break
+        #     except  Exception as e:
+        #         print ('Error {}'.format(e))
+        #         pass
+
+        # sock.close()
+
+        #Start DDS-RC-JARS
+        if confdds:
+            confdds.start_device()
+        if confrc:
+            #print confrc
+            confrc.start_device()
+        if confjars:
+            confjars.start_device()
+
+        self.message = "ABS Beam has been changed"
+        self.module_status = ''.join(status)
+        self.save()
+        return True
 
     def get_absolute_url_import(self):
         return reverse('url_import_abs_conf', args=[str(self.id)])

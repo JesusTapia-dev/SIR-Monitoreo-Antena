@@ -78,9 +78,8 @@ def GetTemperatures(data):
 
 def on_connect(mqtt_client, userdata, flags, rc):
    if rc == 0:
-       print('Connected successfullyasdss')
+    #    print('Connected successfullyasdss')
        mqtt_client.subscribe("atrad/test4")
-       print("Exito")
    else:
        print('Bad connection. Code:', rc)
 
