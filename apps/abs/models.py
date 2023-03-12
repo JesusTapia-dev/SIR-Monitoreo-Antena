@@ -836,16 +836,15 @@ class ABSConfiguration(Configuration):
 
     def change_beam_mqtt(self, beam_pos):
         """
-        This function connects to a multicast group and sends the beam number
-        to all abs modules.
+        This function connects send through mqtt the order of change_beam (id of beam).
         """
-        print ('Send beam')
+        print ('Change beam MQTT')
         print (self.active_beam)
         beams = ABSBeam.objects.filter(abs_conf=self)
         #print beams[self.active_beam-1].module_6bits(0)
         active = ABSActive.objects.get(pk=1)
         if active.conf != self:
-            self.message = 'La configuracion actual es la del siguiente enlace %s.' % active.conf.get_absolute_url()
+            self.message = 'La configuracion actual es la del siguiente enlace %s.' % active.conf.get_absolute_mqtt_url()
             self.message +=  "\n"
             self.message += 'Se debe realizar un write en esta configuracion para luego obtener un status valido.'
 
@@ -907,6 +906,8 @@ class ABSConfiguration(Configuration):
         #         pass
 
         # sock.close()
+        mqtt_client.publish('abs/change_beam',str(beam_pos))
+
 
         #Start DDS-RC-JARS
         if confdds:
@@ -918,7 +919,6 @@ class ABSConfiguration(Configuration):
             confjars.start_device()
 
         self.message = "ABS Beam has been changed"
-        self.module_status = ''.join(status)
         self.save()
         return True
 

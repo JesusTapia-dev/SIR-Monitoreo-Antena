@@ -173,7 +173,43 @@ def abs_conf(request, id_conf):
 
     return render(request, 'abs_conf.html', kwargs)
 
+def abs_conf_mqtt(request, id_conf):
+    print("Estoy en abs_conf_mqtt",flush=True)
+    conf = get_object_or_404(ABSConfiguration, pk=id_conf)
+    beams = ABSBeam.objects.filter(abs_conf=conf)
+    #------------Colors for Active Beam:-------------
+    all_status = {}
+    module_messages = json.loads(conf.module_messages)
+   
+    kwargs = {}
+    kwargs['connected_modules'] = str(conf.connected_modules())+'/64'
+    kwargs['dev_conf'] = conf
+    
+    if conf.operation_mode == 0:
+        kwargs['dev_conf_keys'] = ['label', 'operation_mode']
+    else:
+        kwargs['dev_conf_keys'] = ['label', 'operation_mode', 'operation_value']
 
+    kwargs['title'] = 'ABS Configuration'
+    kwargs['suptitle'] = 'Details'
+    kwargs['button'] = 'Edit Configuration'
+    
+    if conf.active_beam != 0:
+        kwargs['active_beam'] = int(conf.active_beam)
+
+    kwargs['mqtt']=True
+    kwargs['beams'] = beams
+    kwargs['modules_status'] = all_status
+    kwargs['module_messages'] = module_messages
+    ###### SIDEBAR ######
+    kwargs.update(sidebar(conf=conf))
+    print("conf.active_beam: {}",format(conf.active_beam))
+    
+    # print(conf.beam.pk)
+
+    return render(request, 'abs_conf_mqtt.html', kwargs)
+    # // console.log(beam.pk);
+    # // console.log(active_beam);
 # def abs_conf_mqtt(request, id_conf):
 #     # socket.on('beams_ack',function(data){
     #   ack=data;
@@ -197,7 +233,7 @@ def abs_conf_edit(request, id_conf):
         if form.is_valid():
             conf = form.save(commit=False)
             conf.save()
-            return redirect('url_abs_conf', id_conf=conf.id)
+            return redirect('url_abs_conf_mqtt', id_conf=conf.id)
 
     ###### SIDEBAR ######
     kwargs = {}
@@ -210,6 +246,7 @@ def abs_conf_edit(request, id_conf):
     kwargs['title'] = 'Device Configuration'
     kwargs['suptitle'] = 'Edit'
     kwargs['button'] = 'Save'
+    kwargs['mqtt']=True
 
     kwargs['edit'] = True
 
@@ -295,7 +332,7 @@ def send_beam(request, id_conf, id_beam):
     kwargs = {
         'title': 'ABS',
         'suptitle': conf.label,
-        'message': 'Are you sure you want to change ABS Beam to: {}?'.format(beam.name),
+        'message': 'Are you sure you want to change ABS Beam through SEND BEAM to: {}?'.format(beam.name),
         'delete': False
     }
     kwargs['menu_configurations'] = 'active'
@@ -305,8 +342,10 @@ def send_beam(request, id_conf, id_beam):
 def change_beam_mqtt(request, id_conf, id_beam):
 
     conf = get_object_or_404(ABSConfiguration, pk=id_conf)
+    print("conf: {}".format(conf),flush=True)
 
     abs = Configuration.objects.filter(pk=conf.device.conf_active).first()
+    print("abs: {}".format(abs),flush=True)
     if abs!=conf:
         url = '#' if abs is None else abs.get_absolute_url()
         label = 'None' if abs is None else abs.label
@@ -317,7 +356,7 @@ def change_beam_mqtt(request, id_conf, id_beam):
                 label
                 ))
             )
-        return redirect(conf.get_absolute_url()) 
+        return redirect(conf.get_absolute_mqtt_url()) 
     
     beams = ABSBeam.objects.filter(abs_conf=conf)
     beam = get_object_or_404(ABSBeam, pk=id_beam)
@@ -326,7 +365,7 @@ def change_beam_mqtt(request, id_conf, id_beam):
         
         beams_list = ABSBeam.objects.filter(abs_conf=conf)
         conf.active_beam = id_beam
-
+        
         i = 0
         for b in beams_list:
             if b.id == int(id_beam):
@@ -335,41 +374,16 @@ def change_beam_mqtt(request, id_conf, id_beam):
                 i += 1
         beam_pos = i + 1 #Estandarizar
 
-        print('{} Position {}'.format(beam.name,str(beam_pos)))
+        print('{} Position {}'.format(beam.name,str(beam_pos)),flush=True)
         conf.change_beam_mqtt(beam_pos)
-        
-        module_messages = json.loads(conf.module_messages)
-        kwargs = {}
-        kwargs['connected_modules'] = str(conf.connected_modules())+'/64'
-        kwargs['dev_conf'] = conf
-        
-        if conf.operation_mode == 0:
-            kwargs['dev_conf_keys'] = ['label', 'operation_mode']
-        else:
-            kwargs['dev_conf_keys'] = ['label', 'operation_mode', 'operation_value']
-
-        kwargs['title'] = 'ABS Configuration'
-        kwargs['suptitle'] = 'Details'
-        kwargs['button'] = 'Edit Configuration'
-        if conf.active_beam != 0:
-            kwargs['active_beam'] = int(conf.active_beam)
-
-
-        kwargs['beams'] = beams
-        # kwargs['modules_status'] = all_status
-        # kwargs['color_status']   = color_status
-
-
-        kwargs['module_messages'] = module_messages
-
-        ###### SIDEBAR ######
-        kwargs.update(sidebar(conf=conf))
 
         # return redirect('url_abs_conf', conf.id)
-        return render(request, 'abs_conf_mqtt.html',kwargs)
+        return redirect('url_abs_conf_mqtt', conf.id)
+        # return render(request, 'abs_conf_mqtt.html',kwargs)
     
     kwargs = {
         'title': 'ABS',
+        'mqtt':True,
         'suptitle': conf.label,
         'message': 'Are you sure you want to change ABS Beam through MQTT to: {}?'.format(beam.name),
         'delete': False
@@ -547,11 +561,11 @@ def abs_send_beam_up(sid, message):
 def abs_send_beam_down(sid, message):
     mqtt_client.publish('abs/beams_down', message['data'])
 
-@sio.event
-def change_beam(sid,message):
-    data=str(message['data'])
-    data=data[16]
-    mqtt_client.publish('abs/change_beam',data)
+# @sio.event
+# def change_beam(sid,message):
+#     data=str(message['data'])
+#     data=data[16]
+#     mqtt_client.publish('abs/change_beam',data)
 
 
 

@@ -1588,13 +1588,11 @@ def dev_conf_write_mqtt(request,id_conf):
         # kwargs['modules_status'] = all_status
         # kwargs['color_status']   = color_status
 
-
         kwargs['module_messages'] = module_messages
 
         ###### SIDEBAR ######
         kwargs.update(sidebar(conf=conf))
 
-    
         return render(request, 'abs_conf_mqtt.html',kwargs)
 
     kwargs = {

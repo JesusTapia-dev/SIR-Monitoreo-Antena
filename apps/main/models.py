@@ -815,6 +815,12 @@ class Configuration(PolymorphicModel):
 
     def get_absolute_url(self):
         return reverse('url_%s_conf' % self.device.device_type.name, args=[str(self.id)])
+        
+    def get_absolute_mqtt_url(self):
+        if self.device.device_type.name=='abs':
+            return reverse('url_%s_conf_mqtt' % self.device.device_type.name, args=[str(self.id)])
+        else:
+            return reverse('url_%s_conf' % self.device.device_type.name, args=[str(self.id)])
 
     def get_absolute_url_edit(self):
         return reverse('url_edit_%s_conf' % self.device.device_type.name, args=[str(self.id)])
