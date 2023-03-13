@@ -47,12 +47,14 @@ def atrad_conf(request, id_conf):
 def atrad_tx(request, id_conf, id_tx):
     kwargs = {}
     kwargs['id_tx'] = id_tx[-1]
-    kwargs['keys'] = ['id','temp1','temp2','temp3','temp4','temp5','temp6']
     kwargs['title'] = 'Temperature Details'
     kwargs['button'] = 'Edit Configuration'
     time = ATRADData.objects.last().datetime
-    mydata = ATRADData.objects.filter(datetime__gte = (time-timedelta(minutes=20)),nstx=1).values_list('datetime','temp1','temp2','temp3','temp4','temp5','temp6')
-    kwargs['data'] = QuerytoStr(mydata)
+    id_stx = (int(id_tx[-1])-1)*4+1
+    mydata = ATRADData.objects.filter(datetime__gte = (time-timedelta(hours=1)),nstx = id_stx).values('datetime','temp1_1','temp2_1','temp3_1','temp4_1','temp5_1','temp6_1',
+    'temp1_2','temp2_2','temp3_2','temp4_2','temp5_2','temp6_2','temp1_3','temp2_3','temp3_3','temp4_3','temp5_3','temp6_3',
+    'temp1_4','temp2_4','temp3_4','temp4_4','temp5_4','temp6_4')
+    kwargs['data'] = json.dumps(list(mydata),default=str)
     return render(request, 'atrad_tx.html', kwargs)
 
 def QuerytoStr(data):
@@ -99,7 +101,9 @@ def monitor(request):
 def atrad_prueba(request):
     keys = ['id','temp1','temp2','temp3','temp4','temp5','temp6']
     time = ATRADData.objects.last().datetime
-    mydata = ATRADData.objects.filter(datetime__gte = (time-timedelta(hours=1))).values('id','temp1','temp2','temp3','temp4','temp5','temp6')
+    mydata = ATRADData.objects.filter(datetime__gte = (time-timedelta(hours=1))).values('id','temp1_1','temp2_1','temp3_1','temp4_1','temp5_1','temp6_1',
+    'temp1_2','temp2_2','temp3_2','temp4_2','temp5_2','temp6_2','temp1_3','temp2_3','temp3_3','temp4_3','temp5_3','temp6_3',
+    'temp1_4','temp2_4','temp3_4','temp4_4','temp5_4','temp6_4')
     template = get_template('prueba.html')
     context = {
         'last' : time,

@@ -7,10 +7,28 @@ import os
 
 def insert(time,data):
     sql = """INSERT INTO atrad_datas(
-        datetime,nstx,status,temp_cll,nboards,tempdvr,potincdvr,potretdvr,
-        temp1,potinc1,potret1,temp2,potinc2,potret2,temp3,potinc3,potret3,
-        temp4,potinc4,potret4,temp5,potinc5,potret5,temp6,potinc6,potret6)
+        datetime,nstx,status_1,temp_cll_1,nboards_1,tempdvr_1,potincdvr_1,potretdvr_1,
+        temp1_1,potinc1_1,potret1_1,temp2_1,potinc2_1,potret2_1,temp3_1,potinc3_1,potret3_1,
+        temp4_1,potinc4_1,potret4_1,temp5_1,potinc5_1,potret5_1,temp6_1,potinc6_1,potret6_1,
+        status_2,temp_cll_2,nboards_2,tempdvr_2,potincdvr_2,potretdvr_2,
+        temp1_2,potinc1_2,potret1_2,temp2_2,potinc2_2,potret2_2,temp3_2,potinc3_2,potret3_2,
+        temp4_2,potinc4_2,potret4_2,temp5_2,potinc5_2,potret5_2,temp6_2,potinc6_2,potret6_2,
+        status_3,temp_cll_3,nboards_3,tempdvr_3,potincdvr_3,potretdvr_3,
+        temp1_3,potinc1_3,potret1_3,temp2_3,potinc2_3,potret2_3,temp3_3,potinc3_3,potret3_3,
+        temp4_3,potinc4_3,potret4_3,temp5_3,potinc5_3,potret5_3,temp6_3,potinc6_3,potret6_3,
+        status_4,temp_cll_4,nboards_4,tempdvr_4,potincdvr_4,potretdvr_4,
+        temp1_4,potinc1_4,potret1_4,temp2_4,potinc2_4,potret2_4,temp3_4,potinc3_4,potret3_4,
+        temp4_4,potinc4_4,potret4_4,temp5_4,potinc5_4,potret5_4,temp6_4,potinc6_4,potret6_4)
         VALUES(%s,%s,%s,%s,%s,%s,%s,%s,
+        %s,%s,%s,%s,%s,%s,%s,%s,%s,
+        %s,%s,%s,%s,%s,%s,%s,%s,%s,
+        %s,%s,%s,%s,%s,%s,
+        %s,%s,%s,%s,%s,%s,%s,%s,%s,
+        %s,%s,%s,%s,%s,%s,%s,%s,%s,
+        %s,%s,%s,%s,%s,%s,
+        %s,%s,%s,%s,%s,%s,%s,%s,%s,
+        %s,%s,%s,%s,%s,%s,%s,%s,%s,
+        %s,%s,%s,%s,%s,%s,
         %s,%s,%s,%s,%s,%s,%s,%s,%s,
         %s,%s,%s,%s,%s,%s,%s,%s,%s);"""
     try:
@@ -20,7 +38,7 @@ def insert(time,data):
         cur = conn.cursor()
         # execute the INSERT statement
         #data_tuple = [tuple(i[:]) for i in a]
-        values = (time,) + tuple(data[0][:25])
+        values = (time,) + tuple(data[0][:25])+tuple(data[1][1:25])+tuple(data[2][1:25])+tuple(data[3][1:25])
         cur.execute(sql, values)
 
         # get the generated id back
@@ -46,8 +64,10 @@ def maxTemperature(trs):
 
     if STXloc == 0:
         maxT_loc = maxT_loc + " Controller"
-    elif STXloc<7:
-        maxT_loc = maxT_loc + " PA " + str(STXloc+1)
+    elif STXloc == 1:
+        maxT_loc = maxT_loc + " Driver"
+    elif STXloc<8:
+        maxT_loc = maxT_loc + " PA " + str(STXloc-1)
     else:
         maxT_loc = maxT_loc + " Combiners"
 
@@ -64,7 +84,12 @@ def dataConvert(msg):
     # Data to send by socket
     id_STX = dataSTX[0][0] // 4
     status = ''.join([msgClean[i][3] for i in [0,1,2,3]])
-    powers = [dataSTX[0][34],dataSTX[0][36],dataSTX[2][32],dataSTX[2][34]]
+    powers = [dataSTX[0][34],dataSTX[0][36],dataSTX[2][32],dataSTX[2][34],0,0,0,0]
+    # alerta
+    for i in range(4):
+        if powers[i] < 10000 and status == '1111':
+            power[4+i] = 1
+
     tmax,index,tempData = maxTemperature(dataSTX)
     #Json to send
     data = {'time':msgStr[2:21],'num':id_STX,'pow':powers,'tmax':[str(tmax),index],'status':status}
@@ -78,18 +103,16 @@ def GetTemperatures(data):
 
 def on_connect(mqtt_client, userdata, flags, rc):
    if rc == 0:
-    #    print('Connected successfullyasdss')
+       print('Connected successfullyasdss')
        mqtt_client.subscribe("atrad/test4")
+       print("Exito")
    else:
        print('Bad connection. Code:', rc)
 
 def on_message(mqtt_client, userdata, msg):
     print('Received message on topic: {} with payload: {}'.format(msg.topic,msg.payload), flush=True)
     mainData, tempData = dataConvert(msg)
-    # print("Recibi : {}".format(msg.payload),flush=True)
-    #socket fot general data 
     sio.emit('test',data = mainData)
-    print(mainData)
     #socket for temperature details 
     sio.emit('temptx'+str(mainData['num'] + 1),data = tempData)
 

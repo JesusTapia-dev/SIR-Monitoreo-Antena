@@ -34,12 +34,12 @@ function UpdateData(id,data){
     streamPlot("plot-temp",data.time,data.tmax[0],id,40);
     streamPlot2("plot-pot-t"+(id+1),data.time,data.pow);
     ligthStatus(id,data.status);
-    PotenciaAmplificador(id,data.pow,total);
+    PotenciaAmplificador(id,data.pow,total,data.time);
     $('#temp'+(id+1)).text(data.tmax[0]);
     if(eval(data.tmax[0])>20){
-        $('#alert-time'+(id+1)).text(data.time.slice(-8,));
-        $('#alert-temp'+(id+1)).text(data.tmax[0]);
-        $('#alert-loc'+(id+1)).text('Tx'+(id+1)+' '+data.tmax[1]);
+        $('#alerttemp-time'+(id+1)).text(data.time.slice(-8,));
+        $('#alerttemp-'+(id+1)).text(data.tmax[0]);
+        $('#alerttemp-loc'+(id+1)).text('Tx'+(id+1)+' '+data.tmax[1]);
     }
 }
 
@@ -115,13 +115,20 @@ function ligthStatus(id,status){
     }
 };
 
-function PotenciaAmplificador(id,data1,data2){
-    let div = '#pot'+(id+1);
+function PotenciaAmplificador(id,data1,data2,time){
+    id_tx = (id+1)
+    let div = '#pot'+id_tx;
     for(let i=1; i<5; i++){
-        $(div+'-'+i).text(data1[i-1]/1000.0);
+        var pot = (data1[i-1]/1000.0).toFixed(1)
+        $(div+'-'+i).text(pot);
+        if (data1[i-1]<23000){
+            $("#alertpot-time"+id_tx).text(time.slice(-8,));
+            $("#alertpot-"+id_tx).text(pot);
+            $("#alertpot-loc"+id_tx).text('Tx'+ id_tx+ ' Amp '+i);
+        }
     }
-    $(div).text(data2);
-    }
-    $(".clickable-row").click(function() {
+    $(div).text(data2.toFixed(1));
+}
+$(".clickable-row").click(function() {
     window.open($(this).data("href"),);
 });

@@ -69,21 +69,21 @@
       var socket = io.connect('http://' + document.domain + ':' + location.port);
       socket.on('connect', function(data) {
         console.log('Connecting... OK');
-        var data = '{{data|safe}}'.split(',')
-        console.log(data);
-        makePlot("plot-temp-0",4,["PC1","PC2","PC3","PC4"],[0,40]);
-        makePlot("plot-temp-1",6,["PA1","PA2","PA3","PA4","PA5","PA6"],[0,40])
-        makePlot("plot-temp-2",6,["PA1","PA2","PA3","PA4","PA5","PA6"],[0,40])
-        makePlot("plot-temp-3",6,["PA1","PA2","PA3","PA4","PA5","PA6"],[0,40])
-        makePlot("plot-temp-4",6,["PA1","PA2","PA3","PA4","PA5","PA6"],[0,40])
-    })
+        var basedata = JSON.parse('{{data|safe}}')
+        console.log(basedata);
+        makePlot("plot-temp-0",4,["PC1","PC2","PC3","PC4"],[10,40]);
+        makePlot2("plot-temp-1",6,["PA1","PA2","PA3","PA4","PA5","PA6"],[10,40],basedata)
+        makePlot2("plot-temp-2",6,["PA1","PA2","PA3","PA4","PA5","PA6"],[10,40],basedata)
+        makePlot2("plot-temp-3",6,["PA1","PA2","PA3","PA4","PA5","PA6"],[10,40],basedata)
+        makePlot2("plot-temp-4",6,["PA1","PA2","PA3","PA4","PA5","PA6"],[10,40],basedata)
+      })
       socket.on("temptx"+"{{id_tx}}", function(data) {
         var controllers = [data.temp[0][1],data.temp[1][1],data.temp[2][1],data.temp[3][1]]
         streamPlot2("plot-temp-0",data.time,controllers,4);
-        streamPlot2("plot-temp-1",data.time,data.temp[0].slice(1,7),6);
-        streamPlot2("plot-temp-2",data.time,data.temp[1].slice(1,7),6);
-        streamPlot2("plot-temp-3",data.time,data.temp[2].slice(1,7),6);
-        streamPlot2("plot-temp-4",data.time,data.temp[3].slice(1,7),6);
+        streamPlot2("plot-temp-1",data.time,data.temp[0].slice(2,8),6);
+        streamPlot2("plot-temp-2",data.time,data.temp[1].slice(2,8),6);
+        streamPlot2("plot-temp-3",data.time,data.temp[2].slice(2,8),6);
+        streamPlot2("plot-temp-4",data.time,data.temp[3].slice(2,8),6);
       })
     });
   
@@ -94,6 +94,38 @@
         traces.push({x: [], y: [],mode: 'lines', name: names[i]});
       }
       traces.push({x: [], y: [],mode: 'lines',line: {color:'rgb(219, 64, 82)',dash: 'dot',width: 2},name:"nominal",showlegend: false});
+      var yrange = ranges;
+      var layout = {
+        width: 505,
+        height: 300,
+        font: {size: 12},
+        margin: { t: 10, b:50, r:15 ,l:15},
+        xaxis: {
+          type: 'date'
+        },
+        yaxis: {
+          range: yrange,
+        },
+        legend: {"orientation": "h"},
+      };
+      var config = {responsive: true}
+      Plotly.newPlot(plotDiv, traces, layout,config);
+    };
+
+    function makePlot2(div, n=1, names=["", ""],ranges,data){
+      var plotDiv = document.getElementById(div);
+      var traces = [];
+      var keys = ['temp1','temp2','temp3','temp4','temp5','temp6']
+
+      for (let i = 0; i < n; i++) {
+        var x = [];
+        var y = [];
+        for(let j = 0;j < data.length; j++){
+          x[j] = data[j].datetime;
+          y[j] = data[j][keys[i]+'_'+div.charAt(10)];
+        }
+        traces.push({x:x, y:y,mode: 'lines', name: names[i]});
+      }
       var yrange = ranges;
       var layout = {
         width: 505,
