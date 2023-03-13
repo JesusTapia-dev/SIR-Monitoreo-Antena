@@ -286,6 +286,11 @@ class JARSConfiguration(Configuration):
 
     def stop_device(self):
 
+        # Se crea el modo ocupado para una vez inicia el STOP
+        self.device.status = 5
+        self.device.save()
+        # Por si se demora deteniendo, que su estado sea busy
+
         try:
             payload = self.request('stop', 'post')
             self.device.status = payload['status']

@@ -85,6 +85,11 @@ class CGSConfiguration(Configuration):
         if self.device.status == 2: #Configured
             self.message = 'CGS device is already stopped.'
             return False
+        
+        # Se crea el modo ocupado para una vez inicia el STOP
+        self.device.status = 5
+        self.device.save()
+        # Por si se demora deteniendo, que su estado sea busy
 
         post_data = {"freq0":0, "freq1":0, "freq2":0, "freq3":0}
         route = "http://" + str(ip) + ":" + str(port) + "/write/"

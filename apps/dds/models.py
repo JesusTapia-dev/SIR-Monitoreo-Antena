@@ -113,6 +113,11 @@ class DDSConfiguration(Configuration):
 
     def stop_device(self):
 
+        # Se crea el modo ocupado para una vez inicia el STOP
+        self.device.status = 5
+        self.device.save()
+        # Por si se demora deteniendo, que su estado sea busy
+
         try:
             answer = api.disable_rf(ip = self.device.ip_address,
                                     port = self.device.port_address)

@@ -83,6 +83,7 @@ EXP_STATES = (
                  (2,'Running'),               #GREEN
                  (3,'Scheduled'),             #BLUE
                  (4,'Unknown'),               #WHITE
+                 (5,'Busy'),
              )
 
 CONF_TYPES = (
@@ -427,7 +428,7 @@ class Experiment(models.Model):
         '''
         self.status=5 #Busy
         self.save()
-        # print("Guardando STATUS: {}".format(self.status))
+        print("Realizando operación. \nEXPERIMENT STATUS : {}".format(self.status))
 
         confs = []
         allconfs = Configuration.objects.filter(experiment=self, type = 0).order_by('-device__device_type__sequence')
@@ -442,10 +443,8 @@ class Experiment(models.Model):
 
 
         for conf in confs:
-            print("conf->",conf)
-            print(conf.device)
-            print(conf.device.status)
             print("--------------",flush=True)
+            print("STATUS: {}".format(conf.device.status))
             print("Stop ",conf.name,flush=True)
             if conf.stop_device() ==False:
                 print("Falló Stop ",conf.name)
@@ -817,6 +816,7 @@ class Configuration(PolymorphicModel):
         return reverse('url_%s_conf' % self.device.device_type.name, args=[str(self.id)])
         
     def get_absolute_mqtt_url(self):
+        print("----------------- {} ----------------------".format(self.device.device_type.name),flush=True)
         if self.device.device_type.name=='abs':
             return reverse('url_%s_conf_mqtt' % self.device.device_type.name, args=[str(self.id)])
         else:

@@ -65,7 +65,7 @@
 			  {% endfor%}
 			</tr>
 			{% for item in experiments %}
-			<tr class="clickable-row" data-href="{% url 'url_experiment' item.id %}">
+			<tr class="clickable-row" s data-href="{% url 'url_experiment' item.id %}">
 			  <td>{{ forloop.counter }}</td>
 			  {% for key in experiment_keys %}
 			  <td>{{ item|attr:key }}</td>

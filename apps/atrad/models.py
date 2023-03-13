@@ -115,6 +115,11 @@ class ATRADConfiguration(Configuration):
         if self.device.status == 2: #Configured
             self.message = 'TX device is already stopped.'
             return False
+        
+        # Se crea el modo ocupado para una vez inicia el STOP
+        self.device.status = 5
+        self.device.save()
+        # Por si se demora deteniendo, que su estado sea busy
 
         post_data = {"topic":0}
         route = "http://" + str(ip) + ":" + str(port) + "/write/"
