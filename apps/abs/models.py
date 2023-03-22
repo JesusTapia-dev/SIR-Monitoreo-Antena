@@ -339,7 +339,6 @@ class ABSConfiguration(Configuration):
             try:
                 #self.write_device()
                 send_task('task_change_beam', [self.id],)
-                # print("*************************RUNNING ABS**************************",flush=True)
                 self.message = 'ABS running'
 
             except Exception as e:
@@ -430,7 +429,6 @@ class ABSConfiguration(Configuration):
                 message += ''.join([fromBinary2Char(beam.module_6bits(i)) for beam in beams])
             status = ['0'] * 64
             n = 0
-            print("Estoy en write_device normal",flush=True)
             sock = self.send_multicast(message)
 
             while True:
@@ -679,7 +677,7 @@ class ABSConfiguration(Configuration):
             return False
 
         sock = self.send_multicast('MNTR')
-        print("Estoy en status_deice",flush=True)
+        # print("Estoy en status_deice",flush=True)
 
         n = 0
         status = ['0'] * 64
@@ -883,29 +881,6 @@ class ABSConfiguration(Configuration):
         else:
             beam_pos = 0
 
-        #El indice del apunte debe ser menor que el numero total de apuntes
-        #El servidor tcp en el embebido comienza a contar desde 0
-        # status = ['0'] * 64
-        # message = 'CHGB{}'.format(beam_pos)
-        # sock = self.send_multicast(message)
-        # while True:
-        # #for i in range(32):
-        #     try:
-        #         data, address = sock.recvfrom(1024)
-        #         print (address, data)
-        #         data = data.decode()
-        #         if data == '1':
-        #             status[int(address[0][10:])-1] = '3'
-        #         elif data == '0':
-        #             status[int(address[0][10:])-1] = '1'
-        #     except socket.timeout:
-        #         print('Timeout')
-        #         break
-        #     except  Exception as e:
-        #         print ('Error {}'.format(e))
-        #         pass
-
-        # sock.close()
         mqtt_client.publish('abs/change_beam',str(beam_pos))
 
 
@@ -913,7 +888,6 @@ class ABSConfiguration(Configuration):
         if confdds:
             confdds.start_device()
         if confrc:
-            #print confrc
             confrc.start_device()
         if confjars:
             confjars.start_device()

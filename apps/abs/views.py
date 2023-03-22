@@ -174,7 +174,7 @@ def abs_conf(request, id_conf):
     return render(request, 'abs_conf.html', kwargs)
 
 def abs_conf_mqtt(request, id_conf):
-    print("Estoy en abs_conf_mqtt",flush=True)
+    # print("Estoy en abs_conf_mqtt",flush=True)
     conf = get_object_or_404(ABSConfiguration, pk=id_conf)
     beams = ABSBeam.objects.filter(abs_conf=conf)
     #------------Colors for Active Beam:-------------
@@ -342,10 +342,10 @@ def send_beam(request, id_conf, id_beam):
 def change_beam_mqtt(request, id_conf, id_beam):
 
     conf = get_object_or_404(ABSConfiguration, pk=id_conf)
-    print("conf: {}".format(conf),flush=True)
+    # print("conf: {}".format(conf),flush=True)
 
     abs = Configuration.objects.filter(pk=conf.device.conf_active).first()
-    print("abs: {}".format(abs),flush=True)
+    # print("abs: {}".format(abs),flush=True)
     if abs!=conf:
         url = '#' if abs is None else abs.get_absolute_url()
         label = 'None' if abs is None else abs.label

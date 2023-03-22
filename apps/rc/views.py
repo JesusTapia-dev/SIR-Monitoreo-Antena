@@ -355,22 +355,14 @@ def update_lines_position(request, conf_id):
 
 
 def import_file(request, conf_id):
-    # print("HOLA",flush=True)
     conf = get_object_or_404(RCConfiguration, pk=conf_id)
-    # print("HOLA2",flush=True)
     if request.method=='POST':
         form = RCImportForm(request.POST, request.FILES)
-        # print("HOLA3",flush=True)
         if form.is_valid():
-            #print("HOLA4",flush=True)
             # try:
-            #print("HOLA5",flush=True)
-            data = conf.import_from_file(request.FILES['file_name'])
-            #print("HOLA6",flush=True)                
+            data = conf.import_from_file(request.FILES['file_name'])              
             conf.dict_to_parms(data)
-            #print("1",flush=True)
             conf.update_pulses()
-            #print("2",flush=True)
             messages.success(request, 'Configuration "%s" loaded succesfully' % request.FILES['file_name'])
             return redirect(conf.get_absolute_url_edit())
 

@@ -115,6 +115,11 @@ class ATRADData(models.Model):
     potinc6_4 = models.SmallIntegerField()
     potret6_4 = models.SmallIntegerField()
 
+    combiner1 = models.SmallIntegerField()
+    combiner2 = models.SmallIntegerField()
+    combiner3 = models.SmallIntegerField()
+    combiner4 = models.SmallIntegerField()
+    
     class Meta:
         db_table = 'atrad_datas'
     

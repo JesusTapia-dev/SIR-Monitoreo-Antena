@@ -13,11 +13,9 @@ $(document).ready(function() {
         UpdateData(data.num,data);
     })
     $('#ONBtn1').click(function() {
-      console.log("holaa")
       socket.emit('atrad_control_event', '11');
     });
     $('#ONBtn2').click(function(){
-      console.log("holaa2")
       socket.emit('atrad_control_event', '21');
     });
     $('#OFFBtn1').click(function() {
@@ -53,7 +51,7 @@ function makePlot(div, n=1, names=["", ""],ranges){
     var yrange = ranges;
     var layout = {
         width: 700,
-        height: 350,
+        height: 300,
         font: {size: 12},
         margin: { t: 10, b:40,},
         xaxis: {

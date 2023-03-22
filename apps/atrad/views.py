@@ -17,6 +17,7 @@ from django.http import JsonResponse
 from .mqtt import client as mqtt_client
 from radarsys.socketconfig import sio as sio
 from datetime import timedelta
+from datetime import datetime
 
 def atrad_conf(request, id_conf):
 
@@ -49,11 +50,18 @@ def atrad_tx(request, id_conf, id_tx):
     kwargs['id_tx'] = id_tx[-1]
     kwargs['title'] = 'Temperature Details'
     kwargs['button'] = 'Edit Configuration'
-    time = ATRADData.objects.last().datetime
+    try:
+        time = ATRADData.objects.last().datetime
+    except:
+        time = datetime.now()
+    
     id_stx = (int(id_tx[-1])-1)*4+1
-    mydata = ATRADData.objects.filter(datetime__gte = (time-timedelta(hours=1)),nstx = id_stx).values('datetime','temp1_1','temp2_1','temp3_1','temp4_1','temp5_1','temp6_1',
-    'temp1_2','temp2_2','temp3_2','temp4_2','temp5_2','temp6_2','temp1_3','temp2_3','temp3_3','temp4_3','temp5_3','temp6_3',
-    'temp1_4','temp2_4','temp3_4','temp4_4','temp5_4','temp6_4')
+    mydata = ATRADData.objects.filter(datetime__gte = (time-timedelta(hours=1)),nstx = id_stx).values('datetime',
+    'temp1_1','temp2_1','temp3_1','temp4_1','temp5_1','temp6_1',
+    'temp1_2','temp2_2','temp3_2','temp4_2','temp5_2','temp6_2',
+    'temp1_3','temp2_3','temp3_3','temp4_3','temp5_3','temp6_3',
+    'temp1_4','temp2_4','temp3_4','temp4_4','temp5_4','temp6_4',
+    'combiner1','combiner2','combiner3','combiner4')
     kwargs['data'] = json.dumps(list(mydata),default=str)
     return render(request, 'atrad_tx.html', kwargs)
 
@@ -122,4 +130,4 @@ def atrad_disconnect(sid):
 
 @sio.event
 def atrad_control_event(sid,message):
-    mqtt_client.publish('test/data2', json.dumps(message))
+    mqtt_client.publish(os.environ.get('MQTT_TOPIC_ATRAD_CONTROL', 'atrad/test2'), json.dumps(message))

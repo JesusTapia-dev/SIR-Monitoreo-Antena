@@ -18,7 +18,7 @@ services:
       ofelia.enabled: "true"
       # ofelia.job-exec.restart-reception.schedule: "0 1/5 * * * *"
       ofelia.job-exec.test.schedule: "@every 5s"
-      ofelia.job-exec.test.command: "python manage.py hello"
+      ofelia.job-exec.test.command: "python manage.py scheduler"
       # ofelia.job-exec.restart-pedestal.schedule: "0 2/10 * * * *"
       # ofelia.job-exec.restart-pedestal.command: "python manage.py restart_pedestal"
       # ofelia.job-exec.restart-experiment.schedule: "@midnight"
@@ -45,7 +45,7 @@ services:
     restart: always
     build: ./nginx/
     ports:
-      - '0.0.0.0:8086:80'
+      - '0.0.0.0:80:80'
     volumes_from:
       - radarsys
     links:

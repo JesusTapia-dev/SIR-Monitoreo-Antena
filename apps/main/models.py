@@ -784,21 +784,18 @@ class Configuration(PolymorphicModel):
     def stop_device(self):
 
         self.message = 'Function not implemented'
-        print("BUENAS SEÑALES??? NO LO CREO2",flush=True) 
         return False
 
 
     def start_device(self):
 
         self.message = 'Function not implemented'
-        print("BUENAS SEÑALES??? NO LO CREO",flush=True)    
         return False
 
 
     def write_device(self, parms):
 
         self.message = 'Function not implemented'
-        print("BUENAS SEÑALES??? NO LO CREO3",flush=True) 
         return False
 
     def write_device_mqtt(self, parms):

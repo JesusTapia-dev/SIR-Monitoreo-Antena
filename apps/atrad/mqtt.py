@@ -18,7 +18,8 @@ def insert(time,data):
         temp4_3,potinc4_3,potret4_3,temp5_3,potinc5_3,potret5_3,temp6_3,potinc6_3,potret6_3,
         status_4,temp_cll_4,nboards_4,tempdvr_4,potincdvr_4,potretdvr_4,
         temp1_4,potinc1_4,potret1_4,temp2_4,potinc2_4,potret2_4,temp3_4,potinc3_4,potret3_4,
-        temp4_4,potinc4_4,potret4_4,temp5_4,potinc5_4,potret5_4,temp6_4,potinc6_4,potret6_4)
+        temp4_4,potinc4_4,potret4_4,temp5_4,potinc5_4,potret5_4,temp6_4,potinc6_4,potret6_4,
+        combiner1,combiner2,combiner3,combiner4)
         VALUES(%s,%s,%s,%s,%s,%s,%s,%s,
         %s,%s,%s,%s,%s,%s,%s,%s,%s,
         %s,%s,%s,%s,%s,%s,%s,%s,%s,
@@ -30,7 +31,8 @@ def insert(time,data):
         %s,%s,%s,%s,%s,%s,%s,%s,%s,
         %s,%s,%s,%s,%s,%s,
         %s,%s,%s,%s,%s,%s,%s,%s,%s,
-        %s,%s,%s,%s,%s,%s,%s,%s,%s);"""
+        %s,%s,%s,%s,%s,%s,%s,%s,%s,
+        %s,%s,%s,%s);"""
     try:
         # connect to the PostgreSQL database
         conn = psycopg2.connect(database="radarsys", user='docker', password='docker', host='radarsys-postgres', port= '5432')
@@ -38,7 +40,7 @@ def insert(time,data):
         cur = conn.cursor()
         # execute the INSERT statement
         #data_tuple = [tuple(i[:]) for i in a]
-        values = (time,) + tuple(data[0][:25])+tuple(data[1][1:25])+tuple(data[2][1:25])+tuple(data[3][1:25])
+        values = (time,) + tuple(data[0][:25])+tuple(data[1][1:25])+tuple(data[2][1:25])+tuple(data[3][1:25]) + tuple(data[0][29:31]) +tuple(data[2][27:29])
         cur.execute(sql, values)
 
         # get the generated id back
@@ -103,9 +105,9 @@ def GetTemperatures(data):
 
 def on_connect(mqtt_client, userdata, flags, rc):
    if rc == 0:
-       print('Connected successfullyasdss')
-       mqtt_client.subscribe("atrad/test4")
-       print("Exito")
+    #    print('Connected successfullyasdss')
+       mqtt_client.subscribe(os.environ.get('MQTT_TOPIC_ATRAD_RECIEVE', 'atrad/test4'))
+    #    print("Exito")
    else:
        print('Bad connection. Code:', rc)
 
