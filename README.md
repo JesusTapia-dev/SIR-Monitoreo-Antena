@@ -21,6 +21,10 @@ Download the application *radarsys* to your workspace
     $ cd /path/to/radarsys
     $ docker-compose build
 
-### 3. Run containers
+### 3. Modify IP Broker
+
+    Access to .env and modify "MQTT_SERVER" with the IP of the broker. You can install Mosquitto for this.
+
+### 4. Run containers
 
     $ docker-compose up -d
