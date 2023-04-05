@@ -14,7 +14,7 @@ We recommend use docker/docker-compose for test/production but you can install t
 Download the application *radarsys* to your workspace
 
     $ cd /path/to/your/workspace
-    $ git clone http://jro-dev.igp.gob.pe/rhodecode/radarsys && cd radarsys
+    $ git clone http://intranet.igp.gob.pe:8082/radarsys && cd radarsys
 
 ### 2. Build application & the migrations are already done in a .sh  
     
