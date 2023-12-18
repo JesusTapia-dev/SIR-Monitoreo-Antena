@@ -4,9 +4,15 @@ $(document).ready(function() {
     socket.on('connect', function(data) {
         console.log('Connecting OK');
         makePlot("plot-temp",2,["Tx1","Tx2"],[14, 45])
-        makePlot("plot-pot",2,["Tx1","Tx2"],[70,100])
-        makePlot("plot-pot-t1",4,["P1","P2","P3","P4"],[0,25])
-        makePlot("plot-pot-t2",4,["P1","P2","P3","P4"],[0,25])
+        makePlot("plot-pot",2,["Tx1","Tx2"],[100,1000])
+        makePlot("plot-pot-t1",1,[100,800])
+        makePlot("plot-pot-t2",1,[100,800])
+        makePlot("plot-pot-t3",1,[100,800])
+        makePlot("plot-pot-t4",1,[100,800])
+        makePlot("plot-pot-t5",1,[100,800])
+        makePlot("plot-pot-t6",1,[100,800])
+        makePlot("plot-pot-t7",1,[100,800])
+        makePlot("plot-pot-t8",1,[100,800])
     })
 
     socket.on('test', function(data) {
@@ -27,7 +33,7 @@ $(document).ready(function() {
 });
 
 function UpdateData(id,data){
-    let total = data.pow.reduce((a, b) => a + b, 0)/1000.0;
+    let total = data.pow.reduce((a, b) => a + b, 0);
     streamPlot("plot-pot",data.time,total,id,81);
     streamPlot("plot-temp",data.time,data.tmax[0],id,40);
     streamPlot2("plot-pot-t"+(id+1),data.time,data.pow);
@@ -89,7 +95,7 @@ function streamPlot2(div,x,y){
     var tm = [x];
     var values = [];
     for(let i=0;i<4;i++){
-        values[i]=[y[i]/1000.0];
+        values[i]=[y[i]];
     }    
     var data_update = {x: [tm,tm,tm,tm], y: values}
     Plotly.extendTraces(plotDiv, data_update,[0,1,2,3])
@@ -117,12 +123,12 @@ function PotenciaAmplificador(id,data1,data2,time){
     id_tx = (id+1)
     let div = '#pot'+id_tx;
     for(let i=1; i<5; i++){
-        var pot = (data1[i-1]/1000.0).toFixed(1)
+        var pot = (data1[i-1]).toFixed(1)
         $(div+'-'+i).text(pot);
         if (data1[i-1]<23000){
             $("#alertpot-time"+id_tx).text(time.slice(-8,));
-            $("#alertpot-"+id_tx).text(pot);
-            $("#alertpot-loc"+id_tx).text('Tx'+ id_tx+ ' Amp '+i);
+            $("#alertpot-"+id_tx).text(pot+" kW");
+           // $("#alertpot-loc"+id_tx).text('Tx'+ id_tx+ ' Amp '+i);
         }
     }
     $(div).text(data2.toFixed(1));

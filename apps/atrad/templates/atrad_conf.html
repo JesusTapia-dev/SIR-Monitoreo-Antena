@@ -25,9 +25,9 @@
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
 
 <div class="container-fluid">
-  <h1 class="py-4 text-center" >ATRAD Monitoring</h1>
+  <h1 class="py-4 text-center" > Monitoring of the main antenna transmitters</h1>
 
-   <!-- First row : Control-->
+   <!-- First row : Control
    <div class="row">
     <div class="card border-light">
       <div class="card-body">
@@ -41,6 +41,7 @@
                 <button type="button" class="btn btn-outline-danger" id="OFFBtn1"> OFF </button>
               </td>
             </tr>
+
             <tr>
               <th class="align-middle">Tx2</th>
               <td>
@@ -48,11 +49,21 @@
                 <button type="button" class="btn btn-outline-danger" id="OFFBtn2"> OFF </button>
               </td>
             </tr>
+
+            <tr>
+              <th class="align-middle">Tx3</th>
+              <td>
+                <button type="button" class="btn btn-outline-success" id="ONBtn3"> ON </button>
+                <button type="button" class="btn btn-outline-danger" id="OFFBtn3"> OFF </button>
+              </td>
+            </tr>
+
+
           </tbody>
         </table>
       </div>
     </div>
-  </div>
+  </div>-->
 
   <!-- Second row : Status and alerts -->
   <div class="row">
@@ -72,29 +83,44 @@
                 <td><span id="status2" class="dot"></span></td>
                 <td><p id="status-text2" class="font-weight-bold">No data</p></td>
               </tr>
+              <tr>
+                <th scope="row">Tx3</th>
+                <td><span id="status3" class="dot"></span></td>
+                <td><p id="status-text3" class="font-weight-bold">No data</p></td>
+              </tr>
+              <tr>
+                <th scope="row">Tx4</th>
+                <td><span id="status4" class="dot"></span></td>
+                <td><p id="status-text4" class="font-weight-bold">No data</p></td>
+              </tr>
+
+              <tr>
+                <th scope="row">Tx5</th>
+                <td><span id="status5" class="dot"></span></td>
+                <td><p id="status-text5" class="font-weight-bold">No data</p></td>
+              </tr>
+
+              <tr>
+                <th scope="row">Tx6</th>
+                <td><span id="status6" class="dot"></span></td>
+                <td><p id="status-text6" class="font-weight-bold">No data</p></td>
+              </tr>
+
+              <tr>
+                <th scope="row">Tx7</th>
+                <td><span id="status7" class="dot"></span></td>
+                <td><p id="status-text7" class="font-weight-bold">No data</p></td>
+              </tr>
+              <tr>
+                <th scope="row">Tx8</th>
+                <td><span id="status8" class="dot"></span></td>
+                <td><p id="status-text8" class="font-weight-bold">No data</p></td>
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
-      <div class="card border-light">
-        <div class="card-body">
-          <h4 class="card-title">High Temperature Alerts</h4>
-          <table class="table table-borderless">
-            <tbody>
-              <tr>
-                <th scope="row"><p id="alerttemp-time1" class="font-weight-bold"></p></th>
-                <td><p id="alerttemp-1" class="font-weight-bold"></p></td>
-                <td><p id="alerttemp-loc1" class="font-weight-bold"></p></td>
-              </tr>
-              <tr>
-                <th scope="row"><p id="alerttemp-time2" class="font-weight-bold"></p></th>
-                <td><p id="alerttemp-2" class="font-weight-bold"></p></td>
-                <td><p id="alerttemp-loc2" class="font-weight-bold"></p></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+
       <div class="card border-light">
         <div class="card-body">
           <h4 class="card-title">Power Alerts</h4>
@@ -146,14 +172,38 @@
               </table>
             </div>
             <div class="card-body">
-              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot-1">T1</button>
-              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot-2">T2</button>
+
+              <tr> 
+                <td>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot-1">T1</button>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot-2">T2</button>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot-3">T3</button>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot-4">T4</button>
+                 </td>
+              </tr>
+                <tr> 
+                  <td>
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot-5">T5</button>
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot-6">T6</button>
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot-7">T7</button>
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Pot-8">T8</button>
+                </td>
+                </tr>
+              
+            
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+
+
+
+
+
+
   <!--Temperature Graph-->
   <div class="row ">
     <div class="card border-light">
@@ -202,32 +252,6 @@
           <div class="col">
             <div id="plot-pot-t1"></div>
           </div>
-          <div class="col">
-            <table class="table" style="max-width: 150px;">
-              <tbody>
-                <tr>
-                  <th scope="col"># Amp</th>
-                  <th scope="col">Power (kW)</th>
-                </tr>
-                <tr>
-                  <th scope="row">P1</th>
-                  <td><p id="pot1-1"></p></td>
-                </tr>
-                <tr>
-                  <th scope="row">P2</th>
-                  <td><p id="pot1-2"></p></td>
-                </tr>
-                <tr>
-                  <th scope="row">P3</th>
-                  <td><p id="pot1-3"></p></td>
-                </tr>
-                <tr>
-                  <th scope="row">P4</th>
-                  <td><p id="pot1-4"></p></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
     </div>
@@ -246,37 +270,121 @@
           <div class="col">
             <div id="plot-pot-t2"></div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="Pot-3" role="dialog">
+  <div class="modal-dialog modal-lg" style="max-width:50%;min-width:928px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Incident Power - Transmitter 3</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
           <div class="col">
-            <table class="table" style="max-width: 150px;">
-              <tbody>
-                <tr>
-                  <th scope="col"># Amp</th>
-                  <th scope="col">Power (kW)</th>
-                </tr>
-                <tr>
-                  <th scope="row">P1</th>
-                  <td><p id="pot2-1"></p></td>
-                </tr>
-                <tr>
-                  <th scope="row">P2</th>
-                  <td><p id="pot2-2"></p></td>
-                </tr>
-                <tr>
-                  <th scope="row">P3</th>
-                  <td><p id="pot2-3"></p></td>
-                </tr>
-                <tr>
-                  <th scope="row">P4</th>
-                  <td><p id="pot2-4"></p></td>
-                </tr>
-              </tbody>
-            </table>
+            <div id="plot-pot-t3"></div>
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<div class="modal fade" id="Pot-4" role="dialog">
+  <div class="modal-dialog modal-lg" style="max-width:50%;min-width:928px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Incident Power - Transmitter 4</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col">
+            <div id="plot-pot-t4"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="Pot-5" role="dialog">
+  <div class="modal-dialog modal-lg" style="max-width:50%;min-width:928px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Incident Power - Transmitter 5</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col">
+            <div id="plot-pot-t5"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="Pot-6" role="dialog">
+  <div class="modal-dialog modal-lg" style="max-width:50%;min-width:928px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Incident Power - Transmitter 6</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col">
+            <div id="plot-pot-t6"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="Pot-7" role="dialog">
+  <div class="modal-dialog modal-lg" style="max-width:50%;min-width:928px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Incident Power - Transmitter 7</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col">
+            <div id="plot-pot-t7"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="Pot-8" role="dialog">
+  <div class="modal-dialog modal-lg" style="max-width:50%;min-width:928px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Incident Power - Transmitter 8</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col">
+            <div id="plot-pot-t8"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
 <script src="{% static 'js/atrad-mainpage.js' %}"></script>
 

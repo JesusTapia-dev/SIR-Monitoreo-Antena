@@ -34,7 +34,7 @@ def atrad_conf(request, id_conf):
     kwargs['dev_conf_keys'] = ['label',
                                'topic']
 
-    kwargs['title'] = 'ATRAD Configuration'
+    kwargs['title'] = 'Main antenna Configuration'
     kwargs['suptitle'] = 'Details'
 
     kwargs['button'] = 'Edit Configuration'
