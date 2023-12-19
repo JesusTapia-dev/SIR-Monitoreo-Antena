@@ -3,20 +3,19 @@ $(document).ready(function() {
 
     socket.on('connect', function(data) {
         console.log('Connecting OK');
-        makePlot("plot-temp",2,["Tx1","Tx2"],[14, 45])
-        makePlot("plot-pot",2,["Tx1","Tx2"],[100,1000])
-        makePlot("plot-pot-t1",1,[100,800])
-        makePlot("plot-pot-t2",1,[100,800])
-        makePlot("plot-pot-t3",1,[100,800])
-        makePlot("plot-pot-t4",1,[100,800])
-        makePlot("plot-pot-t5",1,[100,800])
-        makePlot("plot-pot-t6",1,[100,800])
-        makePlot("plot-pot-t7",1,[100,800])
-        makePlot("plot-pot-t8",1,[100,800])
+        makePlot("plot-pot",2,["Tx1","Tx2"],[100,6000])
+        makePlot("plot-pot-t1",1,["P1"],[100,1000])
+        makePlot("plot-pot-t2",1,["P2"],[100,1000])
+       makePlot("plot-pot-t3",1,["P3"], [100,1000])
+        makePlot("plot-pot-t4",1,["P4"],[100,1000])
+        makePlot("plot-pot-t5",1,["P5"],[100,1000])
+        makePlot("plot-pot-t6",1,["P6"],[100,1000])
+        makePlot("plot-pot-t7",1,["P7"],[100,1000])
+        makePlot("plot-pot-t8",1,["P8"],[100,1000])
     })
 
     socket.on('test', function(data) {
-        UpdateData(data.num,data);
+        UpdateData(data);
     })
     $('#ONBtn1').click(function() {
       socket.emit('atrad_control_event', '11');
@@ -32,21 +31,13 @@ $(document).ready(function() {
     });
 });
 
-function UpdateData(id,data){
+function UpdateData(data){
     let total = data.pow.reduce((a, b) => a + b, 0);
-    streamPlot("plot-pot",data.time,total,id,81);
-    streamPlot("plot-temp",data.time,data.tmax[0],id,40);
-    streamPlot2("plot-pot-t"+(id+1),data.time,data.pow);
-    ligthStatus(id,data.status);
-    PotenciaAmplificador(id,data.pow,total,data.time);
-    $('#temp'+(id+1)).text(data.tmax[0]);
-    if(eval(data.tmax[0])>20){
-        $('#alerttemp-time'+(id+1)).text(data.time.slice(-8,));
-        $('#alerttemp-'+(id+1)).text(data.tmax[0]);
-        $('#alerttemp-loc'+(id+1)).text('Tx'+(id+1)+' '+data.tmax[1]);
-    }
+    streamPlot("plot-pot",data.time,total);
+    streamPlot2("plot-pot-t",data.time,data.pow);
+    ligthStatus(data.status);
+    PotenciaAmplificador(data.pow,total,data.time);
 }
-
 function makePlot(div, n=1, names=["", ""],ranges){
     var plotDiv = document.getElementById(div);
     var traces = [];
@@ -71,65 +62,50 @@ function makePlot(div, n=1, names=["", ""],ranges){
     Plotly.newPlot(plotDiv, traces, layout,config);
 };
 
-function streamPlot(div,x,y,ind,val){
+function streamPlot(div,x,y){
     var plotDiv = document.getElementById(div);
-    if (plotDiv.data[ind].x.length > 8){
-        plotDiv.data[2].x = plotDiv.data[2].x.slice(-23)
-        plotDiv.data[2].y = plotDiv.data[2].y.slice(-23)
-        plotDiv.data[ind].x = plotDiv.data[ind].x.slice(-11)
-        plotDiv.data[ind].y = plotDiv.data[ind].y.slice(-11)
-    }
     var tm = [x];
     var values = [y];
-    var data_update = {x: [tm,tm], y: [values,[val]]}
-    Plotly.extendTraces(plotDiv, data_update,[ind,2])
+    var time=new Date();
+    var data_update = {x: [[time]], y: [[y]]}
+    Plotly.extendTraces(plotDiv, data_update,[0])
 };
 function streamPlot2(div,x,y){
-    var plotDiv = document.getElementById(div);
-    if (plotDiv.data[0].x.length > 8){
-        for(let i=0;i<4;i++){
-        plotDiv.data[i].x = plotDiv.data[i].x.slice(-11)
-        plotDiv.data[i].y = plotDiv.data[i].y.slice(-11)
+    for(var i=1;i<9;i++){
+        var division=div+i
+        var plotDiv = document.getElementById(division);
+        var time = new Date();
+        var values = y[i-1];
+        var data_update = {x: [[time]], y: [[values]]};
+        Plotly.extendTraces(plotDiv, data_update,[0])
+    }
+};
+
+function ligthStatus(status){
+    for(var i=0;i<8;i++){
+        if(status[i]==1){
+            let div1 = 'status'+(i+1);
+            let div2 = 'status-text'+(i+1);
+            document.getElementById(div1).style.backgroundColor = "green";
+            document.getElementById(div2).innerHTML = "Fully enable";
+        }
+        else {
+            let div1 = 'status'+(i+1);
+            let div2 = 'status-text'+(i+1);
+            document.getElementById(div1).style.backgroundColor = "red";
+            document.getElementById(div2).innerHTML = "Disable";
         }
     }
-    var tm = [x];
-    var values = [];
-    for(let i=0;i<4;i++){
-        values[i]=[y[i]];
-    }    
-    var data_update = {x: [tm,tm,tm,tm], y: values}
-    Plotly.extendTraces(plotDiv, data_update,[0,1,2,3])
 };
 
-function ligthStatus(id,status){
-    let div1 = 'status'+(id+1);
-    let div2 = 'status-text'+(id+1);
-
-    if(status==='0000'){
-        document.getElementById(div1).style.backgroundColor = "red";
-        document.getElementById(div2).innerHTML = "Disable";
-    }
-    else if(status==='1111'){
-        document.getElementById(div1).style.backgroundColor = "green";
-        document.getElementById(div2).innerHTML = "Fully enable";
-    }
-    else{
-        document.getElementById(div1).style.backgroundColor = "yellow";
-        document.getElementById(div2).innerHTML = "Not fully enable";
-    }
-};
-
-function PotenciaAmplificador(id,data1,data2,time){
-    id_tx = (id+1)
-    let div = '#pot'+id_tx;
-    for(let i=1; i<5; i++){
-        var pot = (data1[i-1]).toFixed(1)
+function PotenciaAmplificador(data1,data2,time){
+    
+    let div = '#pot1';
+    for(let i=1; i<9; i++){
+        var pot = (data1[i-1]).toFixed(1);
         $(div+'-'+i).text(pot);
-        if (data1[i-1]<23000){
-            $("#alertpot-time"+id_tx).text(time.slice(-8,));
-            $("#alertpot-"+id_tx).text(pot+" kW");
-           // $("#alertpot-loc"+id_tx).text('Tx'+ id_tx+ ' Amp '+i);
-        }
+        $("#alertpot-time"+i).text(time.slice(-8,));
+        $("#alertpot-"+i).text(pot+" kW");        
     }
     $(div).text(data2.toFixed(1));
 }

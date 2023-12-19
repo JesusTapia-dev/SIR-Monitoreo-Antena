@@ -27,45 +27,8 @@
 <div class="container-fluid">
   <h1 class="py-4 text-center" > Monitoring of the main antenna transmitters</h1>
 
-   <!-- First row : Control
-   <div class="row">
-    <div class="card border-light">
-      <div class="card-body">
-        <h3 class="card-title">Control</h3>
-        <table class="table table-borderless">
-          <tbody>
-            <tr>
-              <th class="align-middle">Tx1</th>
-              <td>
-                <button type="button" class="btn btn-outline-success" id="ONBtn1"> ON </button>
-                <button type="button" class="btn btn-outline-danger" id="OFFBtn1"> OFF </button>
-              </td>
-            </tr>
 
-            <tr>
-              <th class="align-middle">Tx2</th>
-              <td>
-                <button type="button" class="btn btn-outline-success" id="ONBtn2"> ON </button>
-                <button type="button" class="btn btn-outline-danger" id="OFFBtn2"> OFF </button>
-              </td>
-            </tr>
-
-            <tr>
-              <th class="align-middle">Tx3</th>
-              <td>
-                <button type="button" class="btn btn-outline-success" id="ONBtn3"> ON </button>
-                <button type="button" class="btn btn-outline-danger" id="OFFBtn3"> OFF </button>
-              </td>
-            </tr>
-
-
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>-->
-
-  <!-- Second row : Status and alerts -->
+  <!-- first  row : Status and alerts -->
   <div class="row">
     <div class="card-deck" style="width: 100%;">
       <div class="card border-light">
@@ -136,6 +99,39 @@
                 <td><p id="alertpot-2" class="font-weight-bold"></p></td>
                 <td><p id="alertpot-loc2" class="font-weight-bold"></p></td>
               </tr>
+              <tr>
+                <th scope="row"><p id="alertpot-time3" class="font-weight-bold"></p></th>
+                <td><p id="alertpot-3" class="font-weight-bold"></p></td>
+                <td><p id="alertpot-loc3" class="font-weight-bold"></p></td>
+              </tr>
+              <tr>
+                <th scope="row"><p id="alertpot-time4" class="font-weight-bold"></p></th>
+                <td><p id="alertpot-4" class="font-weight-bold"></p></td>
+                <td><p id="alertpot-loc4" class="font-weight-bold"></p></td>
+              </tr>
+              <tr>
+                <th scope="row"><p id="alertpot-time5" class="font-weight-bold"></p></th>
+                <td><p id="alertpot-5" class="font-weight-bold"></p></td>
+                <td><p id="alertpot-loc5" class="font-weight-bold"></p></td>
+              </tr>
+
+              <tr>
+                <th scope="row"><p id="alertpot-time6" class="font-weight-bold"></p></th>
+                <td><p id="alertpot-6" class="font-weight-bold"></p></td>
+                <td><p id="alertpot-loc6" class="font-weight-bold"></p></td>
+              </tr>
+
+              <tr>
+                <th scope="row"><p id="alertpot-time7" class="font-weight-bold"></p></th>
+                <td><p id="alertpot-7" class="font-weight-bold"></p></td>
+                <td><p id="alertpot-loc7" class="font-weight-bold"></p></td>
+              </tr>
+              <tr>
+                <th scope="row"><p id="alertpot-time8" class="font-weight-bold"></p></th>
+                <td><p id="alertpot-8" class="font-weight-bold"></p></td>
+                <td><p id="alertpot-loc8" class="font-weight-bold"></p></td>
+              </tr>
+
             </tbody>
           </table>
         </div>
@@ -157,16 +153,12 @@
               <table class="table" style="max-width:170px;">
                 <tbody>
                   <tr>
-                    <th scope="col"># Tx</th>
+                    <th scope="col"># Potencia total</th>
                     <th scope="col">Power (kW)</th>
                   </tr>
                   <tr>
                     <th scope="row">1</th>
                     <td><p id="pot1"></p></td>
-                  </tr>
-                  <tr>
-                    <th scope="row">2</th>
-                    <td><p id="pot2"></p></td>
                   </tr>
                 </tbody>
               </table>
@@ -197,47 +189,6 @@
       </div>
     </div>
   </div>
-
-
-
-
-
-
-
-  <!--Temperature Graph-->
-  <div class="row ">
-    <div class="card border-light">
-      <div class="card-body">
-        <h3 class="card-title">Temperature graph</h3>
-        <div class="row justify-content-md-center">
-          <div class="col-md-9">
-            <div id="plot-temp"></div>
-          </div>
-          <div class="col-md-3 text-end">
-            <div class="card-body">
-              <table class="table table-hover" style="max-width:170px;">
-                <tbody>
-                  <tr>
-                    <th scope="col"># Tx</th>
-                    <th scope="col">Temperature (°C)</th>
-                  </tr>
-                  <tr class="clickable-row" data-href="{% url 'url_tx_atrad' dev_conf.id 'tx1' %}">
-                    <th scope="row">1</th>
-                    <td><p id="temp1"></p></td>
-                  </tr>
-                  <tr class="clickable-row" data-href="{% url 'url_tx_atrad' dev_conf.id 'tx2' %}">
-                    <th scope="row">2</th>
-                    <td><p id="temp2"></p></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!--Modales-->
 <div class="modal fade" id="Pot-1" role="dialog">
