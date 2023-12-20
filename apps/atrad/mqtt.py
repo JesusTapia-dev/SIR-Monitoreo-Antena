@@ -114,17 +114,9 @@ def on_connect(mqtt_client, userdata, flags, rc):
 
 def on_message(mqtt_client, userdata, msg):
     print('Received message on topic: {} with payload: {}'.format(msg.topic,msg.payload), flush=True)
-    mensajeRecibido=json.loads(msg.payload)
-    mainData={'time': '23-04-20T17:57:53,5', 'pow': [2000, 1890, 20749, 21192, 0, 0, 0, 0], 'status': [1,1,1,1,1,1,1,1]}
-    #tempData={'time': '23-04-20T17:57:53,5', 'temp': [[22, 23, 36, 30, 32, 33, 30, 32, 30, 33], [22, 22, 30, 30, 28, 30, 29, 32, 23, 23, 25, 25], [20, 23, 30, 28, 27, 29, 28, 29, 31, 31], [21, 23, 32, 32, 30, 30, 31, 32]]}
-    #asignamos los valores recibidos al formato desentramado
-    mainData["pow"]=mensajeRecibido["average_potencia"]
-    mainData["time"]=mensajeRecibido["timestamp"]
-    mainData["status"]=mensajeRecibido["estado"]
-    #mainData, tempData = dataConvert(msg)
+    mainData=json.loads(msg.payload)
     sio.emit('test',data = mainData)
-    #socket for temperature details 
-    #sio.emit('temptx'+str(mainData['num'] + 1),data = tempData)
+
 
 client = mqtt.Client()
 client.on_connect = on_connect
