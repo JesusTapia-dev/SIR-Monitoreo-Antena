@@ -6,7 +6,7 @@ $(document).ready(function() {
         makePlot("plot-pot",2,["Tx1","Tx2"],[100,6000])
         makePlot("plot-pot-t1",1,["P1"],[100,1000])
         makePlot("plot-pot-t2",1,["P2"],[100,1000])
-       makePlot("plot-pot-t3",1,["P3"], [100,1000])
+        makePlot("plot-pot-t3",1,["P3"], [100,1000])
         makePlot("plot-pot-t4",1,["P4"],[100,1000])
         makePlot("plot-pot-t5",1,["P5"],[100,1000])
         makePlot("plot-pot-t6",1,["P6"],[100,1000])
@@ -36,7 +36,9 @@ function UpdateData(data){
     streamPlot("plot-pot",data.time,total);
     streamPlot2("plot-pot-t",data.time,data.pow);
     ligthStatus(data.status);
-    PotenciaAmplificador(data.pow,total,data.time);
+    console.log("actualizar");
+    PotenciaAmplificador(data.pow,total,data.potenciaNominal,data.time);
+    console.log("actualizado");
 }
 function makePlot(div, n=1, names=["", ""],ranges){
     var plotDiv = document.getElementById(div);
@@ -98,14 +100,24 @@ function ligthStatus(status){
     }
 };
 
-function PotenciaAmplificador(data1,data2,time){
-    
+function PotenciaAmplificador(data1,data2,dataNominal,time){
     let div = '#pot1';
+    console.log("potNominal");
     for(let i=1; i<9; i++){
         var pot = (data1[i-1]).toFixed(1);
-        $(div+'-'+i).text(pot);
-        $("#alertpot-time"+i).text(time.slice(-8,));
-        $("#alertpot-"+i).text(pot+" kW");        
+        var potNominal=(dataNominal[i-1]).toFixed(1);
+        var maxPot=potNominal+150,minPot=potNominal-150;
+        if(pot>maxPot || pot<minPot){
+            $(div+'-'+i).text(pot);
+            $("#alertpot-time"+i).text(time.slice(-8,));
+            $("#alertpot-"+i).text(pot+" kW");   
+            console.log("potNominal");
+        }
+        else{
+            $("#alertpot-time"+i).text(time.slice(-8,));
+            $("#alertpot-"+i).text("Valor dentro de rango");   
+            console.log("else");
+        }
     }
     $(div).text(data2.toFixed(1));
 }
