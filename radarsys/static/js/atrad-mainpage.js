@@ -36,9 +36,7 @@ function UpdateData(data){
     streamPlot("plot-pot",data.time,total);
     streamPlot2("plot-pot-t",data.time,data.pow);
     ligthStatus(data.status);
-    console.log("actualizar");
-    PotenciaAmplificador(data.pow,total,data.potenciaNominal,data.time);
-    console.log("actualizado");
+    PotenciaAmplificador(data.pow,total,data.potenciaNominal,data.status,data.time);
 }
 function makePlot(div, n=1, names=["", ""],ranges){
     var plotDiv = document.getElementById(div);
@@ -100,23 +98,34 @@ function ligthStatus(status){
     }
 };
 
-function PotenciaAmplificador(data1,data2,dataNominal,time){
+function PotenciaAmplificador(data1,data2,dataNominal,estado,time){
     let div = '#pot1';
-    console.log("potNominal");
     for(let i=1; i<9; i++){
         var pot = (data1[i-1]).toFixed(1);
         var potNominal=(dataNominal[i-1]).toFixed(1);
-        var maxPot=potNominal+150,minPot=potNominal-150;
-        if(pot>maxPot || pot<minPot){
-            $(div+'-'+i).text(pot);
-            $("#alertpot-time"+i).text(time.slice(-8,));
-            $("#alertpot-"+i).text(pot+" kW");   
-            console.log("potNominal");
+        var maxPot=parseFloat(potNominal)+parseFloat(100);
+        var minPot=parseFloat(potNominal)-parseFloat(100);
+        var estadoT=estado[i-1];
+        $(div+'-'+i).text(pot);
+        $("#alertpot-time"+i).text(time.slice(-8,));
+        /*
+        if(pot>maxPot){
+            if(estadoT==1) $("#alertpot-"+i).text("Power is above expected value- "+pot+" kW"); 
+            else $("#alertpot-"+i).text("Alert! Transmitt should be off- "+pot+" kW");
         }
-        else{
-            $("#alertpot-time"+i).text(time.slice(-8,));
-            $("#alertpot-"+i).text("Valor dentro de rango");   
-            console.log("else");
+        else if(pot<minPot){
+            if(estadoT==1) $("#alertpot-"+i).text("Power is below expected value- "+pot+" kW"); 
+            else  $("#alertpot-"+i).text("OK_");
+        }
+        else $("#alertpot-"+i).text("OK"+maxPot);*/
+        if(estadoT==1){
+            if(pot>maxPot) $("#alertpot-"+i).text("Power is above expected value- "+pot+" kW");
+            else if(pot<minPot) $("#alertpot-"+i).text("Power is below expected value- "+pot+" kW"); 
+            else  $("#alertpot-"+i).text("OK");
+        }
+        else {
+            if(pot>0) $("#alertpot-"+i).text("Alert! Transmitt should be off- "+pot+" kW");
+            else $("#alertpot-"+i).text("OK_");
         }
     }
     $(div).text(data2.toFixed(1));
