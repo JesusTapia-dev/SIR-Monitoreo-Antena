@@ -3,7 +3,7 @@ $(document).ready(function() {
 
     socket.on('connect', function(data) {
         console.log('Connecting OK');
-        makePlot("plot-pot",2,["Tx1","Tx2"],[100,6000])
+        makePlot("plot-pot",8,["Tx1","Tx2","Tx3","Tx4","Tx5","Tx6","Tx7","Tx8"],[50,800])
         makePlot("plot-pot-t1",1,["P1"],[100,1000])
         makePlot("plot-pot-t2",1,["P2"],[100,1000])
         makePlot("plot-pot-t3",1,["P3"], [100,1000])
@@ -33,10 +33,10 @@ $(document).ready(function() {
 
 function UpdateData(data){
     let total = data.pow.reduce((a, b) => a + b, 0);
-    streamPlot("plot-pot",data.time,total);
+    streamPlot("plot-pot",data.time,data.pow);
     streamPlot2("plot-pot-t",data.time,data.pow);
     ligthStatus(data.status);
-    PotenciaAmplificador(data.pow,total,data.potenciaNominal,data.status,data.time);
+    PotenciaAmplificador(data.pow,total,data.potenciaNominal,data.status,data.time,data.threshold);
 }
 function makePlot(div, n=1, names=["", ""],ranges){
     var plotDiv = document.getElementById(div);
@@ -67,8 +67,8 @@ function streamPlot(div,x,y){
     var tm = [x];
     var values = [y];
     var time=new Date();
-    var data_update = {x: [[time]], y: [[y]]}
-    Plotly.extendTraces(plotDiv, data_update,[0])
+    var data_update = {x: [[time],[time],[time],[time],[time],[time],[time],[time]], y: [[y[0]],[y[1]],[y[2]],[y[3]],[y[4]],[y[5]],[y[6]],[y[7]]]}
+    Plotly.extendTraces(plotDiv, data_update,[0,1,2,3,4,5,6,7])
 };
 function streamPlot2(div,x,y){
     for(var i=1;i<9;i++){
@@ -98,28 +98,18 @@ function ligthStatus(status){
     }
 };
 
-function PotenciaAmplificador(data1,data2,dataNominal,estado,time){
+function PotenciaAmplificador(data1,data2,dataNominal,estado,time,threshold){
     let div = '#pot1';
     for(let i=1; i<9; i++){
         var pot = (data1[i-1]).toFixed(1);
         var potNominal=(dataNominal[i-1]).toFixed(1);
-        var maxPot=parseFloat(potNominal)+parseFloat(100);
-        var minPot=parseFloat(potNominal)-parseFloat(100);
+        var maxPot=parseFloat(potNominal)+parseFloat(threshold)*parseFloat(potNominal)/parseFloat(100);
+        var minPot=parseFloat(potNominal)-parseFloat(threshold)*parseFloat(potNominal)/parseFloat(100);
         var estadoT=estado[i-1];
         $(div+'-'+i).text(pot);
         $("#alertpot-time"+i).text(time.slice(-8,));
-        /*
-        if(pot>maxPot){
-            if(estadoT==1) $("#alertpot-"+i).text("Power is above expected value- "+pot+" kW"); 
-            else $("#alertpot-"+i).text("Alert! Transmitt should be off- "+pot+" kW");
-        }
-        else if(pot<minPot){
-            if(estadoT==1) $("#alertpot-"+i).text("Power is below expected value- "+pot+" kW"); 
-            else  $("#alertpot-"+i).text("OK_");
-        }
-        else $("#alertpot-"+i).text("OK"+maxPot);*/
         if(estadoT==1){
-            if(pot>maxPot) $("#alertpot-"+i).text("Power is above expected value- "+pot+" kW");
+            if(pot>maxPot) $("#alertpot-"+i).text("Power is above expected value- "+pot+" kW "+maxPot);
             else if(pot<minPot) $("#alertpot-"+i).text("Power is below expected value- "+pot+" kW"); 
             else  $("#alertpot-"+i).text("OK");
         }
